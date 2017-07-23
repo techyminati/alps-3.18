@@ -81,7 +81,7 @@
 #endif
 #include <mach/mt_spm_mtcmos.h>
 #if defined(CONFIG_MTK_RTC)
-#include <mtk_rtc.h>
+#include <mt-plat/mtk_rtc.h>
 #endif
 /* #include <mach/pmic.h> TBD */
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
