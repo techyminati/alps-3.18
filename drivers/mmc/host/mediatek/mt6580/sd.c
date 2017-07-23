@@ -783,34 +783,7 @@ static void dump_axi_bus_info(void)
 
 static void dump_emi_info(void)
 {
-	unsigned int i = 0;
-	unsigned int addr = 0;
 
-#if 0
-	if (emi_reg_base) {
-		pr_err("=============== EMI INFO =============");
-		pr_err("before, reg[0x102034e8]=0x%x",
-			sdr_read32(emi_reg_base + 0x4e8));
-		pr_err("before, reg[0x10203400]=0x%x",
-			sdr_read32(emi_reg_base + 0x400));
-		sdr_write32(emi_reg_base + 0x4e8, 0x2000000);
-		sdr_write32(emi_reg_base + 0x400, 0xff0001);
-		pr_err("after, reg[0x102034e8]=0x%x", sdr_read32(emi_reg_base + 0x4e8));
-		pr_err("after, reg[0x10203400]=0x%x", sdr_read32(emi_reg_base + 0x400));
-
-		for (i = 0; i < 5; i++) {
-			for (addr = 0; addr < 0x78; addr += 4) {
-				pr_err("reg[0x%x]=0x%x", (0x10203500 + addr),
-				       sdr_read32((emi_reg_base + 0x500 + addr)));
-				if (addr % 0x10 == 0)
-					mdelay(1);
-			}
-		}
-	} else
-		pr_err("emi_reg_base = %p\n", emi_reg_base);
-#endif
-
-	return;
 }
 #endif
 
@@ -3550,7 +3523,7 @@ int msdc_cache_ctrl(struct msdc_host *host, unsigned int enable,
 	return err;
 }
 
-static void get_emmc_cache_info(struct work_struct *work)
+void get_emmc_cache_info(struct work_struct *work)
 {
 #ifdef MTK_MSDC_USE_CACHE
 	struct msdc_host *host;
@@ -3586,7 +3559,6 @@ static void get_emmc_cache_info(struct work_struct *work)
 		g_usrdata_part_start, g_usrdata_part_end);
 #endif
 }
-EXPORT_SYMBOL(msdc_get_cache_region);
 #endif
 
 #ifdef CONFIG_MTK_EMMC_SUPPORT

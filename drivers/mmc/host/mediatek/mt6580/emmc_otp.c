@@ -53,61 +53,72 @@ struct msdc_host *emmc_otp_get_host(void)
 unsigned int emmc_get_wp_size(void)
 {
 	unsigned char l_ext_csd[512];
+	unsigned char csd[512];
+	u32 *resp = NULL;
 	struct msdc_host *host_ctl;
+	unsigned int write_prot_grpsz = 0;
 
-	/* not to change ERASE_GRP_DEF after card initialized */
-	host_ctl = emmc_otp_get_host();
+	if (0 == sg_wp_size) {
+		/* not to change ERASE_GRP_DEF after card initialized */
+		host_ctl = emmc_otp_get_host();
 
-	BUG_ON(!host_ctl);
-	BUG_ON(!host_ctl->mmc);
-	BUG_ON(!host_ctl->mmc->card);
+		BUG_ON(!host_ctl);
+		BUG_ON(!host_ctl->mmc);
+		BUG_ON(!host_ctl->mmc->card);
 
-	if (0 != sg_wp_size) {
-		pr_debug("msdc[%s:%d]mmc_host = 0x%p,sg_wp_size=%d\n", __func__,
-			__LINE__, host_ctl->mmc, sg_wp_size);
-		return sg_wp_size;
-	}
+		pr_debug("[%s:%d]mmc_host is : 0x%p\n",
+			__func__, __LINE__, host_ctl->mmc);
+		/* pr_debug("[%s:%d]claim host done! claim_status = %d, "
+			"claim_cnt = %d, claimer = 0x%x, current = 0x%x\n",
+			__func__, __LINE__, host_ctl->mmc->claimed,
+			host_ctl->mmc->claim_cnt, host_ctl->mmc->claimer,
+			current); */
 
-	pr_debug("[%s:%d]mmc_host = 0x%p\n", __func__, __LINE__, host_ctl->mmc);
+		mmc_claim_host(host_ctl->mmc);
 
-	mmc_claim_host(host_ctl->mmc);
+		/* pr_debug("[%s:%d]claim host done! claim_status = %d, "
+			"claim_cnt = %d, claimer = 0x%x, current = 0x%x\n",
+			__func__, __LINE__, host_ctl->mmc->claimed,
+			host_ctl->mmc->claim_cnt, host_ctl->mmc->claimer,
+			current); */
 
-	/* pr_debug("[%s:%d]claim host done!\n", __func__, __LINE__);
-	 * pr_debug("claim_status=%d, claim_cnt=%d, claimer=0x%x, current=0x%x\n",
-	 *	host_ctl->mmc->claimed, host_ctl->mmc->claim_cnt, host_ctl->mmc->claimer
-	 *	, current);
-	 */
-
-	/*
-	 * As the ext_csd is so large and mostly unused, we don't store the
-	 * raw block in mmc_card, so re-get it here.
-	 */
-	mmc_send_ext_csd(host_ctl->mmc->card, l_ext_csd);
+		/*
+		 * As the ext_csd is large and mostly unused, raw ext_csd is
+		 * not stored in mmc_card, so get it again.
+		 */
+		mmc_send_ext_csd(host_ctl->mmc->card, l_ext_csd);
 
 #if EMMC_OTP_DEBUG
-	{
-		int i;
+		{
+			int i;
 
-		for (i = 0; i < 512; i++) {
-			pr_debug("%x", l_ext_csd[i]);
-			if (0 == ((i + 1) % 16))
-				pr_debug("\n");
+			for (i = 0; i < 512; i++) {
+				pr_debug("%x", l_ext_csd[i]);
+				if (0 == ((i + 1) % 16))
+					pr_debug("\n");
+			}
 		}
-	}
 #endif
+		mmc_release_host(host_ctl->mmc);
 
-	mmc_release_host(host_ctl->mmc);
-
-	/* otp length equal to one write protect group size */
-	if (l_ext_csd[EXT_CSD_ERASE_GROUP_DEF] & 0x1) {
-		/* use high-capacity erase uint size, hc erase timeout, hc wp size,
-		 * store in EXT_CSD */
-		sg_wp_size =
-			(512 * 1024 * l_ext_csd[EXT_CSD_HC_ERASE_GRP_SIZE] *
-			 l_ext_csd[EXT_CSD_HC_WP_GRP_SIZE]);
-	} else {
-		/* use old erase group size,write protect group size, store in CSD*/
-		sg_wp_size = (512 * host_ctl->mmc->card->erase_size);
+		resp = host_ctl->mmc->card->raw_csd;
+		write_prot_grpsz = UNSTUFF_BITS(resp, 32, 5);
+		pr_err("otp: write_prot_grpsz is %d", write_prot_grpsz);
+		/* otp length equal to one write protect group size */
+		if (l_ext_csd[EXT_CSD_ERASE_GROUP_DEF] & 0x1) {
+			/* use high-capacity erase uint size, hc erase timeout,
+				hc wp size, store in EXT_CSD */
+			sg_wp_size = (512 * 1024 *
+				l_ext_csd[EXT_CSD_HC_ERASE_GRP_SIZE] *
+				l_ext_csd[EXT_CSD_HC_WP_GRP_SIZE]);
+			pr_err("otp: use hc uint size sg_wp_size is %d\n", sg_wp_size);
+		} else {
+			/* use old erase group size and
+			   write protect group size, store in CSD */
+			sg_wp_size = (512 * host_ctl->mmc->card->erase_size) *
+					(write_prot_grpsz + 1);
+			pr_err("otp: sg_wp_size is %d\n", sg_wp_size);
+		}
 	}
 
 	return sg_wp_size;

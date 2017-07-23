@@ -2045,9 +2045,10 @@ static int simp_emmc_dump_write(unsigned char *buf, unsigned int len,
 #if MTK_MMC_DUMP_DBG
 	pr_debug("write start address = %llu\n", l_start_offset);
 #endif
-
-
-	simp_init_emmc();
+	if (0 == emmc_init) {
+		if (simp_init_emmc() != 0)
+			return ret;
+	}
 
 	for (i = 0; i < (len / 512); i++) {
 		/* code */
