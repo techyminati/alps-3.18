@@ -14,13 +14,16 @@
 #include "ddp_manager.h"
 #include "ddp_rdma.h"
 #include "ddp_ovl.h"
-#include "ddp_color.h"
 #include "ddp_log.h"
 #include "ddp_info.h"
 #include "mtkfb_fence.h"
 #include "primary_display.h"
 #include "mtk_disp_mgr.h"
 #include <mach/mt_clkmgr.h>
+
+#ifdef CONFIG_FOR_SOURCE_PQ
+#include "ddp_color.h"
+#endif
 /* #pragma GCC optimize("O0") */
 
 /* extern DDP_MODULE_DRIVER *ddp_modules_driver[DISP_MODULE_NUM]; */

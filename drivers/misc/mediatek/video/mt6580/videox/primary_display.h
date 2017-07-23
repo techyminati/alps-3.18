@@ -275,6 +275,7 @@ unsigned int _need_wait_esd_eof(void);
 unsigned int _need_register_eint(void);
 unsigned int _need_do_esd_check(void);
 
+unsigned long get_Assert_Layer_PA(void);
 int is_DAL_Enabled(void);
 int DAL_Clean(void);
 int DAL_Printf(const char *fmt, ...);

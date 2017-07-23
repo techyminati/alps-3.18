@@ -60,7 +60,8 @@ extern unsigned int gEnableUartLog;
 			dprec_logger_dump(log);				\
 		} else {						\
 			pr_debug("[DDP/"LOG_TAG"]"fmt, ##__VA_ARGS__);	\
-	} while (0)
+		}
+} while (0)
 
 #define DDPPRINT(fmt, ...)	pr_warn("[DDP/"LOG_TAG"]"fmt, ##__VA_ARGS__)
 
@@ -98,7 +99,7 @@ extern unsigned int gEnableUartLog;
 extern unsigned int gEnableUartLog;
 #define DDPMLOG(string, args...)  \
 	do {	\
-		dprec_logger_pr(DPREC_LOGGER_DEBUG, string, ##args); \
+		dprec_logger_pr(DPREC_LOGGER_FENCE, string, ##args); \
 		if (g_mobilelog) \
 			pr_debug("[DDP/"LOG_TAG"]"string, ##args); \
 	} while (0)
@@ -162,8 +163,11 @@ extern unsigned int gEnableUartLog;
 			scnprintf(log, 511, fmt, ##__VA_ARGS__);    \
 			dprec_logger_dump(log);             \
 		}                                       \
-		else                                    \
-			pr_debug("[DDP/"LOG_TAG"]"fmt, ##__VA_ARGS__);\
+		else {                                  \
+			dprec_logger_pr(DPREC_LOGGER_DUMP, fmt, ##__VA_ARGS__); \
+			if (g_mobilelog)					\
+				pr_debug("[DDP/"LOG_TAG"]"fmt, ##__VA_ARGS__);\
+		}										\
 	} while (0)
 
 #define DDPPRINT(fmt, ...)\

@@ -853,7 +853,7 @@ static void process_dbg_opt(const char *opt)
 			pr_err("DISP/%s: errno %d\n", __func__, ret);
 
 		if (addr) {
-			DISPMSG("Read register 0x%lx: 0x%08x\n", addr,
+			pr_debug("Read register 0x%lx: 0x%08x\n", addr,
 			       INREG32(addr));
 		} else {
 			return;
@@ -969,7 +969,7 @@ static void process_dbg_opt(const char *opt)
 				gCapturePriLayerDownX = 20;
 			if (gCapturePriLayerDownY == 0)
 				gCapturePriLayerDownY = 20;
-			DISPMSG("dump_layer En %d DownX %d DownY %d,Num %d",
+			pr_debug("dump_layer En %d DownX %d DownY %d,Num %d",
 			       gCapturePriLayerEnable, gCapturePriLayerDownX,
 			       gCapturePriLayerDownY, gCapturePriLayerNum);
 
@@ -977,7 +977,7 @@ static void process_dbg_opt(const char *opt)
 			gCapturePriLayerEnable = 0;
 			gCaptureWdmaLayerEnable = 0;
 			gCapturePriLayerNum = OVL_LAYER_NUM;
-			DISPMSG("dump_layer En %d\n", gCapturePriLayerEnable);
+			pr_debug("dump_layer En %d\n", gCapturePriLayerEnable);
 		}
 	} else if (0 == strncmp(opt, "fps:", 4)) {
 		if (0 == strncmp(opt + 4, "on", 2))
@@ -1011,7 +1011,7 @@ static void process_dbg_cmd(char *cmd)
 {
 	char *tok;
 
-	pr_debug("[mtkfb_dbg] %s\n", cmd);
+	pr_debug("DISP/DBG " "[mtkfb_dbg] %s\n", cmd);
 
 	while ((tok = strsep(&cmd, " ")) != NULL)
 		process_dbg_opt(tok);
@@ -1030,46 +1030,9 @@ static int debug_open(struct inode *inode, struct file *file)
 	return 0;
 }
 
-static char debug_buffer[4096 + DPREC_ERROR_LOG_BUFFER_LENGTH];
+static char debug_buffer[4096 + 30 * 16 * 1024];
 
-int debug_get_info(unsigned char *stringbuf, int buf_len)
-{
-	int n = 0;
-
-	DISPFUNC();
-
-	n += mtkfb_get_debug_state(stringbuf + n, buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += primary_display_get_debug_state(stringbuf + n, buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += disp_sync_get_debug_info(stringbuf + n, buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += dprec_logger_get_result_string_all(stringbuf + n, buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += primary_display_check_path(stringbuf + n, buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += dprec_logger_get_buf(DPREC_LOGGER_ERROR, stringbuf + n,
-				  buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += dprec_logger_get_buf(DPREC_LOGGER_FENCE, stringbuf + n,
-				  buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	n += dprec_logger_get_buf(DPREC_LOGGER_HWOP, stringbuf + n,
-				  buf_len - n);
-	DISPMSG("%s,%d, n=%d\n", __func__, __LINE__, n);
-
-	stringbuf[n++] = 0;
-	return n;
-}
-
-void debug_info_dump_to_DISPMSG(char *buf, int buf_len)
+void debug_info_dump_to_printk(char *buf, int buf_len)
 {
 	int i = 0;
 	int n = buf_len;
@@ -1078,16 +1041,38 @@ void debug_info_dump_to_DISPMSG(char *buf, int buf_len)
 		DISPMSG("%s", buf + i);
 }
 
-static ssize_t debug_read(struct file *file,
-			  char __user *ubuf, size_t count, loff_t *ppos)
+static ssize_t debug_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
 {
 	const int debug_bufmax = sizeof(debug_buffer) - 1;
-	int n = 0;
+	static int n;
+
+	/* Debugfs read only fetch 4096 byte each time, thus whole ringbuffer need massive
+	 * iteration. We only copy ringbuffer content to debugfs buffer at first time (*ppos = 0)
+	 */
+	if (*ppos != 0)
+		goto out;
 
 	DISPFUNC();
 
-	n += debug_get_info(debug_buffer + n, debug_bufmax - n);
-	/* debug_info_dump_to_DISPMSG(); */
+	n = mtkfb_get_debug_state(debug_buffer + n, debug_bufmax - n);
+
+	n += primary_display_get_debug_state(debug_buffer + n, debug_bufmax - n);
+
+	n += disp_sync_get_debug_info(debug_buffer + n, debug_bufmax - n);
+
+	n += dprec_logger_get_result_string_all(debug_buffer + n, debug_bufmax - n);
+
+	n += primary_display_check_path(debug_buffer + n, debug_bufmax - n);
+
+	n += dprec_logger_get_buf(DPREC_LOGGER_ERROR, debug_buffer + n, debug_bufmax - n);
+
+	n += dprec_logger_get_buf(DPREC_LOGGER_FENCE, debug_buffer + n, debug_bufmax - n);
+
+	n += dprec_logger_get_buf(DPREC_LOGGER_DUMP, debug_buffer + n, debug_bufmax - n);
+
+	n += dprec_logger_get_buf(DPREC_LOGGER_DEBUG, debug_buffer + n, debug_bufmax - n);
+
+out:
 	return simple_read_from_buffer(ubuf, count, ppos, debug_buffer, n);
 }
 
@@ -1132,7 +1117,7 @@ static ssize_t layer_debug_open(struct inode *inode, struct file *file)
 	    DISP_GetScreenWidth() * DISP_GetScreenHeight() * 2 + 32;
 	dbgopt->working_buf = (unsigned long)vmalloc(dbgopt->working_size);
 	if (dbgopt->working_buf == 0)
-		pr_debug("Vmalloc to get temp buffer failed\n");
+		pr_debug("DISP/DBG Vmalloc to get temp buffer failed\n");
 
 	return 0;
 }
@@ -1150,7 +1135,7 @@ static ssize_t layer_debug_write(struct file *file,
 	MTKFB_LAYER_DBG_OPTIONS *dbgopt =
 	    (MTKFB_LAYER_DBG_OPTIONS *) file->private_data;
 
-	pr_debug("mtkfb_layer%d write is not implemented yet\n",
+	pr_debug("DISP/DBG " "mtkfb_layer%d write is not implemented yet\n",
 		       dbgopt->layer_index);
 
 	return count;

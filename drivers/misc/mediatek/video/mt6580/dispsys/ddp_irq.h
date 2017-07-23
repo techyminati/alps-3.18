@@ -14,6 +14,10 @@ int disp_unregister_irq_callback(DDP_IRQ_CALLBACK cb);
 
 void disp_register_irq(unsigned int irq_num, char *device_name);
 int disp_init_irq(void);
+
+extern unsigned int mutex_start_irq_cnt;
+extern unsigned int mutex_done_irq_cnt;
+
 irqreturn_t disp_irq_handler(int irq, void *dev_id);
 
 #endif

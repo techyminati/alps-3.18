@@ -6,6 +6,8 @@
 #include "ddp_ovl.h"
 #include "ddp_wdma.h"
 #include "ddp_rdma.h"
+#include "ddp_irq.h"
+#include "primary_display.h"
 
 static char *ddp_signal_0(int bit)
 {
@@ -81,35 +83,27 @@ static char *ddp_signal_0(int bit)
 }
 
 
-static char *ddp_signal_1(int bit)
-{
-	/* ufod removed */
-	return "";
-}
-
-/* 1 means SMI dose not grant, maybe SMI hang */
-static int ddp_greq_check(int reg_val)
+static char *ddp_greq_check(int reg_val)
 {
 	if (reg_val & 0x3f)
-		DDPMSG("smi greq not grant module: ");
+		return "smi greq not grant module: ";
 	else
-		return 0;
+		return "N/A";
 
 	if (reg_val & 0x1)
-		DDPDUMP("disp_wdma1, ");
+		return  "disp_wdma1, ";
 	if (reg_val & 0x1)
-		DDPDUMP("disp_rdma1, ");
+		return "disp_rdma1, ";
 	if (reg_val & 0x1)
-		DDPDUMP("disp_ovl1, ");
+		return "disp_ovl1, ";
 	if (reg_val & 0x1)
-		DDPDUMP("disp_wdma0, ");
+		return "disp_wdma0, ";
 	if (reg_val & 0x1)
-		DDPDUMP("disp_rdma0, ");
+		return "disp_rdma0, ";
 	if (reg_val & 0x1)
-		DDPDUMP("disp_ovl0, ");
-	DDPDUMP("\n");
+		return "disp_ovl0, ";
 
-	return 0;
+	return "N/A";
 }
 
 static char *ddp_get_mutex_module_name(unsigned int bit)
@@ -167,7 +161,7 @@ char *ddp_get_fmt_name(DISP_MODULE_ENUM module, unsigned int fmt)
 		case 12:
 			return "nv12";
 		default:
-			DDPDUMP("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
+			DDPERR("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
 			return "unknown";
 		}
 	} else if (module == DISP_MODULE_OVL0) {
@@ -185,7 +179,7 @@ char *ddp_get_fmt_name(DISP_MODULE_ENUM module, unsigned int fmt)
 		case 5:
 			return "yuyv";
 		default:
-			DDPDUMP("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
+			DDPERR("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
 			return "unknown";
 		}
 	} else if (module == DISP_MODULE_RDMA0 || module == DISP_MODULE_RDMA1 || module == DISP_MODULE_RDMA2) {
@@ -204,7 +198,7 @@ char *ddp_get_fmt_name(DISP_MODULE_ENUM module, unsigned int fmt)
 		case 5:
 			return "yuyv";
 		default:
-			DDPDUMP("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
+			DDPERR("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
 			return "unknown";
 		}
 	} else if (module == DISP_MODULE_MUTEX) {
@@ -219,7 +213,7 @@ char *ddp_get_fmt_name(DISP_MODULE_ENUM module, unsigned int fmt)
 		case 3:
 			return "dpi";
 		default:
-			DDPDUMP("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
+			DDPERR("ddp_get_fmt_name, unknown fmt=%d, module=%d\n", fmt, module);
 			return "unknown";
 		}
 	} else {
@@ -350,6 +344,8 @@ static void mutex_dump_analysis(void)
 				}
 			}
 			DDPDUMP("%s)\n", mutex_module);
+			DDPDUMP("irq cnt: start=%d, end=%d\n", mutex_start_irq_cnt,
+				mutex_done_irq_cnt);
 		}
 	}
 }
@@ -504,32 +500,30 @@ static void mmsys_config_dump_analysis(void)
 		if ((valid0 & (1 << i)) == 0)
 			len = sprintf(pos, "%s:-", ddp_signal_0(i));
 		else
-			len = sprintf(pos, "%s:Valid,", ddp_signal_0(i));
+			len = sprintf(pos, "%s:V,", ddp_signal_0(i));
 
 		pos += len;
 		if ((ready0 & (1 << i)) == 0)
 			len = sprintf(pos, "-");
 		else
-			len = sprintf(pos, "Ready");
+			len = sprintf(pos, "R");
 
 		DDPDUMP("%s\n", clock_on);
 	}
-	if (0) {
-		pos = clock_on;
-		if ((valid1 & (1 << i)) == 0)
-			len = sprintf(pos, "%-26s:Not Valid,", ddp_signal_1(i));
-		else
-			len = sprintf(pos, "%-26s:    Valid,", ddp_signal_1(i));
 
-		pos += len;
-		if ((ready1 & (1 << i)) == 0)
-			len = sprintf(pos, "Not Ready");
-		else
-			len = sprintf(pos, "    Ready");
-		DDPDUMP("%s\n", clock_on);
+	DDPDUMP("%s\n", ddp_greq_check(greq));
+
+	/* AEE status dump */
+	{
+		if (isAEEEnabled == 0) {
+			DDPDUMP("isAEEEnabled=%d\n", isAEEEnabled);
+		} else {
+			DDPDUMP("isAEEEnabled=%d, O0L3=0x%x, AEE=0x%lx\n", isAEEEnabled,
+				DISP_REG_GET(DISP_REG_OVL_L3_ADDR), get_Assert_Layer_PA());
+			if (DISP_REG_GET(DISP_REG_OVL_L3_ADDR) != get_Assert_Layer_PA())
+				DDPDUMP("error: AEE enabled but O-L3 Addr wrong!\n");
+		}
 	}
-
-	ddp_greq_check(greq);
 }
 
 static void gamma_dump_reg(void)
@@ -768,17 +762,6 @@ static void dither_dump_analyze(void)
 	     (DISP_REG_GET(DISP_REG_DITHER_OUT_CNT) >> 16) & 0x1fff);
 }
 
-/*
-static void ufoe_dump_reg(void)
-{
-	DDPDUMP("==DISP UFOE REGS==\n");
-}
-
-static void ufoe_dump_analysis(void)
-{
-	DDPDUMP("==DISP UFOE ANALYSIS==\n");
-}
-*/
 
 static void dsi_dump_reg(DISP_MODULE_ENUM module)
 {
@@ -787,12 +770,12 @@ static void dsi_dump_reg(DISP_MODULE_ENUM module)
 	if (DISP_MODULE_DSI0) {
 		DDPDUMP("==DISP DSI0 REGS==\n");
 		for (i = 0; i < 25 * 16; i += 16) {
-			DDPDUMP("DSI0+%04x : 0x%08x  0x%08x  0x%08x  0x%08x\n", i,
+			pr_debug("DSI0+%04x : 0x%08x  0x%08x  0x%08x  0x%08x\n", i,
 			       INREG32(DISPSYS_DSI0_BASE + i), INREG32(DISPSYS_DSI0_BASE + i + 0x4),
 			       INREG32(DISPSYS_DSI0_BASE + i + 0x8),
 			       INREG32(DISPSYS_DSI0_BASE + i + 0xc));
 		}
-		DDPDUMP("DSI0 CMDQ+0x200 : 0x%08x  0x%08x  0x%08x  0x%08x\n",
+		pr_debug("DSI0 CMDQ+0x200 : 0x%08x  0x%08x  0x%08x  0x%08x\n",
 		       INREG32(DISPSYS_DSI0_BASE + 0x200), INREG32(DISPSYS_DSI0_BASE + 0x200 + 0x4),
 		       INREG32(DISPSYS_DSI0_BASE + 0x200 + 0x8),
 		       INREG32(DISPSYS_DSI0_BASE + 0x200 + 0xc));
@@ -875,7 +858,7 @@ int ddp_dump_reg(DISP_MODULE_ENUM module)
 		dither_dump_reg();
 		break;
 	default:
-		DDPDUMP("DDP error, dump_reg unknown module=%d\n", module);
+		DDPERR("DDP error, dump_reg unknown module=%d\n", module);
 	}
 	return 0;
 }
@@ -938,7 +921,7 @@ int ddp_dump_analysis(DISP_MODULE_ENUM module)
 		dither_dump_analyze();
 		break;
 	default:
-		DDPDUMP("DDP error, dump_analysis unknown module=%d\n", module);
+		DDPERR("DDP error, dump_analysis unknown module=%d\n", module);
 	}
 	return 0;
 }

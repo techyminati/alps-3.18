@@ -75,11 +75,10 @@ static inline void dbg_print(int level, const char *fmt, ...)
 			if (ind > MAX_DBG_INDENT_LEVEL)
 				ind = MAX_DBG_INDENT_LEVEL;
 
-			DISP_LOG_PRINT(ANDROID_LOG_INFO, "DBG", "%*s",
-				       ind * DBG_INDENT_SIZE, "");
+			pr_info("DISP/DBG " "%*s", ind * DBG_INDENT_SIZE, "");
 			va_start(args, fmt);
 			vsnprintf(dbg_buf, sizeof(dbg_buf), fmt, args);
-			DISP_LOG_PRINT(ANDROID_LOG_INFO, "DBG", dbg_buf);
+			pr_info("DISP/DBG " dbg_buf);
 			va_end(args);
 			spin_unlock_irqrestore(&dbg_spinlock, flags);
 		}
@@ -107,11 +106,10 @@ static inline void dbg_print(int level, const char *fmt, ...)
 
 #define MTKFB_DBG_EVT_MASK    (MTKFB_DBG_EVT_NONE)
 
-#define MSG(evt, fmt, args...)                              \
-	do {                                                    \
-		if ((MTKFB_DBG_EVT_##evt) & MTKFB_DBG_EVT_MASK) {   \
-			DISP_LOG_PRINT(ANDROID_LOG_INFO, "DBG", fmt, ##args);\
-		}                                                   \
+#define MSG(evt, fmt, args...)					\
+	do {							\
+		if ((MTKFB_DBG_EVT_##evt) & MTKFB_DBG_EVT_MASK)	\
+			pr_info("DISP/DBG " fmt, ##args);	\
 	} while (0)
 
 #define MSG_FUNC_ENTER(f)   MSG(FUNC, "<FB_ENTER>: %s\n", __func__)

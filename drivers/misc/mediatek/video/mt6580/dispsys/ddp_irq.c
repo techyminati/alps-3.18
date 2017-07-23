@@ -184,6 +184,8 @@ unsigned int rdma_start_irq_cnt[2] = { 0, 0 };
 unsigned int rdma_done_irq_cnt[2] = { 0, 0 };
 unsigned int rdma_underflow_irq_cnt[2] = { 0, 0 };
 unsigned int rdma_targetline_irq_cnt[2] = { 0, 0 };
+unsigned int mutex_start_irq_cnt = 0;
+unsigned int mutex_done_irq_cnt = 0;
 
 irqreturn_t disp_irq_handler(int irq, void *dev_id)
 {
@@ -365,11 +367,13 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 			for (mutexID = 0; mutexID < 5; mutexID++) {
 				if (reg_val & (0x1 << mutexID)) {
 					DDPIRQ("IRQ: mutex%d sof!\n", mutexID);
+					mutex_start_irq_cnt++;
 					MMProfileLogEx(ddp_mmp_get_events()->MUTEX_IRQ[index],
 						       MMProfileFlagPulse, reg_val, 0);
 				}
 				if (reg_val & (0x1 << (mutexID + DISP_MUTEX_TOTAL))) {
 					DDPIRQ("IRQ: mutex%d eof!\n", mutexID);
+					mutex_done_irq_cnt++;
 					MMProfileLogEx(ddp_mmp_get_events()->MUTEX_IRQ[index],
 						       MMProfileFlagPulse, reg_val, 1);
 				}
