@@ -1183,8 +1183,11 @@ static int set_primary_buffer(disp_session_input_config *input)
 
 		layer_id = input->config[i].layer_id;
 		if (layer_id >= OVL_LAYER_NUM) {
-			DISPERR("set_primary_buffer, invalid layer_id = %d!\n",
-				layer_id);
+			DISPERR("set_primary_buffer, invalid layer_id = %d!\n", layer_id);
+			continue;
+		}
+		if (layer_id == primary_display_get_option("ASSERT_LAYER") && is_DAL_Enabled()) {
+			DISPPR_FENCE("Skip L3/AEE_Layer, Due to AEE is enable now.\n");
 			continue;
 		}
 
