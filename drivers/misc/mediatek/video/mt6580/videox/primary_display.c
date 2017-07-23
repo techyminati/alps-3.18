@@ -1482,9 +1482,7 @@ static int _DC_switch_to_DL_fast(void)
 	ret = dpmgr_path_config(pgc->dpmgr_handle, data_config_dl, pgc->cmdq_handle_config);
 
 	/* use blocking flush to make sure all config is done, then stop/start trigger loop */
-
-	cmdqRecBackupUpdateSlot(pgc->cmdq_handle_config, pgc->rdma_buff_info, 0,
-				0);
+	cmdqRecBackupUpdateSlot(pgc->cmdq_handle_config, pgc->rdma_buff_info, 0, 0);
 
 	/* cmdqRecDumpCommand(pgc->cmdq_handle_config); */
 	_cmdq_set_config_handle_dirty();
@@ -1930,6 +1928,9 @@ static int _convert_disp_input_to_ovl(OVL_CONFIG_STRUCT *dst,
 			       (unsigned int *)(&Bpp), (unsigned int *)(&bpp));
 
 	dst->addr = (unsigned long)src->src_phy_addr;
+	if ((unsigned int long)src->src_phy_addr == 0)
+		DISPMSG("_convert_disp_input_to_ovl, src->src_phy_addr=0x%08lx\n",
+			(unsigned int long)src->src_phy_addr);
 	dst->vaddr = (unsigned long)src->src_base_addr;
 	dst->src_x = src->src_offset_x;
 	dst->src_y = src->src_offset_y;
@@ -4743,9 +4744,9 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		sw_only = 1;
 	}
 
-	pr_debug("primary display will switch from %s to %s\n",
+	/* pr_debug("primary display will switch from %s to %s\n",
 		session_mode_spy(pgc->session_mode),
-		session_mode_spy(sess_mode));
+		session_mode_spy(sess_mode)); */
 
 	if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
 	    && sess_mode == DISP_SESSION_DECOUPLE_MODE) {
@@ -4760,6 +4761,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MODE
 		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
 		/* dc to dl */
+		pr_debug("primary display DC_switch_to_DL_fast\n");
 		DC_switch_to_DL_fast(sw_only);
 		pgc->session_mode = sess_mode;
 		DISPMSG("primary display is %s mode now\n",
@@ -4800,7 +4802,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE
 		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
 		/*dc mirror  to dl */
-		DISPMSG("primary display will DC_switch_to_DL_fast\n");
+		pr_debug("primary display DC_Mirror_switch_to_DL_fast\n");
 		DC_switch_to_DL_fast(sw_only);
 		pgc->session_mode = sess_mode;
 		DISPMSG("primary display is %s mode now\n",
@@ -4919,7 +4921,7 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 
 void primary_display_idlemgr_leave_idle(int need_lock)
 {
-	/* DISPFUNC(); */
+	DISPFUNC();
 	if (primary_display_is_video_mode())
 		spm_enable_sodi(0);
 

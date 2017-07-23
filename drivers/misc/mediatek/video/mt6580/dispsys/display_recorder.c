@@ -1107,8 +1107,9 @@ static struct logger_buffer dprec_logger_buffer[DPREC_LOGGER_PR_NUM] = {
 	{dump_buffer, 0, 0, DUMP_BUFFER_COUNT, LOGGER_BUFFER_SIZE},
 };
 
-static DPREC_LOGGER_PR_TYPE logger_type;
-static int logger_type_offset;
+DPREC_LOGGER_PR_TYPE log_type = DPREC_LOGGER_ERROR;
+unsigned int type_offset = 0;
+unsigned int type_buffer_len = 0;
 
 void get_disp_err_buffer(unsigned long *addr, unsigned long *size, unsigned long *start)
 {
@@ -1143,90 +1144,118 @@ int panic_dump_disp_log(void *type, unsigned char *stringbuf, size_t size)
 	int fill_size = 0;
 	char *buffer_addr = NULL;
 
-	type = (void *) &logger_type;
-	pr_debug("input dump buffer type=%d, size=%d, offset=%d\n",
-		 (int)logger_type,
+	type = (void *) &log_type;
+	pr_debug("AEE input dump buffer type=%d, size=%d, offset=%d\n",
+		 (int)log_type,
 		 (int)size,
-		 (int)logger_type_offset);
-
-	if (logger_type >= DPREC_LOGGER_PR_NUM)
+		 (int)type_offset);
+	if (stringbuf == NULL) {
+		pr_err("AEE input dump buffer *stringbuf is NULL\n");
 		return 0;
-	else if (logger_type == DPREC_LOGGER_ERROR) {
+	}
+	if ((log_type == DPREC_LOGGER_ERROR) && (0 == strlen((char *)err_buffer))) {
+		pr_debug("err_buffer is NULL, skip it\n");
+		log_type = DPREC_LOGGER_FENCE;
+	}
+	if ((log_type == DPREC_LOGGER_FENCE) && (0 == strlen((char *)fence_buffer))) {
+		pr_debug("fence_buffer is NULL, skip it\n");
+		log_type = DPREC_LOGGER_DEBUG;
+	}
+	if ((log_type == DPREC_LOGGER_DEBUG) && (0 == strlen((char *)dbg_buffer))) {
+		pr_debug("dbg_buffer is NULL, skip it\n");
+		log_type = DPREC_LOGGER_DUMP;
+	}
+	if ((log_type == DPREC_LOGGER_DUMP) && (0 == strlen((char *)dump_buffer))) {
+		pr_debug("dump_buffer is NULL, skip it\n");
+		log_type = DPREC_LOGGER_PR_NUM;
+	}
+
+	if (log_type >= DPREC_LOGGER_PR_NUM) {
+		pr_debug("AEE dump log_type is DPREC_LOGGER_PR_NUM, And it means End.\n");
+		log_type = DPREC_LOGGER_ERROR;
+		type_offset = 0;
+		return 0;
+	} else if (log_type == DPREC_LOGGER_ERROR) {
 		buffer_addr = (char *)err_buffer;
-		if (size < ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		type_buffer_len = strlen((char *)buffer_addr);
+		if (size < type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
 					       size,
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset += fill_size;
+					       (char *)(buffer_addr + type_offset));
+			type_offset += fill_size;
 			return size;
-		} else if (size >= ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		} else if (size >= type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
-					       (ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       (ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - type_offset),
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset = 0;
-			logger_type = DPREC_LOGGER_FENCE;
+					       (char *)(buffer_addr + type_offset));
+			type_offset = 0;
+			log_type = DPREC_LOGGER_FENCE;
 			return size;
 		}
-	} else if (logger_type == DPREC_LOGGER_FENCE) {
+	} else if (log_type == DPREC_LOGGER_FENCE) {
 		buffer_addr = (char *)fence_buffer;
-		if (size < FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		type_buffer_len = strlen((char *)buffer_addr);
+		if (size < type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
 					       size,
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset += fill_size;
+					       (char *)(buffer_addr + type_offset));
+			type_offset += fill_size;
 			return size;
-		} else if (size >= FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		} else if (size >= type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
-					       (FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       (FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - type_offset),
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset = 0;
-			logger_type = DPREC_LOGGER_DEBUG;
+					       (char *)(buffer_addr + type_offset));
+			type_offset = 0;
+			log_type = DPREC_LOGGER_DEBUG;
 			return size;
 		}
-	} else if (logger_type == DPREC_LOGGER_DEBUG) {
+	} else if (log_type == DPREC_LOGGER_DEBUG) {
 		buffer_addr = (char *)dbg_buffer;
-		if (size < DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		type_buffer_len = strlen((char *)buffer_addr);
+		if (size < type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
 					       size,
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset += fill_size;
+					       (char *)(buffer_addr + type_offset));
+			type_offset += fill_size;
 			return size;
-		} else if (size >= DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		} else if (size >= type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
-					       (DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       (DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - type_offset),
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset = 0;
-			logger_type = DPREC_LOGGER_DUMP;
+					       (char *)(buffer_addr + type_offset));
+			type_offset = 0;
+			log_type = DPREC_LOGGER_DUMP;
 			return size;
 		}
-	} else if (logger_type == DPREC_LOGGER_DUMP) {
+	} else if (log_type == DPREC_LOGGER_DUMP) {
 		buffer_addr = (char *)dump_buffer;
-		if (size < DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		type_buffer_len = strlen((char *)buffer_addr);
+		if (size < type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
 					       size,
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset += fill_size;
+					       (char *)(buffer_addr + type_offset));
+			type_offset += fill_size;
 			return size;
-		} else if (size >= DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+		} else if (size >= type_buffer_len - type_offset) {
 			fill_size += scnprintf(stringbuf,
-					       (DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       (DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - type_offset),
 					       "%s",
-					       (char *)(buffer_addr + logger_type_offset));
-			logger_type_offset = 0;
-			logger_type = DPREC_LOGGER_ERROR;
-			return 0;
+					       (char *)(buffer_addr + type_offset));
+			type_offset = 0;
+			log_type = DPREC_LOGGER_PR_NUM;
+			return size;
 		}
 	} else {
 		pr_debug("there is no this input dump buffer type\n");
 		return 0;
 	}
+
 	return 0;
 }
 
