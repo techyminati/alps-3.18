@@ -562,7 +562,7 @@ static int __init arch_timer_register(void)
 					 "arch_timer", arch_timer_evt);
 	} else {
 /* When TEE is enabled, change to use non-secure local timer */
-#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT)
+#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT) || defined(CONFIG_TRUSTY)
 		ppi = arch_timer_ppi[PHYS_NONSECURE_PPI];	/* GIC_PPI_NS_PRIVATE_TIMER; */
 #else
 		ppi = arch_timer_ppi[PHYS_SECURE_PPI];	/* GIC_PPI_PRIVATE_TIMER; */
