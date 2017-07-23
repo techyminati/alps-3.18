@@ -44,15 +44,15 @@
 #include <linux/of_address.h>
 #endif
 
-#include <mach/mt_gpio.h>
-#include <mach/eint.h>
-#include <mach/mt6605.h>
+/* #include <mach/mt_gpio.h> */
+/* #include <mach/eint.h> */
+/* #include <mach/mt6605.h> */
 
 #ifndef CONFIG_MTK_FPGA
 #include <mach/mt_clkbuf_ctl.h>	/*  for clock buffer */
 #endif
 
-#include <cust_gpio_usage.h>
+/* #include <cust_gpio_usage.h> */
 /* #include <cust_eint.h> */
 /* #include <cust_i2c.h>  */
 
@@ -98,11 +98,29 @@ enum {
 	MTK_NFC_PULL_INVALID,
 };
 
+enum {
+	MTK_NFC_GPIO_DIR_IN = 0x0,
+	MTK_NFC_GPIO_DIR_OUT,
+	MTK_NFC_GPIO_DIR_INVALID,
+};
+
 /*****************************************************************************
  * Global Variable
  *****************************************************************************/
 struct mt6605_dev *mt6605_dev_ptr = NULL;
 struct mt6605_dev _gmt6605_dev;
+
+#if !defined(CONFIG_MTK_LEGACY)
+struct platform_device *nfc_plt_dev = NULL;
+struct pinctrl *gpctrl = NULL;
+struct pinctrl_state *st_ven_h = NULL;
+struct pinctrl_state *st_ven_l = NULL;
+struct pinctrl_state *st_rst_h = NULL;
+struct pinctrl_state *st_rst_l = NULL;
+struct pinctrl_state *st_eint_h = NULL;
+struct pinctrl_state *st_eint_l = NULL;
+struct pinctrl_state *st_irq_init = NULL;
+#endif
 
 /* static struct i2c_board_info nfc_board_info __initdata = */
 /*    { I2C_BOARD_INFO(I2C_ID_NAME, I2C_NFC_SLAVE_7_BIT_ADDR) }; */
@@ -141,6 +159,13 @@ static irqreturn_t mt6605_dev_irq_handler(int irq, void *data); /* NFC IRQ handl
 
 /* static void mt6605_disable_irq(struct mt6605_dev *mt6605_dev); */
 /* extern void mt_eint_soft_set(unsigned int eint_num); */
+#if !defined(CONFIG_MTK_LEGACY)
+/* static int mt_nfc_pinctrl_init(struct platform_device *pdev); */
+static int mt_nfc_pinctrl_select(struct pinctrl *p, struct pinctrl_state *s);
+/* static int mt_nfc_gpio_init(void); */
+#endif
+static int mt_nfc_get_gpio_value(int gpio_num);
+static int mt_nfc_get_gpio_dir(int gpio_num);
 
 /*****************************************************************************
  * Data Structure
@@ -188,14 +213,22 @@ static struct i2c_driver mt6605_dev_driver = {.id_table = mt6605_id, .probe =
 #endif
 	}, };
 
-static struct mt6605_i2c_platform_data mt6605_platform_data = {.irq_gpio =
-		GPIO_IRQ_NFC_PIN, .ven_gpio = GPIO_NFC_VENB_PIN, .sysrstb_gpio =
-		GPIO_NFC_RST_PIN, .eint_gpio = GPIO_NFC_EINT_PIN, };
+#if !defined(CONFIG_MTK_LEGACY)
+struct mt6605_i2c_platform_data mt6605_platform_data;
+#else
+static struct mt6605_i2c_platform_data mt6605_platform_data = {
+.irq_gpio = GPIO_IRQ_NFC_PIN,
+.ven_gpio = GPIO_NFC_VENB_PIN,
+.sysrstb_gpio = GPIO_NFC_RST_PIN,
+.eint_gpio = GPIO_NFC_EINT_PIN,
+};
+#endif
 
 static const struct file_operations mt6605_dev_fops = {.owner = THIS_MODULE,
-		.llseek = no_llseek, .read = mt6605_dev_read, .write =
-				mt6605_dev_write, .open = mt6605_dev_open,
-		.unlocked_ioctl = mt6605_dev_unlocked_ioctl, };
+.llseek = no_llseek, .read = mt6605_dev_read,
+.write = mt6605_dev_write, .open = mt6605_dev_open,
+.unlocked_ioctl = mt6605_dev_unlocked_ioctl,
+};
 
 /*****************************************************************************
  * Extern Area
@@ -280,7 +313,7 @@ static int mt6605_probe(struct i2c_client *client,
 		pr_err("%s : need I2C_FUNC_I2C\n", __func__);
 		return -ENODEV;
 	}
-
+#if defined(CONFIG_MTK_LEGACY)
 	mt_set_gpio_mode(platform_data->irq_gpio, GPIO_IRQ_NFC_PIN_M_EINT);
 	mt_set_gpio_dir(platform_data->irq_gpio, GPIO_DIR_IN);
 	mt_set_gpio_pull_enable(platform_data->irq_gpio, GPIO_PULL_ENABLE);
@@ -308,6 +341,8 @@ static int mt6605_probe(struct i2c_client *client,
 	_gmt6605_dev.ven_gpio = platform_data->ven_gpio;
 	_gmt6605_dev.sysrstb_gpio = platform_data->sysrstb_gpio;
 	_gmt6605_dev.eint_gpio = platform_data->eint_gpio;
+#endif
+
 	_gmt6605_dev.client = client;
 
 	/* init mutex and queues */
@@ -455,10 +490,14 @@ static int mt6605_remove(struct i2c_client *client)
 	free_irq(nfc_irq, &_gmt6605_dev);
 	misc_deregister(&_gmt6605_dev.mt6605_device);
 	mutex_destroy(&_gmt6605_dev.read_mutex);
+
+#if defined(CONFIG_MTK_LEGACY)
 	gpio_free(_gmt6605_dev.irq_gpio);
 	gpio_free(_gmt6605_dev.ven_gpio);
 	gpio_free(_gmt6605_dev.sysrstb_gpio);
 	gpio_free(_gmt6605_dev.eint_gpio);
+#endif
+
 	/* kfree(mt6605_dev); */
 
 	return 0;
@@ -513,7 +552,7 @@ static ssize_t mt6605_dev_read(struct file *filp, char __user *buf,
 	if (count > MAX_BUFFER_SIZE)
 		count = MAX_BUFFER_SIZE;
 
-	if (!mt_get_gpio_in(mt6605_dev->irq_gpio)) {
+	if (!mt_nfc_get_gpio_value(mt6605_dev->irq_gpio)) {
 		if (filp->f_flags & O_NONBLOCK) {
 			ret = -EAGAIN;
 			pr_debug("%s : goto fail.\n", __func__);
@@ -539,19 +578,20 @@ static ssize_t mt6605_dev_read(struct file *filp, char __user *buf,
 		/*                mt_get_gpio_in(mt6605_dev->irq_gpio)); */
 
 		mt6605_enable_irq(nfc_irq); /* enable irq */
-
+/* 2015/06/11 reduce print
 		pr_debug("%s : enable_irq %d, irq status=%d\n",
-				__func__,
-				nfc_irq, mt_get_gpio_in(mt6605_dev->irq_gpio));
-
+			 __func__,
+			 nfc_irq, mt_nfc_get_gpio_value(mt6605_dev->irq_gpio));
+*/
 		ret = wait_event_interruptible(mt6605_dev->read_wq,
-				(mt_get_gpio_in
+				(mt_nfc_get_gpio_value
 						(mt6605_dev->irq_gpio)
 						|| forceExitBlockingRead));
-
+/* 2015/06/11 reduce print
 		pr_debug("%s : wait_event_interruptible ret=%d,irq status=%d\n",
-				__func__, ret, mt_get_gpio_in(mt6605_dev->irq_gpio));
-
+			 __func__, ret,
+			 mt_nfc_get_gpio_value(mt6605_dev->irq_gpio));
+*/
 		if (ret || forceExitBlockingRead) {
 			pr_debug("%s : goto fail\n", __func__);
 			mutex_lock(&mt6605_dev->read_mutex);
@@ -580,10 +620,10 @@ static ssize_t mt6605_dev_read(struct file *filp, char __user *buf,
 			count);
 
 	/* mutex_unlock(&mt6605_dev->read_mutex); */
-
+/*2015/0611 reduce print
 	pr_debug("%s : i2c_master_recv returned=%d, irq status=%d\n", __func__,
 			ret, mt_get_gpio_in(mt6605_dev->irq_gpio));
-
+*/
 	if (ret < 0) {
 		pr_debug("%s: i2c_master_recv returned %d\n", __func__, ret);
 		return ret;
@@ -702,13 +742,13 @@ static int mt6605_dev_open(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd,
-		unsigned long arg)
+static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 {
 
 	struct mt6605_dev *mt6605_dev = filp->private_data;
 	int result = 0;
-	int gpio_dir, gpio_num, tmp_gpio;
+	int gpio_dir, tmp_gpio;
+	int gpio_num = 0;
 
 	pr_debug("mt6605_dev_unlocked_ioctl: cmd=0x%04x,arg=0x%04lx .\n", cmd,
 			arg);
@@ -725,10 +765,14 @@ static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd,
 		struct device_node *node;
 		int ret;
 
+#if !defined(CONFIG_MTK_LEGACY)
+		mt_nfc_pinctrl_select(gpctrl, st_irq_init);
+#else
 		mt_set_gpio_mode(mt6605_dev->irq_gpio, GPIO_IRQ_NFC_PIN_M_EINT);
 		mt_set_gpio_dir(mt6605_dev->irq_gpio, GPIO_DIR_IN);
 		mt_set_gpio_pull_enable(mt6605_dev->irq_gpio, GPIO_PULL_ENABLE);
 		mt_set_gpio_pull_select(mt6605_dev->irq_gpio, GPIO_PULL_DOWN);
+#endif
 
 		/* mt_eint_set_hw_debounce(CUST_EINT_IRQ_NFC_NUM,*/
 		/* CUST_EINT_IRQ_NFC_DEBOUNCE_CN); */
@@ -829,8 +873,8 @@ static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd,
 			return fgNfcChip;
 		case MTK_NFC_IOCTL_CMD_READ_DATA:
 			pr_debug("Call mt6605_dev_irq_handler. irq=%d.\n",
-					mt_get_gpio_in(mt6605_dev->irq_gpio));
-			if (mt_get_gpio_in(mt6605_dev->irq_gpio))
+					mt_nfc_get_gpio_value(mt6605_dev->irq_gpio));
+			if (mt_nfc_get_gpio_value(mt6605_dev->irq_gpio))
 				mt6605_dev_irq_handler(nfc_irq, NULL); /* need check */
 
 			break;
@@ -843,13 +887,13 @@ static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd,
 
 	if (result != MTK_NFC_PULL_INVALID) {
 		if (cmd == MTK_NFC_IOCTL_READ) {
-			gpio_dir = mt_get_gpio_dir(gpio_num);
-			if ((gpio_dir == GPIO_DIR_IN)
+			result = mt_nfc_get_gpio_value(gpio_num);
+			/*if ((gpio_dir == GPIO_DIR_IN)
 					|| (gpio_dir == GPIO_DIR_OUT)) {
 				result = mt_get_gpio_in(gpio_num);
 			} else {
 				result = MTK_NFC_PULL_INVALID;
-			}
+			}*/
 			/*  error handler for eint_registration abnormal case: */
 			if (tmp_gpio == MTK_NFC_GPIO_IRQ && result == 0x01) {
 				pr_debug(
@@ -858,17 +902,64 @@ static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd,
 			}
 
 		} else if (cmd == MTK_NFC_IOCTL_WRITE) {
-			gpio_dir = mt_get_gpio_dir(gpio_num);
+			gpio_dir = mt_nfc_get_gpio_dir(gpio_num);
 
-			if (gpio_dir == GPIO_DIR_OUT) {
+			if (gpio_dir == MTK_NFC_GPIO_DIR_OUT) {
 				int gpio_pol = (arg & 0x00FF);
 
 				if (gpio_pol == MTK_NFC_PULL_LOW) {
-					result = mt_set_gpio_out(gpio_num,
-							GPIO_OUT_ZERO);
+#if !defined(CONFIG_MTK_LEGACY)
+					switch (tmp_gpio) {
+					case MTK_NFC_GPIO_EN_B:
+						result = mt_nfc_pinctrl_select(gpctrl, st_ven_l);
+						break;
+
+					case MTK_NFC_GPIO_SYSRST_B:
+						result = mt_nfc_pinctrl_select(gpctrl, st_rst_l);
+						break;
+
+					case MTK_NFC_GPIO_EINT:
+						result = mt_nfc_pinctrl_select(gpctrl, st_eint_l);
+						break;
+
+					case MTK_NFC_GPIO_IRQ:
+						pr_debug("%s : IRQ cannot set.\n", __func__);
+						break;
+					default:
+						pr_debug("%s : default case.\n", __func__);
+						break;
+					}
+#else
+					result = mt_set_gpio_out(gpio_num, GPIO_OUT_ZERO);
+					pr_debug("%s : call mtk legacy.\n", __func__);
+#endif
 				} else if (gpio_pol == MTK_NFC_PULL_HIGH) {
-					result = mt_set_gpio_out(gpio_num,
-							GPIO_OUT_ONE);
+#if !defined(CONFIG_MTK_LEGACY)
+					switch (tmp_gpio) {
+					case MTK_NFC_GPIO_EN_B:
+						result = mt_nfc_pinctrl_select(gpctrl, st_ven_h);
+						break;
+
+					case MTK_NFC_GPIO_SYSRST_B:
+						result = mt_nfc_pinctrl_select(gpctrl, st_rst_h);
+						break;
+
+					case MTK_NFC_GPIO_EINT:
+						result = mt_nfc_pinctrl_select(gpctrl, st_eint_h);
+						break;
+
+					case MTK_NFC_GPIO_IRQ:
+						pr_debug("%s : IRQ cannot pull.\n", __func__);
+						break;
+
+					default:
+						pr_debug("%s : default case.\n", __func__);
+						break;
+				}
+#else
+					result = mt_set_gpio_out(gpio_num, GPIO_OUT_ONE);
+					pr_debug("%s : call mtk legacy.\n", __func__);
+#endif
 				}
 			} else {
 				result = MTK_NFC_PULL_INVALID;
@@ -881,6 +972,52 @@ static long mt6605_dev_unlocked_ioctl(struct file *filp, unsigned int cmd,
 	pr_debug("mt6605_dev_unlocked_ioctl : result=%d\n", result);
 
 	return result;
+}
+
+#if !defined(CONFIG_MTK_LEGACY)
+static int mt_nfc_pinctrl_select(struct pinctrl *p, struct pinctrl_state *s)
+{
+	int ret = 0;
+
+	if (p != NULL && s != NULL) {
+		ret = pinctrl_select_state(p, s);
+	} else {
+		/* pr_debug("%s : pinctrl_select err\n", __func__); */
+		ret = -1;
+	}
+	return ret;
+}
+#endif
+
+static int mt_nfc_get_gpio_value(int gpio_num)
+{
+	int value = 0;
+
+	if (mt_nfc_get_gpio_dir(gpio_num) != MTK_NFC_GPIO_DIR_INVALID) {
+#if !defined(CONFIG_MTK_LEGACY)
+		value = __gpio_get_value(gpio_num);
+#else
+		value = mt_get_gpio_in(gpio_num);
+#endif
+	}
+
+	return value;
+}
+
+static int mt_nfc_get_gpio_dir(int gpio_num)
+{
+	if (gpio_num == mt6605_platform_data.irq_gpio) {
+		return MTK_NFC_GPIO_DIR_IN;	/* input */
+
+	} else if ((gpio_num == mt6605_platform_data.ven_gpio) ||
+		   (gpio_num == mt6605_platform_data.sysrstb_gpio) ||
+		   (gpio_num == mt6605_platform_data.eint_gpio)) {
+		return MTK_NFC_GPIO_DIR_OUT;	/* output */
+
+	} else {
+		return MTK_NFC_GPIO_DIR_INVALID;
+
+	}
 }
 
 /* return 0, success; return <0, fail
@@ -917,7 +1054,11 @@ int inform_nfc_vsim_change(int md_id, int md_state, int vsim_state)
 	memcpy(I2CDMAWriteBuf, send_data, send_bytes);
 
 	/* eint pull high */
+#if !defined(CONFIG_MTK_LEGACY)
+	mt_nfc_pinctrl_select(gpctrl, st_eint_h);
+#else
 	ret = mt_set_gpio_out(mt6605_platform_data.eint_gpio, GPIO_OUT_ONE);
+#endif
 
 	/* sleep 5ms */
 	/*msleep(5);*/
@@ -942,8 +1083,12 @@ int inform_nfc_vsim_change(int md_id, int md_state, int vsim_state)
 		usleep_range(1800, 2000);
 	}
 	/* eint pull low */
-	ret = mt_set_gpio_out(mt6605_platform_data.eint_gpio, GPIO_OUT_ZERO);
 
+#if !defined(CONFIG_MTK_LEGACY)
+	mt_nfc_pinctrl_select(gpctrl, st_eint_l);
+#else
+	ret = mt_set_gpio_out(mt6605_platform_data.eint_gpio, GPIO_OUT_ZERO);
+#endif
 	return 0;
 }
 
