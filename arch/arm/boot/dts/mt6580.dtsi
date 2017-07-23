@@ -369,6 +369,11 @@
 			reg = <0x1020000 0x200>;
 		};
 
+		mcucfg: mcucfg@10200000 {
+			compatible = "mediatek,mt6580-mcucfg";
+			reg = <0x10200000 0x200>;
+		};
+
 		AES@0x1000E000 {
 			compatible = "mediatek,AES";
 			reg = <0x1000E000 0x1000>;
