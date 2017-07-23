@@ -26,8 +26,6 @@
 #include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <asm/atomic.h>
-#include <asm/system.h>
-#include <linux/xlog.h>
 
 #include "kd_camera_hw.h"
 #include "kd_imgsensor.h"
@@ -40,7 +38,7 @@
 //#define LOG_WRN(format, args...) pr_warn(PFX "[%S] " format, __FUNCTION__, ##args)
 //#defineLOG_INF(format, args...) pr_info(PFX "[%s] " format, __FUNCTION__, ##args)
 //#define LOG_DBG(format, args...) pr_debug(PFX "[%S] " format, __FUNCTION__, ##args)
-#define LOG_INF(format, args...)	pr_info( PFX "[%s] " format, __FUNCTION__, ##args)
+#define LOG_INF(format, args...)	pr_debug( PFX "[%s] " format, __FUNCTION__, ##args)
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
@@ -129,8 +127,8 @@ static imgsensor_info_struct imgsensor_info = {
 	.ihdr_le_firstline = 0,  //1,le first ; 0, se first
 	.sensor_mode_num = 5,	  //support sensor mode num
 	
-	.cap_delay_frame = 2,		//enter capture delay frame num
-	.pre_delay_frame = 2, 		//enter preview delay frame num
+	.cap_delay_frame = 1,		//enter capture delay frame num
+	.pre_delay_frame = 1, 		//enter preview delay frame num
 	.video_delay_frame = 2,		//enter video delay frame num
 	.hs_video_delay_frame = 2,	//enter high speed video  delay frame num
 	.slim_video_delay_frame = 2,//enter slim video delay frame num
@@ -143,6 +141,7 @@ static imgsensor_info_struct imgsensor_info = {
 	.mclk = 24,//mclk value, suggest 24 or 26 for 24Mhz or 26Mhz
 	.mipi_lane_num = SENSOR_MIPI_2_LANE,//mipi lane num
 	.i2c_addr_table = {0x6c, 0x20, 0xff},//record sensor support all write id addr, only supprt 4must end with 0xff
+	.i2c_speed = 400,
 };
 
 
@@ -176,6 +175,7 @@ static kal_uint16 read_cmos_sensor(kal_uint32 addr)
 	kal_uint16 get_byte=0;
 
 	char pu_send_cmd[2] = {(char)(addr >> 8), (char)(addr & 0xFF) };
+	kdSetI2CSpeed(imgsensor_info.i2c_speed);
 	iReadRegI2C(pu_send_cmd, 2, (u8*)&get_byte, 1, imgsensor.i2c_write_id);
 
 	return get_byte;
@@ -184,11 +184,12 @@ static kal_uint16 read_cmos_sensor(kal_uint32 addr)
 static void write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
 {
 	char pu_send_cmd[3] = {(char)(addr >> 8), (char)(addr & 0xFF), (char)(para & 0xFF)};
+	kdSetI2CSpeed(imgsensor_info.i2c_speed);
 	iWriteRegI2C(pu_send_cmd, 3, imgsensor.i2c_write_id);
 }
 
 
-static void set_dummy()
+static void set_dummy(void)
 {
 	LOG_INF("dummyline = %d, dummypixels = %d \n", imgsensor.dummy_line, imgsensor.dummy_pixel);
 	/* you can set dummy by imgsensor.dummy_line and imgsensor.dummy_pixel, or you can set dummy by imgsensor.frame_length and imgsensor.line_length */
@@ -444,11 +445,11 @@ static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gai
 
 
 
-static void set_mirror_flip(kal_uint8 image_mirror)
+/*static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);
 
-	/********************************************************
+	********************************************************
 	   *
 	   *   0x3820[2] ISP Vertical flip
 	   *   0x3820[1] Sensor Vertical flip
@@ -458,7 +459,7 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 	   *
 	   *   ISP and Sensor flip or mirror register bit should be the same!!
 	   *
-	   ********************************************************/
+	   ********************************************************
 	
 	switch (image_mirror) {
 		case IMAGE_NORMAL:
@@ -481,7 +482,7 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 			LOG_INF("Error image_mirror setting\n");
 	}
 
-}
+}*/
 
 /*************************************************************************
 * FUNCTION
@@ -507,7 +508,7 @@ static void night_mode(kal_bool enable)
 static void sensor_init(void)
 {
 	LOG_INF("OV5671_Sensor_Init_2lane E\n");
-	
+
 	write_cmos_sensor(0x0103,0x01);// ; software reset
 	mDELAY(10);
 	write_cmos_sensor(0x0100, 0x00);// ; software standby
@@ -990,7 +991,7 @@ static void normal_video_setting(kal_uint16 currefps)
 	
 	write_cmos_sensor(0x0100, 0x01);  // 	
 }
-static void hs_video_setting()
+static void hs_video_setting(void)
 { 
 	LOG_INF("hs_video_setting enter!\n");
 
@@ -1068,7 +1069,7 @@ static void hs_video_setting()
 }
 
 
-static void slim_video_setting()
+static void slim_video_setting(void)
 {
 	LOG_INF("slim_video_setting enter!\n");
 	
