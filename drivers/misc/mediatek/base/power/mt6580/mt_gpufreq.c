@@ -4,6 +4,7 @@
  * the Free Software Foundation; either version 2 of the License, or
  * (at your option) any later version.
  */
+#define GPUDVFS_WORKAROUND_FOR_GIT	1	/* TODO: remove this! */
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -14,7 +15,6 @@
 #include <linux/proc_fs.h>
 #include <linux/miscdevice.h>
 #include <linux/platform_device.h>
-#include <linux/earlysuspend.h>
 #include <linux/spinlock.h>
 #include <linux/kthread.h>
 #include <linux/hrtimer.h>
@@ -34,17 +34,15 @@
 
 #include <asm/uaccess.h>
 
-#include "mach/mt_typedefs.h"
 #include "mach/mt_clkmgr.h"
-#include "mach/mt_cpufreq.h"
-#include "mach/mt_gpufreq.h"
-#include "mach/sync_write.h"
+#include "mt_cpufreq.h"
+#include "mt_gpufreq.h"
+#include "sync_write.h"
 /* #include "mach/mt_freqhopping.h" */
 /* #include "mach/mt_static_power.h" */
+#ifndef GPUDVFS_WORKAROUND_FOR_GIT
 #include "mach/mt_thermal.h"
-#include "mach/upmu_common.h"
-#include "mach/upmu_sw.h"
-#include "mach/upmu_hw.h"
+#endif
 
 
 /*
@@ -302,7 +300,7 @@ static void _mt_gpufreq_aee_init(void)
  ***************************************/
 static unsigned int _mt_gpufreq_get_dvfs_table_type(void)
 {
-#if 1
+#if GPUDVFS_WORKAROUND_FOR_GIT
 	return 0;
 #else
 	unsigned int type = 0;
@@ -615,10 +613,14 @@ static void _mt_update_gpufreqs_power_table(void)
 		gpufreq_warn("@%s: GPU DVFS not ready\n", __func__);
 		return;
 	}
+#ifdef GPUDVFS_WORKAROUND_FOR_GIT
+	temp = 40;
+#else
 #ifdef CONFIG_THERMAL
 	temp = get_immediate_gpu_wrap() / 1000;
 #else
 	temp = 40;
+#endif
 #endif
 
 	gpufreq_dbg("@%s, temp = %d\n", __func__, temp);
@@ -653,10 +655,14 @@ static void _mt_setup_gpufreqs_power_table(int num)
 		/* gpufreq_err("GPU power table memory allocation fail\n"); */
 		return;
 	}
+#ifdef GPUDVFS_WORKAROUND_FOR_GIT
+	temp = 40;
+#else
 #ifdef CONFIG_THERMAL
 	temp = get_immediate_gpu_wrap() / 1000;
 #else
 	temp = 40;
+#endif
 #endif
 
 	gpufreq_info("@%s: temp = %d\n", __func__, temp);
@@ -677,9 +683,10 @@ static void _mt_setup_gpufreqs_power_table(int num)
 		gpufreq_info("mt_gpufreqs_power[%d].gpufreq_power = %u\n", i,
 			     mt_gpufreqs_power[i].gpufreq_power);
 	}
-
+#ifndef GPUDVFS_WORKAROUND_FOR_GIT
 #ifdef CONFIG_THERMAL
 	mtk_gpufreq_register(mt_gpufreqs_power, num);
+#endif
 #endif
 }
 
@@ -2326,6 +2333,10 @@ static int mt_gpufreq_create_procfs(void)
  ***********************************/
 static int __init _mt_gpufreq_init(void)
 {
+#ifdef GPUDVFS_WORKAROUND_FOR_GIT
+	mt_gpufreq_create_procfs();
+	return 0;
+#else
 	int ret = 0;
 
 	gpufreq_info("@%s\n", __func__);
@@ -2353,7 +2364,7 @@ static int __init _mt_gpufreq_init(void)
 
 out:
 	return ret;
-
+#endif
 }
 
 static void __exit _mt_gpufreq_exit(void)
