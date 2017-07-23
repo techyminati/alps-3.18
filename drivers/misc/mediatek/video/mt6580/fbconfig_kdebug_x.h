@@ -16,7 +16,10 @@
 
 #include <linux/types.h>
 
-/* *****************debug for fbconfig tool in kernel part************* */
+void PanelMaster_Init(void);
+void PanelMaster_Deinit(void);
+int fb_config_execute_cmd(void);
+int fbconfig_get_esd_check_exec(void);
 #define MAX_INSTRUCTION 35
 #define NUM_OF_DSI 1
 
@@ -44,7 +47,7 @@ typedef struct CONFIG_RECORD_LIST {
 	struct list_head list;
 } CONFIG_RECORD_LIST;
 
-typedef enum MIPI_SETTING_TYPE {
+typedef enum {
 	HS_PRPR = 0,
 	HS_ZERO = 1,
 	HS_TRAIL = 2,
@@ -139,17 +142,14 @@ typedef struct {
 
 } FBCONFIG_DISP_IF;
 
-typedef struct _property {
+struct misc_property {
 	unsigned int dual_port:1;
-	unsigned int reserved:31;
-} misc_property;
+	unsigned int overall_layer_num:5;
+	unsigned int reserved:26;
+};
 
 void Panel_Master_DDIC_config(void);
-
-void PanelMaster_Init(void);
-void PanelMaster_Deinit(void);
-int fb_config_execute_cmd(void);
-int fbconfig_get_esd_check_exec(void);
 int fbconfig_get_esd_check(DSI_INDEX dsi_id, uint32_t cmd, uint8_t *buffer, uint32_t num);
 
-#endif /* __FBCONFIG_KDEBUG_H */
+#endif
+/* __FBCONFIG_KDEBUG_H */
