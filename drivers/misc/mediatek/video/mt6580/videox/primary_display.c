@@ -1290,6 +1290,8 @@ static int _DL_switch_to_DC_fast(void)
 				mva);
 	cmdqRecBackupUpdateSlot(pgc->cmdq_handle_config, pgc->rdma_buff_info, 1,
 				rdma_config.pitch);
+	cmdqRecBackupUpdateSlot(pgc->cmdq_handle_config, pgc->rdma_buff_info, 2,
+				rdma_config.inputFormat);
 
 	/* 6 .flush to cmdq */
 	_cmdq_set_config_handle_dirty();
