@@ -281,17 +281,17 @@
 				0x10176000 0x2000>;
 		};
 
-		eintc: EINTC@0x1000B000 {
-			compatible = "mtk,mt-eic";
+		eintc: eintc@1000b000 {
+			compatible = "mediatek,mt6735-eic";
 			reg = <0x1000B000 0x1000>;
-			interrupts = <0 94 0x4>;
+			interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
 
 			#interrupt-cells = <2>;
 			interrupt-controller;
 
-			max_eint_num = <26>;
-			mapping_table_entry = <83>;
-			mapping_table = <0 0>, /* <gpio_pin, eint_pin> */
+			mediatek,max_eint_num = <26>;
+			mediatek,mapping_table_entry = <83>;
+			mediatek,mapping_table = <0 0>, /* <gpio_pin, eint_pin> */
 					<1 1>,
 					<2 2>,
 					<3 3>,
@@ -376,9 +376,9 @@
 					<84 3>;
 
 			/* the number of gpio/eint mapping might be affected by built-in eint */
-			builtin_entry = <11>;
+			mediatek,builtin_entry = <11>;
 			/* gpio, built-in func mode, built-in eint */
-			builtin_mapping = <0 3 20>, /* USB IDDIG & USB VBUS */
+			mediatek,builtin_mapping = <0 3 20>, /* USB IDDIG & USB VBUS */
 						 <1 3 18>,
 						 <7 4 20>,
 						 <8 4 18>,
