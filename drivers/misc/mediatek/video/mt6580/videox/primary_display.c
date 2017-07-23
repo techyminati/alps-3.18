@@ -3437,14 +3437,20 @@ static int _present_fence_release_worker_thread(void *data)
 			wait_event_interruptible(primary_display_present_fence_wq,
 						atomic_read(&primary_display_present_fence_update_event));
 			atomic_set(&primary_display_present_fence_update_event, 0);
+
 			dpmgr_wait_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
 		}
 
-		dpmgr_wait_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
-		timeline_id = disp_sync_get_present_timeline_id();
+		/* if session not created, do not release present fence */
+		if (pgc->session_id == 0) {
+			MMProfileLogEx(ddp_mmp_get_events()->present_fence_release,
+				       MMProfileFlagPulse, -1, 0x4a4a4a4a);
+			/* DISPDBG("_get_sync_info fail in present_fence_release thread\n"); */
+			continue;
+		}
 
-		layer_info =
-		    _get_sync_info(primary_session_id, timeline_id);
+		timeline_id = disp_sync_get_present_timeline_id();
+		layer_info = _get_sync_info(primary_session_id, timeline_id);
 		if (layer_info == NULL) {
 			MMProfileLogEx(ddp_mmp_get_events
 				       ()->present_fence_release,
@@ -3454,12 +3460,11 @@ static int _present_fence_release_worker_thread(void *data)
 		}
 
 		_primary_path_lock(__func__);
-		fence_increment =
-		    gPresentFenceIndex - layer_info->timeline->value;
+		fence_increment = gPresentFenceIndex - layer_info->timeline->value;
 		if (fence_increment > 0) {
 			timeline_inc(layer_info->timeline, fence_increment);
-			/*DISPPR_FENCE("R+/%s%d/L%d/id%d\n", disp_session_mode_spy(primary_session_id),
-			   DISP_SESSION_DEV(primary_session_id), timeline_id, gPresentFenceIndex); */
+			DISPPR_FENCE("R+/%s%d/L%d/id%d\n", disp_session_mode_spy(primary_session_id),
+			   DISP_SESSION_DEV(primary_session_id), timeline_id, gPresentFenceIndex);
 		}
 		MMProfileLogEx(ddp_mmp_get_events()->present_fence_release,
 			       MMProfileFlagPulse, gPresentFenceIndex,
