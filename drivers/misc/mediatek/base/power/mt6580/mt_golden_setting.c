@@ -458,9 +458,11 @@ static int _parse_mask_val(char *buf, unsigned int *mask, unsigned int *golden_v
 
 static char *_gen_mask_str(const unsigned int mask, const unsigned int reg_val)
 {
-	char _mask_str[] = "0bxxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx";
+	static char _mask_str[64];
+	char mask_str[] = "0bxxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx";
 	unsigned int i, bit_shift;
 
+	strncpy(_mask_str, mask_str, sizeof(_mask_str));
 	for (i = 2,
 	     bit_shift = 1 << 31;
 	     bit_shift > 0;
@@ -490,9 +492,11 @@ static char *_gen_mask_str(const unsigned int mask, const unsigned int reg_val)
 
 static char *_gen_diff_str(const unsigned int mask, const unsigned int golden_val, const unsigned int reg_val)
 {
-	char _diff_str[] = "0b    _    _    _    _    _    _    _    ";
+	static char _diff_str[64];
+	char diff_str[] = "0b    _    _    _    _    _    _    _    ";
 	unsigned int i, bit_shift;
 
+	strncpy(_diff_str, diff_str, sizeof(_diff_str));
 	for (i = 2,
 	     bit_shift = 1 << 31;
 	     bit_shift > 0;
@@ -523,9 +527,11 @@ static char *_gen_color_str(const unsigned int mask, const unsigned int golden_v
 	#define FC "\e[41m"
 	#define EC "\e[m"
 	#define XXXX FC "x" EC FC "x" EC FC "x" EC FC "x" EC
-	char _clr_str[] = "0b"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX;
+	static char _clr_str[512];
+	char clr_str[] = "0b"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX;
 	unsigned int i, bit_shift;
 
+	strncpy(_clr_str, clr_str, sizeof(_clr_str));
 	for (i = 2,
 	     bit_shift = 1 << 31;
 	     bit_shift > 0;
