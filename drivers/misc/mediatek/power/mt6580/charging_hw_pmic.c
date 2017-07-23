@@ -253,8 +253,6 @@ static unsigned int charging_set_cv_voltage(void *data)
 
 	register_value = charging_parameter_to_value(VBAT_CV_VTH, GETARRAYNUM(VBAT_CV_VTH) , *(unsigned int *)(data));
 
-	battery_set_cv_voltage(VBAT_CV_VTH[register_value]);
-
 	pmic_set_register_value(PMIC_RG_VBAT_CV_VTH, register_value);
 
 	battery_log(BAT_LOG_CRTI, "[charging_set_cv_voltage] [0x%x]=0x%x, [0x%x]=0x%x\n",
