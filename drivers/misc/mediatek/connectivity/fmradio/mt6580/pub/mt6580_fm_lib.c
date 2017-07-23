@@ -1332,7 +1332,7 @@ static fm_s32 mt6580_full_cqi_get(fm_s32 min_freq, fm_s32 max_freq, fm_s32 space
 	fm_s32 pos;
 	fm_u8 cqi_log_path[100] = { 0 };
 
-	WCN_DBG(FM_NTC | CHIP, "6627 cqi log start\n");
+	WCN_DBG(FM_DBG | CHIP, "6580 cqi log start\n");
 	/* for soft-mute tune, and get cqi */
 	freq = fm_cb_op->cur_freq_get();
 	if (0 == fm_get_channel_space(freq))
@@ -1405,7 +1405,7 @@ static fm_s32 mt6580_full_cqi_get(fm_s32 min_freq, fm_s32 max_freq, fm_s32 space
 		}
 		fm_cb_op->cur_freq_set(0);	/* avoid run too much times */
 	}
-	WCN_DBG(FM_NTC | CHIP, "6627 cqi log done\n");
+	WCN_DBG(FM_DBG | CHIP, "6580 cqi log done\n");
 
 	return ret;
 }
