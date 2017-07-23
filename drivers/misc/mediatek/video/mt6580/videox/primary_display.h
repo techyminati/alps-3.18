@@ -188,6 +188,7 @@ int is_dim_layer(unsigned int long mva);
 int primary_display_suspend(void);
 int primary_display_resume(void);
 int primary_display_ipoh_restore(void);
+int primary_display_ipoh_recover(void);
 
 int primary_display_get_width(void);
 int primary_display_get_height(void);

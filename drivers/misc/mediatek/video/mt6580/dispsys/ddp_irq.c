@@ -203,12 +203,12 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 		if (irq == dispsys_irq[DISP_REG_DSI0]) {
 			module = DISP_MODULE_DSI0;
 			reg_val = (DISP_REG_GET(dsi_reg_va + 0xC) & 0xff);
-#if 0
+
 			if (primary_display_esd_cust_get() == 1) {
 				/* rd_rdy won't be cleared and ESD & Read LCM will clear this bit. */
 				reg_val = reg_val & 0xfffe;
 			}
-#endif
+
 			DISP_CPU_REG_SET(dsi_reg_va + 0xC, ~reg_val);
 		} else if (irq == dispsys_irq[DISP_REG_OVL0]) {
 			index = 0;

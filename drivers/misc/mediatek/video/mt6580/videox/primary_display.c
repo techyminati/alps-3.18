@@ -103,8 +103,8 @@ int primary_display_cur_dst_mode = 0;
 #endif
 
 int primary_trigger_cnt = 0;
-/* Disable lock which is used to avoid esd and suspend affect */
-/* struct mutex esd_mode_switch_lock; */
+/* Lock which is used to avoid esd and suspend affect */
+struct mutex esd_mode_switch_lock;
 
 #define PRIMARY_DISPLAY_TRIGGER_CNT (1)
 typedef struct {
@@ -178,8 +178,7 @@ static void _primary_path_unlock(const char *caller)
 	dprec_logger_done(DPREC_LOGGER_PRIMARY_MUTEX, 0, 0);
 }
 
-/* Disable lock which is used to avoid esd and suspend affect */
-#if 0
+/* Lock which is used to avoid esd and suspend affect */
 static void _primary_path_esd_check_lock(void)
 {
 	mutex_lock(&esd_mode_switch_lock);
@@ -189,7 +188,6 @@ static void _primary_path_esd_check_unlock(void)
 {
 	mutex_unlock(&esd_mode_switch_lock);
 }
-#endif
 
 void primary_display_esd_cust_bycmdq(int enable)
 {
@@ -2214,14 +2212,12 @@ int _esd_check_config_handle_vdo(void)
 
 	/* 1.reset */
 	cmdqRecReset(pgc->cmdq_handle_config_esd);
-/* Disable lock which is used to avoid esd and suspend affect */
-#if 0
+
+	/* Lock which is used to avoid esd and suspend affect */
 	ret = cmdqRecWait(pgc->cmdq_handle_config_esd, CMDQ_EVENT_DISP_RDMA0_EOF);
 	cmdqRecWait(pgc->cmdq_handle_config_esd, CMDQ_EVENT_MUTEX0_STREAM_EOF);
-#endif
 
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* _primary_path_lock(__func__); */
+	_primary_path_lock(__func__);
 
 	/* 2.stop dsi vdo mode */
 	dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd,
@@ -2240,8 +2236,8 @@ int _esd_check_config_handle_vdo(void)
 	/* 5. trigger path */
 	dpmgr_path_trigger(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd,
 			   CMDQ_ENABLE);
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* _primary_path_unlock(__func__); */
+
+	_primary_path_unlock(__func__);
 
 	/* 6.flush instruction */
 	dprec_logger_start(DPREC_LOGGER_ESD_CMDQ, 0, 0);
@@ -2264,8 +2260,8 @@ int primary_display_esd_check(void)
 {
 	int ret = 0;
 
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* _primary_path_esd_check_lock(); */
+	/* Lock which is used to avoid esd and suspend affect */
+	_primary_path_esd_check_lock();
 	dprec_logger_start(DPREC_LOGGER_ESD_CHECK, 0, 0);
 	MMProfileLogEx(ddp_mmp_get_events()->esd_check_t, MMProfileFlagStart, 0,
 		       0);
@@ -2282,7 +2278,7 @@ int primary_display_esd_check(void)
 	}
 	_primary_path_unlock(__func__);
 
-	/* / Esd Check : EXT TE */
+	/* Esd Check : EXT TE */
 	if (pgc->plcm->params->dsi.customization_esd_check_enable == 0) {
 		MMProfileLogEx(ddp_mmp_get_events()->esd_extte,
 			       MMProfileFlagStart, 0, 0);
@@ -2363,8 +2359,7 @@ int primary_display_esd_check(void)
 	MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm, MMProfileFlagStart, 0,
 		       primary_display_cmdq_enabled());
 	if (primary_display_cmdq_enabled()) {
-		/* Disable lock which is used to avoid esd and suspend affect */
-		/* _primary_path_lock(__func__); */
+		_primary_path_lock(__func__);
 		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
 			       MMProfileFlagPulse, 0, 1);
 
@@ -2377,8 +2372,7 @@ int primary_display_esd_check(void)
 		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
 			       MMProfileFlagPulse, 0, 2);
 		DISPCHECK("[ESD]ESD config thread=%p\n", pgc->cmdq_handle_config_esd);
-		/* Disable lock which is used to avoid esd and suspend affect */
-		/* _primary_path_unlock(__func__); */
+		_primary_path_unlock(__func__);
 
 		/* 1.use cmdq to read from lcm */
 		if (primary_display_is_video_mode())
@@ -2496,8 +2490,9 @@ done:
 	MMProfileLogEx(ddp_mmp_get_events()->esd_check_t, MMProfileFlagEnd, 0,
 		       ret);
 	dprec_logger_done(DPREC_LOGGER_ESD_CHECK, 0, 0);
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* _primary_path_esd_check_unlock(); */
+
+	/* Lock which is used to avoid esd and suspend affect */
+	_primary_path_esd_check_unlock();
 	return ret;
 
 }
@@ -3715,8 +3710,8 @@ int primary_display_suspend(void)
 	primary_display_switch_dst_mode(primary_display_def_dst_mode);
 #endif
 	disp_sw_mutex_lock(&(pgc->capture_lock));
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* _primary_path_esd_check_lock(); */
+	/* Lock which is used to avoid esd and suspend affect */
+	_primary_path_esd_check_lock();
 	_primary_path_lock(__func__);
 	if (pgc->state == DISP_SLEPT) {
 		DISPCHECK("primary display path is already sleep, skip\n");
@@ -3796,10 +3791,10 @@ int primary_display_suspend(void)
 	pgc->state = DISP_SLEPT;
 done:
 	_primary_path_unlock(__func__);
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* _primary_path_esd_check_unlock(); */
+	/* Lock which is used to avoid esd and suspend affect */
+	_primary_path_esd_check_unlock();
 	disp_sw_mutex_unlock(&(pgc->capture_lock));
-#ifdef AEE_ENABLE
+#ifndef DISP_NO_AEE
 	/* For AEE_POWERKEY_HANG_DETECT */
 	aee_kernel_wdt_kick_Powkey_api("mtkfb_early_suspend",
 				       WDT_SETBY_Display);
@@ -3828,6 +3823,35 @@ int primary_display_get_lcm_index(void)
 	DISPMSG("lcm index = %d\n", index);
 	return index;
 }
+
+
+int primary_display_ipoh_restore(void)
+{
+	DISPMSG("primary_display_ipoh_restore In\n");
+	DISPCHECK("ESD check stop[begin]\n");
+	primary_display_esd_check_enable(0);
+	DISPCHECK("ESD check stop[end]\n");
+	if (NULL != pgc->cmdq_handle_trigger) {
+		struct TaskStruct *pTask = pgc->cmdq_handle_trigger->pRunningTask;
+
+		if (NULL != pTask) {
+			DISPCHECK("[Primary_display]display cmdq trigger loop stop[begin]\n");
+			_cmdq_stop_trigger_loop();
+			DISPCHECK("[Primary_display]display cmdq trigger loop stop[end]\n");
+		}
+	}
+	DISPMSG("primary_display_ipoh_restore Out\n");
+	return 0;
+}
+
+int primary_display_ipoh_recover(void)
+{
+	DISPMSG("%s In\n", __func__);
+	_cmdq_start_trigger_loop();
+	DISPMSG("%s Out\n", __func__);
+	return 0;
+}
+
 
 int primary_display_resume(void)
 {
@@ -4029,7 +4053,7 @@ done:
 	_primary_path_unlock(__func__);
 
 	wake_up(&resume_wait_queue);
-#ifdef AEE_ENABLE
+#ifndef DISP_NO_AEE
 	/* For AEE_POWERKEY_HANG_DETECT */
 	aee_kernel_wdt_kick_Powkey_api("mtkfb_late_resume", WDT_SETBY_Display);
 #endif
@@ -4038,26 +4062,6 @@ done:
 	return 0;
 }
 
-int primary_display_ipoh_restore(void)
-{
-	DISPMSG("primary_display_ipoh_restore In\n");
-	DISPCHECK("ESD check stop[begin]\n");
-	primary_display_esd_check_enable(0);
-	DISPCHECK("ESD check stop[end]\n");
-	if (NULL != pgc->cmdq_handle_trigger) {
-		struct TaskStruct *pTask =
-		    pgc->cmdq_handle_trigger->pRunningTask;
-		if (NULL != pTask) {
-			DISPCHECK
-			    ("[Primary_display]display cmdq trigger loop stop[begin]\n");
-			_cmdq_stop_trigger_loop();
-			DISPCHECK
-			    ("[Primary_display]display cmdq trigger loop stop[end]\n");
-		}
-	}
-	DISPMSG("primary_display_ipoh_restore Out\n");
-	return 0;
-}
 
 int primary_display_start(void)
 {
@@ -4195,7 +4199,7 @@ int primary_display_trigger(int blocking, void *callback, int need_merge)
 
 done:
 	_primary_path_unlock(__func__);
-#ifdef AEE_ENABLE
+#ifndef DISP_NO_AEE
 	/* For AEE_POWERKEY_HANG_DETECT */
 	if ((primary_trigger_cnt > PRIMARY_DISPLAY_TRIGGER_CNT)
 	    && aee_kernel_Powerkey_is_press()) {
@@ -5044,8 +5048,8 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps)
 
 	mutex_init(&(pgc->capture_lock));
 	mutex_init(&(pgc->lock));
-	/* Disable lock which is used to avoid esd and suspend affect */
-	/* mutex_init(&esd_mode_switch_lock); */
+	/* Lock which is used to avoid esd and suspend affect */
+	mutex_init(&esd_mode_switch_lock);
 #ifdef DISP_SWITCH_DST_MODE
 	mutex_init(&(pgc->switch_dst_lock));
 #endif

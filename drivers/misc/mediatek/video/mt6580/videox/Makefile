@@ -3,7 +3,6 @@
 
 obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 						disp_assert_layer.o    \
-						mtkfb.o                \
 						debug.o                \
 						primary_display.o      \
 						disp_lcm.o             \
@@ -13,10 +12,6 @@ obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 						mtk_ovl.o              \
 						disp_dts_gpio.o        \
 						disp_helper.o
-
-ifneq ($(CONFIG_MTK_FB), y)
-obj-y += mtkfb_dummy.o
-endif
 
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/include/     \
              -I$(srctree)/drivers/misc/mediatek/video/common/      \

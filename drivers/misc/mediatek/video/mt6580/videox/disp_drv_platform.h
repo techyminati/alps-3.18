@@ -77,4 +77,15 @@ typedef enum {
 
 #define MAX_SESSION_COUNT					5
 /* #define DISP_SWITCH_DST_MODE */
+
+/**
+ * DISP_NO_MT_BOOT: option for mt_boot
+ */
+#define DISP_NO_MT_BOOT
+
+/**
+ * DISP_NO_AEE
+ */
+#define DISP_NO_AEE
+
 #endif /* __DISP_DRV_PLATFORM_H__ */
