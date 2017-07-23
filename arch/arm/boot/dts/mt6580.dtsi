@@ -6,7 +6,8 @@
  *
  */
 
-
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/interrupt-controller/irq.h>
 #include "mt6580-pinfunc.h"
 
 / {
@@ -441,12 +442,12 @@
 			reg = <0x10201000 0x1000>;
 		};
 
-		SYS_CIRQ@0x10202000 {
-			compatible = "mediatek,SYS_CIRQ";
+		sys_cirq: sys_cirq@10202000 {
+			compatible = "mediatek,mt6580-sys_cirq", "mediatek,mt6735-sys_cirq";
 			reg = <0x10202000 0x1000>;
-			interrupts = <0 158 0x8>;
-			cirq_num = <126>;
-			spi_start_offset = <32>;
+			interrupts = <GIC_SPI 158 IRQ_TYPE_LEVEL_LOW>;
+			mediatek,cirq_num = <126>;
+			mediatek,spi_start_offset = <32>;
 		};
 
 
