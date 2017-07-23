@@ -282,7 +282,7 @@
 		};
 
 		eintc: eintc@1000b000 {
-			compatible = "mediatek,mt6735-eic";
+			compatible = "mediatek,mt-eic";
 			reg = <0x1000B000 0x1000>;
 			interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
 
