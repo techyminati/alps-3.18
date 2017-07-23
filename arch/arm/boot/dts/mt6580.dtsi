@@ -261,8 +261,8 @@
 			interrupts = <0 110 0x0>;
 		};
 
-		cpu_dbgapb: cpu_dbgapb {
-			compatible = "mediatek,hw_dbg";
+		cpu_dbgapb: cpu_dbgapb@10170000 {
+			compatible = "mediatek,mt6580-dbg_debug";
 			num = <4>;
 			reg = <0x10170000 0x2000
 				0x10172000 0x2000
@@ -803,8 +803,8 @@
 			/*clock-names = "btifc","apdmac";*/
 		};/* End of btif */
 
-		gps {
-			compatible = "mediatek,gps";
+		mt3326-gps@0xffffffff {
+			compatible = "mediatek,mt3326-gps";
 		};
 
 
@@ -1061,6 +1061,14 @@
 
 		lcm: lcm {
 			compatible = "mediatek,mt6580-lcm";
+		};
+
+		nfc:nfc {
+			compatible = "mediatek,nfc-gpio-v2";
+			gpio-ven = <11>;
+			gpio-rst = <10>;
+			gpio-eint = <12>;
+			gpio-irq = <9>;
 		};
 
 		DISPSYS@0x14007000 {
