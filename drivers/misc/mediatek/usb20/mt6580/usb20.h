@@ -4,6 +4,8 @@
 #define ID_PIN_USE_EX_EINT 1
 
 #ifdef CONFIG_USB_MTK_OTG
+extern struct musb *mtk_musb;
+extern struct timer_list musb_idle_timer;
 #ifdef ID_PIN_USE_EX_EINT
 /* #define IDDIG_EINT_PIN (GPIO_OTG_IDDIG_EINT_PIN & ~(0x80000000)) */
 #define IDDIG_EINT_PIN 9
@@ -17,6 +19,7 @@ extern struct musb *mtk_musb;
 #define ID_PULL_UP 0x0101
 #define ID_PHY_RESET 0x3d11
 #endif
+extern unsigned int mt_gpio_to_irq(unsigned int gpio);
 #endif
 
 #if defined(CONFIG_MTK_FAN5405_SUPPORT) \

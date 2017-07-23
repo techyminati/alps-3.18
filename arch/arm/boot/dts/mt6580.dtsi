@@ -852,7 +852,7 @@
 			interrupts = <0 33 0x8>;
 		};
 
-		USB0@0x11100000 {
+		usb0:USB0@0x11100000 {
 			compatible = "mediatek,USB0";
 			cell-index = <0>;
 			reg = <0x11100000 0x10000>,
@@ -867,6 +867,9 @@
 			dma_channels = <8>;
 			iddig_gpio = <9 3>;
 			drvvbus_gpio = <10 3>;
+			usbiddig:usbiddig {
+				compatible = "mediatek,usb_iddig_eint";
+			};
 		};
 
 		usbphy0: usbphy@0 {

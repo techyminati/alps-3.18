@@ -16,13 +16,11 @@
 #include <linux/list.h>
 #include <linux/gpio.h>
 #include <linux/io.h>
-#include <linux/xlog.h>
 #ifndef CONFIG_OF
 #include <mach/irqs.h>
 #endif
-#include <mach/eint.h>
 #if defined(CONFIG_MTK_LEGACY)
-#include <mach/mt_gpio.h>
+#include <mt-plat/mt_gpio.h>
 #include <cust_gpio_usage.h>
 #endif
 #include "musb_core.h"
@@ -40,7 +38,12 @@
 #include <linux/of_address.h>
 #endif
 
+#include <mt-plat/mt_boot_common.h>
+#ifdef CONFIG_USB_MTK_OTG
+
+#endif
 #ifdef CONFIG_OF
+struct device_node		*usb_node;
 static unsigned int iddig_pin;
 static unsigned int iddig_pin_mode;
 static unsigned int iddig_if_config = 1;
@@ -49,6 +52,13 @@ static unsigned int drvvbus_pin_mode;
 static unsigned int drvvbus_if_config = 1;
 #endif
 
+#if !defined(CONFIG_MTK_LEGACY)
+struct pinctrl *pinctrl;
+struct pinctrl_state *pinctrl_iddig;
+struct pinctrl_state *pinctrl_drvvbus;
+struct pinctrl_state *pinctrl_drvvbus_low;
+struct pinctrl_state *pinctrl_drvvbus_high;
+#endif
 static int usb_iddig_number;
 
 static struct musb_fifo_cfg fifo_cfg_host[] = {
@@ -74,6 +84,8 @@ u32 delay_time = 15;
 module_param(delay_time, int, 0644);
 u32 delay_time1 = 55;
 module_param(delay_time1, int, 0644);
+u32 iddig_cnt = 0;
+module_param(iddig_cnt, int, 0644);
 
 void mt_usb_set_vbus(struct musb *musb, int is_on)
 {
@@ -98,31 +110,28 @@ void mt_usb_set_vbus(struct musb *musb, int is_on)
 	fan5405_set_opa_mode(1);
 	fan5405_set_otg_pl(1);
 	fan5405_set_otg_en(1);
-    #elif defined(CONFIG_MTK_NCP1851_SUPPORT)
+	#elif defined(CONFIG_MTK_NCP1851_SUPPORT) || defined(CONFIG_MTK_BQ24196_SUPPORT)
 		tbl_charger_otg_vbus((work_busy(&musb->id_pin_work.work) << 8) | 1);
-    #elif defined(CONFIG_MTK_BQ24261_SUPPORT) || defined(CONFIG_MTK_BQ24196_SUPPORT)
-	#if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
-	    #ifdef CONFIG_MTK_BQ24261_SUPPORT
+	#elif defined(CONFIG_MTK_BQ24261_SUPPORT)
 	bq24261_set_en_boost(1);
-		#endif
-
-		#ifdef CONFIG_MTK_BQ24196_SUPPORT
-		bq24196_set_otg_config(0x01); /* OTG */
-		bq24196_set_boost_lim(0x01); /* 1.3A on VBUS */
-		#endif
+	#elif defined(CONFIG_MTK_BQ24296_SUPPORT)
+		bq24296_set_otg_config(0x1); /* OTG */
+		bq24296_set_boostv(0x7); /* boost voltage 4.998V */
+		bq24296_set_boost_lim(0x1); /* 1.5A on VBUS */
+		bq24296_set_en_hiz(0x0);
+	#elif defined(CONFIG_MTK_NCP1854_SUPPORT)
+		ncp1854_set_otg_en(0);
+		ncp1854_set_chg_en(0);
+		ncp1854_set_otg_en(1);
 	#else
 		#ifdef CONFIG_OF
+		#if defined(CONFIG_MTK_LEGACY)
 		mt_set_gpio_mode(drvvbus_pin, drvvbus_pin_mode);
 		mt_set_gpio_out(drvvbus_pin, GPIO_OUT_ONE);
     #else
-		mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_OTG_DRVVBUS_PIN_M_GPIO);
-		mt_set_gpio_out(GPIO_OTG_DRVVBUS_PIN, GPIO_OUT_ONE);
+		pr_debug("****%s:%d Drive VBUS LOW KS!!!!!\n", __func__, __LINE__);
+		pinctrl_select_state(pinctrl, pinctrl_drvvbus_low);
 	#endif
-	#endif
-	#else
-	#ifdef CONFIG_OF
-		mt_set_gpio_mode(drvvbus_pin, drvvbus_pin_mode);
-		mt_set_gpio_out(drvvbus_pin, GPIO_OUT_ONE);
 	#else
 		mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_OTG_DRVVBUS_PIN_M_GPIO);
 		mt_set_gpio_out(GPIO_OTG_DRVVBUS_PIN, GPIO_OUT_ONE);
@@ -131,32 +140,25 @@ void mt_usb_set_vbus(struct musb *musb, int is_on)
 	} else {
 	/* power off VBUS, implement later... */
     #ifdef CONFIG_MTK_FAN5405_SUPPORT
-		fan5405_config_interface_liao(0x01, 0x30);
-		fan5405_config_interface_liao(0x02, 0x8e);
-    #elif defined(CONFIG_MTK_NCP1851_SUPPORT)
+		fan5405_reg_config_interface(0x01, 0x30);
+		fan5405_reg_config_interface(0x02, 0x8e);
+	#elif defined(CONFIG_MTK_NCP1851_SUPPORT) || defined(CONFIG_MTK_BQ24196_SUPPORT)
 		tbl_charger_otg_vbus((work_busy(&musb->id_pin_work.work) << 8) | 0);
-    #elif defined(CONFIG_MTK_BQ24261_SUPPORT) || defined(CONFIG_MTK_BQ24196_SUPPORT)
-	#if !defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
-	    #ifdef CONFIG_MTK_BQ24261_SUPPORT
+	#elif defined(CONFIG_MTK_BQ24261_SUPPORT)
 	bq24261_set_en_boost(0);
-	    #endif
-
-	    #ifdef CONFIG_MTK_BQ24196_SUPPORT
-		bq24196_set_otg_config(0x0); /* OTG disabled */
-	    #endif
+	#elif defined(CONFIG_MTK_BQ24296_SUPPORT)
+		bq24296_set_otg_config(0);
+	#elif defined(CONFIG_MTK_NCP1854_SUPPORT)
+		ncp1854_set_otg_en(0x0);
 	#else
 		#ifdef CONFIG_OF
+		#if defined(CONFIG_MTK_LEGACY)
 		mt_set_gpio_mode(drvvbus_pin, drvvbus_pin_mode);
 		mt_set_gpio_out(drvvbus_pin, GPIO_OUT_ZERO);
 		#else
-		mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_OTG_DRVVBUS_PIN_M_GPIO);
-		mt_set_gpio_out(GPIO_OTG_DRVVBUS_PIN, GPIO_OUT_ZERO);
+		pr_debug("****%s:%d Drive VBUS LOW KS!!!!!\n", __func__, __LINE__);
+		pinctrl_select_state(pinctrl, pinctrl_drvvbus_low);
 		#endif
-	#endif
-	#else
-	#ifdef CONFIG_OF
-		mt_set_gpio_mode(drvvbus_pin, drvvbus_pin_mode);
-		mt_set_gpio_out(drvvbus_pin, GPIO_OUT_ZERO);
 	#else
 		mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_OTG_DRVVBUS_PIN_M_GPIO);
 		mt_set_gpio_out(GPIO_OTG_DRVVBUS_PIN, GPIO_OUT_ZERO);
@@ -186,12 +188,39 @@ void mt_usb_init_drvvbus(void)
 {
 #if !(defined(SWITCH_CHARGER) || defined(FPGA_PLATFORM))
 	#ifdef CONFIG_OF
-	mt_set_gpio_mode(drvvbus_pin, drvvbus_pin_mode);
+	#if defined(CONFIG_MTK_LEGACY)
+	mt_set_gpio_mode(drvvbus_pin, drvvbus_pin_mode); /* should set GPIO2 as gpio mode. */
 	mt_set_gpio_dir(drvvbus_pin, GPIO_DIR_OUT);
 	mt_get_gpio_pull_enable(drvvbus_pin);
 	mt_set_gpio_pull_select(drvvbus_pin, GPIO_PULL_UP);
   #else
-	mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_OTG_DRVVBUS_PIN_M_GPIO);
+	int ret = 0;
+
+	pr_debug("****%s:%d before Init Drive VBUS KS!!!!!\n", __func__, __LINE__);
+
+	pinctrl_drvvbus = pinctrl_lookup_state(pinctrl, "drvvbus_init");
+	if (IS_ERR(pinctrl_drvvbus)) {
+		ret = PTR_ERR(pinctrl_drvvbus);
+		dev_err(mtk_musb->controller, "Cannot find usb pinctrl drvvbus\n");
+	}
+
+	pinctrl_drvvbus_low = pinctrl_lookup_state(pinctrl, "drvvbus_low");
+	if (IS_ERR(pinctrl_drvvbus_low)) {
+		ret = PTR_ERR(pinctrl_drvvbus_low);
+		dev_err(mtk_musb->controller, "Cannot find usb pinctrl drvvbus_low\n");
+	}
+
+	pinctrl_drvvbus_high = pinctrl_lookup_state(pinctrl, "drvvbus_high");
+	if (IS_ERR(pinctrl_drvvbus_high)) {
+		ret = PTR_ERR(pinctrl_drvvbus_high);
+		dev_err(mtk_musb->controller, "Cannot find usb pinctrl drvvbus_high\n");
+	}
+
+	pinctrl_select_state(pinctrl, pinctrl_drvvbus);
+	pr_debug("****%s:%d end Init Drive VBUS KS!!!!!\n", __func__, __LINE__);
+	#endif
+	#else
+	mt_set_gpio_mode(GPIO_OTG_DRVVBUS_PIN, GPIO_OTG_DRVVBUS_PIN_M_GPIO); /* should set GPIO2 as gpio mode. */
 	mt_set_gpio_dir(GPIO_OTG_DRVVBUS_PIN, GPIO_DIR_OUT);
 	mt_get_gpio_pull_enable(GPIO_OTG_DRVVBUS_PIN);
 	mt_set_gpio_pull_select(GPIO_OTG_DRVVBUS_PIN, GPIO_PULL_UP);
@@ -199,7 +228,11 @@ void mt_usb_init_drvvbus(void)
 #endif
 }
 
+#if defined(CONFIG_USBIF_COMPLIANCE)
+u32 sw_deboun_time = 1;
+#else
 u32 sw_deboun_time = 400;
+#endif
 module_param(sw_deboun_time, int, 0644);
 struct switch_dev otg_state;
 
@@ -217,12 +250,18 @@ static bool musb_is_host(void)
 	musb_platform_enable(mtk_musb);
 
 #ifdef ID_PIN_USE_EX_EINT
+#ifndef CONFIG_MTK_FPGA
 	#ifdef CONFIG_OF
+	#if defined(CONFIG_MTK_LEGACY)
 	iddig_state = mt_get_gpio_in(iddig_pin);
+	#else
+	iddig_state = __gpio_get_value(iddig_pin);
+	#endif
 	#else
 	iddig_state = mt_get_gpio_in(GPIO_OTG_IDDIG_EINT_PIN);
 	#endif
 	DBG(0, "iddig_state = %d\n", iddig_state);
+#endif
 #else
 	iddig_state = 0;
 	devctl = musb_readb(mtk_musb->mregs, MUSB_DEVCTL);
@@ -276,10 +315,7 @@ void musb_session_restart(struct musb *musb)
 void switch_int_to_device(struct musb *musb)
 {
 #ifdef ID_PIN_USE_EX_EINT
-	/* disable_irq(usb_iddig_number); */
-	/* mt_eint_set_polarity(IDDIG_EINT_PIN, MT_EINT_POL_POS); */
 	irq_set_irq_type(usb_iddig_number, IRQF_TRIGGER_HIGH);
-	/* mt_eint_unmask(IDDIG_EINT_PIN); */
 	enable_irq(usb_iddig_number);
 #else
 	 musb_writel(musb->mregs, USB_L1INTP, 0);
@@ -291,10 +327,7 @@ void switch_int_to_device(struct musb *musb)
 void switch_int_to_host(struct musb *musb)
 {
 #ifdef ID_PIN_USE_EX_EINT
-	/* disable_irq(usb_iddig_number); */
-	/* mt_eint_set_polarity(IDDIG_EINT_PIN, MT_EINT_POL_NEG); */
 	irq_set_irq_type(usb_iddig_number, IRQF_TRIGGER_LOW);
-	/* mt_eint_unmask(IDDIG_EINT_PIN); */
 	enable_irq(usb_iddig_number);
 #else
 	musb_writel(musb->mregs, USB_L1INTP, IDDIG_INT_STATUS);
@@ -307,13 +340,11 @@ void switch_int_to_host(struct musb *musb)
 void switch_int_to_host_and_mask(struct musb *musb)
 {
 #ifdef ID_PIN_USE_EX_EINT
-	/* mt_eint_set_polarity(IDDIG_EINT_PIN, MT_EINT_POL_NEG); */
 	irq_set_irq_type(usb_iddig_number, IRQF_TRIGGER_LOW);
-	/* mt_eint_mask(IDDIG_EINT_PIN); */
 	disable_irq(usb_iddig_number);
 #else
 	musb_writel(musb->mregs, USB_L1INTM, (~IDDIG_INT_STATUS)&musb_readl(musb->mregs, USB_L1INTM));
-	/* memory barrier */
+	/*avoid race condiction*/
 	mb();
 	musb_writel(musb->mregs, USB_L1INTP, IDDIG_INT_STATUS);
 #endif
@@ -330,7 +361,13 @@ static void musb_id_pin_work(struct work_struct *data)
 	spin_unlock_irqrestore(&mtk_musb->lock, flags);
 
 	down(&mtk_musb->musb_lock);
-	DBG(0, "work start, is_host=%d\n", mtk_musb->is_host);
+	DBG(0, "work start, is_host=%d, boot mode(%d)\n", mtk_musb->is_host, get_boot_mode());
+#ifdef CONFIG_MTK_KERNEL_POWER_OFF_CHARGING
+	if (get_boot_mode() == KERNEL_POWER_OFF_CHARGING_BOOT || get_boot_mode() == LOW_POWER_OFF_CHARGING_BOOT) {
+		DBG(0, "do nothing due to in power off charging\n");
+		goto out;
+	}
+#endif
 	if (mtk_musb->in_ipo_off) {
 		DBG(0, "do nothing due to in_ipo_off\n");
 		goto out;
@@ -392,12 +429,8 @@ static void musb_id_pin_work(struct work_struct *data)
 		DBG(0, "force PHY to idle, 0x6d=%x, 0x6c=%x\n", USBPHY_READ8(0x6d), USBPHY_READ8(0x6c));
 	#endif
 
-#if !defined(MTK_HDMI_SUPPORT)
 		musb_stop(mtk_musb);
-#else
-		mt_usb_check_reconnect();/* ALPS01688604, IDDIG noise caused by MHL init */
-#endif
-
+		mtk_musb->xceiv->state = OTG_STATE_B_IDLE;
 		MUSB_DEV_MODE(mtk_musb);
 		switch_int_to_host(mtk_musb);
 	}
@@ -406,12 +439,9 @@ out:
 	up(&mtk_musb->musb_lock);
 
 }
-
-
-
-/* static void mt_usb_ext_iddig_int(void) */
-static irqreturn_t mt_usb_ext_iddig_int(unsigned irq, struct irq_desc *desc)
+static irqreturn_t mt_usb_ext_iddig_int(int irq, void *dev_id)
 {
+	iddig_cnt++;
 	if (!mtk_musb->is_ready) {
 		/* dealy 5 sec if usb function is not ready */
 		schedule_delayed_work(&mtk_musb->id_pin_work, 5000*HZ/1000);
@@ -447,33 +477,55 @@ void mt_usb_iddig_int(struct musb *musb)
 
 static void otg_int_init(void)
 {
+	struct device_node *node;
+	u32 ints[2] = { 0, 0 };
+	unsigned int debounce;
 #ifdef ID_PIN_USE_EX_EINT
 	int	ret = 0;
-	unsigned int iddig_pin_temp;
+#ifndef CONFIG_MTK_FPGA
 	#ifdef CONFIG_OF
+	#if defined(CONFIG_MTK_LEGACY)
 	mt_set_gpio_mode(iddig_pin, iddig_pin_mode);
 	mt_set_gpio_dir(iddig_pin, GPIO_DIR_IN);
 	mt_set_gpio_pull_enable(iddig_pin, GPIO_PULL_ENABLE);
 	mt_set_gpio_pull_select(iddig_pin, GPIO_PULL_UP);
+	#else
+	pr_debug("****%s:%d before Init IDDIG KS!!!!!\n", __func__, __LINE__);
+
+	pinctrl_iddig = pinctrl_lookup_state(pinctrl, "iddig_irq_init");
+	if (IS_ERR(pinctrl_iddig)) {
+		ret = PTR_ERR(pinctrl_iddig);
+		dev_err(mtk_musb->controller, "Cannot find usb pinctrl iddig_irq_init\n");
+	}
+
+	pinctrl_select_state(pinctrl, pinctrl_iddig);
+
+	#endif
 	#else
 	mt_set_gpio_mode(GPIO_OTG_IDDIG_EINT_PIN, GPIO_OTG_IDDIG_EINT_PIN_M_IDDIG);
 	mt_set_gpio_dir(GPIO_OTG_IDDIG_EINT_PIN, GPIO_DIR_IN);
 	mt_set_gpio_pull_enable(GPIO_OTG_IDDIG_EINT_PIN, GPIO_PULL_ENABLE);
 	mt_set_gpio_pull_select(GPIO_OTG_IDDIG_EINT_PIN, GPIO_PULL_UP);
 	#endif
-
-	/* mt_eint_set_sens(IDDIG_EINT_PIN, MT_LEVEL_SENSITIVE); */
-	/* irq_set_irq_type(IDDIG_EINT_PIN, IRQF_TRIGGER_LOW); //IRQF_TRIGGER_LOW */
-	iddig_pin_temp = (iddig_pin &= ~0x80000000);
-	/* mt_eint_set_hw_debounce(iddig_pin_temp,64); */
-	mt_gpio_set_debounce(iddig_pin_temp, 64000);
-	/* mt_eint_registration(IDDIG_EINT_PIN, EINTF_TRIGGER_LOW, mt_usb_ext_iddig_int, FALSE); */
-
-	usb_iddig_number = mt_gpio_to_irq(iddig_pin_temp);
-  /* usb_iddig_number = 276; */
-	pr_debug("USB IDDIG IRQ LINE %d, %d!!\n", iddig_pin_temp, mt_gpio_to_irq(iddig_pin_temp));
-
+#endif
+	#if defined(CONFIG_MTK_LEGACY)
+	mt_gpio_set_debounce(IDDIG_EINT_PIN, 64000);
+	usb_iddig_number = mt_gpio_to_irq(IDDIG_EINT_PIN);
 	ret = request_irq(usb_iddig_number, mt_usb_ext_iddig_int, IRQF_TRIGGER_LOW, "USB_IDDIG", NULL);
+	#else
+
+		node = of_find_compatible_node(NULL, NULL, "mediatek,usb_iddig_eint");
+		if (node) {
+						of_property_read_u32_array(node, "debounce", ints, ARRAY_SIZE(ints));
+						debounce = ints[1];
+#if defined(CONFIG_MTK_LEGACY)
+						mt_gpio_set_debounce(gpiopin, debounce);
+#endif
+		}
+
+		usb_iddig_number = irq_of_parse_and_map(node, 0);
+		ret = request_irq(usb_iddig_number, mt_usb_ext_iddig_int, IRQF_TRIGGER_LOW, "USB_IDDIG", NULL);
+	#endif
 	if (ret > 0)
 		pr_err("USB IDDIG IRQ LINE not available!!\n");
 	else
@@ -492,39 +544,33 @@ static void otg_int_init(void)
 void mt_usb_otg_init(struct musb *musb)
 {
 #ifdef CONFIG_OF
-	struct device_node		*node;
-#endif
-
-#if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
-#ifdef MTK_KERNEL_POWER_OFF_CHARGING
-	if (g_boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT || g_boot_mode == LOW_POWER_OFF_CHARGING_BOOT)
-		return;
-#endif
-#endif
-
-#ifdef CONFIG_OF
-	node = of_find_compatible_node(NULL, NULL, "mediatek,USB0");
-	if (node == NULL) {
-		pr_err("USB OTG - get node failed\n");
+	usb_node = of_find_compatible_node(NULL, NULL, "mediatek,USB0");
+	if (usb_node == NULL) {
+		pr_err("USB OTG - get USB0 node failed\n");
 	} else {
-		if (of_property_read_u32_index(node, "iddig_gpio", 0, &iddig_pin)) {
+		if (of_property_read_u32_index(usb_node, "iddig_gpio", 0, &iddig_pin)) {
 			iddig_if_config = 0;
-			pr_err("iddig_gpio fail\n");
+			pr_err("get dtsi iddig_pin fail\n");
 		}
-
-		if (of_property_read_u32_index(node, "iddig_gpio", 1, &iddig_pin_mode))
-			pr_err("iddig_gpio fail\n");
-
-		if (of_property_read_u32_index(node, "drvvbus_gpio", 0, &drvvbus_pin)) {
+		if (of_property_read_u32_index(usb_node, "iddig_gpio", 1, &iddig_pin_mode))
+			pr_err("get dtsi iddig_pin_mode fail\n");
+		if (of_property_read_u32_index(usb_node, "drvvbus_gpio", 0, &drvvbus_pin)) {
 			drvvbus_if_config = 0;
-			pr_err("drvvbus_gpio fail\n");
+			pr_err("get dtsi drvvbus_pin fail\n");
 		}
-
-		if (of_property_read_u32_index(node, "drvvbus_gpio", 1, &drvvbus_pin_mode))
-			pr_err("drvvbus_gpio fail\n");
-			iddig_pin |= 0x80000000;
+		if (of_property_read_u32_index(usb_node, "drvvbus_gpio", 1, &drvvbus_pin_mode))
+			pr_err("get dtsi drvvbus_pin_mode fail\n");
+		#if defined(CONFIG_MTK_LEGACY)
+		iddig_pin |= 0x80000000;
 		drvvbus_pin |= 0x80000000;
+		#endif
 	}
+
+	#if !defined(CONFIG_MTK_LEGACY)
+	pinctrl = devm_pinctrl_get(mtk_musb->controller);
+	if (IS_ERR(pinctrl))
+		dev_err(mtk_musb->controller, "Cannot find usb pinctrl!\n");
+	#endif
 #endif
     /*init drrvbus*/
 	mt_usb_init_drvvbus();

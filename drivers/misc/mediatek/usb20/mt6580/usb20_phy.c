@@ -303,20 +303,13 @@ void usb_phy_switch_to_uart(void)
 	/* mtk_uart_usb_rx_sel(1, 1); */
 
 	/* GPIO Selection set UART#1 */
-	DRV_WriteReg32(GPIO_BASE_1 + 0x118, 0x02);	/* set */
-
-	usb_port_mode_temp = 1;
-
-	DBG(0, "usb port value in uart function:%d\n", usb_port_mode_temp);
+	/*DRV_WriteReg32(GPIO_BASE_1 + 0x118, 0x02); */	/* set */
 }
 
 
 void usb_phy_switch_to_usb(void)
 {
-	/* Disable UART */
-	DRV_WriteReg32(GPIO_BASE_1 + 0x11C, 0x02);	/* clear */
-	/* set uart rx path for K2 use */
-	/* mtk_uart_usb_rx_sel(1, 0); */
+	/* DRV_WriteReg32(GPIO_BASE_1 + 0x11C, 0x02); */	/* clear */
 	usb_enable_clock(true);
 	udelay(50);
 	/* clear force_uart_en */
