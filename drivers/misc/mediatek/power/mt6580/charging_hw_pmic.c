@@ -398,7 +398,7 @@ static unsigned int charging_get_charger_det_status(void *data)
 
 #if defined(CONFIG_MTK_FPGA)
 	*(kal_bool *) (data) = 1;
-	battery_log(BAT_LOG_CRTI, "chr exist for fpga\n");
+	battery_log(BAT_LOG_CRTI, "chr exist for fpga!\n");
 #else
 	*(kal_bool *) (data) = pmic_get_register_value(PMIC_RGS_CHRDET);
 #endif
