@@ -71,7 +71,7 @@
 #define  ENABLE_MEM_SIZE_CHECK
 /******EMI MPU protect configure******/
 /* disable for bring up            */
-/*#define  ENABLE_EMI_PROTECTION*/
+#define  ENABLE_EMI_PROTECTION
 /******md memory remap configure******/
 #define  ENABLE_MEM_REMAP_HW
 /******md wake up workaround******/
@@ -80,7 +80,7 @@
 /* ******other feature configure******/
 /* #define  ENABLE_LOCK_MD_SLP_FEATURE */
 /* disable for bring up */
-/*#define ENABLE_32K_CLK_LESS*/
+#define ENABLE_32K_CLK_LESS
 /* disable for bring up for md not enable wdt at bring up */
 #define  ENABLE_MD_WDT_PROCESS
 /* disable for bring up */

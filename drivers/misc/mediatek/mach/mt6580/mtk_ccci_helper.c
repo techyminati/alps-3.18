@@ -23,9 +23,10 @@
 #include <mach/eint.h>
 #include <mach/mt_gpio.h>
 #include <mach/mt_reg_base.h>
-#include <mach/battery_common.h>
-#include <mach/mt_boot.h>
 */
+#include <mt-plat/mt_boot_common.h>
+#include <mt-plat/battery_common.h>
+
 #include <mt-plat/upmu_common.h>
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -54,17 +55,23 @@ static unsigned int ccif_wdt_irqid[MAX_MD_NUM];
 /*-------------feature enable/disable configure----------------*/
 /*#define FEATURE_GET_TD_EINT_NUM*/
 #if 1				/*For Bring up */
-/*#define FEATURE_GET_MD_GPIO_NUM	temp mark disable for bring up */
-/*#define FEATURE_GET_MD_GPIO_VAL	temp mark disable for bring up */
-/*#define FEATURE_GET_MD_ADC_NUM	temp mark disable for bring up */
-/*#define FEATURE_GET_MD_ADC_VAL	temp mark disable for bring up */
+#define FEATURE_GET_MD_GPIO_NUM
+#define FEATURE_GET_MD_GPIO_VAL
+#define FEATURE_GET_MD_ADC_NUM
+#define FEATURE_GET_MD_ADC_VAL
 #define FEATURE_GET_MD_EINT_ATTR	/*disable for bring up  */
 #define FEATURE_GET_MD_EINT_ATTR_DTS
 /*#define FEATURE_GET_DRAM_TYPE_CLK*/
 /*#define FEATURE_MD_FAST_DORMANCY*/
-/*#define FEATURE_GET_MD_BAT_VOL	 temp mark disable for bring up */
+#define FEATURE_GET_MD_BAT_VOL
 #define FEATURE_PM_IPO_H	/*disable for bring up */
 /*#define FEATURE_DFO_EN					  Always bring up*/
+#define CCCI_GET_GPIO_VAL
+
+#endif
+
+#ifdef FEATURE_GET_MD_GPIO_VAL
+#include <linux/gpio.h>
 #endif
 
 /*-------------grobal variable define----------------*/
@@ -748,6 +755,81 @@ void get_md_post_fix(int md_id, char buf[], char buf_ex[])
 /*provide API called by ccci module                                                                           */
 /**/
 /***************************************************************************/
+#ifdef CCCI_GET_GPIO_VAL
+#define GPIO_SIM_SWITCH_DAT_PIN (34)
+#define GPIO_SIM_SWITCH_CLK_PIN (67)
+
+struct mt_gpio_modem_info {
+	char name[40];
+	int num;
+};
+static struct mt_gpio_modem_info mt_gpio_info[] = {
+	{"GPIO_MD_TEST", 800},
+#ifdef GPIO_AST_CS_PIN
+	{"GPIO_AST_HIF_CS", GPIO_AST_CS_PIN},
+#endif
+#ifdef GPIO_AST_CS_PIN_NCE
+	{"GPIO_AST_HIF_CS_ID", GPIO_AST_CS_PIN_NCE},
+#endif
+#ifdef GPIO_AST_RST_PIN
+	{"GPIO_AST_Reset", GPIO_AST_RST_PIN},
+#endif
+#ifdef GPIO_AST_CLK32K_PIN
+	{"GPIO_AST_CLK_32K", GPIO_AST_CLK32K_PIN},
+#endif
+#ifdef GPIO_AST_CLK32K_PIN_CLK
+	{"GPIO_AST_CLK_32K_CLKM", GPIO_AST_CLK32K_PIN_CLK},
+#endif
+#ifdef GPIO_AST_WAKEUP_PIN
+	{"GPIO_AST_Wakeup", GPIO_AST_WAKEUP_PIN},
+#endif
+#ifdef GPIO_AST_INTR_PIN
+	{"GPIO_AST_INT", GPIO_AST_INTR_PIN},
+#endif
+#ifdef GPIO_AST_WAKEUP_INTR_PIN
+	{"GPIO_AST_WAKEUP_INT", GPIO_AST_WAKEUP_INTR_PIN},
+#endif
+#ifdef GPIO_AST_AFC_SWITCH_PIN
+	{"GPIO_AST_AFC_Switch", GPIO_AST_AFC_SWITCH_PIN},
+#endif
+#ifdef GPIO_FDD_BAND_SUPPORT_DETECT_1ST_PIN
+	{"GPIO_FDD_Band_Support_Detection_1", GPIO_FDD_BAND_SUPPORT_DETECT_1ST_PIN},
+#endif
+#ifdef GPIO_FDD_BAND_SUPPORT_DETECT_2ND_PIN
+	{"GPIO_FDD_Band_Support_Detection_2", GPIO_FDD_BAND_SUPPORT_DETECT_2ND_PIN},
+#endif
+#ifdef GPIO_FDD_BAND_SUPPORT_DETECT_3RD_PIN
+	{"GPIO_FDD_Band_Support_Detection_3", GPIO_FDD_BAND_SUPPORT_DETECT_3RD_PIN},
+#endif
+#ifdef GPIO_SIM_SWITCH_CLK_PIN
+	{"GPIO_SIM_SWITCH_CLK", GPIO_SIM_SWITCH_CLK_PIN},
+#endif
+#ifdef GPIO_SIM_SWITCH_DAT_PIN
+	{"GPIO_SIM_SWITCH_DAT", GPIO_SIM_SWITCH_DAT_PIN},
+#endif
+/*if you have new GPIO pin add bellow*/
+
+};
+
+static int mt_get_md_gpio(char *gpio_name, int len)
+{
+	unsigned int i;
+	unsigned long number;
+
+	for (i = 0; i < ARRAY_SIZE(mt_gpio_info); i++) {
+		if (!strncmp(gpio_name, mt_gpio_info[i].name, len)) {
+			number = mt_gpio_info[i].num;
+			CH_MSG_INF(-1, "hlp", "Modern get number=%d, name:%s\n", mt_gpio_info[i].num, gpio_name);
+			/*mt_gpio_pin_decrypt(&number);*/
+			return number;
+		}
+	}
+	CH_MSG_INF(-1, "hlp", "Modem gpio name can't match!!!\n");
+	return -1;
+}
+#endif
+
+
 AP_IMG_TYPE get_ap_img_ver(void)
 {
 #if defined(MODEM_2G)
@@ -771,21 +853,41 @@ int get_td_eint_info(int md_id, char *eint_name, unsigned int len)
 int get_md_gpio_info(int md_id, char *gpio_name, unsigned int len)
 {
 #if defined(FEATURE_GET_MD_GPIO_NUM)
-	return mt_get_md_gpio(gpio_name, len);
-
+#if defined(CONFIG_MTK_LEGACY)
+		return mt_get_md_gpio(gpio_name, len);
 #else
-	return -1;
+#ifdef CCCI_GET_GPIO_VAL
+		CH_MSG_INF(md_id, "hlp",  "get_md_gpio old workaround.\n");
+		return mt_get_md_gpio(gpio_name, len);
+#else
+		struct device_node *node = of_find_compatible_node(NULL, NULL, "mediatek,MD_USE_GPIO");
+		int gpio_id = -1;
+
+		if (node)
+			of_property_read_u32(node, gpio_name, &gpio_id);
+		else
+			CH_MSG_INF(md_id, "hlp", "MD_USE_GPIO is not set in device tree,need to check?\n");
+		return gpio_id;
 #endif
+#endif
+#else
+		return -1;
+#endif
+
 }
 
 int get_md_gpio_val(int md_id, unsigned int num)
 {
 #if defined(FEATURE_GET_MD_GPIO_VAL)
-	return mt_get_gpio_in(num);
-
+#if defined(CONFIG_MTK_LEGACY)
+		return mt_get_gpio_in(num);
 #else
-	return -1;
+		return __gpio_get_value(num);
 #endif
+#else
+		return -1;
+#endif
+
 }
 
 int get_md_adc_info(int md_id, char *adc_name, unsigned int len)
