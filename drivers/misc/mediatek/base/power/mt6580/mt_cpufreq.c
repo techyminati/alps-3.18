@@ -1790,11 +1790,11 @@ static int _thermal_limited_verify(struct mt_cpu_dvfs *p, int new_opp_idx)
 
 	if (found) {
 		target_khz = p->power_tbl[i].cpufreq_khz;
-		cpufreq_info("%s(): freq found, idx = %d, target_khz = %d, online_cpu = %d\n",
+		cpufreq_dbg("%s(): freq found, idx = %d, target_khz = %d, online_cpu = %d\n",
 			     __func__, i, target_khz, online_cpu);
 	} else {
 		target_khz = p->limited_max_freq;
-		cpufreq_info("%s(): freq not found, set to limited_max_freq = %d\n", __func__,
+		cpufreq_dbg("%s(): freq not found, set to limited_max_freq = %d\n", __func__,
 			     target_khz);
 	}
 
@@ -1819,7 +1819,7 @@ static unsigned int _calc_new_opp_idx(struct mt_cpu_dvfs *p, int new_opp_idx)
 
 		if (idx != -1 && new_opp_idx > idx) {
 			new_opp_idx = idx;
-			cpufreq_info("%s(): hevc limited freq, idx = %d\n", __func__, new_opp_idx);
+			cpufreq_ver("%s(): hevc limited freq, idx = %d\n", __func__, new_opp_idx);
 		}
 	}
 
@@ -1828,7 +1828,7 @@ static unsigned int _calc_new_opp_idx(struct mt_cpu_dvfs *p, int new_opp_idx)
 
 	if (idx != -1 && idx != new_opp_idx) {
 		new_opp_idx = idx;
-		cpufreq_info("%s(): thermal limited freq, idx = %d\n", __func__, new_opp_idx);
+		cpufreq_ver("%s(): thermal limited freq, idx = %d\n", __func__, new_opp_idx);
 	}
 
 	/* for early suspend */
@@ -1848,7 +1848,7 @@ static unsigned int _calc_new_opp_idx(struct mt_cpu_dvfs *p, int new_opp_idx)
 
 		if (idx != -1 && new_opp_idx < idx) {
 			new_opp_idx = idx;
-			cpufreq_dbg("%s(): limited max freq by user, idx = %d\n", __func__,
+			cpufreq_ver("%s(): limited max freq by user, idx = %d\n", __func__,
 				    new_opp_idx);
 		}
 	}
