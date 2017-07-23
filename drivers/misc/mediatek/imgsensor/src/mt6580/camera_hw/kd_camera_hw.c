@@ -87,28 +87,28 @@ int mtkcam_gpio_init(struct platform_device *pdev)
 
 	/*Cam1 Power/Rst Ping initialization */
 	cam1_pnd_h = pinctrl_lookup_state(camctrl, "cam1_pnd1");
-	if (IS_ERR(cam0_pnd_h)) {
-		ret = PTR_ERR(cam0_pnd_h);
+	if (IS_ERR(cam1_pnd_h)) {
+		ret = PTR_ERR(cam1_pnd_h);
 		pr_debug("%s : pinctrl err, cam1_pnd_h\n", __func__);
 	}
 
 	cam1_pnd_l = pinctrl_lookup_state(camctrl, "cam1_pnd0");
-	if (IS_ERR(cam0_pnd_l)) {
-		ret = PTR_ERR(cam0_pnd_l);
+	if (IS_ERR(cam1_pnd_l )) {
+		ret = PTR_ERR(cam1_pnd_l );
 		pr_debug("%s : pinctrl err, cam1_pnd_l\n", __func__);
 	}
 
 
 	cam1_rst_h = pinctrl_lookup_state(camctrl, "cam1_rst1");
-	if (IS_ERR(cam0_rst_h)) {
-		ret = PTR_ERR(cam0_rst_h);
+	if (IS_ERR(cam1_rst_h)) {
+		ret = PTR_ERR(cam1_rst_h);
 		pr_debug("%s : pinctrl err, cam1_rst_h\n", __func__);
 	}
 
 
 	cam1_rst_l = pinctrl_lookup_state(camctrl, "cam1_rst0");
-	if (IS_ERR(cam0_rst_l)) {
-		ret = PTR_ERR(cam0_rst_l);
+	if (IS_ERR(cam1_rst_l)) {
+		ret = PTR_ERR(cam1_rst_l);
 		pr_debug("%s : pinctrl err, cam1_rst_l\n", __func__);
 	}
 	/*externel LDO enable */
