@@ -46,12 +46,22 @@ void __iomem *GIC_DIST_BASE;
 void __iomem *GIC_CPU_BASE;
 void __iomem *INT_POL_CTL0;
 
+/*
+ * The GIC mapping of CPU interfaces does not necessarily match
+ * the logical CPU numbering.  Let's use a mapping as returned
+ * by the GIC itself.
+ */
+#define NR_GIC_CPU_IF 8
+static u8 gic_cpu_map[NR_GIC_CPU_IF] __read_mostly;
+
 static spinlock_t irq_lock;
-/* irq_total_secondary_cpus will be initialized in smp_init_cpus() of mt-smp.c */
+/* irq_total_secondary_cpus will be initialized
+ * in smp_init_cpus() of mt-smp.c */
 unsigned int irq_total_secondary_cpus;
 #if defined(__CHECK_IRQ_TYPE)
 #define X_DEFINE_IRQ(__name, __num, __polarity, __sensitivity) \
-		{ .num = __num, .polarity = __polarity, .sensitivity = __sensitivity, },
+	{ .num = __num, .polarity = __polarity,\
+		.sensitivity = __sensitivity, },
 #define L 0
 #define H 1
 #define EDGE MT_EDGE_SENSITIVE
@@ -85,14 +95,6 @@ void mt_irq_mask(struct irq_data *data)
 	const unsigned int irq = data->irq;
 	u32 mask = 1 << (irq % 32);
 
-	if (irq < NR_GIC_SGI) {
-		/*Note: workaround for false alarm:"Fail to disable interrupt 14" */
-		if (irq != FIQ_DBG_SGI)
-			pr_debug("Fail to disable interrupt %d\n",
-				  irq);
-		return;
-	}
-
 	mt_reg_sync_writel(mask,
 			   IOMEM(GIC_DIST_BASE + GIC_DIST_ENABLE_CLEAR +
 				 irq / 32 * 4));
@@ -107,14 +109,6 @@ void mt_irq_unmask(struct irq_data *data)
 {
 	const unsigned int irq = data->irq;
 	u32 mask = 1 << (irq % 32);
-
-	if (irq < NR_GIC_SGI) {
-		/*Note: workaround for false alarm:"Fail to enable interrupt 14" */
-		if (irq != FIQ_DBG_SGI)
-			pr_debug("Fail to enable interrupt %d\n",
-				  irq);
-		return;
-	}
 
 	mt_reg_sync_writel(mask,
 			   IOMEM((GIC_DIST_BASE + GIC_DIST_ENABLE_SET +
@@ -177,6 +171,118 @@ void mt_irq_set_sens(unsigned int irq, unsigned int sens)
 	dsb();
 }
 EXPORT_SYMBOL(mt_irq_set_sens);
+
+static inline unsigned int gic_irq(struct irq_data *d)
+{
+	return d->hwirq;
+}
+
+#ifdef CONFIG_SMP
+static int gic_set_affinity(struct irq_data *d,
+	const struct cpumask *mask_val, bool force)
+{
+	void __iomem *reg = GIC_DIST_BASE +
+			GIC_DIST_TARGET + (gic_irq(d) & ~3);
+	unsigned int cpu, shift = (gic_irq(d) % 4) * 8;
+	u32 val, bit = 0;
+#ifndef CONFIG_MTK_IRQ_NEW_DESIGN
+	u32 mask;
+
+	if (!force)
+		cpu = cpumask_any_and(mask_val, cpu_online_mask);
+	else
+		cpu = cpumask_first(mask_val);
+
+	if (cpu >= NR_GIC_CPU_IF || cpu >= nr_cpu_ids)
+		return -EINVAL;
+
+	mask = 0xff << shift;
+	bit = gic_cpu_map[cpu] << shift;
+
+	raw_spin_lock(&irq_lock.rlock);
+	val = readl_relaxed(reg) & ~mask;
+	writel_relaxed(val | bit, reg);
+	raw_spin_unlock(&irq_lock.rlock);
+#else
+	/*
+	 * no need to update when:
+	 * input mask is equal to the current setting
+	 */
+	if (cpumask_equal(d->affinity, mask_val))
+		return IRQ_SET_MASK_OK_NOCOPY;
+
+	/*
+	 * cpumask_first_and() returns >= nr_cpu_ids when the intersection
+	 * of inputs is an empty set ->
+	 * return error when this is not a "forced" update
+	 */
+	if (!force &&
+	(cpumask_first_and(mask_val, cpu_online_mask) >= nr_cpu_ids))
+		return -EINVAL;
+
+	/* set target cpus */
+	for_each_cpu(cpu, mask_val)
+		bit |= gic_cpu_map[cpu] << shift;
+
+	/* update gic register */
+	raw_spin_lock(&irq_lock.rlock);
+	val = readl_relaxed(reg) & ~(0xff << shift);
+	writel_relaxed(val | bit, reg);
+	raw_spin_unlock(&irq_lock.rlock);
+#endif
+	return IRQ_SET_MASK_OK;
+}
+#endif
+
+#ifdef CONFIG_MTK_IRQ_NEW_DESIGN
+bool mt_is_secure_irq(struct irq_data *d)
+{
+	unsigned int irq = gic_irq(d);
+	/* FIXME */
+	if (irq == 189)
+		return true;
+
+	return false;
+}
+EXPORT_SYMBOL(mt_is_secure_irq);
+
+bool mt_get_irq_gic_targets(struct irq_data *d, cpumask_t *mask)
+{
+	unsigned int irq = gic_irq(d);
+	unsigned int cpu, shift, irq_targets = 0;
+	void __iomem *reg;
+	int rc;
+
+	/* check whether this IRQ is configured as FIQ */
+	if (mt_is_secure_irq(d)) {
+		/* secure call for get the irq targets */
+#ifndef CONFIG_MTK_PSCI
+		rc = -1;
+#else
+		rc = mt_secure_call(MTK_SIP_KERNEL_GIC_DUMP, irq, 0, 0);
+#endif
+
+		if (rc < 0) {
+			pr_err("[mt_get_gicd_itargetsr] not allowed to dump!\n");
+			return false;
+		}
+		irq_targets = (rc >> 14) & 0xff;
+	} else {
+		shift = (irq % 4) * 8;
+		reg = GIC_DIST_BASE  + GIC_DIST_TARGET + (irq & ~3);
+		irq_targets = (readl_relaxed(reg) & (0xff << shift)) >> shift;
+	}
+
+	cpumask_clear(mask);
+	for_each_cpu(cpu, cpu_possible_mask)
+		if (irq_targets & (1<<cpu))
+			cpumask_set_cpu(cpu, mask);
+
+	return true;
+}
+EXPORT_SYMBOL(mt_get_irq_gic_targets);
+#endif
+
 
 /*
  * mt_irq_set_polarity: set the interrupt polarity
@@ -295,7 +401,8 @@ int mt_get_supported_irq_num(void)
 	int ret = 0;
 
 	if (GIC_DIST_BASE) {
-		ret = ((readl_relaxed(GIC_DIST_BASE + GIC_DIST_CTR) & 0x1f) + 1) * 32;
+		ret =
+		((readl_relaxed(GIC_DIST_BASE + GIC_DIST_CTR) & 0x1f) + 1) * 32;
 		pr_debug("gic supported max = %d\n", ret);
 	} else
 		pr_warn("gic dist_base is unknown\n");
@@ -311,6 +418,10 @@ static struct irq_chip mt_irq_chip = {
 	.irq_mask = mt_irq_mask,
 	.irq_unmask = mt_irq_unmask,
 	.irq_set_type = mt_irq_set_type,
+#ifdef CONFIG_SMP
+	.irq_set_affinity = gic_set_affinity,
+#endif
+
 };
 
 #ifdef CONFIG_OF
@@ -452,6 +563,26 @@ static void mt_gic_dist_init(void)
 static void mt_gic_cpu_init(void)
 {
 	int i;
+	unsigned int cpu_mask, cpu = smp_processor_id();
+
+	/*
+	 * Get what the GIC says our CPU mask is.
+	 */
+	BUG_ON(cpu >= NR_GIC_CPU_IF);
+	/*
+	cpu_mask = gic_get_cpumask(gic);
+	FIXME
+	*/
+	cpu_mask = 1 << smp_processor_id();
+	gic_cpu_map[cpu] = cpu_mask;
+
+	/*
+	 * Clear our mask from the other map entries in case they're
+	 * still undefined.
+	 */
+	for (i = 0; i < NR_GIC_CPU_IF; i++)
+		if (i != cpu)
+			gic_cpu_map[i] &= ~cpu_mask;
 
 	/*
 	 * Deal with the banked PPI and SGI interrupts - disable all
@@ -817,7 +948,8 @@ int mt_irq_mask_restore(struct mtk_irq_mask *mask)
 #define GIC_DIST_PENDING_SET			0x200
 #define GIC_DIST_PENDING_CLEAR		  0x280
 
- * mt_irq_set_pending_for_sleep: pending an interrupt for the sleep manager's use
+ * mt_irq_set_pending_for_sleep: pending an interrupt
+ * for the sleep manager's use
  * @irq: interrupt id
  * (THIS IS ONLY FOR SLEEP FUNCTION USE. DO NOT USE IT YOURSELF!)
  */
@@ -1484,6 +1616,7 @@ static struct mt_gic_driver mt_gic_drv = {
 int __init mt_gic_of_init(struct device_node *node, struct device_node *parent)
 {
 	int irq_base;
+	unsigned int i;
 	struct irq_domain *domain;
 
 	GIC_DIST_BASE = of_iomap(node, 0);
@@ -1502,6 +1635,9 @@ int __init mt_gic_of_init(struct device_node *node, struct device_node *parent)
 		pr_err("[%s] irq_alloc_descs failed! (irq_base = %d)\n",
 		       __func__, irq_base);
 
+	for (i = 0; i < NR_GIC_CPU_IF; i++)
+		gic_cpu_map[i] = 0xff;
+
 	domain =
 	    irq_domain_add_legacy(node, (NR_GIC_PPI + MT_NR_SPI), irq_base,
 				  NR_GIC_SGI, &mt_gic_irq_domain_ops, NULL);
@@ -1512,12 +1648,26 @@ int __init mt_gic_of_init(struct device_node *node, struct device_node *parent)
 	set_smp_cross_call(irq_raise_softirq);
 #endif
 
+	/*
+	 * Initialize the CPU interface map to all CPUs.
+	 * It will be refined as each CPU probes its ID.
+	 */
+	for (i = 0; i < NR_GIC_CPU_IF; i++)
+		gic_cpu_map[i] = 0xff;
+
 	mt_init_irq();
 	mt_get_supported_irq_num();
+#ifdef CONFIG_MTK_IRQ_NEW_DESIGN
+	for (i = 0; i <= CONFIG_NR_CPUS-1; ++i) {
+		INIT_LIST_HEAD(&(irq_need_migrate_list[i].list));
+		spin_lock_init(&(irq_need_migrate_list[i].lock));
+	}
+#endif
 	return 0;
 }
 
-#define IRQCHIP_DECLARE(name, compat, fn) OF_DECLARE_2(irqchip, name, compat, fn)
+#define IRQCHIP_DECLARE(name, compat, fn) \
+	OF_DECLARE_2(irqchip, name, compat, fn)
 IRQCHIP_DECLARE(mt_cortex_a7_gic, "arm,cortex-a7-gic", mt_gic_of_init);
 #endif
 
