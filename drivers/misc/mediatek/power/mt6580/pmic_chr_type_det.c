@@ -16,35 +16,35 @@
 #include <linux/cdev.h>
 #include <linux/delay.h>
 #include <linux/platform_device.h>
+/* #include <linux/aee.h> TBD */
+/* #include <linux/xlog.h> TBD */
 #include <linux/proc_fs.h>
 #include <linux/syscalls.h>
 #include <linux/sched.h>
 #include <linux/writeback.h>
+/* #include <linux/earlysuspend.h> TBD */
 #include <linux/seq_file.h>
 
 #include <asm/uaccess.h>
 
+/* #include <mach/upmu_common.h> TBD */
 #include <mt-plat/upmu_common.h>
 #include <mach/upmu_sw.h>
 #include <mach/upmu_hw.h>
 #include <mach/mt_pmic_wrap.h>
-#if defined CONFIG_MTK_LEGACY
-/*#include <mach/mt_gpio.h> TBD*/
-#endif
-/*#include <mach/mtk_rtc.h> TBD*/
+/* #include <mach/mt_gpio.h> TBD */
+/* #include <mach/mtk_rtc.h> TBD */
 #include <mach/mt_spm_mtcmos.h>
 
-/*#include <mach/battery_common.h> TBD*/
+/* #include <mach/battery_common.h> TBD */
 #include <linux/time.h>
 
 /*
  * extern function
  */
-/*
-extern unsigned int upmu_get_reg_value(unsigned int reg);
+#ifdef CONFIG_MTK_SMART_BATTERY
 extern void Charger_Detect_Init(void);
 extern void Charger_Detect_Release(void);
-*/
 bool is_dcp_type = false;
 #if defined(CONFIG_POWER_EXT) || defined(CONFIG_MTK_FPGA)
 
@@ -58,7 +58,7 @@ int hw_charging_get_charger_type(void)
 static void hw_bc11_dump_register(void)
 {
 /*
-    battery_log(BAT_LOG_FULL, "Reg[0x%x]=0x%x,Reg[0x%x]=0x%x\n",
+    battery_xlog_printk(BAT_LOG_FULL, "Reg[0x%x]=0x%x,Reg[0x%x]=0x%x\n",
 	MT6325_CHR_CON20, upmu_get_reg_value(MT6325_CHR_CON20),
 	MT6325_CHR_CON21, upmu_get_reg_value(MT6325_CHR_CON21)
 	);
@@ -91,12 +91,10 @@ static void hw_bc11_init(void)
 	/* mdelay(50); */
 
 	if (Enable_BATDRV_LOG == BAT_LOG_FULL) {
-		battery_log(BAT_LOG_FULL, "hw_bc11_init() \r\n");
+		battery_xlog_printk(BAT_LOG_FULL, "hw_bc11_init() \r\n");
 		hw_bc11_dump_register();
 	}
-
 }
-
 
 static unsigned int hw_bc11_DCD(void)
 {
@@ -117,7 +115,7 @@ static unsigned int hw_bc11_DCD(void)
 	wChargerAvail = bc11_get_register_value(PMIC_RGS_BC11_CMP_OUT);
 
 	if (Enable_BATDRV_LOG == BAT_LOG_FULL) {
-		battery_log(BAT_LOG_FULL, "hw_bc11_DCD() \r\n");
+		battery_xlog_printk(BAT_LOG_FULL, "hw_bc11_DCD() \r\n");
 		hw_bc11_dump_register();
 	}
 
@@ -152,7 +150,7 @@ static unsigned int hw_bc11_stepA1(void)
 	wChargerAvail = bc11_get_register_value(PMIC_RGS_BC11_CMP_OUT);
 
 	if (Enable_BATDRV_LOG == BAT_LOG_FULL) {
-		battery_log(BAT_LOG_FULL, "hw_bc11_stepA1() \r\n");
+		battery_xlog_printk(BAT_LOG_FULL, "hw_bc11_stepA1() \r\n");
 		hw_bc11_dump_register();
 	}
 
@@ -181,10 +179,13 @@ static unsigned int hw_bc11_stepA2(void)
 	msleep(80);
 	/* mdelay(80); */
 
+	/* msleep(80); */
+	mdelay(80);
+
 	wChargerAvail = bc11_get_register_value(PMIC_RGS_BC11_CMP_OUT);
 
 	if (Enable_BATDRV_LOG == BAT_LOG_FULL) {
-		battery_log(BAT_LOG_FULL, "hw_bc11_stepA2() \r\n");
+		battery_xlog_printk(BAT_LOG_FULL, "hw_bc11_stepA2() \r\n");
 		hw_bc11_dump_register();
 	}
 
@@ -216,7 +217,7 @@ static unsigned int hw_bc11_stepB2(void)
 	wChargerAvail = bc11_get_register_value(PMIC_RGS_BC11_CMP_OUT);
 
 	if (Enable_BATDRV_LOG == BAT_LOG_FULL) {
-		battery_log(BAT_LOG_FULL, "hw_bc11_stepB2() \r\n");
+		battery_xlog_printk(BAT_LOG_FULL, "hw_bc11_stepB2() \r\n");
 		hw_bc11_dump_register();
 	}
 
@@ -257,10 +258,9 @@ static void hw_bc11_done(void)
 	Charger_Detect_Release();
 
 	if (Enable_BATDRV_LOG == BAT_LOG_FULL) {
-		battery_log(BAT_LOG_FULL, "hw_bc11_done() \r\n");
+		battery_xlog_printk(BAT_LOG_FULL, "hw_bc11_done() \r\n");
 		hw_bc11_dump_register();
 	}
-
 }
 
 int hw_charging_get_charger_type(void)
@@ -270,7 +270,6 @@ int hw_charging_get_charger_type(void)
 	/* return STANDARD_CHARGER; //adaptor */
 #else
 	CHARGER_TYPE CHR_Type_num = CHARGER_UNKNOWN;
-
 	/********* Step initial  ***************/
 	hw_bc11_init();
 
@@ -279,26 +278,27 @@ int hw_charging_get_charger_type(void)
 		/********* Step A1 ***************/
 		if (1 == hw_bc11_stepA1()) {
 			CHR_Type_num = APPLE_2_1A_CHARGER;
-			battery_log(BAT_LOG_CRTI, "step A1 : Apple 2.1A CHARGER!\r\n");
+			battery_xlog_printk(BAT_LOG_CRTI, "step A1 : Apple 2.1A CHARGER!\r\n");
 		} else {
 			CHR_Type_num = NONSTANDARD_CHARGER;
-			battery_log(BAT_LOG_CRTI, "step A1 : Non STANDARD CHARGER!\r\n");
+			battery_xlog_printk(BAT_LOG_CRTI, "step A1 : Non STANDARD CHARGER!\r\n");
 		}
 	} else {
-	/********* Step A2 ***************/
-	if (1 == hw_bc11_stepA2()) {
-		/********* Step B2 ***************/
+		/********* Step A2 ***************/
+		if (1 == hw_bc11_stepA2()) {
+			/********* Step B2 ***************/
 			if (1 == hw_bc11_stepB2()) {
 				is_dcp_type = true;
 				CHR_Type_num = STANDARD_CHARGER;
-				battery_log(BAT_LOG_CRTI, "step B2 : STANDARD CHARGER!\r\n");
+				battery_xlog_printk(BAT_LOG_CRTI,
+						    "step B2 : STANDARD CHARGER!\r\n");
 			} else {
 				CHR_Type_num = CHARGING_HOST;
-				battery_log(BAT_LOG_CRTI, "step B2 :  Charging Host!\r\n");
+				battery_xlog_printk(BAT_LOG_CRTI, "step B2 :  Charging Host!\r\n");
 			}
 		} else {
 			CHR_Type_num = STANDARD_HOST;
-			battery_log(BAT_LOG_CRTI, "step A2 : Standard USB Host!\r\n");
+			battery_xlog_printk(BAT_LOG_CRTI, "step A2 : Standard USB Host!\r\n");
 		}
 
 	}
@@ -309,4 +309,5 @@ int hw_charging_get_charger_type(void)
 	return CHR_Type_num;
 #endif
 }
-#endif
+#endif				/* End of #if defined(CONFIG_POWER_EXT) || defined(CONFIG_MTK_FPGA) */
+#endif				/* End of #ifdef CONFIG_MTK_SMART_BATTERY */

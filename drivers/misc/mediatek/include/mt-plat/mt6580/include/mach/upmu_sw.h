@@ -1,16 +1,7 @@
 #ifndef _MT_PMIC_UPMU_SW_H_
 #define _MT_PMIC_UPMU_SW_H_
 
-#define AUXADC_SUPPORT_IMM_CURRENT_MODE
-#define BATTERY_DTS_SUPPORT
-
-#define BATTERY_CDP_WORKAROUND
-
-#if !defined(MTK_PLUG_OUT_DETECTION)
-#define MTK_PLUG_OUT_DETECTION
-#endif
-
-extern void PMIC_INIT_SETTING_V1(void);
+#define SW_OAM_INIT_V2
 
 /* ============================================================================== */
 /* Low battery level define */
@@ -80,27 +71,40 @@ extern void (*battery_percent_callback)(BATTERY_PERCENT_LEVEL);
 extern void
 register_battery_percent_notify(void (*battery_percent_callback) (BATTERY_PERCENT_LEVEL),
 				BATTERY_PERCENT_PRIO prio_val);
+/*
+0 : BATON2 **
+1 : CH6
+2 : THR SENSE2 **
+3 : THR SENSE1
+4 : VCDT
+5 : BATON1
+6 : ISENSE
+7 : BATSNS
+8 : ACCDET
+9-16 : audio
+*/
 
 /* ADC Channel Number */
 typedef enum {
-	/* MT6328 */
+	/* MT6350 */
 
-	MT6328_AUX_BATSNS_AP = 0x000,
-	MT6328_AUX_ISENSE_AP,
-	MT6328_AUX_VCDT_AP,
-	MT6328_AUX_BATON_AP,
-	MT6328_AUX_CH4,
-	MT6328_AUX_VACCDET_AP,
-	MT6328_AUX_CH6,
-	MT6328_AUX_TSX,
-	MT6328_AUX_CH8,
-	MT6328_AUX_CH9,
-	MT6328_AUX_CH10,
-	MT6328_AUX_CH11,
-	MT6328_AUX_CH12,
-	MT6328_AUX_CH13,
-	MT6328_AUX_CH14,
-	MT6328_AUX_CH15,
+	MT6350_AUX_BATON2 = 0x000,
+	MT6350_AUX_CH6,
+	MT6350_AUX_THR_SENSE2,
+	MT6350_AUX_THR_SENSE1,
+	MT6350_AUX_VCDT,
+	MT6350_AUX_BATON1,
+	MT6350_AUX_ISENSE,
+	MT6350_AUX_BATSNS,
+	MT6350_AUX_ACCDET,
+	MT6350_AUX_CH9,
+	MT6350_AUX_CH10,
+	MT6350_AUX_CH11,
+	MT6350_AUX_CH12,
+	MT6350_AUX_CH13,
+	MT6350_AUX_CH14,
+	MT6350_AUX_CH15,
+	MT6350_AUX_CH16,
 } pmic_adc_ch_list_enum;
 
 /* ============================================================================== */
@@ -120,16 +124,10 @@ typedef enum DLPT_PRIO_TAG {
 } DLPT_PRIO;
 
 extern void (*dlpt_callback)(unsigned int);
-extern void register_dlpt_notify(void (*dlpt_callback)(unsigned int), DLPT_PRIO prio_val);
+extern void register_dlpt_notify(void (*dlpt_callback) (unsigned int), DLPT_PRIO prio_val);
 
 /* ============================================================================== */
 /* PMIC LDO define */
 /* ============================================================================== */
-
-
-
-
-
-
 
 #endif				/* _MT_PMIC_UPMU_SW_H_ */

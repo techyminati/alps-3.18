@@ -29,7 +29,9 @@
 #define GETSIZE(array) (sizeof(array)/sizeof(array[0]))
 
 /* extern functions */
+#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
 extern void mt_power_off(void);
+#endif
 extern PMU_FLAG_TABLE_ENTRY pmu_flags_table[];
 extern unsigned int bat_get_ui_percentage(void);
 extern signed int fgauge_read_IM_current(void *data);
@@ -38,7 +40,7 @@ extern void pmic_auxadc_unlock(void);
 extern unsigned int bat_get_ui_percentage(void);
 extern signed int fgauge_read_v_by_d(int d_val);
 extern signed int fgauge_read_r_bat_by_v(signed int voltage);
-/*extern PMU_ChargerStruct BMT_status;*//*have defined in battery_common.h */
+/* extern PMU_ChargerStruct BMT_status; *//*have defined in battery_common.h */
 extern void kpd_pwrkey_pmic_handler(unsigned long pressed);
 extern void kpd_pmic_rstkey_handler(unsigned long pressed);
 extern int is_mt6311_sw_ready(void);
@@ -47,6 +49,9 @@ extern int get_mt6311_i2c_ch_num(void);
 extern bool crystal_exist_status(void);
 #if !defined CONFIG_MTK_LEGACY
 extern void pmu_drv_tool_customization_init(void);
+#endif
+#ifdef CONFIG_MTK_ACCDET
+extern int accdet_irq_handler(void);
 #endif
 extern int batt_init_cust_data(void);
 
