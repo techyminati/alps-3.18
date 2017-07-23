@@ -9,7 +9,6 @@
 /*============================================================= */
 /* Include files						*/
 /*============================================================= */
-
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -20,18 +19,23 @@
 #include <linux/uaccess.h>
 #include <linux/types.h>
 #include <asm/io.h>
-/* #include <mach/mt_pmic_wrap.h>	*/
-/* #include <mach/upmu_hw.h>		*/
-/* #include <mach/mt_spm_idle.h>	*/
 #include <mach/mt_clkmgr.h>
-/* #include <mach/pmic_mt6325_sw.h>	*/
-/* #include <mach/upmu_common.h>	*/
-/* #include <mach/upmu_hw.h>		*/
-
+#include <mt-plat/upmu_common.h>
 
 /*=============================================================	*/
 /* Macro definition						*/
 /*=============================================================	*/
+#ifndef FALSE
+	#define FALSE (0)
+#endif
+
+#ifndef TRUE
+	#define TRUE (1)
+#endif
+
+#ifndef NULL
+	#define NULL (0)
+#endif
 
 /* #define BIT(_bit_)          (unsigned int)(1 << (_bit_))	*/
 #define BITS(_bits_, _val_) \
@@ -51,7 +55,6 @@
 #define clk_dbg(fmt, args...)       \
 	pr_debug(fmt, ##args)
 
-
 #define FUNC_LV_API		BIT(0)
 #define FUNC_LV_LOCKED		BIT(1)
 #define FUNC_LV_BODY		BIT(2)
@@ -61,23 +64,6 @@
 
 #define FUNC_LV_MASK	\
 	(FUNC_LV_API | FUNC_LV_LOCKED | FUNC_LV_BODY | FUNC_LV_OP | FUNC_LV_REG_ACCESS | FUNC_LV_DONT_CARE)
-
-#if defined(CONFIG_CLKMGR_SHOWLOG)
-#define ENTER_FUNC(lv)								\
-	do {									\
-		if (lv & FUNC_LV_MASK)						\
-			pr_debug(">> %s()\n", __func__);			\
-	} while (0)
-
-#define EXIT_FUNC(lv)								\
-	do {									\
-		if (lv & FUNC_LV_MASK)						\
-			pr_debug("<< %s():%d\n", __func__, __LINE__);		\
-	} while (0)
-#else
-#define ENTER_FUNC (lv)
-#define EXIT_FUNC (lv)
-#endif /* defined(CONFIG_CLKMGR_SHOWLOG)	*/
 
 /*					*/
 /* Register access function		*/
@@ -187,7 +173,7 @@ struct snapshot {
 struct golden {
 	unsigned int is_golden_log;
 
-	print_mode mode;
+	enum print_mode mode;
 
 	char func[64]; /* TODO: check the size is OK or not	*/
 	unsigned int line;
@@ -239,7 +225,7 @@ static void _golden_setting_disable(struct golden *g)
 	}
 }
 
-static void _golden_setting_set_mode(struct golden *g, print_mode mode)
+static void _golden_setting_set_mode(struct golden *g, enum print_mode mode)
 {
 	g->mode = mode;
 }
@@ -472,10 +458,8 @@ static int _parse_mask_val(char *buf, unsigned int *mask, unsigned int *golden_v
 
 static char *_gen_mask_str(const unsigned int mask, const unsigned int reg_val)
 {
-	static char _mask_str[];
+	char _mask_str[] = "0bxxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx";
 	unsigned int i, bit_shift;
-
-	_mask_str[] = "0bxxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx_xxxx";
 
 	for (i = 2,
 	     bit_shift = 1 << 31;
@@ -506,10 +490,8 @@ static char *_gen_mask_str(const unsigned int mask, const unsigned int reg_val)
 
 static char *_gen_diff_str(const unsigned int mask, const unsigned int golden_val, const unsigned int reg_val)
 {
-	static char _diff_str[];
+	char _diff_str[] = "0b    _    _    _    _    _    _    _    ";
 	unsigned int i, bit_shift;
-
-	_diff_str[] = "0b    _    _    _    _    _    _    _    ";
 
 	for (i = 2,
 	     bit_shift = 1 << 31;
@@ -541,10 +523,8 @@ static char *_gen_color_str(const unsigned int mask, const unsigned int golden_v
 	#define FC "\e[41m"
 	#define EC "\e[m"
 	#define XXXX FC "x" EC FC "x" EC FC "x" EC FC "x" EC
-	static char _clr_str[];
+	char _clr_str[] = "0b"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX;
 	unsigned int i, bit_shift;
-
-	_clr_str[] = "0b"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX"_"XXXX;
 
 	for (i = 2,
 	     bit_shift = 1 << 31;
@@ -614,7 +594,6 @@ static int golden_test_proc_show(struct seq_file *m, void *v)
 
 	buf_golden_setting_idx = 0;
 
-	ENTER_FUNC(FUNC_LV_BODY);
 	if (FALSE == _golden.is_golden_log) {
 		for (i = 0; i < _golden.nr_golden_setting; i++)
 			seq_printf(m, ""HEX_FMT" "HEX_FMT" "HEX_FMT"\n",
@@ -738,7 +717,6 @@ static int golden_test_proc_show(struct seq_file *m, void *v)
 					break;
 			}
 		}
-	EXIT_FUNC(FUNC_LV_BODY);
 	return 0; /* len < count ? len : count;	*/
 }
 
@@ -749,8 +727,6 @@ static int golden_test_proc_write(struct file *file, const char __user *buffer, 
 	unsigned int addr;
 	unsigned int mask;
 	unsigned int golden_val;
-
-	ENTER_FUNC(FUNC_LV_BODY);
 
 	/* set golden setting (hex mode)	*/
 	if (sscanf(buf, "0x%x 0x%x 0x%x", &addr, &mask, &golden_val) == 3)
@@ -803,7 +779,6 @@ static int golden_test_proc_write(struct file *file, const char __user *buffer, 
 	}
 
 	free_page((unsigned int)buf);
-	EXIT_FUNC(FUNC_LV_BODY);
 	return count;
 }
 
@@ -872,7 +847,6 @@ static int mt_golden_setting_init(void)
 
 			if (!dir) {
 				clk_err("[%s]: fail to mkdir /proc/golden\n", __func__);
-				EXIT_FUNC(FUNC_LV_API);
 				return -ENOMEM;
 			}
 
