@@ -67,7 +67,7 @@ static fm_s32 mt6580_I2s_Setting(fm_s32 onoff, fm_s32 mode, fm_s32 sample);
 #endif
 static fm_u16 mt6580_chan_para_get(fm_u16 freq);
 static fm_s32 mt6580_desense_check(fm_u16 freq, fm_s32 rssi);
-static fm_bool mt6580_TDD_chan_check(fm_u16 freq);
+/*static fm_bool mt6580_TDD_chan_check(fm_u16 freq);*/
 static fm_s32 mt6580_soft_mute_tune(fm_u16 freq, fm_s32 *rssi, fm_bool *valid);
 static fm_s32 mt6580_pwron(fm_s32 data)
 {
@@ -1008,18 +1008,56 @@ static fm_bool mt6580_SetFreq(fm_u16 freq)
 
 	fm_cb_op->cur_freq_set(freq);
 
+	chan_para = mt6580_chan_para_get(freq);
+	WCN_DBG(FM_DBG | CHIP, "%d chan para = %d\n", (fm_s32) freq, (fm_s32) chan_para);
+	freq_reg = freq;
+	if (0 == fm_get_channel_space(freq_reg))
+		freq_reg *= 10;
+	WCN_DBG(FM_DBG | CHIP, "freq_reg = %d\n", freq_reg);
 	ret = mt6580_write(0x60, 0x00000007);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
-#if 1
+	/* add this paragragh to resolve Rainier FM sensitivity bad in low band issue */
+#if 0
 	if (mt6580_TDD_chan_check(freq)) {
-		ret = mt6580_set_bits(0x30, 0x0008, 0xFFF3);	/* use TDD solution */
+		ret = mt6580_set_bits(0x39, 0x0008, 0xFFF3);	/* use TDD solution */
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x30 failed\n");
 	} else {
-		ret = mt6580_set_bits(0x30, 0x0000, 0xFFF3);	/* default use FDD solution */
+		ret = mt6580_set_bits(0x39, 0x0000, 0xFFF3);	/* default use FDD solution */
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x30 failed\n");
 	}
 #endif
+	if ((6500 <= freq_reg) && (freq_reg <= 7290)) {
+		ret = mt6580_write(0x39, 0xd002);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((7295 <= freq_reg) && (freq_reg <= 8410)) {
+		ret = mt6580_write(0x39, 0xce02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((8415 <= freq_reg) && (freq_reg <= 9815)) {
+		ret = mt6580_write(0x39, 0xcc02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((9820 <= freq_reg) && (freq_reg <= 9830)) {
+		ret = mt6580_write(0x39, 0xca02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((9835 <= freq_reg) && (freq_reg <= 9940)) {
+		ret = mt6580_write(0x39, 0xcc02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((9845 <= freq_reg) && (freq_reg <= 10800)) {
+		ret = mt6580_write(0x39, 0xca02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else {
+		ret = mt6580_write(0x39, 0xca02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	}
+
+	/* end */
 	ret = mt6580_write(0x6a, 0x00000021);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x6a failed\n");
@@ -1032,11 +1070,6 @@ static fm_bool mt6580_SetFreq(fm_u16 freq)
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
 
-	chan_para = mt6580_chan_para_get(freq);
-	WCN_DBG(FM_DBG | CHIP, "%d chan para = %d\n", (fm_s32) freq, (fm_s32) chan_para);
-	freq_reg = freq;
-	if (0 == fm_get_channel_space(freq_reg))
-		freq_reg *= 10;
 
 	freq_reg = (freq_reg - 6400) * 2 / 10;
 	ret = mt6580_set_bits(0x65, freq_reg, 0xFC00);
@@ -1457,12 +1490,58 @@ static fm_s32 mt6580_soft_mute_tune(fm_u16 freq, fm_s32 *rssi, fm_bool *valid)
 	fm_s32 RSSI = 0, PAMD = 0, MR = 0, ATDC = 0;
 	fm_u32 PRX = 0, ATDEV = 0;
 	fm_u16 softmuteGainLvl = 0;
+	fm_u16 freq_reg = 0;
 
+	/* add this paragragh to resolve Rainier FM sensitivity bad in low band issue */
+#if 0
 	ret = mt6580_chan_para_get(freq);
 	if (ret == 2)
 		ret = mt6580_set_bits(FM_CHANNEL_SET, 0x2000, 0x0FFF);	/* mdf HiLo */
 	else
 		ret = mt6580_set_bits(FM_CHANNEL_SET, 0x0000, 0x0FFF);	/* clear FA/HL/ATJ */
+#endif
+	freq_reg = freq;
+	if (0 == fm_get_channel_space(freq_reg))
+		freq_reg *= 10;
+
+	ret = mt6580_write(0x60, 0x00000007);
+	if (ret)
+		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
+
+	if ((6500 <= freq_reg) && (freq_reg <= 7290)) {
+		ret = mt6580_write(0x39, 0xd002);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((7295 <= freq_reg) && (freq_reg <= 8410)) {
+		ret = mt6580_write(0x39, 0xce02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((8415 <= freq_reg) && (freq_reg <= 9815)) {
+		ret = mt6580_write(0x39, 0xcc02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((9820 <= freq_reg) && (freq_reg <= 9830)) {
+		ret = mt6580_write(0x39, 0xca02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((9835 <= freq_reg) && (freq_reg <= 9940)) {
+		ret = mt6580_write(0x39, 0xcc02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else if ((9845 <= freq_reg) && (freq_reg <= 10800)) {
+		ret = mt6580_write(0x39, 0xca02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	} else {
+		ret = mt6580_write(0x39, 0xca02);
+		if (ret)
+			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
+	}
+
+	ret = mt6580_write(0x60, 0x0000000f);
+	if (ret)
+		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
+	/* end */
 
 	if (FM_LOCK(cmd_buf_lock))
 		return -FM_ELOCK;
@@ -1693,45 +1772,45 @@ static const fm_u16 mt6580_gps_dese_list[] = {
 
 static const fm_s8 mt6580_chan_para_map[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 6500~6595 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 6600~6695 */
-	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 6700~6795 */
+	0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0,	/* 6600~6695 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 6700~6795 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 6800~6895 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 6900~6995 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7000~7095 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0,	/* 6900~6995 */
+	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7000~7095 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7100~7195 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7200~7295 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7300~7395 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,	/* 7200~7295 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2,	/* 7300~7395 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7400~7495 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7500~7595 */
+	0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,	/* 7500~7595 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7600~7695 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7700~7795 */
-	8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7800~7895 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7900~7995 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8000~8095 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8100~8195 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8200~8295 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8300~8395 */
+	0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7700~7795 */
+	8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0,	/* 7800~7895 */
+	0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 7900~7995 */
+	0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8000~8095 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,	/* 8100~8195 */
+	0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8200~8295 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0,	/* 8300~8395 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8400~8495 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8500~8595 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8600~8695 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8700~8795 */
+	0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0,	/* 8600~8695 */
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8700~8795 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8800~8895 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 8900~8995 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9000~9095 */
+	0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9000~9095 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9100~9195 */
-	0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9200~9295 */
-	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9300~9395 */
+	0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0,	/* 9200~9295 */
+	0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9300~9395 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9400~9495 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9500~9595 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9600~9695 */
+	2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9600~9695 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9700~9795 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9800~9895 */
-	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9900~9995 */
+	0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 9900~9995 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10000~10095 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10100~10195 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10200~10295 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10300~10395 */
-	8, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10400~10495 */
+	8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10400~10495 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10500~10595 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10600~10695 */
 	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	/* 10700~10795 */
@@ -1739,7 +1818,7 @@ static const fm_s8 mt6580_chan_para_map[] = {
 };
 
 static const fm_u16 mt6580_scan_dese_list[] = {
-	0
+	6700, 7800, 9210, 9220, 9300, 1040, 1041
 };
 
 static const fm_u16 mt6580_TDD_list[] = {
@@ -1768,7 +1847,7 @@ static const fm_u16 mt6580_TDD_list[] = {
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/* 8700~8795 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/* 8800~8895 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/* 8900~8995 */
-	0x0000, 0x0000, 0x0000, 0x0001, 0x0000,	/* 9000~9095 */
+	0x0000, 0x0000, 0x0000, 0x0100, 0x0000,	/* 9000~9095 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/* 9100~9195 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/* 9200~9295 */
 	0x0000, 0x0000, 0x0000, 0x0000, 0x0000,	/* 9300~9395 */
@@ -1827,7 +1906,7 @@ static fm_s32 mt6580_desense_check(fm_u16 freq, fm_s32 rssi)
 	}
 	return 0;
 }
-
+#if 0
 static fm_bool mt6580_TDD_chan_check(fm_u16 freq)
 {
 	fm_u32 i = 0;
@@ -1850,7 +1929,7 @@ static fm_bool mt6580_TDD_chan_check(fm_u16 freq)
 	} else
 		return fm_false;
 }
-
+#endif
 /* get channel parameter, HL side/ FA / ATJ */
 static fm_u16 mt6580_chan_para_get(fm_u16 freq)
 {
