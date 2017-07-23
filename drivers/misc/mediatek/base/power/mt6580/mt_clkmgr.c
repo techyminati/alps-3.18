@@ -25,7 +25,7 @@
 
 /* #include <mach/mt_dcm.h> */
 #include <mach/mt_spm_mtcmos.h>
-/* #include <mach/mt_spm_sleep.h> */
+#include <mt_spm_sleep.h>
 #include <mach/mt_freqhopping.h>
 /* #include <mach/mt_gpufreq.h> */
 #include <mach/mt_clkmgr.h>
@@ -3789,6 +3789,11 @@ int md_power_on(enum subsys_id id)
 }
 EXPORT_SYMBOL(md_power_on);
 
+bool __attribute__((weak)) spm_is_md_sleep(void)
+{
+	return 0;
+}
+
 int md_power_off(enum subsys_id id, unsigned int timeout)
 {
 	int err;
@@ -3811,12 +3816,12 @@ int md_power_off(enum subsys_id id, unsigned int timeout)
 	BUG_ON(id != SYS_MD1);
 
 	/* 0: not sleep, 1: sleep */
-	/* slept = spm_is_md_sleep(); */
+	slept = spm_is_md_sleep();
 	cnt = (timeout + JIFFIES_PER_LOOP - 1) / JIFFIES_PER_LOOP;
 
 	while (!slept && cnt--) {
 		msleep(MSEC_PER_SEC / JIFFIES_PER_LOOP);
-		/* slept = spm_is_md_sleep(); */
+		slept = spm_is_md_sleep();
 
 		if (slept)
 			break;

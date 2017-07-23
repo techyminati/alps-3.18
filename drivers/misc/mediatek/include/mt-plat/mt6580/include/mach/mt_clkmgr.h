@@ -934,6 +934,8 @@ extern void clk_clr_force_on(int id);
 extern int clk_is_force_on(int id);
 extern void slp_check_pm_mtcmos_pll(void);
 extern void clk_stat_bug(void);
+extern void clkmgr_faudintbus_sq2pll(void);
+extern void clkmgr_faudintbus_pll2sq(void);
 #ifdef CONFIG_MMC_MTK
 extern void msdc_clk_status(int *status);
 #endif
