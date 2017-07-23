@@ -560,6 +560,18 @@ static void mt_gic_dist_init(void)
 
 }
 
+/* set the priority mask to 0x00 for masking all irqs to this cpu */
+void gic_set_primask(void)
+{
+	writel_relaxed(0x00, GIC_CPU_BASE + GIC_CPU_PRIMASK);
+}
+
+/* restore the priority mask value */
+void gic_clear_primask(void)
+{
+	writel_relaxed(0xf0, GIC_CPU_BASE + GIC_CPU_PRIMASK);
+}
+
 static void mt_gic_cpu_init(void)
 {
 	int i;
