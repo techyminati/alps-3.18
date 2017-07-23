@@ -779,16 +779,12 @@
 			status = "disabled";
 		};
 
-		SPI@0x1100C000 {
-			compatible = "mediatek,SPI";
+		spi@1100c000 {
+			compatible = "mediatek,mt6580-spi";
 			cell-index = <0>;
-			spi-padmacro = <0>;
-			/* spi-cs=<0 1>; */
-			/* spi-clk=<1 1>; */
-			/* spi-mo=<2 1>; */
-			/* spi-mi=<3 1>; */
-			reg = <0x1100C000 0x1000>;
-			interrupts = <0 64 0x8>;
+			reg = <0x1100c000 0x1000>;
+			interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_LOW>;
+			mediatek,spi-padmacro = <0>;
 		};
 
 		THERM_CTRL@0x1100D000 {
