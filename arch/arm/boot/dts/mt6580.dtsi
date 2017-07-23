@@ -105,21 +105,30 @@
 						compatible = "pstore-reserve-memory";
 						reg = <0 0x83f10000 0 0xe0000>;
 				};
+				ram_console-reserved-memory@83f00000 {
+						compatible = "mediatek,ram_console";
+						reg = <0 0x83f00000 0 0x10000>;
+				};
 
-		mrdump-reserved-memory {
-			compatible = "mrdump-reserved-memory";
-			reg = <0 0x81F00000 0 0x2000>;
-		};
+				minirdump-reserved-memory@83ff0000 {
+						compatible = "mediatek, minirdump";
+						reg = <0 0x83ff0000 0 0x10000>;
+				};
 
-		preloader-reserved-memory {
-			compatible = "mrdump-reserved-memory";
-			reg = <0 0x82000000 0 0x200000>;
-		};
+				mrdump-reserved-memory {
+						compatible = "mrdump-reserved-memory";
+						reg = <0 0x81f00000 0 0x2000>;
+				};
 
-		lk-reserved-memory {
-			compatible = "mrdump-reserved-memory";
-			reg = <0 0x81E00000 0 0x100000>;
-		};
+				preloader-reserved-memory@82000000 {
+						compatible = "mediatek,preloader";
+						reg = <0 0x82000000 0 0x200000>;
+				};
+
+				lk-reserved-memory@81e00000 {
+						compatible = "mediatek,lk";
+						reg = <0 0x81e00000 0 0x100000>;
+				};
 		};
 
 		gic: interrupt-controller@10210000 {
