@@ -29,7 +29,7 @@
 #include "mt_clkmgr.h"
 
 #ifdef CONFIG_MTK_HIBERNATION
-#include "mach/mtk_hibernate_dpm.h"
+#include <mtk_hibernate_dpm.h>
 #endif
 
 #include "videocodec_kernel_driver.h"
@@ -3488,8 +3488,6 @@ static int vcodec_probe(struct platform_device *dev)
 }
 
 #ifdef CONFIG_MTK_HIBERNATION
-/* extern void mt_irq_set_sens(unsigned int irq, unsigned int sens); */
-/* extern void mt_irq_set_polarity(unsigned int irq, unsigned int polarity); */
 static int vcodec_pm_restore_noirq(struct device *device)
 {
 	/* vdec : IRQF_TRIGGER_LOW */

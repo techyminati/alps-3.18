@@ -19,7 +19,7 @@
 #include <linux/of_address.h>
 #include <linux/types.h>
 #ifdef CONFIG_MTK_HIBERNATION
-#include <mach/mtk_hibernate_dpm.h>
+#include <mtk_hibernate_dpm.h>
 #endif
 #include "mt_device_apc.h"
 #include "mt_io.h"
