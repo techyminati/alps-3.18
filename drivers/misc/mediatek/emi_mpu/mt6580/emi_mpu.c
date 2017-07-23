@@ -1582,14 +1582,14 @@ static int __init emi_mpu_mod_init(void)
 	pr_err("[EMI MPU] EMI_CHKER_ADR = 0x%x\n",
 	       mt_emi_reg_read(EMI_CHKER_ADR));
 
+	/* Set Device APC initialization for EMI-MPU. */
+	mt_devapc_emi_initial();
+
 	if (mt_emi_reg_read(EMI_MPUS)) {
 		pr_err("[EMI MPU] get MPU violation in driver init\n");
 		mpu_check_violation();
 	}
 	__clear_emi_mpu_vio();
-
-	/* Set Device APC initialization for EMI-MPU. */
-	mt_devapc_emi_initial();
 
 	/*
 	 * NoteXXX: Interrupts of violation (including SPC in SMI, or EMI MPU)
