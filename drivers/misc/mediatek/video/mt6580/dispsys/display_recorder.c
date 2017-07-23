@@ -1090,8 +1090,8 @@ int dprec_mmp_dump_rdma_layer(void *rdma_layer, unsigned int rdma_num)
 
 struct logger_buffer {
 	char (*buffer_ptr)[LOGGER_BUFFER_SIZE];
-	unsigned int len;
-	unsigned int id;
+	unsigned int len; /* record buffer_ptr offset */
+	unsigned int id;  /* record current count id  */
 	const unsigned int count;
 	const unsigned int size;
 };
@@ -1106,6 +1106,9 @@ static struct logger_buffer dprec_logger_buffer[DPREC_LOGGER_PR_NUM] = {
 	{dbg_buffer, 0, 0, DEBUG_BUFFER_COUNT, LOGGER_BUFFER_SIZE},
 	{dump_buffer, 0, 0, DUMP_BUFFER_COUNT, LOGGER_BUFFER_SIZE},
 };
+
+static DPREC_LOGGER_PR_TYPE logger_type;
+static int logger_type_offset;
 
 void get_disp_err_buffer(unsigned long *addr, unsigned long *size, unsigned long *start)
 {
@@ -1133,6 +1136,98 @@ void get_disp_dump_buffer(unsigned long *addr, unsigned long *size, unsigned lon
 	*addr = (unsigned long)dump_buffer;
 	*size = DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE;
 	*start = 0;
+}
+
+int panic_dump_disp_log(void *type, unsigned char *stringbuf, size_t size)
+{
+	int fill_size = 0;
+	char *buffer_addr = NULL;
+
+	type = (void *) &logger_type;
+	pr_debug("input dump buffer type=%d, size=%d, offset=%d\n",
+		 (int)logger_type,
+		 (int)size,
+		 (int)logger_type_offset);
+
+	if (logger_type >= DPREC_LOGGER_PR_NUM)
+		return 0;
+	else if (logger_type == DPREC_LOGGER_ERROR) {
+		buffer_addr = (char *)err_buffer;
+		if (size < ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       size,
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset += fill_size;
+			return size;
+		} else if (size >= ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       (ERROR_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset = 0;
+			logger_type = DPREC_LOGGER_FENCE;
+			return size;
+		}
+	} else if (logger_type == DPREC_LOGGER_FENCE) {
+		buffer_addr = (char *)fence_buffer;
+		if (size < FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       size,
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset += fill_size;
+			return size;
+		} else if (size >= FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       (FENCE_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset = 0;
+			logger_type = DPREC_LOGGER_DEBUG;
+			return size;
+		}
+	} else if (logger_type == DPREC_LOGGER_DEBUG) {
+		buffer_addr = (char *)dbg_buffer;
+		if (size < DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       size,
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset += fill_size;
+			return size;
+		} else if (size >= DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       (DEBUG_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset = 0;
+			logger_type = DPREC_LOGGER_DUMP;
+			return size;
+		}
+	} else if (logger_type == DPREC_LOGGER_DUMP) {
+		buffer_addr = (char *)dump_buffer;
+		if (size < DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       size,
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset += fill_size;
+			return size;
+		} else if (size >= DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset) {
+			fill_size += scnprintf(stringbuf,
+					       (DUMP_BUFFER_COUNT * LOGGER_BUFFER_SIZE - logger_type_offset),
+					       "%s",
+					       (char *)(buffer_addr + logger_type_offset));
+			logger_type_offset = 0;
+			logger_type = DPREC_LOGGER_ERROR;
+			return 0;
+		}
+	} else {
+		pr_debug("there is no this input dump buffer type\n");
+		return 0;
+	}
+	return 0;
 }
 
 static DEFINE_SPINLOCK(dprec_logger_spinlock);
