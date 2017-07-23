@@ -22,9 +22,14 @@
 #include <linux/serial_core.h>
 #include <linux/serial.h>
 
-#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
 #include <mach/mt_clkmgr.h>
+#if 0
 #include <mach/mt_idle.h>
+#endif
+#endif				/* defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)*/
+
+#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
 #include "mach/mt_gpio.h"
 #include <cust_gpio_usage.h>
 #endif /* defined(CONFIG_MTK_LEGACY) && !defined (CONFIG_MTK_FPGA)*/
@@ -34,6 +39,11 @@
 #include "include/mtk_uart_intf.h"
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
+
+void set_uart_pinctrl(int idx, struct pinctrl *ppinctrl)
+{
+	/* dummy */
+}
 
 #ifdef ENABLE_RAW_DATA_DUMP
 static void save_tx_raw_data(struct mtk_uart *uart, void *addr);
@@ -62,7 +72,7 @@ static struct mtk_uart_setting mtk_uart_default_settings[] = {
 	 .tx_trig = UART_FCR_TXFIFO_1B_TRI, .rx_trig = UART_FCR_RXFIFO_12B_TRI,
 
 	 /* .uart_base = AP_UART0_BASE, .irq_num = UART0_IRQ_BIT_ID, .irq_sen = MT_LEVEL_SENSITIVE, */
-#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
 	 .set_bit = PDN_FOR_UART1, .clr_bit = PDN_FOR_UART1, .pll_id = PDN_FOR_UART1,
 #endif
 	 .sysrq = FALSE, .hw_flow = TRUE, .vff = TRUE,
@@ -72,7 +82,7 @@ static struct mtk_uart_setting mtk_uart_default_settings[] = {
 	 .tx_trig = UART_FCR_TXFIFO_1B_TRI, .rx_trig = UART_FCR_RXFIFO_12B_TRI,
 
 	 /* .uart_base = AP_UART1_BASE, .irq_num = UART1_IRQ_BIT_ID, .irq_sen = MT_LEVEL_SENSITIVE, */
-#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
 	 .set_bit = PDN_FOR_UART2, .clr_bit = PDN_FOR_UART2, .pll_id = PDN_FOR_UART2,
 #endif
 	 .sysrq = FALSE, .hw_flow = TRUE, .vff = TRUE,
@@ -1561,6 +1571,7 @@ void mtk_uart_power_up(struct mtk_uart *uart)
 		MSG(FUC, "%s(%d)\n", __func__, uart->poweron_count);
 	} else {
 #ifdef POWER_FEATURE
+#if defined(CONFIG_MTK_CLKMGR)
 		if (0 != enable_clock(setting->pll_id, "UART"))
 			MSG(ERR, "power on fail!!\n");
 		if ((uart != console_port)
@@ -1568,6 +1579,7 @@ void mtk_uart_power_up(struct mtk_uart *uart)
 			if (0 != enable_clock(PDN_FOR_DMA, "VFIFO"))
 				MSG(ERR, "power on dma fail!\n");
 		}
+#endif
 		uart->poweron_count++;
 #endif
 	}
@@ -1590,6 +1602,7 @@ void mtk_uart_power_down(struct mtk_uart *uart)
 		MSG(FUC, "%s(%d)\n", __func__, uart->poweron_count);
 	} else {
 #ifdef POWER_FEATURE
+#if defined(CONFIG_MTK_CLKMGR)
 		if (0 != disable_clock(setting->pll_id, "UART"))
 			MSG(ERR, "power off fail!!\n");
 		if ((uart != console_port)
@@ -1597,6 +1610,7 @@ void mtk_uart_power_down(struct mtk_uart *uart)
 			if (0 != disable_clock(PDN_FOR_DMA, "VFIFO"))
 				MSG(ERR, "power off dma fail!\n");
 		}
+#endif
 		uart->poweron_count--;
 #endif
 		MSG(FUC, "%s(%d) => dn\n", __func__, uart->poweron_count);
@@ -2344,9 +2358,11 @@ void mtk_uart_switch_to_rx(struct mtk_uart *uart)
 void mtk_uart_enable_dpidle(struct mtk_uart *uart)
 {
 /* FIX-ME early porting */
-#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
+#if 0
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
 	enable_dpidle_by_bit(uart->setting->pll_id);
 	enable_soidle_by_bit(uart->setting->pll_id);
+#endif
 #endif
 }
 
@@ -2354,9 +2370,11 @@ void mtk_uart_enable_dpidle(struct mtk_uart *uart)
 void mtk_uart_disable_dpidle(struct mtk_uart *uart)
 {
 /* FIX-ME early porting */
-#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
+#if 0
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
 	disable_dpidle_by_bit(uart->setting->pll_id);
 	disable_soidle_by_bit(uart->setting->pll_id);
+#endif
 #endif
 }
 
