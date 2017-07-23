@@ -23,6 +23,7 @@
 
 /* t-base fastcall  */
 /*
+ *          ***   obsolete  ***
  * Command to inform SW that we will enter in Power Sleep (Dormant).
  * Parameters:
  *   - param0, the NW wakeup addr (phys).
@@ -31,18 +32,22 @@
  * Return:
  *   - Cannot fail, always MC_FC_RET_OK.
  */
-#define MC_FC_SLEEP                     -3
+/*#define MC_FC_SLEEP                     -3 */
+
 /*
  * Command to write NW reset addr for Slave cpus.
  * Parameters:
  *   - param0, the NW reset addr (phys).
  *   - param1, the cpuID.
- *   - param2, unused.
+ *   - param2, in case of erratum 802022, 1.
+ *             otherwise, 0
  * Return:
  *   - Cannot fail, always MC_FC_RET_OK.
  */
 #define MC_FC_SET_RESET_VECTOR		-301
+
 /*
+ *          ***   obsolete  ***
  * Command to switch off BootRom.
  * Parameters:
  *   - param0, unused.
@@ -51,7 +56,8 @@
  * Return:
  *   - Cannot fail, always MC_FC_RET_OK.
  */
-#define MC_FC_TURN_OFF_BOOTROM		-302
+/* #define MC_FC_TURN_OFF_BOOTROM		-302 */
+
 /*
  * Command to cancel a sleep command in case of Dormant abort.
  * Parameters:
@@ -63,15 +69,18 @@
  */
 #define MC_FC_SLEEP_CANCELLED		-303
 
+
 /*
- * The command to notify SWd about entering the deep sleep mode
- * is equivalent to MC_FC_SLEEP but has different implementation on SWd.
- *   - param0, unused.
- *   - param1, unused.
+ * Command to inform SW that we will enter in Power Sleep (Dormant).
+ * Parameters:
+ *   - param0, the NW wakeup addr (phys).
+ *   - param1, the cpuID who will sleep
  *   - param2, unused.
  * Return:
  *   - Cannot fail, always MC_FC_RET_OK.
  */
+#define MC_FC_MTK_SLEEP             -304
+
 #define MC_FC_ERRATA_808022		-305
 
 #define MC_FC_MTK_AEEDUMP		-306
