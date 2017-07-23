@@ -92,4 +92,9 @@ extern int mt_cpu_kill(unsigned int cpu);
 extern void mt_cpu_die(unsigned int cpu);
 extern int mt_cpu_disable(unsigned int cpu);
 
+/* set the priority mask to 0x00 for masking all irqs to this cpu */
+extern void gic_set_primask(void);
+/* restore the priority mask value */
+extern void gic_clear_primask(void);
+
 #endif

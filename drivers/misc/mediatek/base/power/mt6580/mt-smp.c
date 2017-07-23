@@ -181,6 +181,11 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 		atomic_dec(&hotplug_cpu_count);
 		return -ENOSYS;
 	}
+
+#ifdef CONFIG_MTK_IRQ_NEW_DESIGN
+	gic_clear_primask();
+#endif
+
 	return 0;
 }
 

@@ -198,6 +198,10 @@ void mt_cpu_die(unsigned int cpu)
 	 */
 	cpu_leave_lowpower(cpu);
 
+#ifdef CONFIG_MTK_IRQ_NEW_DESIGN
+	gic_set_primask();
+#endif
+
 	if (spurious)
 		HOTPLUG_INFO(
 			"spurious wakeup call, cpu: %d, spurious: %d\n",
