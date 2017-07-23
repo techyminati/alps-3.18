@@ -50,13 +50,15 @@ enum {
 	NR_IDX_DI,
 };
 typedef void (*cpuVoltsampler_func) (enum mt_cpu_dvfs_id, unsigned int mv);
+#define CPUDVFS_WORKAROUND_FOR_GIT	1
 
 /* PMIC WRAP ADDR */
-#ifdef CONFIG_OF
-	extern void __iomem *pwrap_base;
+/* #ifdef CONFIG_OF */
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
+extern void __iomem *pwrap_base;
 #define PWRAP_BASE_ADDR     ((unsigned int)pwrap_base)
 #else
-#include "mach/mt_reg_base.h"
+#define PWRAP_BASE 0x0
 #define PWRAP_BASE_ADDR     PWRAP_BASE
 #endif
 

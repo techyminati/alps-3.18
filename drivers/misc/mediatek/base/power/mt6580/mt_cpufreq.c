@@ -26,11 +26,11 @@
 #include <linux/kthread.h>
 #include <linux/hrtimer.h>
 #include <linux/ktime.h>
-#include <linux/xlog.h>
 #include <linux/jiffies.h>
 #include <linux/bitops.h>
 #include <linux/uaccess.h>
-#include <linux/aee.h>
+#include "aee.h"
+#include <linux/seq_file.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
@@ -38,19 +38,15 @@
 #endif
 
 /* project includes */
-#include "mach/mt_typedefs.h"
-#include "mach/irqs.h"
-#include "mach/mt_irq.h"
-#include "mach/mt_thermal.h"
-#include "mach/mt_spm_idle.h"
-#include "mach/mt_pmic_wrap.h"
+/* #include "mach/mt_typedefs.h" */
+#include <asm/io.h>
+/* #include "mach/mt_thermal.h" */
+/* #include "mach/mt_pmic_wrap.h" */
 #include "mach/mt_clkmgr.h"
-#include "mach/mt_freqhopping.h"
-#include "mach/mt_ptp.h"
-#include "mach/upmu_sw.h"
-#include "mach/mtk_rtc_hal.h"
-#include "mach/mt_rtc_hw.h"
-#include "mach/mt_hotplug_strategy.h"
+/* #include "mach/mt_freqhopping.h" */
+#include "mt_ptp.h"
+/* #include "mach/upmu_sw.h" */
+/* #include "mach/mt_hotplug_strategy.h" */
 
 #ifndef __KERNEL__
 #include "freqhop_sw.h"
@@ -58,25 +54,12 @@
 #include "clock_manager.h"
 #include "pmic.h"
 #else
-#include "mach/mt_spm.h"
+#include "mt_spm.h"
 #endif
 
 /* local includes */
-#include "mach/mt_cpufreq.h"
-void ext_buck_vosel(unsigned long val)
-{
-}
-int is_ext_buck_sw_ready(void)
-{
-	return 0;
-}
-int is_ext_buck_exist(void)
-{
-	return 0;
-}
-void fan53555_read_byte(kal_uint8 cmd, kal_uint8 *returnData)
-{
-}
+#include "mt_cpufreq.h"
+
 /*=============================================================*/
 /* Macro definition                                            */
 /*=============================================================*/
@@ -89,7 +72,7 @@ void fan53555_read_byte(kal_uint8 cmd, kal_uint8 *returnData)
 #define MAX(a, b) ((a) >= (b) ? (a) : (b))
 #define MIN(a, b) ((a) >= (b) ? (b) : (a))
 
-/* used @ set_cur_volt_extBuck() */
+/* used @ set_cur_volt() */
 #define MAX_VPROC_VOLT             115000	/* 1150mv * 100 */
 
 /* PMIC/PLL settle time (us), should not be changed */
@@ -172,11 +155,10 @@ static unsigned int do_dvfs_stress_test;
 /*
  * REG ACCESS
  */
-#define cpufreq_read(addr)                  DRV_Reg32(addr)
+#define cpufreq_read(addr)                  __raw_readl(addr)
 #define cpufreq_write(addr, val)            mt_reg_sync_writel(val, addr)
 #define cpufreq_write_mask(addr, mask, val) \
 cpufreq_write(addr, (cpufreq_read(addr) & ~(_BITMASK_(mask))) | _BITS_(mask, val))
-
 
 /*=============================================================*/
 /* Local type definition                                       */
@@ -232,12 +214,6 @@ bool is_in_cpufreq = 0;
 static unsigned int _mt_cpufreq_get_cpu_level(void)
 {
 	unsigned int lv = 0;
-unsigned int func_code_0 = _GET_BITS_VAL_(27:24, get_devinfo_with_index(FUNC_CODE_EFUSE_INDEX));
-unsigned int func_code_1 = _GET_BITS_VAL_(31:28, get_devinfo_with_index(FUNC_CODE_EFUSE_INDEX));
-
-	cpufreq_info("from efuse: function code 0 = 0x%x, function code 1 = 0x%x\n", func_code_0,
-		     func_code_1);
-
 	/* get CPU clock-frequency from DT */
 #ifdef CONFIG_OF
 	lv = CPU_LEVEL_0;
@@ -292,9 +268,6 @@ static unsigned int _mt_cpufreq_get_cpu_level(void)
  */
 #define VOLT_TO_PMIC_VAL(volt)  (((volt) - 70000 + 625 - 1) / 625)
 #define PMIC_VAL_TO_VOLT(pmic)  (((pmic) * 625) + 70000)
-
-#define VOLT_TO_EXTBUCK_VAL(volt) (((((volt) - 800) + 9) / 10) & 0x7F)
-#define EXTBUCK_VAL_TO_VOLT(val)  (800 + ((val) & 0x7F) * 10)
 
 #define PMIC_WRAP_DVFS_ADR0     (PWRAP_BASE_ADDR + 0x0E4)
 #define PMIC_WRAP_DVFS_WDATA0   (PWRAP_BASE_ADDR + 0x0E8)
@@ -516,9 +489,6 @@ EXPORT_SYMBOL(mt_cpufreq_setvolt_registerCB);
 #define cpu_dvfs_get_cur_volt(p)                (p->opp_tbl[p->idx_opp_tbl].cpufreq_volt)
 #define cpu_dvfs_get_volt_by_idx(p, idx)        (p->opp_tbl[idx].cpufreq_volt)
 
-#define cpu_dvfs_is_extbuck_valid()     (is_ext_buck_exist() && is_ext_buck_sw_ready())
-
-
 struct mt_cpu_freq_info {
 	const unsigned int cpufreq_khz;
 	unsigned int cpufreq_volt;	/* mv * 100 */
@@ -582,7 +552,7 @@ struct mt_cpu_dvfs_ops {
 	unsigned int (*get_cur_phy_freq)(struct mt_cpu_dvfs *p);
 	void (*set_cur_freq)(struct mt_cpu_dvfs *p, unsigned int cur_khz, unsigned int target_khz);
 
-	/* for volt change (PMICWRAP/extBuck) */
+	/* for volt change (PMICWRAP) */
 	unsigned int (*get_cur_volt)(struct mt_cpu_dvfs *p);
 	int (*set_cur_volt)(struct mt_cpu_dvfs *p, unsigned int volt);
 };
@@ -595,11 +565,9 @@ static int setup_power_table(struct mt_cpu_dvfs *p);
 static unsigned int get_cur_phy_freq(struct mt_cpu_dvfs *p);
 static void set_cur_freq(struct mt_cpu_dvfs *p, unsigned int cur_khz, unsigned int target_khz);
 
-/* for volt change (PMICWRAP/extBuck) */
+/* for volt change (PMICWRAP) */
 static unsigned int get_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p);
 static int set_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p, unsigned int volt);	/* volt: mv * 100 */
-static unsigned int get_cur_volt_extbuck(struct mt_cpu_dvfs *p);
-static int set_cur_volt_extbuck(struct mt_cpu_dvfs *p, unsigned int volt);	/* volt: mv * 100 */
 
 static unsigned int max_cpu_num = 8;
 
@@ -613,23 +581,12 @@ static struct mt_cpu_dvfs_ops dvfs_ops_pmic_wrap = {
 	.set_cur_volt = set_cur_volt_pmic_wrap,
 };
 
-static struct mt_cpu_dvfs_ops dvfs_ops_extbuck = {
-	.setup_power_table = setup_power_table,
-
-	.get_cur_phy_freq = get_cur_phy_freq,
-	.set_cur_freq = set_cur_freq,
-
-	.get_cur_volt = get_cur_volt_extbuck,
-	.set_cur_volt = set_cur_volt_extbuck,
-};
-
-
 static struct mt_cpu_dvfs cpu_dvfs[] = {
 	[MT_CPU_DVFS_LITTLE] = {
 				.name = __stringify(MT_CPU_DVFS_LITTLE),
 				.cpu_id = MT_CPU_DVFS_LITTLE,
 				.cpu_level = CPU_LEVEL_1,	/* 1.7GHz */
-				.ops = &dvfs_ops_extbuck,
+				.ops = &dvfs_ops_pmic_wrap,
 
 				.pre_online_cpu = 0,
 				.pre_freq = 0,
@@ -730,9 +687,6 @@ struct turbo_mode_cfg {
 #define TURBO_MODE_FREQ(mode, freq) \
 (((freq * (100 + turbo_mode_cfg[mode].freq_delta)) / PLL_FREQ_STEP) / 100 * PLL_FREQ_STEP)
 #define TURBO_MODE_VOLT(mode, volt) (volt + turbo_mode_cfg[mode].volt_delta)
-
-static unsigned int num_online_cpus_delta;
-static bool is_in_turbo_mode;
 
 static enum turbo_mode get_turbo_mode(struct mt_cpu_dvfs *p, unsigned int target_khz)
 {
@@ -1173,14 +1127,16 @@ BUG_ON(dds & _BITMASK_(26:24));/* should not use posdiv */
 #if !defined(__KERNEL__) && defined(MTKDRV_FREQHOP)
 		fhdrv_dvt_dvfs_enable(ARMCA7PLL_ID, dds);
 #else				/* __KERNEL__ */
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
 		mt_dfs_armpll(FH_ARMCA7_PLLID, dds);
+#endif
 #endif				/* ! __KERNEL__ */
 	}
 
 	FUNC_EXIT(FUNC_LV_LOCAL);
 }
 
-/* for volt change (PMICWRAP/extBuck) */
+/* for volt change (PMICWRAP) */
 
 static unsigned int get_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p)
 {
@@ -1190,7 +1146,9 @@ static unsigned int get_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p)
 	FUNC_ENTER(FUNC_LV_LOCAL);
 
 	do {
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
 		pwrap_read(PMIC_ADDR_VCORE_VOSEL_ON, &rdata);
+#endif
 	} while (rdata == PMIC_VAL_TO_VOLT(0) && retry_cnt--);
 
 	rdata = PMIC_VAL_TO_VOLT(rdata);
@@ -1199,28 +1157,6 @@ static unsigned int get_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p)
 	FUNC_EXIT(FUNC_LV_LOCAL);
 
 	return rdata;		/* vproc: mv*100 */
-}
-
-#define fan53555_VDVFS11_CON13 0x01
-static unsigned int get_cur_volt_extbuck(struct mt_cpu_dvfs *p)
-{
-	unsigned char ret_val = 0;
-	unsigned int ret_volt = 0;	/* volt: mv * 100 */
-	unsigned int retry_cnt = 5;
-
-	FUNC_ENTER(FUNC_LV_LOCAL);
-
-	if (cpu_dvfs_is_extbuck_valid()) {
-		do {
-			fan53555_read_byte(fan53555_VDVFS11_CON13, &ret_val);
-			ret_volt = EXTBUCK_VAL_TO_VOLT(ret_val);
-		} while (ret_volt == EXTBUCK_VAL_TO_VOLT(0) && retry_cnt--);
-	} else
-		cpufreq_err("%s(), can not use ext buck!\n", __func__);
-
-	FUNC_EXIT(FUNC_LV_LOCAL);
-
-	return ret_volt;
 }
 
 unsigned int mt_cpufreq_get_cur_volt(enum mt_cpu_dvfs_id id)
@@ -1237,47 +1173,6 @@ unsigned int mt_cpufreq_get_cur_volt(enum mt_cpu_dvfs_id id)
 	return p->ops->get_cur_volt(p);	/* mv * 100 */
 }
 EXPORT_SYMBOL(mt_cpufreq_get_cur_volt);
-
-static unsigned int _calc_pmic_settle_time(unsigned int old_vproc, unsigned int old_vsram,
-					   unsigned int new_vproc, unsigned int new_vsram)
-{
-	unsigned delay = 100;
-
-	if (new_vproc == old_vproc && new_vsram == old_vsram)
-		return 0;
-
-	/* VPROC is UP */
-	if (new_vproc >= old_vproc) {
-		/* VSRAM is UP too, choose larger one to calculate settle time */
-		if (new_vsram >= old_vsram)
-			delay = MAX(PMIC_VOLT_UP_SETTLE_TIME(old_vsram, new_vsram),
-				    PMIC_VOLT_UP_SETTLE_TIME(old_vproc, new_vproc)
-			    );
-		/* VSRAM is DOWN, it may happen at bootup stage */
-		else
-			delay = MAX(PMIC_VOLT_DOWN_SETTLE_TIME(old_vsram, new_vsram),
-				    PMIC_VOLT_UP_SETTLE_TIME(old_vproc, new_vproc)
-			    );
-	}
-	/* VPROC is DOWN */
-	else {
-		/* VSRAM is DOWN too, choose larger one to calculate settle time */
-		if (old_vsram >= new_vsram)
-			delay = MAX(PMIC_VOLT_DOWN_SETTLE_TIME(old_vsram, new_vsram),
-				    PMIC_VOLT_DOWN_SETTLE_TIME(old_vproc, new_vproc)
-			    );
-		/* VSRAM is UP, it may happen at bootup stage */
-		else
-			delay = MAX(PMIC_VOLT_UP_SETTLE_TIME(old_vsram, new_vsram),
-				    PMIC_VOLT_DOWN_SETTLE_TIME(old_vproc, new_vproc)
-			    );
-	}
-
-	if (delay < MIN_PMIC_SETTLE_TIME)
-		delay = MIN_PMIC_SETTLE_TIME;
-
-	return delay;
-}
 
 #define PMIC_SETTLE_TIME (40)	/* us */
 static int set_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p, unsigned int volt)
@@ -1299,49 +1194,6 @@ static int set_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p, unsigned int volt)
 	FUNC_EXIT(FUNC_LV_LOCAL);
 
 	return 0;
-}
-
-static void dump_opp_table(struct mt_cpu_dvfs *p)
-{
-	int i;
-
-	cpufreq_err("[%s/%d]\n" "cpufreq_oppidx = %d\n", p->name, p->cpu_id, p->idx_opp_tbl);
-
-	for (i = 0; i < p->nr_opp_tbl; i++) {
-		cpufreq_err("\tOP(%d, %d),\n",
-			    cpu_dvfs_get_freq_by_idx(p, i), cpu_dvfs_get_volt_by_idx(p, i)
-		    );
-	}
-}
-
-static int set_cur_volt_extbuck(struct mt_cpu_dvfs *p, unsigned int volt)
-{				/* volt: vproc (mv*100) */
-	unsigned int cur_vproc = get_cur_volt_extbuck(p);
-	int ret = 0;
-
-	FUNC_ENTER(FUNC_LV_LOCAL);
-
-	if (cur_vproc == 0 || !cpu_dvfs_is_extbuck_valid()) {
-		cpufreq_err("@%s():%d, can not use ext buck!\n", __func__, __LINE__);
-		return -1;
-	}
-	/* wait for WY */
-	if (cpu_dvfs_is_extbuck_valid())
-		ext_buck_vosel(VOLT_TO_EXTBUCK_VAL(cur_vproc));
-	else {
-		cpufreq_err("%s(), fail to set ext buck volt\n", __func__);
-		ret = -1;
-	}
-
-	if (NULL != g_pCpuVoltSampler)
-		g_pCpuVoltSampler(MT_CPU_DVFS_LITTLE, volt / 100);	/* mv */
-
-	cpufreq_ver("@%s():%d, cur_vproc = %d\n", __func__, __LINE__, cur_vproc);
-
-
-	FUNC_EXIT(FUNC_LV_LOCAL);
-
-	return ret;
 }
 
 /* cpufreq set (freq & volt) */
@@ -1374,7 +1226,6 @@ static int _cpufreq_set_locked(struct mt_cpu_dvfs *p, unsigned int cur_khz, unsi
 	int ret = 0;
 #ifdef CONFIG_CPU_FREQ
 	struct cpufreq_freqs freqs;
-	unsigned int cpu;
 #endif
 
 	enum turbo_mode mode = get_turbo_mode(p, target_khz);
@@ -1499,54 +1350,6 @@ static void _mt_cpufreq_set(enum mt_cpu_dvfs_id id, int new_opp_idx)
 
 	FUNC_EXIT(FUNC_LV_LOCAL);
 }
-
-static int __cpuinit turbo_mode_cpu_callback(struct notifier_block *nfb,
-					     unsigned long action, void *hcpu)
-{
-	unsigned int cpu = (unsigned long)hcpu;
-	unsigned int online_cpus = num_online_cpus();
-	struct device *dev;
-	struct mt_cpu_dvfs *p = id_to_cpu_dvfs(0);
-
-	cpufreq_ver(
-		"@%s():%d, cpu = %d, action = %lu, oppidx = %d, num_online_cpus = %d, num_online_cpus_delta = %d\n"
-		, __func__, __LINE__, cpu, action, p->idx_opp_tbl, online_cpus, num_online_cpus_delta);
-
-	dev = get_cpu_device(cpu);
-
-	if (dev) {
-		if (TURBO_MODE_BOUNDARY_CPU_NUM == online_cpus) {
-			switch (action) {
-			case CPU_UP_PREPARE:
-			case CPU_UP_PREPARE_FROZEN:
-				num_online_cpus_delta = 1;
-
-			case CPU_DEAD:
-			case CPU_DEAD_FROZEN:
-				_mt_cpufreq_set(MT_CPU_DVFS_LITTLE, -1);
-				break;
-			}
-		} else {
-			switch (action) {
-			case CPU_ONLINE:	/* CPU UP done */
-			case CPU_ONLINE_FROZEN:
-			case CPU_UP_CANCELED:	/* CPU UP failed */
-			case CPU_UP_CANCELED_FROZEN:
-				num_online_cpus_delta = 0;
-				break;
-			}
-		}
-
-		cpufreq_ver(
-			"@%s():%d, cpu = %d, action = %lu, oppidx = %d, num_online_cpus = %d, num_online_cpus_delta = %d\n"
-			, __func__, __LINE__, cpu, action, p->idx_opp_tbl, online_cpus, num_online_cpus_delta);
-	}
-	return NOTIFY_OK;
-}
-
-static struct notifier_block __refdata turbo_mode_cpu_notifier = {
-	.notifier_call = turbo_mode_cpu_callback,
-};
 
 static void _set_no_limited(struct mt_cpu_dvfs *p)
 {
@@ -1766,10 +1569,13 @@ static int _mt_cpufreq_setup_freqs_table(struct cpufreq_policy *policy,
 #ifdef CONFIG_CPU_FREQ
 	ret = cpufreq_frequency_table_cpuinfo(policy, p->freq_tbl_for_cpufreq);
 
+#if 0
 	if (!ret)
-		policy->freq_table = table;
-
-
+		cpufreq_frequency_table_get_attr(p->freq_tbl_for_cpufreq, policy->cpu);
+#else
+	if (!ret)
+		policy->freq_table = p->freq_tbl_for_cpufreq;
+#endif
 #endif
 
 	if (NULL == p->power_tbl)
@@ -1891,7 +1697,9 @@ void mt_cpufreq_thermal_protect(unsigned int limited_power)
 			     p->limited_max_freq, p->limited_max_ncpu);
 
 		cpufreq_unlock(flag);	/* <- unlock */
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
 		hps_set_cpu_num_limit(LIMIT_THERMAL, p->limited_max_ncpu, 0);
+#endif
 		/* correct opp idx will be calcualted in _thermal_limited_verify() */
 		_mt_cpufreq_set(MT_CPU_DVFS_LITTLE, -1);
 		cpufreq_cpu_put(policy);	/* <- policy put */
@@ -2126,10 +1934,7 @@ static int _mt_cpufreq_init(struct cpufreq_policy *policy)
 			|| lv == CPU_LEVEL_3));
 
 		p->cpu_level = lv;
-
-		if (!cpu_dvfs_is_extbuck_valid())
-			p->ops = &dvfs_ops_pmic_wrap;
-
+		p->ops = &dvfs_ops_pmic_wrap;
 
 		ret = _mt_cpufreq_setup_freqs_table(policy,
 						    opp_tbl_info->opp_tbl, opp_tbl_info->size);
@@ -2672,10 +2477,7 @@ static int cpufreq_volt_proc_show(struct seq_file *m, void *v)
 {
 	struct mt_cpu_dvfs *p = (struct mt_cpu_dvfs *)m->private;
 
-	if (cpu_dvfs_is_extbuck_valid())
-		seq_printf(m, "Vproc: %d mv\n", p->ops->get_cur_volt(p) / 100);	/* mv */
-	else
-		seq_printf(m, "%d mv\n", p->ops->get_cur_volt(p) / 100);	/* mv */
+	seq_printf(m, "%d mv\n", p->ops->get_cur_volt(p) / 100);	/* mv */
 
 	return 0;
 }

@@ -2,7 +2,7 @@
 #define _MT_PTP_
 
 #include <linux/kernel.h>
-#include <mach/sync_write.h>
+#include <sync_write.h>
 
 #define EN_PTP_OD (1)		/* enable/disable PTP-OD (SW) */
 
@@ -15,7 +15,6 @@ extern void __iomem *ptpod_base;
 #else
 #define ptpod_base PTP_BASEADDR
 #endif
-
 
 /* PTP Register Definition */
 /* #define PTP_BASEADDR        (0xF100B000) */

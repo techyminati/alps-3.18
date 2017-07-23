@@ -1,19 +1,3 @@
-struct devinfo {
-	int sn;
-	int M_HW_RES4;
-	int M_HW_RES5;
-	int M_HW_RES0;
-	int M_HW_RES1;
-	int M_HW_RES7;
-	int M_HW_RES8;
-	int M_HW_RES9;
-	int M_HW_RES6;
-	int core;
-	int gpu;
-	int sram2;
-	int sram1;
-} devinfo[];
-
 unsigned int reg_dump_addr_off[] = {
 	0x0000,
 	0x0004,
@@ -145,30 +129,27 @@ unsigned int reg_dump_addr_off[] = {
 #include <linux/completion.h>
 #include <linux/fs.h>
 #include <linux/file.h>
-
+#include <linux/uaccess.h>
 /* project includes */
-#include "mach/mt_reg_base.h"
-#include "mach/mt_typedefs.h"
-
-#include "mach/irqs.h"
-#include "mach/mt_irq.h"
-#include "mach/mt_ptp.h"
-#include "mach/mt_cpufreq.h"
-#include "mach/mt_thermal.h"
-#include "mach/mt_spm_idle.h"
-#include "mach/mt_pmic_wrap.h"
+/* #include "mach/mt_typedefs.h" */
+#include <linux/seq_file.h>
+#include <asm/io.h>
+/*#include "mach/irqs.h"
+#include "mach/mt_irq.h"*/
+#include "mt_ptp.h"
+#include "mt_cpufreq.h"
+/*#include "mach/mt_thermal.h"
+#include "mach/mt_pmic_wrap.h"*/
 #include "mach/mt_clkmgr.h"
-#include "mach/mt_freqhopping.h"
-#include "mach/mtk_rtc_hal.h"
-#include "mach/mt_rtc_hw.h"
+/*#include "mach/mt_freqhopping.h"*/
+
 #ifdef CONFIG_OF
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
 #endif
 /* local includes */
-#include <mach/mt_ptp.h>
-#include <linux/aee.h>
+#include "aee.h"
 
 /* Global variable for slow idle*/
 volatile unsigned int ptp_data[3] = { 0, 0, 0 };
@@ -274,12 +255,11 @@ static unsigned int func_lv_mask;
  * REG ACCESS
  */
 
-#define ptp_read(addr)	DRV_Reg32(addr)
+#define ptp_read(addr)	__raw_readl(addr)
 #define ptp_read_field(addr, range)	\
 	((ptp_read(addr) & BITMASK(range)) >> LSB(range))
 
 #define ptp_write(addr, val)	mt_reg_sync_writel(val, addr)
-
 /*
  * Write a field of a register.
  * @addr:	Address of the register
@@ -726,6 +706,7 @@ static int base_ops_init02(struct ptp_det *det)
 
 static int base_ops_mon_mode(struct ptp_det *det)
 {
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
 	struct TS_PTPOD ts_info;
 	thermal_bank_name ts_bank;
 
@@ -765,7 +746,7 @@ static int base_ops_mon_mode(struct ptp_det *det)
 	det->ops->set_phase(det, PTP_PHASE_MON);
 
 	FUNC_EXIT(FUNC_LV_HELP);
-
+#endif
 	return 0;
 }
 
@@ -929,6 +910,7 @@ static void base_ops_set_phase(struct ptp_det *det, ptp_phase phase)
 
 static int base_ops_get_temp(struct ptp_det *det)
 {
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
 	thermal_bank_name ts_bank;
 
 	FUNC_ENTER(FUNC_LV_HELP);
@@ -936,10 +918,12 @@ static int base_ops_get_temp(struct ptp_det *det)
 	ts_bank = THERMAL_BANK0;
 
 	FUNC_EXIT(FUNC_LV_HELP);
-#endif
 
 #ifdef CONFIG_THERMAL
 	return tscpu_get_temp_by_bank(ts_bank);
+#else
+	return 0;
+#endif
 #else
 	return 0;
 #endif
@@ -1639,8 +1623,6 @@ static irqreturn_t ptp_isr(int irq, void *dev_id)
 	return IRQ_HANDLED;
 }
 
-#endif
-
 void ptp_init01(void)
 {
 	struct ptp_det *det;
@@ -1709,11 +1691,12 @@ void get_devinfo(struct ptp_devinfo *p)
 
 	FUNC_ENTER(FUNC_LV_HELP);
 
-	val[0] = get_devinfo_with_index(31);	/* ptp_read(0x10009180); /* M_HW_RES0 */ */
-	val[1] = get_devinfo_with_index(32);	/* ptp_read(0x10009184); /* M_HW_RES1 */ */
-	val[2] = get_devinfo_with_index(33);	/* ptp_read(0x10009188); /* M_HW_RES2 */ */
-	val[3] = get_devinfo_with_index(34);	/* ptp_read(0x1000918C); /* M_HW_RES3 */ */
-
+#ifndef CPUDVFS_WORKAROUND_FOR_GIT
+	val[0] = get_devinfo_with_index(31);	/* ptp_read(0x10009180); */
+	val[1] = get_devinfo_with_index(32);	/* ptp_read(0x10009184); */
+	val[2] = get_devinfo_with_index(33);	/* ptp_read(0x10009188); */
+	val[3] = get_devinfo_with_index(34);	/* ptp_read(0x1000918C); */
+#endif
 
 	ptp_crit("val[0]=0x%x\n", val[0]);
 	ptp_crit("val[1]=0x%x\n", val[1]);
@@ -2357,7 +2340,6 @@ static void __exit ptp_exit(void)
 }
 
 late_initcall(ptp_init);
-#endif
 
 MODULE_DESCRIPTION("MediaTek PTPOD Driver v0.3");
 MODULE_LICENSE("GPL");
