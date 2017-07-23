@@ -84,7 +84,7 @@
 #include "gl_os.h"
 
 
-#include <mach/emi_mpu.h>
+/* #include <mach/emi_mpu.h> */
 
 #if (CONF_MTK_AHB_DMA == 1)
 
@@ -180,7 +180,7 @@ VOID HifPdmaInit(GL_HIF_INFO_T *HifInfo)
 	/* enable GDMA mode */
 	HifInfo->fgDmaEnable = TRUE;
 
-#if 1				/* MPU Setting, we need to enable it after MPU ready */
+#if 0				/* MPU Setting, we need to enable it after MPU ready */
 	/* WIFI using TOP 512KB */
 	DBGLOG(INIT, INFO, "[wlan] MPU region 5, 0x%08x - 0x%08x\n", (UINT_32) gConEmiPhyBase,
 	       (UINT_32) (gConEmiPhyBase + 512 * 1024));
