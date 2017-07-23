@@ -49,9 +49,7 @@
 static int dma_force[HOST_MAX_NUM] =	/* used for sd ioctrol */
 {
 	FORCE_NOTHING,
-	FORCE_NOTHING,
-	FORCE_NOTHING,
-	FORCE_NOTHING,
+	FORCE_NOTHING
 };
 
 #define dma_is_forced(host_id)     (dma_force[host_id] & 0x10)

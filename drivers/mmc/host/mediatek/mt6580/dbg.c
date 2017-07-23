@@ -1835,25 +1835,17 @@ static int msdc_debug_proc_show(struct seq_file *m, void *v)
 	seq_printf(m, "-> MSDC[0] Zone: 0x%.8x\n", sd_debug_zone[0]);
 	seq_printf(m, "-> MSDC[1] Zone: 0x%.8x\n", sd_debug_zone[1]);
 
-	seq_printf(m, "-> MSDC[2] Zone: 0x%.8x\n", sd_debug_zone[2]);
-	seq_printf(m, "-> MSDC[3] Zone: 0x%.8x\n", sd_debug_zone[3]);
-
 	seq_puts(m, "Index<1> + ID:4|Mode:4 + DMA_SIZE\n");
 	seq_puts(m, "-> 0)PIO 1)DMA 2)SIZE\n");
 	seq_puts(m, "-> echo 1 22 0x200 >msdc_bebug -> host[2] size mode, dma when >= 512\n");
 	seq_printf(m, "-> MSDC[0] mode<%d> size<%d>\n", drv_mode[0], dma_size[0]);
 	seq_printf(m, "-> MSDC[1] mode<%d> size<%d>\n", drv_mode[1], dma_size[1]);
 
-	seq_printf(m, "-> MSDC[2] mode<%d> size<%d>\n", drv_mode[2], dma_size[2]);
-	seq_printf(m, "-> MSDC[3] mode<%d> size<%d>\n", drv_mode[3], dma_size[3]);
-
 	seq_puts(m, "Index<3> + SDIO_PROFILE + TIME\n");
 	seq_puts(m, "-> echo 3 1 0x1E >msdc_bebug -> enable sdio_profile, 30s\n");
 	seq_printf(m, "-> SDIO_PROFILE<%d> TIME<%llu s>\n", sdio_pro_enable, sdio_pro_time);
 	seq_printf(m, "-> Clokc SRC selection Host[0]<%d>\n", msdc_clock_src[0]);
 	seq_printf(m, "-> Clokc SRC selection Host[1]<%d>\n", msdc_clock_src[1]);
-	seq_printf(m, "-> Clokc SRC selection Host[2]<%d>\n", msdc_clock_src[2]);
-	seq_printf(m, "-> Clokc SRC selection Host[3]<%d>\n", msdc_clock_src[3]);
 	seq_puts(m, "=========================================\n\n");
 
 	if (mtk_msdc_host[0]) {
@@ -2021,8 +2013,6 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 			sd_debug_zone[id] = zone;
 		} else if (id == HOST_MAX_NUM) {
 			sd_debug_zone[0] = sd_debug_zone[1] = zone;
-			sd_debug_zone[2] = zone;
-			sd_debug_zone[3] = zone;
 		} else {
 			pr_err("[****SD_Debug****]msdc host_id error when set debug zone\n");
 		}
