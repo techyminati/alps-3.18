@@ -40,13 +40,13 @@
 /* project includes */
 /* #include "mach/mt_typedefs.h" */
 #include <asm/io.h>
-/* #include "mach/mt_thermal.h" */
+#include "mach/mt_thermal.h"
+#include <mt-plat/mt_hotplug_strategy.h>
 /* #include "mach/mt_pmic_wrap.h" */
 #include "mach/mt_clkmgr.h"
-/* #include "mach/mt_freqhopping.h" */
+#include "mach/mt_freqhopping.h"
 #include "mt_ptp.h"
 /* #include "mach/upmu_sw.h" */
-/* #include "mach/mt_hotplug_strategy.h" */
 
 #ifndef __KERNEL__
 #include "freqhop_sw.h"

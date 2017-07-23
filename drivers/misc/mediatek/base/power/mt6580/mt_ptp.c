@@ -138,8 +138,8 @@ unsigned int reg_dump_addr_off[] = {
 #include "mach/mt_irq.h"*/
 #include "mt_ptp.h"
 #include "mt_cpufreq.h"
-/*#include "mach/mt_thermal.h"
-#include "mach/mt_pmic_wrap.h"*/
+#include "mach/mt_thermal.h"
+/* #include "mach/mt_pmic_wrap.h"*/
 #include "mach/mt_clkmgr.h"
 /*#include "mach/mt_freqhopping.h"*/
 

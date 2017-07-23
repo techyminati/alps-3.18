@@ -50,7 +50,6 @@ enum {
 	NR_IDX_DI,
 };
 typedef void (*cpuVoltsampler_func) (enum mt_cpu_dvfs_id, unsigned int mv);
-#define CPUDVFS_WORKAROUND_FOR_GIT	1
 
 /* PMIC WRAP ADDR */
 #ifdef CONFIG_OF
