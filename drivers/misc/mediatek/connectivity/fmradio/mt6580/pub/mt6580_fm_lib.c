@@ -10,8 +10,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
-
-#include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/vmalloc.h>
 
@@ -56,12 +54,10 @@ static struct fm_hw_info mt6580_hw_info = {
 	.reserve = 0x00000000,
 };
 
-#define PATCH_SEG_LEN 512
-
-static fm_u8 *cmd_buf;
-static struct fm_lock *cmd_buf_lock;
+fm_u8 *cmd_buf;
+struct fm_lock *cmd_buf_lock;
+struct fm_res_ctx *fm_res;
 static struct fm_callback *fm_cb_op;
-static struct fm_res_ctx *mt6580_res;
 /* static fm_s32 Chip_Version = mt6580_E1; */
 
 /* static fm_bool rssi_th_set = fm_false; */
@@ -80,21 +76,22 @@ static fm_u16 mt6580_chan_para_get(fm_u16 freq);
 static fm_s32 mt6580_desense_check(fm_u16 freq, fm_s32 rssi);
 /*static fm_bool mt6580_TDD_chan_check(fm_u16 freq);*/
 static fm_s32 mt6580_soft_mute_tune(fm_u16 freq, fm_s32 *rssi, fm_bool *valid);
+
 static fm_s32 mt6580_pwron(fm_s32 data)
 {
 	if (MTK_WCN_BOOL_FALSE == mtk_wcn_wmt_func_on(WMTDRV_TYPE_FM)) {
-		WCN_DBG(FM_ALT | CHIP, "WMT turn on FM Fail!\n");
+		WCN_DBG(FM_ERR | CHIP, "WMT turn on FM Fail!\n");
 		return -FM_ELINK;
 	}
 
-	WCN_DBG(FM_ALT | CHIP, "WMT turn on FM OK!\n");
+	WCN_DBG(FM_NTC | CHIP, "WMT turn on FM OK!\n");
 	return 0;
 }
 
 static fm_s32 mt6580_pwroff(fm_s32 data)
 {
 	if (MTK_WCN_BOOL_FALSE == mtk_wcn_wmt_func_off(WMTDRV_TYPE_FM)) {
-		WCN_DBG(FM_ALT | CHIP, "WMT turn off FM Fail!\n");
+		WCN_DBG(FM_ERR | CHIP, "WMT turn off FM Fail!\n");
 		return -FM_ELINK;
 	}
 
@@ -102,171 +99,34 @@ static fm_s32 mt6580_pwroff(fm_s32 data)
 	return 0;
 }
 
-static fm_s32 Delayms(fm_u32 data)
-{
-	WCN_DBG(FM_DBG | CHIP, "delay %dms\n", data);
-	msleep(data);
-	return 0;
-}
-
-static fm_s32 Delayus(fm_u32 data)
-{
-	WCN_DBG(FM_DBG | CHIP, "delay %dus\n", data);
-	udelay(data);
-	return 0;
-}
-
-fm_s32 mt6580_get_read_result(struct fm_res_ctx *result)
-{
-	if (result == NULL) {
-		WCN_DBG(FM_ERR | CHIP, "%s,invalid pointer\n", __func__);
-		return -FM_EPARA;
-	}
-	mt6580_res = result;
-
-	return 0;
-}
-
-static fm_s32 mt6580_read(fm_u8 addr, fm_u16 *val)
-{
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_get_reg(cmd_buf, TX_BUF_SIZE, addr);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_FSPI_RD, SW_RETRY_CNT, FSPI_RD_TIMEOUT, mt6580_get_read_result);
-
-	if (!ret && mt6580_res)
-		*val = mt6580_res->fspi_rd;
-
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
-}
-
-static fm_s32 mt6580_write(fm_u8 addr, fm_u16 val)
-{
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_set_reg(cmd_buf, TX_BUF_SIZE, addr, val);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_FSPI_WR, SW_RETRY_CNT, FSPI_WR_TIMEOUT, NULL);
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
-}
-
-static fm_s32 mt6580_set_bits(fm_u8 addr, fm_u16 bits, fm_u16 mask)
-{
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_set_bits_reg(cmd_buf, TX_BUF_SIZE, addr, bits, mask);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, (1 << 0x11), SW_RETRY_CNT, FSPI_WR_TIMEOUT, NULL);
-	/* 0x11 this opcode won't be parsed as an opcode, so set here as spcial case. */
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
-}
-
-static fm_s32 mt6580_top_read(fm_u16 addr, fm_u32 *val)
-{
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_top_get_reg(cmd_buf, TX_BUF_SIZE, addr);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_CSPI_READ, SW_RETRY_CNT, FSPI_RD_TIMEOUT, mt6580_get_read_result);
-
-	if (!ret && mt6580_res)
-		*val = mt6580_res->cspi_rd;
-
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
-}
-
-static fm_s32 mt6580_top_write(fm_u16 addr, fm_u32 val)
-{
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_top_set_reg(cmd_buf, TX_BUF_SIZE, addr, val);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_CSPI_WRITE, SW_RETRY_CNT, FSPI_WR_TIMEOUT, NULL);
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
-}
-
 /*static fm_s32 mt6580_top_set_bits(fm_u16 addr, fm_u32 bits, fm_u32 mask)
 {
     fm_s32 ret = 0;
     fm_u32 val;
 
-    ret = mt6580_top_read(addr, &val);
+    ret = fm_top_reg_read(addr, &val);
 
     if (ret)
 	return ret;
 
     val = ((val & (mask)) | bits);
-    ret = mt6580_top_write(addr, val);
+    ret = fm_top_reg_write(addr, val);
 
     return ret;
-}*/
-
-static fm_s32 mt6580_host_read(fm_u32 addr, fm_u32 *val)
-{
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_host_get_reg(cmd_buf, TX_BUF_SIZE, addr);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_HOST_READ, SW_RETRY_CNT, FSPI_RD_TIMEOUT, mt6580_get_read_result);
-
-	if (!ret && mt6580_res)
-		*val = mt6580_res->cspi_rd;
-
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
 }
-
-static fm_s32 mt6580_host_write(fm_u32 addr, fm_u32 val)
+static fm_s32 mt6580_DSP_write(fm_u16 addr, fm_u16 val)
 {
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (FM_LOCK(cmd_buf_lock))
-		return -FM_ELOCK;
-	pkt_size = fm_host_set_reg(cmd_buf, TX_BUF_SIZE, addr, val);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_HOST_WRITE, SW_RETRY_CNT, FSPI_WR_TIMEOUT, NULL);
-	FM_UNLOCK(cmd_buf_lock);
-
-	return ret;
-}
-
-/*static fm_s32 mt6580_DSP_write(fm_u16 addr, fm_u16 val)
-{
-    mt6580_write(0xE2, addr);
-    mt6580_write(0xE3, val);
-    mt6580_write(0xE1, 0x0002);
+    fm_reg_write(0xE2, addr);
+    fm_reg_write(0xE3, val);
+    fm_reg_write(0xE1, 0x0002);
     return 0;
 }
 static fm_s32 mt6580_DSP_read(fm_u16 addr, fm_u16 *val)
 {
     fm_s32 ret=-1;
-    mt6580_write(0xE2, addr);
-    mt6580_write(0xE1, 0x0001);
-    ret = mt6580_read(0xE4, val);
+    fm_reg_write(0xE2, addr);
+    fm_reg_write(0xE1, 0x0001);
+    ret = fm_reg_read(0xE4, val);
     return ret;
 }*/
 static fm_u16 mt6580_get_chipid(void)
@@ -282,14 +142,14 @@ static fm_s32 mt6580_SetAntennaType(fm_s32 type)
 	fm_u16 dataRead;
 
 	WCN_DBG(FM_DBG | CHIP, "set ana to %s\n", type ? "short" : "long");
-	mt6580_read(FM_MAIN_CG2_CTRL, &dataRead);
+	fm_reg_read(FM_MAIN_CG2_CTRL, &dataRead);
 
 	if (type)
 		dataRead |= ANTENNA_TYPE;
 	else
 		dataRead &= (~ANTENNA_TYPE);
 
-	mt6580_write(FM_MAIN_CG2_CTRL, dataRead);
+	fm_reg_write(FM_MAIN_CG2_CTRL, dataRead);
 
 	return 0;
 }
@@ -298,7 +158,7 @@ static fm_s32 mt6580_GetAntennaType(void)
 {
 	fm_u16 dataRead;
 
-	mt6580_read(FM_MAIN_CG2_CTRL, &dataRead);
+	fm_reg_read(FM_MAIN_CG2_CTRL, &dataRead);
 	WCN_DBG(FM_DBG | CHIP, "get ana type: %s\n", (dataRead & ANTENNA_TYPE) ? "short" : "long");
 
 	if (dataRead & ANTENNA_TYPE)
@@ -313,30 +173,30 @@ static fm_s32 mt6580_Mute(fm_bool mute)
 	fm_u16 dataRead;
 
 	WCN_DBG(FM_DBG | CHIP, "set %s\n", mute ? "mute" : "unmute");
-	/* mt6580_read(FM_MAIN_CTRL, &dataRead); */
-	mt6580_read(0x9C, &dataRead);
+	/* fm_reg_read(FM_MAIN_CTRL, &dataRead); */
+	fm_reg_read(0x9C, &dataRead);
 
-	/* mt6580_top_write(0x0050,0x00000007); */
+	/* fm_top_reg_write(0x0050,0x00000007); */
 
 	if (mute == 1)
-		ret = mt6580_write(0x9C, (dataRead & 0xFFFC) | 0x0003);
+		ret = fm_reg_write(0x9C, (dataRead & 0xFFFC) | 0x0003);
 	else
-		ret = mt6580_write(0x9C, (dataRead & 0xFFFC));
+		ret = fm_reg_write(0x9C, (dataRead & 0xFFFC));
 
-	/* mt6580_top_write(0x0050,0x0000000F); */
+	/* fm_top_reg_write(0x0050,0x0000000F); */
 
 	return ret;
 }
 
 /*static fm_s32 mt6580_set_RSSITh(fm_u16 TH_long, fm_u16 TH_short)
 {
-    mt6580_write(0xE2, 0x3072);
-    mt6580_write(0xE3, TH_long);
-    mt6580_write(0xE1, 0x0002);
-    Delayms(1);
-    mt6580_write(0xE2, 0x307A);
-    mt6580_write(0xE3, TH_short);
-    mt6580_write(0xE1, 0x0002);
+    fm_reg_write(0xE2, 0x3072);
+    fm_reg_write(0xE3, TH_long);
+    fm_reg_write(0xE1, 0x0002);
+    fm_delayms(1);
+    fm_reg_write(0xE2, 0x307A);
+    fm_reg_write(0xE3, TH_short);
+    fm_reg_write(0xE1, 0x0002);
 
     WCN_DBG(FM_DBG | CHIP, "RSSI TH, long:0x%04x, short:0x%04x", TH_long, TH_short);
     return 0;
@@ -346,13 +206,13 @@ static fm_s32 mt6580_Mute(fm_bool mute)
 static fm_s32 mt6580_set_SMGTh(fm_s32 ver, fm_u16 TH_smg)
 {
     if (mt6580_E1 == ver) {
-	mt6580_write(0xE2, 0x321E);
-	mt6580_write(0xE3, TH_smg);
-	mt6580_write(0xE1, 0x0002);
+	fm_reg_write(0xE2, 0x321E);
+	fm_reg_write(0xE3, TH_smg);
+	fm_reg_write(0xE1, 0x0002);
     } else {
-	mt6580_write(0xE2, 0x3218);
-	mt6580_write(0xE3, TH_smg);
-	mt6580_write(0xE1, 0x0002);
+	fm_reg_write(0xE2, 0x3218);
+	fm_reg_write(0xE3, TH_smg);
+	fm_reg_write(0xE1, 0x0002);
     }
 
     WCN_DBG(FM_DBG | CHIP, "Soft-mute gain TH %d\n", (int)TH_smg);
@@ -407,12 +267,12 @@ static fm_s32 mt6580_RampDown(void)
 	fm_u16 pkt_size;
 
 	WCN_DBG(FM_DBG | CHIP, "ramp down\n");
-	ret = mt6580_write(0x60, 0x00000007);
+	ret = fm_reg_write(0x60, 0x00000007);
 	if (ret) {
 		WCN_DBG(FM_ERR | CHIP, "ramp down wr 0x60 failed\n");
 		return ret;
 	}
-	ret = mt6580_write(0x60, 0x0000000f);
+	ret = fm_reg_write(0x60, 0x0000000f);
 	if (ret) {
 		WCN_DBG(FM_ERR | CHIP, "ramp down wr 0x60 failed\n");
 		return ret;
@@ -436,24 +296,24 @@ static fm_s32 mt6580_get_rom_version(void)
 	fm_u16 tmp;
 	fm_s32 ret;
 
-	mt6580_write(0x90, 0xe);
-	mt6580_write(0x92, 0x0);
-	mt6580_write(0x90, 0x40);
-	mt6580_write(0x90, 0x0);
+	fm_reg_write(0x90, 0xe);
+	fm_reg_write(0x92, 0x0);
+	fm_reg_write(0x90, 0x40);
+	fm_reg_write(0x90, 0x0);
 
 	/* DSP rom code version request enable --- set 0x61 b15=1 */
-	mt6580_set_bits(0x61, 0x8000, 0x7FFF);
+	fm_set_bits(0x61, 0x8000, 0x7FFF);
 
 	/* Release ASIP reset --- set 0x61 b1=1 */
-	mt6580_set_bits(0x61, 0x0002, 0xFFFD);
+	fm_set_bits(0x61, 0x0002, 0xFFFD);
 
 	/* Enable ASIP power --- set 0x61 b0=0 */
-	mt6580_set_bits(0x61, 0x0000, 0xFFFE);
+	fm_set_bits(0x61, 0x0000, 0xFFFE);
 
 	/* Wait DSP code version ready --- wait 1ms */
 	do {
-		Delayus(1000);
-		ret = mt6580_read(0x84, &tmp);
+		fm_delayus(1000);
+		ret = fm_reg_read(0x84, &tmp);
 		/* ret=-4 means signal got when control FM. usually get sig 9 to kill FM process. */
 		/* now cancel FM power up sequence is recommended. */
 		if (ret)
@@ -463,150 +323,17 @@ static fm_s32 mt6580_get_rom_version(void)
 	} while (tmp != 0x0001);
 
 	/* Get FM DSP code version --- rd 0x83[15:8] */
-	mt6580_read(0x83, &tmp);
+	fm_reg_read(0x83, &tmp);
 	tmp = (tmp >> 8);
 
 	/* DSP rom code version request disable --- set 0x61 b15=0 */
-	mt6580_set_bits(0x61, 0x0000, 0x7FFF);
+	fm_set_bits(0x61, 0x0000, 0x7FFF);
 
 	/* Reset ASIP --- set 0x61[1:0] = 1 */
-	mt6580_set_bits(0x61, 0x0001, 0xFFFC);
+	fm_set_bits(0x61, 0x0001, 0xFFFC);
 
 	/* WCN_DBG(FM_NTC | CHIP, "ROM version: v%d\n", (fm_s32)tmp); */
 	return (fm_s32) tmp;
-}
-
-static fm_s32 mt6580_get_patch_path(fm_s32 ver, const fm_s8 **ppath, struct fm_patch_tbl *patch_tbl)
-{
-	fm_s32 i;
-	fm_s32 max = FM_ROM_MAX;
-
-	/* check if the ROM version is defined or not */
-	for (i = 0; i < max; i++) {
-		if ((patch_tbl[i].idx == ver)
-		    && (fm_file_exist(patch_tbl[i].patch) == 0)) {
-			*ppath = patch_tbl[i].patch;
-			WCN_DBG(FM_NTC | CHIP, "Get ROM version OK\n");
-			return 0;
-		}
-	}
-
-	/* the ROM version isn't defined, find a latest patch instead */
-	for (i = max; i > 0; i--) {
-		if (fm_file_exist(patch_tbl[i - 1].patch) == 0) {
-			*ppath = patch_tbl[i - 1].patch;
-			WCN_DBG(FM_WAR | CHIP, "undefined ROM version\n");
-			return 0;
-		}
-	}
-
-	/* get path failed */
-	WCN_DBG(FM_ERR | CHIP, "No valid patch file\n");
-	return -FM_EPATCH;
-}
-
-static fm_s32 mt6580_get_coeff_path(fm_s32 ver, const fm_s8 **ppath, struct fm_patch_tbl *patch_tbl)
-{
-	fm_s32 i;
-	fm_s32 max = FM_ROM_MAX;
-
-	/* check if the ROM version is defined or not */
-	for (i = 0; i < max; i++) {
-		if ((patch_tbl[i].idx == ver)
-		    && (fm_file_exist(patch_tbl[i].coeff) == 0)) {
-			*ppath = patch_tbl[i].coeff;
-			WCN_DBG(FM_NTC | CHIP, "Get ROM version OK\n");
-			return 0;
-		}
-	}
-
-	/* the ROM version isn't defined, find a latest patch instead */
-	for (i = max; i > 0; i--) {
-		if (fm_file_exist(patch_tbl[i - 1].coeff) == 0) {
-			*ppath = patch_tbl[i - 1].coeff;
-			WCN_DBG(FM_WAR | CHIP, "undefined ROM version\n");
-			return 0;
-		}
-	}
-
-	/* get path failed */
-	WCN_DBG(FM_ERR | CHIP, "No valid coeff file\n");
-	return -FM_EPATCH;
-}
-
-/*
-*  mt6580_DspPatch - DSP download procedure
-*  @img - source dsp bin code
-*  @len - patch length in byte
-*  @type - rom/patch/coefficient/hw_coefficient
-*/
-static fm_s32 mt6580_DspPatch(const fm_u8 *img, fm_s32 len, enum IMG_TYPE type)
-{
-	fm_u8 seg_num;
-	fm_u8 seg_id = 0;
-	fm_s32 seg_len;
-	fm_s32 ret = 0;
-	fm_u16 pkt_size;
-
-	if (img == NULL) {
-		WCN_DBG(FM_ERR | CHIP, "%s,invalid pointer\n", __func__);
-		return -FM_EPARA;
-	}
-
-	if (len <= 0)
-		return -1;
-
-	seg_num = len / PATCH_SEG_LEN + 1;
-	WCN_DBG(FM_NTC | CHIP, "binary len:%d, seg num:%d\n", len, seg_num);
-
-	switch (type) {
-	case IMG_PATCH:
-
-		for (seg_id = 0; seg_id < seg_num; seg_id++) {
-			seg_len = ((seg_id + 1) < seg_num) ? PATCH_SEG_LEN : (len % PATCH_SEG_LEN);
-			WCN_DBG(FM_NTC | CHIP, "patch,[seg_id:%d],  [seg_len:%d]\n", seg_id, seg_len);
-			if (FM_LOCK(cmd_buf_lock))
-				return -FM_ELOCK;
-			pkt_size =
-			    fm_patch_download(cmd_buf, TX_BUF_SIZE, seg_num, seg_id,
-						  &img[seg_id * PATCH_SEG_LEN], seg_len);
-			WCN_DBG(FM_NTC | CHIP, "pkt_size:%d\n", (fm_s32) pkt_size);
-			ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_PATCH, SW_RETRY_CNT, PATCH_TIMEOUT, NULL);
-			FM_UNLOCK(cmd_buf_lock);
-
-			if (ret) {
-				WCN_DBG(FM_ALT | CHIP, "mt6580_patch_download failed\n");
-				return ret;
-			}
-		}
-
-		break;
-	case IMG_COEFFICIENT:
-
-		for (seg_id = 0; seg_id < seg_num; seg_id++) {
-			seg_len = ((seg_id + 1) < seg_num) ? PATCH_SEG_LEN : (len % PATCH_SEG_LEN);
-			WCN_DBG(FM_NTC | CHIP, "coeff,[seg_id:%d],  [seg_len:%d]\n", seg_id, seg_len);
-			if (FM_LOCK(cmd_buf_lock))
-				return -FM_ELOCK;
-			pkt_size =
-			    fm_coeff_download(cmd_buf, TX_BUF_SIZE, seg_num, seg_id,
-						  &img[seg_id * PATCH_SEG_LEN], seg_len);
-			WCN_DBG(FM_NTC | CHIP, "pkt_size:%d\n", (fm_s32) pkt_size);
-			ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_COEFF, SW_RETRY_CNT, COEFF_TIMEOUT, NULL);
-			FM_UNLOCK(cmd_buf_lock);
-
-			if (ret) {
-				WCN_DBG(FM_ALT | CHIP, "mt6580_coeff_download failed\n");
-				return ret;
-			}
-		}
-
-		break;
-	default:
-		break;
-	}
-
-	return 0;
 }
 
 static fm_s32 mt6580_enable_pmic_tldo(void)
@@ -615,105 +342,105 @@ static fm_s32 mt6580_enable_pmic_tldo(void)
 	fm_u32 hostreg = 0;
 
 	/* set 26M clock mannual on */
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg | (0x1 << 0));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg | (0x1 << 0));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg | (0x1 << 6));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg | (0x1 << 6));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg | (0x1 << 16));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg | (0x1 << 16));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg | (0x1 << 22));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg | (0x1 << 22));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
 	/* set RX_DET_OUT Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg | (0x1 << 16));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg | (0x1 << 16));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set ADC_QD Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg | (0x1 << 15));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg | (0x1 << 15));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set ADC_ID Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg | (0x1 << 14));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg | (0x1 << 14));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set ADC_CK Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg | (0x1 << 7));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg | (0x1 << 7));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set DIG_CK Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg | (0x1 << 6));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg | (0x1 << 6));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
@@ -728,105 +455,105 @@ static fm_s32 mt6580_disable_pmic_tldo(void)
 	fm_u32 hostreg = 0;
 
 	/* set 26M clock mannual on */
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg & (~(0x1 << 22)));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg & (~(0x1 << 22)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg & (~(0x1 << 16)));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg & (~(0x1 << 16)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg & (~(0x1 << 6)));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg & (~(0x1 << 6)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
-	ret = mt6580_host_read(MCUPLL_CON1, &hostreg);
+	ret = fm_host_reg_read(MCUPLL_CON1, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd MCUPLL_CON1 failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(MCUPLL_CON1, hostreg & (~(0x1 << 0)));
+	ret = fm_host_reg_write(MCUPLL_CON1, hostreg & (~(0x1 << 0)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr MCUPLL_CON1 failed\n");
 		return ret;
 	}
 
 	/* set RX_DET_OUT Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg & (~(0x1 << 16)));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg & (~(0x1 << 16)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set ADC_QD Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg & (~(0x1 << 15)));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg & (~(0x1 << 15)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set ADC_ID Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg & (~(0x1 << 14)));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg & (~(0x1 << 14)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set ADC_CK Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg & (~(0x1 << 7)));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg & (~(0x1 << 7)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
 
 	/* set DIG_CK Gating off */
-	ret = mt6580_host_read(CONN_RF_CG, &hostreg);
+	ret = fm_host_reg_read(CONN_RF_CG, &hostreg);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup rd CONN_RF_CG failed\n");
 		return ret;
 	}
-	ret = mt6580_host_write(CONN_RF_CG, hostreg & (~(0x1 << 6)));
+	ret = fm_host_reg_write(CONN_RF_CG, hostreg & (~(0x1 << 6)));
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
@@ -1069,21 +796,21 @@ static fm_s32 mt6580_pwrup_DSP_download(struct fm_patch_tbl *patch_tbl)
 		return -ENOMEM;
 	}
 
-	ret = mt6580_get_patch_path(mt6580_hw_info.rom_ver, &path_patch, patch_tbl);
+	ret = fm_get_patch_path(mt6580_hw_info.rom_ver, &path_patch, patch_tbl);
 	if (ret) {
-		WCN_DBG(FM_ALT | CHIP, " mt6580_get_patch_path failed\n");
+		WCN_DBG(FM_ALT | CHIP, " fm_get_patch_path failed\n");
 		goto out;
 	}
 	patch_len = fm_file_read(path_patch, dsp_buf, PATCH_BUF_SIZE, 0);
-	ret = mt6580_DspPatch((const fm_u8 *)dsp_buf, patch_len, IMG_PATCH);
+	ret = fm_download_patch((const fm_u8 *)dsp_buf, patch_len, IMG_PATCH);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " DL DSPpatch failed\n");
 		goto out;
 	}
 
-	ret = mt6580_get_coeff_path(mt6580_hw_info.rom_ver, &path_coeff, patch_tbl);
+	ret = fm_get_coeff_path(mt6580_hw_info.rom_ver, &path_coeff, patch_tbl);
 	if (ret) {
-		WCN_DBG(FM_ALT | CHIP, " mt6580_get_coeff_path failed\n");
+		WCN_DBG(FM_ALT | CHIP, " fm_get_coeff_path failed\n");
 		goto out;
 	}
 	patch_len = fm_file_read(path_coeff, dsp_buf, PATCH_BUF_SIZE, 0);
@@ -1099,14 +826,14 @@ static fm_s32 mt6580_pwrup_DSP_download(struct fm_patch_tbl *patch_tbl)
 		dsp_buf[5] = 0x00;
 	}
 
-	ret = mt6580_DspPatch((const fm_u8 *)dsp_buf, patch_len, IMG_COEFFICIENT);
+	ret = fm_download_patch((const fm_u8 *)dsp_buf, patch_len, IMG_COEFFICIENT);
 	if (ret) {
 		WCN_DBG(FM_ALT | CHIP, " DL DSPcoeff failed\n");
 		goto out;
 	}
-	mt6580_write(0x92, 0x0000);
-	mt6580_write(0x90, 0x0040);
-	mt6580_write(0x90, 0x0000);
+	fm_reg_write(0x92, 0x0000);
+	fm_reg_write(0x90, 0x0040);
+	fm_reg_write(0x90, 0x0000);
 out:
 	if (dsp_buf) {
 		fm_vfree(dsp_buf);
@@ -1145,7 +872,7 @@ static fm_s32 mt6580_PowerUp(fm_u16 *chip_id, fm_u16 *device_id)
 		return ret;
 	}
 
-	mt6580_read(0x62, &tmp_reg);
+	fm_reg_read(0x62, &tmp_reg);
 	*chip_id = tmp_reg;
 	*device_id = tmp_reg;
 	mt6580_hw_info.chip_id = (fm_s32) tmp_reg;
@@ -1173,7 +900,7 @@ static fm_s32 mt6580_PowerUp(fm_u16 *chip_id, fm_u16 *device_id)
 	}
 
 	/* set audio output I2S TX mode  */
-	mt6580_write(0x9B, 0x3);
+	fm_reg_write(0x9B, 0x3);
 
 	WCN_DBG(FM_NTC | CHIP, "pwr on seq ok\n");
 
@@ -1192,10 +919,10 @@ static fm_s32 mt6580_PowerDown(void)
 	 *if interrupt happen before doing rampdown, DSP can't switch MCUFA back well.
 	 * In case read interrupt, and clean if interrupt found before rampdown.
 	 */
-	mt6580_read(FM_MAIN_INTR, &dataRead);
+	fm_reg_read(FM_MAIN_INTR, &dataRead);
 
 	if (dataRead & 0x1) {
-		ret = mt6580_write(FM_MAIN_INTR, dataRead);	/* clear status flag */
+		ret = fm_reg_write(FM_MAIN_INTR, dataRead);	/* clear status flag */
 		if (ret)
 			WCN_DBG(FM_ALT | CHIP, "mt6580_pwrdown wr FM_MAIN_INTR failed\n");
 	}
@@ -1232,70 +959,70 @@ static fm_bool mt6580_SetFreq(fm_u16 freq)
 	if (0 == fm_get_channel_space(freq_reg))
 		freq_reg *= 10;
 	WCN_DBG(FM_DBG | CHIP, "freq_reg = %d\n", freq_reg);
-	ret = mt6580_write(0x60, 0x00000007);
+	ret = fm_reg_write(0x60, 0x00000007);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
 	/* add this paragragh to resolve Rainier FM sensitivity bad in low band issue */
 #if 0
 	if (mt6580_TDD_chan_check(freq)) {
-		ret = mt6580_set_bits(0x39, 0x0008, 0xFFF3);	/* use TDD solution */
+		ret = fm_set_bits(0x39, 0x0008, 0xFFF3);	/* use TDD solution */
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x30 failed\n");
 	} else {
-		ret = mt6580_set_bits(0x39, 0x0000, 0xFFF3);	/* default use FDD solution */
+		ret = fm_set_bits(0x39, 0x0000, 0xFFF3);	/* default use FDD solution */
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x30 failed\n");
 	}
 #endif
 	if ((6500 <= freq_reg) && (freq_reg <= 7290)) {
-		ret = mt6580_write(0x39, 0xd002);
+		ret = fm_reg_write(0x39, 0xd002);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((7295 <= freq_reg) && (freq_reg <= 8410)) {
-		ret = mt6580_write(0x39, 0xce02);
+		ret = fm_reg_write(0x39, 0xce02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((8415 <= freq_reg) && (freq_reg <= 9815)) {
-		ret = mt6580_write(0x39, 0xcc02);
+		ret = fm_reg_write(0x39, 0xcc02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((9820 <= freq_reg) && (freq_reg <= 9830)) {
-		ret = mt6580_write(0x39, 0xca02);
+		ret = fm_reg_write(0x39, 0xca02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((9835 <= freq_reg) && (freq_reg <= 9940)) {
-		ret = mt6580_write(0x39, 0xcc02);
+		ret = fm_reg_write(0x39, 0xcc02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((9845 <= freq_reg) && (freq_reg <= 10800)) {
-		ret = mt6580_write(0x39, 0xca02);
+		ret = fm_reg_write(0x39, 0xca02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else {
-		ret = mt6580_write(0x39, 0xca02);
+		ret = fm_reg_write(0x39, 0xca02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	}
 
 	/* end */
-	ret = mt6580_write(0x6a, 0x00000021);
+	ret = fm_reg_write(0x6a, 0x00000021);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x6a failed\n");
 
-	ret = mt6580_write(0x6b, 0x00000021);
+	ret = fm_reg_write(0x6b, 0x00000021);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x6b failed\n");
 
-	ret = mt6580_write(0x60, 0x0000000F);
+	ret = fm_reg_write(0x60, 0x0000000F);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
 
 
 	freq_reg = (freq_reg - 6400) * 2 / 10;
-	ret = mt6580_set_bits(0x65, freq_reg, 0xFC00);
+	ret = fm_set_bits(0x65, freq_reg, 0xFC00);
 	if (ret) {
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x65 failed\n");
 		return fm_false;
 	}
-	ret = mt6580_set_bits(0x65, (chan_para << 12), 0x0FFF);
+	ret = fm_set_bits(0x65, (chan_para << 12), 0x0FFF);
 	if (ret) {
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x65 failed\n");
 		return fm_false;
@@ -1373,13 +1100,13 @@ static fm_s32 mt6580_full_cqi_get(fm_s32 min_freq, fm_s32 max_freq, fm_s32 space
 			pkt_size = fm_full_cqi_req(cmd_buf, TX_BUF_SIZE, &freq, 1, 1);
 			ret =
 			    fm_cmd_tx(cmd_buf, pkt_size, FLAG_SM_TUNE, SW_RETRY_CNT,
-				      SM_TUNE_TIMEOUT, mt6580_get_read_result);
+				      SM_TUNE_TIMEOUT, fm_get_read_result);
 			FM_UNLOCK(cmd_buf_lock);
 
-			if (!ret && mt6580_res) {
-				WCN_DBG(FM_NTC | CHIP, "smt cqi size %d\n", mt6580_res->cqi[0]);
-				p_cqi = (struct mt6580_full_cqi *)&mt6580_res->cqi[2];
-				for (i = 0; i < mt6580_res->cqi[1]; i++) {
+			if (!ret && fm_res) {
+				WCN_DBG(FM_NTC | CHIP, "smt cqi size %d\n", fm_res->cqi[0]);
+				p_cqi = (struct mt6580_full_cqi *)&fm_res->cqi[2];
+				for (i = 0; i < fm_res->cqi[1]; i++) {
 					/* just for debug */
 					WCN_DBG(FM_NTC | CHIP,
 						"freq %d, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x\n",
@@ -1420,7 +1147,7 @@ static fm_s32 mt6580_GetCurRSSI(fm_s32 *pRSSI)
 {
 	fm_u16 tmp_reg;
 
-	mt6580_read(FM_RSSI_IND, &tmp_reg);
+	fm_reg_read(FM_RSSI_IND, &tmp_reg);
 	tmp_reg = tmp_reg & 0x03ff;
 
 	if (pRSSI) {
@@ -1445,7 +1172,7 @@ static fm_s32 mt6580_SetVol(fm_u8 vol)
 	fm_s32 ret = 0;
 
 	vol = (vol > 15) ? 15 : vol;
-	ret = mt6580_write(0x7D, mt6580_vol_tbl[vol]);
+	ret = fm_reg_write(0x7D, mt6580_vol_tbl[vol]);
 	if (ret) {
 		WCN_DBG(FM_ERR | CHIP, "Set vol=%d Failed\n", vol);
 		return ret;
@@ -1471,7 +1198,7 @@ static fm_s32 mt6580_GetVol(fm_u8 *pVol)
 		return -FM_EPARA;
 	}
 
-	ret = mt6580_read(0x7D, &tmp);
+	ret = fm_reg_read(0x7D, &tmp);
 	if (ret) {
 		*pVol = 0;
 		WCN_DBG(FM_ERR | CHIP, "Get vol Failed\n");
@@ -1495,7 +1222,7 @@ static fm_s32 mt6580_dump_reg(void)
 	fm_u16 TmpReg;
 
 	for (i = 0; i < 0xff; i++) {
-		mt6580_read(i, &TmpReg);
+		fm_reg_read(i, &TmpReg);
 		WCN_DBG(FM_NTC | CHIP, "0x%02x=0x%04x\n", i, TmpReg);
 	}
 	return 0;
@@ -1508,7 +1235,7 @@ static fm_bool mt6580_GetMonoStereo(fm_u16 *pMonoStereo)
 	fm_u16 TmpReg;
 
 	if (pMonoStereo) {
-		mt6580_read(FM_RSSI_IND, &TmpReg);
+		fm_reg_read(FM_RSSI_IND, &TmpReg);
 		*pMonoStereo = (TmpReg & FM_BF_STEREO) >> 12;
 	} else {
 		WCN_DBG(FM_ERR | CHIP, "MonoStero: para err\n");
@@ -1524,16 +1251,16 @@ static fm_s32 mt6580_SetMonoStereo(fm_s32 MonoStereo)
 	fm_s32 ret = 0;
 
 	WCN_DBG(FM_NTC | CHIP, "set to %s\n", MonoStereo ? "mono" : "auto");
-	mt6580_top_write(0x50, 0x0007);
+	fm_top_reg_write(0x50, 0x0007);
 
 	if (MonoStereo) {	/*mono */
-		ret = mt6580_set_bits(0x75, 0x0008, ~0x0008);
+		ret = fm_set_bits(0x75, 0x0008, ~0x0008);
 	} else {		/*auto switch */
 
-		ret = mt6580_set_bits(0x75, 0x0000, ~0x0008);
+		ret = fm_set_bits(0x75, 0x0000, ~0x0008);
 	}
 
-	mt6580_top_write(0x50, 0x000F);
+	fm_top_reg_write(0x50, 0x000F);
 	return ret;
 }
 
@@ -1546,13 +1273,13 @@ static fm_s32 mt6580_GetCapArray(fm_s32 *ca)
 		WCN_DBG(FM_ERR | CHIP, "%s,invalid pointer\n", __func__);
 		return -FM_EPARA;
 	}
-	mt6580_read(0x60, &tmp);
-	mt6580_write(0x60, tmp & 0xFFF7);	/* 0x60 D3=0 */
+	fm_reg_read(0x60, &tmp);
+	fm_reg_write(0x60, tmp & 0xFFF7);	/* 0x60 D3=0 */
 
-	mt6580_read(0x26, &dataRead);
+	fm_reg_read(0x26, &dataRead);
 	*ca = dataRead;
 
-	mt6580_write(0x60, tmp);	/* 0x60 D3=1 */
+	fm_reg_write(0x60, tmp);	/* 0x60 D3=1 */
 	return 0;
 }
 
@@ -1569,7 +1296,7 @@ static fm_bool mt6580_GetCurPamd(fm_u16 *pPamdLevl)
 	int i, total = 0;
 
 	for (i = 0; i < 8; i++) {
-		if (mt6580_read(FM_ADDR_PAMD, &tmp_reg)) {
+		if (fm_reg_read(FM_ADDR_PAMD, &tmp_reg)) {
 			*pPamdLevl = 0;
 			return fm_false;
 		}
@@ -1581,7 +1308,7 @@ static fm_bool mt6580_GetCurPamd(fm_u16 *pPamdLevl)
 			valid_cnt++;
 			WCN_DBG(FM_DBG | CHIP, "[%d]PAMD=%d\n", i, dBvalue);
 		}
-		Delayms(3);
+		fm_delayms(3);
 	}
 	if (valid_cnt != 0)
 		*pPamdLevl = total / valid_cnt;
@@ -1639,9 +1366,9 @@ static fm_s32 mt6580_pre_search(void)
 {
 	mt6580_RampDown();
 	/* disable audio output I2S Rx mode */
-	mt6580_host_write(0x80101054, 0x00000000);
+	fm_host_reg_write(0x80101054, 0x00000000);
 	/* disable audio output I2S Tx mode */
-	mt6580_write(0x9B, 0x0000);
+	fm_reg_write(0x9B, 0x0000);
 
 	return 0;
 }
@@ -1650,9 +1377,9 @@ static fm_s32 mt6580_restore_search(void)
 {
 	mt6580_RampDown();
 	/* set audio output I2S Tx mode */
-	mt6580_write(0x9B, 0xF9AB);
+	fm_reg_write(0x9B, 0xF9AB);
 	/* set audio output I2S Rx mode */
-	mt6580_host_write(0x80101054, 0x00003f35);
+	fm_host_reg_write(0x80101054, 0x00003f35);
 	return 0;
 }
 
@@ -1670,49 +1397,49 @@ static fm_s32 mt6580_soft_mute_tune(fm_u16 freq, fm_s32 *rssi, fm_bool *valid)
 #if 0
 	ret = mt6580_chan_para_get(freq);
 	if (ret == 2)
-		ret = mt6580_set_bits(FM_CHANNEL_SET, 0x2000, 0x0FFF);	/* mdf HiLo */
+		ret = fm_set_bits(FM_CHANNEL_SET, 0x2000, 0x0FFF);	/* mdf HiLo */
 	else
-		ret = mt6580_set_bits(FM_CHANNEL_SET, 0x0000, 0x0FFF);	/* clear FA/HL/ATJ */
+		ret = fm_set_bits(FM_CHANNEL_SET, 0x0000, 0x0FFF);	/* clear FA/HL/ATJ */
 #endif
 	freq_reg = freq;
 	if (0 == fm_get_channel_space(freq_reg))
 		freq_reg *= 10;
 
-	ret = mt6580_write(0x60, 0x00000007);
+	ret = fm_reg_write(0x60, 0x00000007);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
 
 	if ((6500 <= freq_reg) && (freq_reg <= 7290)) {
-		ret = mt6580_write(0x39, 0xd002);
+		ret = fm_reg_write(0x39, 0xd002);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((7295 <= freq_reg) && (freq_reg <= 8410)) {
-		ret = mt6580_write(0x39, 0xce02);
+		ret = fm_reg_write(0x39, 0xce02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((8415 <= freq_reg) && (freq_reg <= 9815)) {
-		ret = mt6580_write(0x39, 0xcc02);
+		ret = fm_reg_write(0x39, 0xcc02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((9820 <= freq_reg) && (freq_reg <= 9830)) {
-		ret = mt6580_write(0x39, 0xca02);
+		ret = fm_reg_write(0x39, 0xca02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((9835 <= freq_reg) && (freq_reg <= 9940)) {
-		ret = mt6580_write(0x39, 0xcc02);
+		ret = fm_reg_write(0x39, 0xcc02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else if ((9845 <= freq_reg) && (freq_reg <= 10800)) {
-		ret = mt6580_write(0x39, 0xca02);
+		ret = fm_reg_write(0x39, 0xca02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	} else {
-		ret = mt6580_write(0x39, 0xca02);
+		ret = fm_reg_write(0x39, 0xca02);
 		if (ret)
 			WCN_DBG(FM_ERR | CHIP, "set freq wr 0x39 failed\n");
 	}
 
-	ret = mt6580_write(0x60, 0x0000000f);
+	ret = fm_reg_write(0x60, 0x0000000f);
 	if (ret)
 		WCN_DBG(FM_ERR | CHIP, "set freq wr 0x60 failed\n");
 	/* end */
@@ -1720,12 +1447,12 @@ static fm_s32 mt6580_soft_mute_tune(fm_u16 freq, fm_s32 *rssi, fm_bool *valid)
 	if (FM_LOCK(cmd_buf_lock))
 		return -FM_ELOCK;
 	pkt_size = fm_full_cqi_req(cmd_buf, TX_BUF_SIZE, &freq, 1, 1);
-	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_SM_TUNE, SW_RETRY_CNT, SM_TUNE_TIMEOUT, mt6580_get_read_result);
+	ret = fm_cmd_tx(cmd_buf, pkt_size, FLAG_SM_TUNE, SW_RETRY_CNT, SM_TUNE_TIMEOUT, fm_get_read_result);
 	FM_UNLOCK(cmd_buf_lock);
 
-	if (!ret && mt6580_res) {
-		WCN_DBG(FM_NTC | CHIP, "smt cqi size %d\n", mt6580_res->cqi[0]);
-		p_cqi = (struct mt6580_full_cqi *)&mt6580_res->cqi[2];
+	if (!ret && fm_res) {
+		WCN_DBG(FM_NTC | CHIP, "smt cqi size %d\n", fm_res->cqi[0]);
+		p_cqi = (struct mt6580_full_cqi *)&fm_res->cqi[2];
 		/* just for debug */
 		WCN_DBG(FM_NTC | CHIP,
 			"freq %d, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x, 0x%04x\n",
@@ -1840,15 +1567,6 @@ fm_s32 fm_low_ops_register(struct fm_callback *cb, struct fm_basic_interface *bi
 
 	bi->pwron = mt6580_pwron;
 	bi->pwroff = mt6580_pwroff;
-	bi->msdelay = Delayms;
-	bi->usdelay = Delayus;
-	bi->read = mt6580_read;
-	bi->write = mt6580_write;
-	bi->top_read = mt6580_top_read;
-	bi->top_write = mt6580_top_write;
-	bi->host_read = mt6580_host_read;
-	bi->host_write = mt6580_host_write;
-	bi->setbits = mt6580_set_bits;
 	bi->chipid_get = mt6580_get_chipid;
 	bi->mute = mt6580_Mute;
 	bi->rampdown = mt6580_RampDown;
