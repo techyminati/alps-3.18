@@ -297,6 +297,12 @@ static int disp_probe(struct platform_device *pdev)
 			return -ENOMEM;
 		}
 		dispsys_reg[i] = (unsigned long)dispsys_dev->regs[i];
+		/* Move to here for outof for_loop, due to it will be needed soon after request_irq */
+		if (i == DISP_REG_DSI0)
+			dsi_reg_va = dispsys_reg[DISP_REG_DSI0];
+		if (i == DISP_REG_MIPI)
+			mipi_tx_reg = dispsys_reg[DISP_REG_MIPI];
+
 		/* get IRQ ID and request IRQ */
 		dispsys_dev->irq[i] = irq_of_parse_and_map(pdev->dev.of_node, i);
 		dispsys_irq[i] = dispsys_dev->irq[i];
@@ -320,8 +326,8 @@ static int disp_probe(struct platform_device *pdev)
 	}
 	nr_dispsys_dev = new_count;
 	/* mipi tx reg map here */
-	dsi_reg_va = dispsys_reg[DISP_REG_DSI0];
-	mipi_tx_reg = dispsys_reg[DISP_REG_MIPI];
+	/* dsi_reg_va = dispsys_reg[DISP_REG_DSI0]; */
+	/* mipi_tx_reg = dispsys_reg[DISP_REG_MIPI]; */
 
 	/* power on MMSYS for early porting */
 #ifdef CONFIG_MTK_FPGA
