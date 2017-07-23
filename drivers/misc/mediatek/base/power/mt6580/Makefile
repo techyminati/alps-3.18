@@ -9,3 +9,4 @@ obj-y	+= mt_spm_internal.o
 obj-y	+= mt_cpufreq.o
 obj-y	+= mt_gpufreq.o
 obj-y	+= mt_ptp.o
+obj-y	+= mt_dcm.o
