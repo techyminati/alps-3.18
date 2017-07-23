@@ -190,6 +190,10 @@ void mt_cpu_die(unsigned int cpu)
 	 * we're ready for shutdown now, so do it
 	 */
 	cpu_enter_lowpower(cpu);
+
+#ifdef CONFIG_MTK_IRQ_NEW_DESIGN
+	gic_set_primask();
+#endif
 	platform_do_lowpower(cpu, &spurious);
 
 	/*
@@ -197,10 +201,6 @@ void mt_cpu_die(unsigned int cpu)
 	 * coherency, and then restore interrupts
 	 */
 	cpu_leave_lowpower(cpu);
-
-#ifdef CONFIG_MTK_IRQ_NEW_DESIGN
-	gic_set_primask();
-#endif
 
 	if (spurious)
 		HOTPLUG_INFO(
