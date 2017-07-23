@@ -140,8 +140,8 @@ void mt_usb_set_vbus(struct musb *musb, int is_on)
 	} else {
 	/* power off VBUS, implement later... */
     #ifdef CONFIG_MTK_FAN5405_SUPPORT
-		fan5405_reg_config_interface(0x01, 0x30);
-		fan5405_reg_config_interface(0x02, 0x8e);
+	fan5405_config_interface(0x01, 0x30, 0xff, 0x00);
+	fan5405_config_interface(0x02, 0x8e, 0xff, 0x00);
 	#elif defined(CONFIG_MTK_NCP1851_SUPPORT) || defined(CONFIG_MTK_BQ24196_SUPPORT)
 		tbl_charger_otg_vbus((work_busy(&musb->id_pin_work.work) << 8) | 0);
 	#elif defined(CONFIG_MTK_BQ24261_SUPPORT)
