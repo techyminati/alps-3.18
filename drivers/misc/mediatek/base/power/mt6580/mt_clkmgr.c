@@ -1565,8 +1565,8 @@ static int enable_clock_locked(struct cg_clk *clk)
 		EXIT_FUNC(FUNC_LV_LOCKED);
 		return -1;
 	}
-
-	clk->cnt++;
+	if ((clk - &clks[1]) > 0)
+		clk->cnt++;
 /* pr_debug("%s[%d]:%s\n", __FUNCTION__, clk - &clks[0], clk->name); */
 
 	if (clk->cnt > 1) {
@@ -1625,10 +1625,12 @@ static int disable_clock_locked(struct cg_clk *clk)
 		return -1;
 	}
 
-	if (!clk->cnt)
-		pr_err("Assert @ %s\n", clk->name);
-	BUG_ON(!clk->cnt);
-	clk->cnt--;
+	if ((clk - &clks[1]) > 0) {
+		if (!clk->cnt)
+			pr_err("Assert @ %s\n", clk->name);
+		BUG_ON(!clk->cnt);
+		clk->cnt--;
+	}
 
 /* pr_debug("%s[%d]\n", __FUNCTION__, clk - &clks[0]); */
 	if (clk->cnt > 0) {
