@@ -60,10 +60,6 @@ extern struct platform_driver accdet_driver_func(void);	/*from accdet_drv.c*/
 extern struct headset_mode_settings *get_cust_headset_settings(void);
 extern struct headset_key_custom *get_headset_key_custom_setting(void);
 extern void accdet_create_attr_func(void);	/*from accdet_drv.c*/
-#if defined(ACCDET_TS3A225E_PIN_SWAP)
-extern int ts3a225e_read_byte(unsigned char cmd, unsigned char *returnData);
-extern int ts3a225e_write_byte(unsigned char cmd, unsigned char writeData);
-#endif
 extern struct of_device_id accdet_of_match[];
 void mt_accdet_remove(void);
 void mt_accdet_suspend(void);
