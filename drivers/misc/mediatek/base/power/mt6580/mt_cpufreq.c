@@ -22,6 +22,8 @@
 #include <linux/proc_fs.h>
 #include <linux/miscdevice.h>
 #include <linux/platform_device.h>
+#include <linux/notifier.h>
+#include <linux/fb.h>
 #include <linux/spinlock.h>
 #include <linux/kthread.h>
 #include <linux/hrtimer.h>
@@ -178,7 +180,11 @@ cpufreq_write(addr, (cpufreq_read(addr) & ~(_BITMASK_(mask))) | _BITS_(mask, val
 /*=============================================================*/
 /* Gobal function definition                                   */
 /*=============================================================*/
+static int _mt_cpufreq_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data);
 
+static struct notifier_block _mt_cpufreq_fb_notifier = {
+	.notifier_call = _mt_cpufreq_fb_notifier_callback,
+};
 /*
  * LOCK
  */
@@ -1992,6 +1998,89 @@ static struct cpufreq_driver _mt_cpufreq_driver = {
 };
 #endif
 
+static void _mt_cpufreq_lcm_status_switch(int onoff)
+{
+	struct mt_cpu_dvfs *p;
+	int i;
+#ifdef CONFIG_CPU_FREQ
+	struct cpufreq_policy *policy;
+#endif
+	cpufreq_info("@%s: LCM is %s\n", __func__, (onoff) ? "on" : "off");
+
+	/* onoff = 0: LCM OFF */
+	/* others: LCM ON */
+	if (onoff) {
+		for_each_cpu_dvfs(i, p) {
+			if (!cpu_dvfs_is_available(p))
+				continue;
+
+#ifdef CONFIG_CPU_FREQ
+			policy = cpufreq_cpu_get(p->cpu_id);
+			if (policy) {
+				cpufreq_driver_target(
+					policy,
+					cpu_dvfs_get_freq_by_idx(
+						p,
+						p->idx_opp_tbl_for_late_resume
+					),
+					CPUFREQ_RELATION_L
+				);
+				cpufreq_cpu_put(policy);
+			}
+#endif
+		}
+	} else {
+		for_each_cpu_dvfs(i, p) {
+			if (!cpu_dvfs_is_available(p))
+				continue;
+
+			p->idx_opp_tbl_for_late_resume = p->idx_opp_tbl;
+
+#ifdef CONFIG_CPU_FREQ
+			policy = cpufreq_cpu_get(p->cpu_id);
+			if (policy) {
+				cpufreq_driver_target(
+					policy,
+					cpu_dvfs_get_freq_by_idx(p, 4), CPUFREQ_RELATION_L);
+				cpufreq_cpu_put(policy);
+			}
+#endif
+		}
+	}
+}
+
+static int _mt_cpufreq_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int blank;
+
+	FUNC_ENTER(FUNC_LV_MODULE);
+
+	blank = *(int *)evdata->data;
+	cpufreq_ver("@%s: blank = %d, event = %lu\n", __func__, blank, event);
+
+	/* skip if it's not a blank event */
+	if (event != FB_EVENT_BLANK)
+		return 0;
+
+	switch (blank) {
+	/* LCM ON */
+	case FB_BLANK_UNBLANK:
+		_mt_cpufreq_lcm_status_switch(1);
+		break;
+	/* LCM OFF */
+	case FB_BLANK_POWERDOWN:
+		_mt_cpufreq_lcm_status_switch(0);
+		break;
+	default:
+		break;
+	}
+
+	FUNC_EXIT(FUNC_LV_MODULE);
+
+	return 0;
+}
+
 /*
  * Platform driver
  */
@@ -2048,6 +2137,9 @@ static int _mt_cpufreq_pm_restore_early(struct device *dev)
 static int _mt_cpufreq_pdrv_probe(struct platform_device *pdev)
 {
 	FUNC_ENTER(FUNC_LV_MODULE);
+
+	if (fb_register_client(&_mt_cpufreq_fb_notifier))
+		cpufreq_err("@%s: register FB client failed!\n", __func__);
 
 	if (pw.addr[0].cmd_addr == 0)
 		_mt_cpufreq_pmic_table_init();
