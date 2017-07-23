@@ -244,7 +244,7 @@ static unsigned int charging_enable(void *data)
 }
 
 
-BATTERY_VOLTAGE_ENUM cv_voltage = BATTERY_VOLT_04_200000_V;
+
 
 static unsigned int charging_set_cv_voltage(void *data)
 {
@@ -253,8 +253,7 @@ static unsigned int charging_set_cv_voltage(void *data)
 
 	register_value = charging_parameter_to_value(VBAT_CV_VTH, GETARRAYNUM(VBAT_CV_VTH) , *(unsigned int *)(data));
 
-	cv_voltage = VBAT_CV_VTH[register_value];
-
+	battery_set_cv_voltage(VBAT_CV_VTH[register_value]);
 
 	pmic_set_register_value(PMIC_RG_VBAT_CV_VTH, register_value);
 
