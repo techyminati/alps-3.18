@@ -17,7 +17,7 @@ int disp_init_irq(void);
 
 extern unsigned int mutex_start_irq_cnt;
 extern unsigned int mutex_done_irq_cnt;
+extern atomic_t ESDCheck_byCPU;
 
 irqreturn_t disp_irq_handler(int irq, void *dev_id);
-
 #endif
