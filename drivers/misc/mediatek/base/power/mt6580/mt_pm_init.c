@@ -25,8 +25,8 @@
 #include <mach/irqs.h>
 #include <mach/mt_clkmgr.h>
 #include <mach/mt_clkbuf_ctl.h>
-#include <mt_cpufreq.h>
-#include <mt_gpufreq.h>
+#include "mt_cpufreq.h"
+#include "mt_gpufreq.h"
 #include <mt-plat/sync_write.h>
 #include <mt_spm.h>
 #include "mt_sleep.h"

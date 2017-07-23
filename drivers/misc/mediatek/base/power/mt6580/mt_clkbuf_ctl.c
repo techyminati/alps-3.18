@@ -73,7 +73,7 @@ static DEFINE_SPINLOCK(clk_buf_ctrl_lock);
 #ifdef MTKDRV_CLKBUF_CTL	/* for CTP */
 
 #include <kernel_to_ctp.h>
-#include <mt_clkbuf_ctl.h>
+#include "mt_clkbuf_ctl.h"
 
 #define clk_buf_emerg(fmt, args...)     must_print("[clk_buf] " fmt, ##args)
 #define clk_buf_alert(fmt, args...)     must_print("[clk_buf] " fmt, ##args)
