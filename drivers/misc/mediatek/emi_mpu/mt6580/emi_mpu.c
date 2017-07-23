@@ -24,7 +24,8 @@
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <mt-plat/mt_io.h>
-#include "mach/emi_mpu.h"
+#include <mach/mtk_ccci_helper.h>
+#include <mach/emi_mpu.h>
 
 #define ENABLE_EMI_CHKER
 #define ENABLE_EMI_WATCH_POINT
@@ -605,7 +606,7 @@ static int mpu_check_violation(void)
 		u32 port_ID;
 
 		port_ID  = master_ID & 0x00000007;
-#if 0
+#if 1
 		/*not support ccci md dump correctly */
 		if (port_ID == MONITOR_PORT_MDMCU ||
 		    port_ID == MONITOR_PORT_MDHW) {
@@ -1497,7 +1498,6 @@ DRIVER_ATTR(emi_wp_vio, 0644, emi_wp_vio_show, emi_wp_vio_store);
 
 #define AP_REGION_ID   7
 
-#if 0 /*disable protect ap region */
 static void protect_ap_region(void)
 {
 	unsigned int ap_mem_mpu_id, ap_mem_mpu_attr;
@@ -1522,7 +1522,7 @@ static void protect_ap_region(void)
 				      ap_mem_mpu_id,
 				      ap_mem_mpu_attr);
 }
-#endif
+
 
 static struct platform_driver emi_mpu_ctrl = {
 	.driver = {
@@ -1607,9 +1607,9 @@ static int __init emi_mpu_mod_init(void)
 		return ret;
 	}
 
-	/* need to protect ap region
-	 *  protect_ap_region();
-	 */
+	/* need to protect ap region */
+	protect_ap_region();
+
 
 #ifdef ENABLE_EMI_CHKER
 	/* AXI violation monitor setting and timer function create */

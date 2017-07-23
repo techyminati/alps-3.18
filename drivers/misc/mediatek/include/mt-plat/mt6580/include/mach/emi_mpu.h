@@ -187,4 +187,5 @@ extern void mt_emi_reg_write(unsigned int data, unsigned int offset);
 extern unsigned int mt_emi_reg_read(unsigned int offset);
 extern void mt_emi_reg_base_set(void *base);
 extern void *mt_emi_reg_base_get(void);
+extern phys_addr_t get_max_DRAM_size(void);
 #endif  /* !__MT_EMI_MPU_H */
