@@ -9,7 +9,6 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include "mt6580-pinfunc.h"
-
 / {
 	model = "MT6580";
 	compatible = "mediatek,MT6580";
@@ -745,6 +744,14 @@
 		touch: touch@0 {
 			compatible = "mediatek,mt6580-touch";
 			vtouch-supply = <&mt_pmic_vgp1_ldo_reg>;
+		};
+		accdet: accdet {
+			compatible = "mediatek,mt6580-accdet";
+		};
+
+		gse_1: gse_1 {
+			compatible = "mediatek, gse_1-eint";
+			status = "disabled";
 		};
 
 		SPI@0x1100C000 {
@@ -1552,6 +1559,11 @@
 				regulator-max-microvolt = <1800000>;
 				regulator-enable-ramp-delay = <44>;
 			};
+
+			mt_pmic_vcanio_ldo_reg:vcanio_ldo_reg {
+			};
+			mt_pmic_vcn33_ldo_reg:vcn33_ldo_reg {
+			};
 		};/* End of ldo_regulators */
 		regulators_supply {
 			compatible = "mediatek,mt_pmic_regulator_supply";
@@ -1589,6 +1601,8 @@
 	};
 
 };
+
+#include <cust.dtsi>
 
 &eintc {
 	pmic@13 {
