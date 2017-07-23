@@ -2403,7 +2403,6 @@ static int mtkfb_probe(struct device *dev)
 	init_state++;		/* 2 */
 
 	/* Register to system */
-
 	r = mtkfb_fbinfo_init(fbi);
 	if (r) {
 		DISPERR("mtkfb_fbinfo_init fail, r = %d\n", r);
