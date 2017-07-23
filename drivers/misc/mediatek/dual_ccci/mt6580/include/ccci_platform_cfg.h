@@ -1,12 +1,8 @@
 #ifndef __CCCI_PLATFORM_CFG_H__
 #define __CCCI_PLATFORM_CFG_H__
 #include <linux/version.h>
-#include <mach/irqs.h>
-#include <mach/mt_irq.h>
-#include <mach/mt_reg_base.h>
-#include <mach/mt_typedefs.h>
-#include <mach/mt_boot.h>
-#include <mach/sync_write.h>
+#include <mt-plat/mt_boot.h>
+#include <mt-plat/sync_write.h>
 /* -------------ccci driver configure------------------------*/
 #define MD1_DEV_MAJOR	(184)
 #define MD2_DEV_MAJOR	(169)
@@ -84,7 +80,7 @@
 /* ******other feature configure******/
 /* #define  ENABLE_LOCK_MD_SLP_FEATURE */
 /* disable for bring up */
-#define ENABLE_32K_CLK_LESS
+/*#define ENABLE_32K_CLK_LESS*/
 /* disable for bring up for md not enable wdt at bring up */
 #define  ENABLE_MD_WDT_PROCESS
 /* disable for bring up */

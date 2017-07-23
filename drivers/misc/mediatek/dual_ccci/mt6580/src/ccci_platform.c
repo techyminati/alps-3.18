@@ -13,26 +13,27 @@
 #include <linux/semaphore.h>
 #include <linux/version.h>
 #include <linux/fs.h>
-#include <mach/bus_fabric.h>
-#include <mach/emi_mpu.h>
-#include <mach/sec_osal.h>
-#include <mach/mt_sec_export.h>
 #include <ccci_common.h>
 #include <ccci_platform.h>
 #include <mach/mt_clkmgr.h>
-
 #ifdef CONFIG_OF
 #include <linux/of.h>
 #include <linux/of_fdt.h>
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
-
 #ifdef CONFIG_OF_RESERVED_MEM
 #include <linux/of_reserved_mem.h>
 #endif
-
 #endif
 
+#ifdef ENABLE_MD_IMG_SECURITY_FEATURE
+#include <sec_osal.h>
+#include <sec_export.h>
+#endif
+
+#ifdef ENABLE_EMI_PROTECTION
+#include <mach/emi_mpu.h>
+#endif
 /* -------------ccci initial status define----------------------*/
 #define CCCI_ALLOC_SMEM_DONE	(1<<0)
 #define CCCI_MAP_MD_CODE_DONE	(1<<1)
