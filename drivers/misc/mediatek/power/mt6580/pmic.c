@@ -68,6 +68,10 @@
 /* mach */
 /* #include <mach/battery_common.h> TBD */
 /* #include <mach/battery_meter.h> TBD */
+#include <mt-plat/battery_meter.h>
+#include <mt-plat/battery_common.h>
+#include <mach/mt_battery_meter.h>
+
 /* #include <mach/eint.h> TBD */
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
 #include <mt-plat/mt_boot.h>
@@ -2585,7 +2589,7 @@ void chrdet_int_handler(void)
 	pmic_set_register_value(PMIC_RG_USBDL_RST, 1);
 #ifdef CONFIG_POWER_EXT
 #else
-	/* do_chrdet_int_task(); TBD */
+	do_chrdet_int_task();
 #endif
 }
 
