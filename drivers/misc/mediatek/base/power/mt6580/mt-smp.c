@@ -48,6 +48,9 @@
 
 static DEFINE_SPINLOCK(boot_lock);
 
+#define MT6580_INFRACFG_AO	0x10001000
+#define SW_ROM_PD		BIT(31)
+
 /*
  * Write pen_release in a way that is guaranteed to be visible to all
  * observers, irrespective of whether they're taking part in coherency
@@ -88,6 +91,8 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 {
 	unsigned long timeout;
 
+	static void __iomem *infracfg_ao_base;
+
 	pr_crit("Boot slave CPU\n");
 
 	atomic_inc(&hotplug_cpu_count);
@@ -121,6 +126,10 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 #elif defined(CONFIG_TRUSTY)
 	if (cpu >= 1 && cpu <= 3)
 		mt_trusty_call(SMC_FC_CPU_ON, virt_to_phys(mt_secondary_startup), cpu, 0);
+#else
+	infracfg_ao_base = ioremap(MT6580_INFRACFG_AO, 0x1000);
+	writel_relaxed(virt_to_phys(mt_secondary_startup), infracfg_ao_base + 0x800);
+	iounmap(infracfg_ao_base);
 #endif
 
 	switch (cpu) {
@@ -182,9 +191,6 @@ void __init mt_smp_init_cpus(void)
 
 	irq_total_secondary_cpus = num_possible_cpus() - 1;
 }
-
-#define MT6580_INFRACFG_AO	0x10001000
-#define SW_ROM_PD		BIT(31)
 
 void __init mt_smp_prepare_cpus(unsigned int max_cpus)
 {
