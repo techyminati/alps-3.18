@@ -38,6 +38,7 @@ extern unsigned int mt_gpio_to_irq(unsigned int gpio);
 #if defined(CONFIG_MTK_FAN5405_SUPPORT) \
 	|| defined(CONFIG_MTK_BQ24158_SUPPORT) \
 	|| defined(CONFIG_MTK_NCP1851_SUPPORT) \
+	|| defined(CONFIG_MTK_NCP1854_SUPPORT) \
 	|| defined(CONFIG_MTK_BQ24196_SUPPORT)
 #define SWITCH_CHARGER 1
 #endif
@@ -110,6 +111,9 @@ extern void bq24261_set_en_boost(kal_uint32 val);
 #elif defined(CONFIG_MTK_BQ24196_SUPPORT)
 extern void bq24196_set_otg_config(kal_uint32 val);
 extern void bq24196_set_boost_lim(kal_uint32 val);
+#elif defined CONFIG_MTK_NCP1854_SUPPORT
+extern void ncp1854_set_chg_en(unsigned int val);
+extern void ncp1854_set_otg_en(unsigned int val);
 #endif
 
 #ifdef FPGA_PLATFORM
