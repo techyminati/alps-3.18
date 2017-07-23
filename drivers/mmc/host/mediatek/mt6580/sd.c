@@ -1228,6 +1228,7 @@ enum MSDC_LDO_POWER {
 bool msdc_hwPowerOn(unsigned int powerId, int powerVolt, char *mode_name)
 {
 	struct regulator *reg = NULL;
+	int ret = 0;
 
 	if (powerId == POWER_LDO_VMCH)
 		reg = reg_vmch;
@@ -1240,9 +1241,12 @@ bool msdc_hwPowerOn(unsigned int powerId, int powerVolt, char *mode_name)
 	powerVolt = powerVolt * 1000;
 	/* New API voltage use micro V */
 	regulator_set_voltage(reg, powerVolt, powerVolt);
-	regulator_enable(reg);
-	pr_err("msdc_hwPoweron:%d: name:%s", powerId, mode_name);
-	return true;
+	ret = regulator_enable(reg);
+	pr_err("msdc_hwPoweron:%d: name:%s ret(%d)", powerId, mode_name, ret);
+	if (ret)
+		return false;
+	else
+		return true;
 }
 EXPORT_SYMBOL(msdc_hwPowerOn);
 
@@ -3014,6 +3018,7 @@ static void msdc_pin_reset(struct msdc_host *host, int mode)
 	}
 }
 
+#if 0
 static void msdc_pin_reset_force(struct msdc_host *host, int mode)
 {
 	struct msdc_hw *hw = (struct msdc_hw *)host->hw;
@@ -3033,6 +3038,7 @@ static void msdc_pin_reset_force(struct msdc_host *host, int mode)
 	else
 		sdr_set_bits(EMMC_IOCON, EMMC_IOCON_BOOTRST);
 }
+#endif
 
 static void msdc_set_power_mode(struct msdc_host *host, u8 mode)
 {
@@ -3546,10 +3552,9 @@ int msdc_get_cache_region(void)
 {
 #ifdef MTK_MSDC_USE_CACHE
 	struct msdc_host *host;
+	struct hd_struct *lp_hd_struct;
 
 	host = msdc_get_host(MSDC_EMMC, MSDC_BOOT_EN, 0);
-
-	struct hd_struct *lp_hd_struct;
 
 	lp_hd_struct = get_part("cache");
 	if (likely(lp_hd_struct)) {
@@ -4453,7 +4458,8 @@ static void msdc_dma_start(struct msdc_host *host)
 	N_MSG(DMA, "DMA start");
 
 	if (host->data && host->data->flags & MMC_DATA_WRITE) {
-		host->write_timeout_ms = min(max(host->data->blocks * 500,
+		host->write_timeout_ms = min_t(u32, max_t(u32,
+			host->data->blocks * 500,
 			host->data->timeout_ns / 1000000), 270 * 1000);
 		schedule_delayed_work(&host->write_timeout, msecs_to_jiffies(host->write_timeout_ms));
 		N_MSG(DMA, "DMA Data Busy Timeout:%u ms, schedule_delayed_work", host->write_timeout_ms);
@@ -4783,13 +4789,13 @@ static int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 	/* u32 intsts = 0; */
 	int dma = 0, read = 1, dir = DMA_FROM_DEVICE, send_type = 0;
 	u32 map_sg = 0;
+	unsigned long pio_tmo;
+	unsigned int left = 0;
 #ifdef MTK_MSDC_USE_CACHE
 	u32 l_force_prg = 0;
 
 	g_bypass_flush = 0;
 #endif
-	unsigned long pio_tmo;
-	unsigned int left = 0;
 
 #define SND_DAT 0
 #define SND_CMD 1
@@ -7751,7 +7757,6 @@ static int msdc_ops_get_cd(struct mmc_host *mmc)
 {
 	struct msdc_host *host = mmc_priv(mmc);
 	void __iomem *base;
-	unsigned long flags;
 	int level = 0;
 	/* int present = 1; */
 
@@ -8817,11 +8822,11 @@ static void msdc_get_rigister_settings(struct msdc_host *host)
 
 	if (MSDC_EMMC == host->hw->host_function
 		&& !of_property_read_u32_array(register_setting_node, "ett-hs200-customer",
-		host->hw->ett_hs200_settings, host->hw->ett_hs200_count * 3)) {
+		(u32 *)host->hw->ett_hs200_settings, host->hw->ett_hs200_count * 3)) {
 		pr_err("[MSDC%d] hs200 ett setting for customer is found in DT.\n", host->id);
 	} else if (MSDC_EMMC == host->hw->host_function
 		&& !of_property_read_u32_array(register_setting_node, "ett-hs200-default",
-		host->hw->ett_hs200_settings, host->hw->ett_hs200_count * 3)) {
+		(u32 *)host->hw->ett_hs200_settings, host->hw->ett_hs200_count * 3)) {
 		pr_err("[MSDC%d] hs200 ett setting for default is found in DT.\n", host->id);
 	} else if (MSDC_EMMC == host->hw->host_function) {
 		pr_err("[MSDC%d]error: hs200 ett setting is not found in DT.\n", host->id);
@@ -8835,11 +8840,11 @@ static void msdc_get_rigister_settings(struct msdc_host *host)
 
 	if (MSDC_EMMC == host->hw->host_function
 		&& !of_property_read_u32_array(register_setting_node, "ett-hs400-customer",
-		host->hw->ett_hs400_settings, host->hw->ett_hs400_count * 3)) {
+		(u32 *)host->hw->ett_hs400_settings, host->hw->ett_hs400_count * 3)) {
 		pr_err("[MSDC%d] hs400 ett setting for customer is found in DT.\n", host->id);
 	} else if (MSDC_EMMC == host->hw->host_function
 		&& !of_property_read_u32_array(register_setting_node, "ett-hs400-default",
-		host->hw->ett_hs400_settings, host->hw->ett_hs400_count * 3)) {
+		(u32 *)host->hw->ett_hs400_settings, host->hw->ett_hs400_count * 3)) {
 		pr_err("[MSDC%d] hs400 ett setting for default is found in DT.\n", host->id);
 	} else if (MSDC_EMMC == host->hw->host_function) {
 		pr_err("[MSDC%d]error: hs400 ett setting is not found in DT.\n", host->id);
@@ -8856,7 +8861,7 @@ int msdc_of_parse(struct mmc_host *mmc)
 {
 	struct device_node *np;
 	struct msdc_host *host = mmc_priv(mmc);
-	int ret, len, debug = 0;
+	int len;
 
 	if (!mmc->parent || !mmc->parent->of_node)
 		return 1;
@@ -8912,7 +8917,7 @@ int msdc_of_parse(struct mmc_host *mmc)
 		host->hw->boot = 1;
 
 	/*get cd_level*/
-	of_property_read_u8(np, "cd_level", &host->hw->cd_level);
+	of_property_read_u8(np, "cd_level", (u8 *)&host->hw->cd_level);
 
 	/*get cd_gpio*/
 	of_property_read_u32_index(np, "cd-gpios", 1, &cd_gpio);
@@ -8921,9 +8926,6 @@ int msdc_of_parse(struct mmc_host *mmc)
 	msdc_get_pinctl_settings(host);
 
 	return 0;
-
-out:
-	return ret;
 }
 
 static int msdc_drv_probe(struct platform_device *pdev)
@@ -8936,9 +8938,6 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	void __iomem *base;
 	int ret;
 	struct irq_data l_irq_data;
-	unsigned int msdc_hw_parameter[sizeof(struct tag_msdc_hw_para) / 4];
-	unsigned int msdc_custom[1];
-	struct device_node *msdc_cust_node = NULL;
 
 #ifdef FPGA_PLATFORM
 	u16 l_val;
@@ -9382,8 +9381,8 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	/* not set for sdio */
 	/* set to combo_sdio_request_eirq() for WIFI */
 	/* msdc_eirq_sdio() will be called when EIRQ */
-	if (host->hw->request_sdio_eirq)
-		host->hw->request_sdio_eirq(msdc_eirq_sdio, (void *)host);
+	/* if (host->hw->request_sdio_eirq)
+		host->hw->request_sdio_eirq(msdc_eirq_sdio, (void *)host); */
 
 #ifdef CONFIG_PM
 	if (host->hw->register_pm) {	/* yes for sdio */
@@ -9471,7 +9470,6 @@ static int msdc_drv_probe(struct platform_device *pdev)
 
 	mmc_free_host(mmc);
 
-out:
 	return ret;
 }
 
