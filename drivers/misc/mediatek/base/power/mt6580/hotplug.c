@@ -15,6 +15,9 @@
 #include <asm/cacheflush.h>
 #include <mt-plat/sync_write.h>
 #include <mach/mt_spm_mtcmos.h>
+#if defined(CONFIG_TRUSTY)
+#include <mach/mt_trusty_api.h>
+#endif
 
 #include "mt-smp.h"
 #include "smp.h"
@@ -24,6 +27,10 @@ atomic_t hotplug_cpu_count = ATOMIC_INIT(1);
 
 static inline void cpu_enter_lowpower(unsigned int cpu)
 {
+#if defined(CONFIG_TRUSTY)
+	mt_trusty_call(SMC_FC_CPU_OFF, 0, cpu, 0);
+#endif
+
 	if (((cpu == 4) && (cpu_online(5) == 0) && (cpu_online(6) == 0)
 	     && (cpu_online(7) == 0)) || ((cpu == 5) && (cpu_online(4) == 0)
 					  && (cpu_online(6) == 0)

@@ -20,6 +20,9 @@
 #include <mt-plat/sync_write.h>
 #include <mach/mt_spm_mtcmos.h>
 #include <mach/mt_secure_api.h>
+#if defined(CONFIG_TRUSTY)
+#include <mach/mt_trusty_api.h>
+#endif
 
 #include "mt-smp.h"
 #include "smp.h"
@@ -111,6 +114,14 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 	 * be there.
 	 */
 	write_pen_release(cpu);
+
+#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT)
+	if (cpu >= 1 && cpu <= 3)
+		mt_secure_call(MC_FC_SET_RESET_VECTOR, virt_to_phys(mt_secondary_startup), cpu, 0);
+#elif defined(CONFIG_TRUSTY)
+	if (cpu >= 1 && cpu <= 3)
+		mt_trusty_call(SMC_FC_CPU_ON, virt_to_phys(mt_secondary_startup), cpu, 0);
+#endif
 
 	switch (cpu) {
 	case 1:

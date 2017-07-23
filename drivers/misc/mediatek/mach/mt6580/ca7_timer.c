@@ -269,7 +269,7 @@ static void __arch_timer_setup(unsigned type, struct clock_event_device *clk)
 			clk->set_next_event = arch_timer_set_next_event_virt;
 		} else {
 /* When TEE is enabled, change to use non-secure local timer */
-#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT)
+#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT) || defined(CONFIG_TRUSTY)
 			clk->irq = arch_timer_ppi[PHYS_NONSECURE_PPI];	/* GIC_PPI_NS_PRIVATE_TIMER; */
 #else
 			clk->irq = arch_timer_ppi[PHYS_SECURE_PPI];	/* GIC_PPI_PRIVATE_TIMER; */
