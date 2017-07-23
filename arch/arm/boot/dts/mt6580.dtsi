@@ -89,10 +89,10 @@
 				ranges;
 
 				reserve-memory-ccci_md1 {
-						compatible = "reserve-memory-ccci_md1";
+						compatible = "mediatek,reserve-memory-ccci_md1";
 						no-map;
-						size = <0 0x1800000>;			 /* MD ROM + RAM + SMEM */
-						alignment = <0 0x2000000>;	/* 32M alignment */
+						size = <0 0x1800000>; /* MD ROM + RAM + SMEM */
+						alignment = <0 0x2000000>; /* 32M alignment */
 						alloc-ranges = <0 0x80000000 0 0x80000000>;
 				};
 
@@ -354,21 +354,14 @@
 						 <13 1 17>; /* PMIC */
 		};
 
-		AP_CCIF0@0x1000C000 {
-			compatible = "mediatek,AP_CCIF0";
-			reg = <0x1000C000 0x1000>, /*AP_CCIF_BASE*/
-				<0x1000D000 0x1000>; /*MD_CCIF_BASE*/
-			interrupts = <0 93 0x8>,/* CCIF0 IRQ */
-				<0 152 0x2>; /* MD WDT IRQ */
-			ccif0,major = <184>;
-			ccif0,minor_base = <0>;
-			ccif0,capability = <2>;
-			md_smem_size = <0x200000>; //md share memory size
-		};
-
-		MD_CCIF0@0x1000D000 {
-			compatible = "mediatek,MD_CCIF0";
-			reg = <0x1000D000 0x1000>;
+		ap_ccif0:ap_ccif0@1000C000 {
+			compatible = "mediatek,ap_ccif0";
+			reg =	<0x1000C000 0x1000>,	/*AP_CCIF_BASE*/
+				<0x1000D000 0x1000>;	/*MD_CCIF_BASE*/
+			interrupts =	<GIC_SPI 93 IRQ_TYPE_LEVEL_LOW>, /* CCIF0 IRQ */
+					<GIC_SPI 152 IRQ_TYPE_EDGE_FALLING>;/* MD WDT IRQ */
+			mediatek,ccif_capability = <2>;
+			mediatek,md_smem_size = <0x200000>; /* md share memory size */
 		};
 
 		MCUSYS_CFGREG@0x1020000 {
