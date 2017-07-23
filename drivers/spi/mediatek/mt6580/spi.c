@@ -39,8 +39,8 @@
 #include <mach/mt_clkmgr.h>
 #endif
 #include <mach/irqs.h>
-#include <mt_spi.h>
-#include <mt_spi_hal.h>
+#include "mt_spi.h"
+#include "mt_spi_hal.h"
 
 #if (defined(CONFIG_MTK_FPGA))
 #define  CONFIG_MT_SPI_FPGA_ENABLE

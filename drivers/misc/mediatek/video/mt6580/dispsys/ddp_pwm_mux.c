@@ -3,7 +3,7 @@
 #include <linux/delay.h>
 #include <linux/sched.h>
 #include <ddp_pwm_mux.h>
-#include <ddp_reg.h>
+#include "ddp_reg.h"
 #include <mach/mt_clkmgr.h>
 
 #define PWM_MSG(fmt, arg...) pr_debug("[PWM] " fmt "\n", ##arg)

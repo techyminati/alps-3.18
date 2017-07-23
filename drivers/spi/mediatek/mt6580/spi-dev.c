@@ -20,8 +20,8 @@
 #include <linux/dma-mapping.h>
 #include <linux/sched.h>
 #include <linux/kthread.h>
-#include <mt_spi.h>
-#include <mt_spi_hal.h>
+#include "mt_spi.h"
+#include "mt_spi_hal.h"
 
 #define SPIDEV_LOG(fmt, args...) pr_err("[SPI-UT]: [%s]:[%d]" fmt, __func__, __LINE__, ##args)
 #define SPIDEV_MSG(fmt, args...) pr_info(fmt, ##args)
