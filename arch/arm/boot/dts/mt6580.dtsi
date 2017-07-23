@@ -1639,6 +1639,7 @@
 };
 
 #include <cust.dtsi>
+#include <trusty.dtsi>
 
 &eintc {
 	pmic@13 {
