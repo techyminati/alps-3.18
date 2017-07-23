@@ -22,7 +22,7 @@
 #include <mt-plat/sync_write.h>
 #include <linux/memory.h>
 #include <linux/string.h>
-#include <ccci_platform_cfg.h>
+#include "ccci_platform_cfg.h"
 
 /* ******************** macro definition**************************/
 #define CCCI_DEV_MAJOR			184

@@ -9,7 +9,7 @@
  ******************************************************************************/
 
 #include <linux/slab.h>
-#include <6580_gpio.h>
+#include "6580_gpio.h"
 #include <mt-plat/mt_gpio.h>
 #include <mt-plat/mt_gpio_core.h>
 
