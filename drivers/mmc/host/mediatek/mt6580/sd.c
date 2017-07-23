@@ -3589,6 +3589,7 @@ static void get_emmc_cache_info(struct work_struct *work)
 EXPORT_SYMBOL(msdc_get_cache_region);
 #endif
 
+#ifdef CONFIG_MTK_EMMC_SUPPORT
 static struct delayed_work get_cache_info;
 static int __init init_get_cache_work(void)
 {
@@ -3596,6 +3597,7 @@ static int __init init_get_cache_work(void)
 	schedule_delayed_work(&get_cache_info, 100);
 	return 0;
 }
+#endif
 
 /*--------------------------------------------------------------------------*/
 /* mmc_host_ops members                                                     */
