@@ -217,7 +217,7 @@ static void spi_complete(void *arg)
 
 static int threadfunc1(void *data)
 {
-	struct spi_transfer transfer;
+	struct spi_transfer transfer = {0,};
 	struct spi_message msg;
 	struct spi_device *spi = (struct spi_device *)data;
 	u32 len = 8;
@@ -250,7 +250,7 @@ static int threadfunc1(void *data)
 
 static int threadfunc2(void *data)
 {
-	struct spi_transfer transfer;
+	struct spi_transfer transfer = {0,};
 	struct spi_message msg;
 	struct spi_device *spi = (struct spi_device *)data;
 
@@ -504,9 +504,9 @@ spi_msg_store(struct device *dev, struct device_attribute *attr, const char *buf
 	int ret = 0;
 	struct spi_device *spi;
 
-	struct spi_transfer transfer;
-	struct spi_transfer transfer2;
-	struct spi_transfer transfer3;
+	struct spi_transfer transfer = {0,};
+	struct spi_transfer transfer2 = {0,};
+	struct spi_transfer transfer3 = {0,};
 	struct spi_message msg;
 	struct mt_chip_conf *chip_config;
 
@@ -811,7 +811,7 @@ static int spi_test_probe(struct spi_device *spi)
 	SPIDEV_LOG("spi test probe  enter\n");
 	spi_test = spi;
 	spi->mode = SPI_MODE_3;
-	spi->bits_per_word = 32;
+	/* spi->bits_per_word = 32; */
 	return spi_create_attribute(&spi->dev);
 	return 0;
 }
