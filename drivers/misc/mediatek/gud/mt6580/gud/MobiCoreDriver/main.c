@@ -627,9 +627,7 @@ int mc_register_wsm_mmu(struct mc_instance *instance,
 
 	tmp_len = (len + offset > SZ_1M) ? (SZ_1M - offset) : len;
 	for (index = 0; index < nb_of_1mb_section; index++) {
-		mutex_lock(&ctx.bufs_lock);
 		table = mc_alloc_mmu_table(instance, task, buffer, tmp_len, 0);
-		mutex_unlock(&ctx.bufs_lock);
 
 		if (IS_ERR(table)) {
 			MCDRV_DBG_ERROR(mcd, "mc_alloc_mmu_table() failed");
@@ -654,14 +652,12 @@ int mc_register_wsm_mmu(struct mc_instance *instance,
 				  mmu_table,
 				  nb_of_1mb_section*sizeof(uint64_t));
 
-		mutex_lock(&ctx.bufs_lock);
 		table = mc_alloc_mmu_table(
 					instance,
 					NULL,
 					mmu_table,
 					nb_of_1mb_section*sizeof(uint64_t),
 					MC_MMU_TABLE_TYPE_WSM_FAKE_L1);
-		mutex_unlock(&ctx.bufs_lock);
 		if (IS_ERR(table)) {
 			MCDRV_DBG_ERROR(mcd, "mc_alloc_mmu_table() failed");
 			ret = -EINVAL;
