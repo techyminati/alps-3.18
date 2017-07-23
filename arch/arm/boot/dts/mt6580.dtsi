@@ -41,6 +41,11 @@
 			reg = <0x11130000 0x10000/*MSDC1_BASE*/
 			0x10001E84 0x2>;/*FPGA PWR_GPIO,PWR_GPIO_EO*/
 			interrupts = <0 39 0x8>;
+			cd-gpios = <&pio 3 0>;
+			};
+
+			msdc1_ins: default {
+			compatible = "mediatek,msdc1_ins-eint";
 			};
 		};
 
