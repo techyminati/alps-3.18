@@ -4726,6 +4726,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 					 int need_lock)
 {
 	int sw_only = 0;
+
 	DISPDBG("primary_display_switch_mode sess_mode %d, session 0x%x\n", sess_mode, session);
 	if (need_lock)
 		_primary_path_lock(__func__);
@@ -4842,9 +4843,6 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 {
 
 	session_mode_before_enter_idle = pgc->session_mode;
-
-	if (is_hwc_enabled == 0)
-		return;
 
 	if (primary_display_is_video_mode() &&
 	    pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE &&
@@ -5014,6 +5012,10 @@ static int _primary_path_idlemgr_monitor_thread(void *data)
 	msleep(1000);
 	while (1) {
 		msleep(1000);
+
+		/* before HWC trigger, idlemgr is blocked. */
+		if (is_hwc_enabled == 0)
+			continue;
 
 		_primary_path_lock(__func__);
 

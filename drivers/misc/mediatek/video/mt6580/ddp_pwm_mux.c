@@ -1,9 +1,21 @@
+/*
+ * Copyright (C) 2015 MediaTek Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
 #include <linux/kernel.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/sched.h>
 #include <ddp_pwm_mux.h>
-#include "ddp_reg.h"
+#include <ddp_reg.h>
 #include <mach/mt_clkmgr.h>
 
 #define PWM_MSG(fmt, arg...) pr_debug("[PWM] " fmt "\n", ##arg)

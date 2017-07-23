@@ -50,6 +50,7 @@ typedef struct mout_s {
 typedef struct selection_s {
 	int id;
 	int id_bit_map[5];
+
 	volatile unsigned long *reg;
 	unsigned int reg_val;
 } sel_t;

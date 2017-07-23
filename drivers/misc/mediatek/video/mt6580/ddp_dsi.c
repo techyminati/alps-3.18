@@ -213,6 +213,7 @@ struct t_dsi_context {
 	unsigned int lcm_height;
 	cmdqRecHandle *handle;
 	bool enable;
+
 	volatile struct DSI_REGS regBackup;
 	unsigned int cmdq_size;
 	LCM_DSI_PARAMS dsi_params;
@@ -826,6 +827,7 @@ DSI_STATUS DSI_Wakeup(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 DSI_STATUS DSI_BackupRegisters(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 {
 		int i = 0;
+
 		volatile struct DSI_REGS *regs = NULL;
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
@@ -870,6 +872,7 @@ DSI_STATUS DSI_BackupRegisters(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 DSI_STATUS DSI_RestoreRegisters(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 {
 	int i = 0;
+
 	volatile struct DSI_REGS *regs = NULL;
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {

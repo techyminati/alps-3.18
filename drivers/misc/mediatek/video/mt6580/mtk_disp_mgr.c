@@ -220,7 +220,6 @@ done:
 #endif
 	}
 	DISPMSG("new session done\n");
-	is_hwc_enabled = 1;
 
 	return ret;
 }
@@ -486,6 +485,8 @@ int _ioctl_trigger_session(unsigned long arg)
 	if (session_info)
 		dprec_done(&session_info->event_trigger, 0, 0);
 
+	/* allow Idlemgr to switch DL to Decouple. */
+	is_hwc_enabled = 1;
 	return ret;
 }
 

@@ -53,6 +53,7 @@ typedef struct {
 	volatile unsigned int init;
 	DISP_PATH_EVENT event;
 	wait_queue_head_t wq;
+
 	volatile unsigned long long data;
 } DPMGR_WQ_HANDLE;
 
