@@ -4315,6 +4315,8 @@ int mt_clkmgr_init(void)
 	iomap();
 	BUG_ON(initialized);
 
+	/* initial spm_mtcmos memory map */
+	spm_mtcmos_cpu_init();
 	mt_subsys_init();
 	/* cg_all_force_on(); */
 	mt_clks_init();
