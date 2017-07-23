@@ -194,6 +194,9 @@ int primary_display_get_height(void);
 int primary_display_get_bpp(void);
 int primary_display_get_pages(void);
 
+void primary_display_esd_cust_bycmdq(int enable);
+int primary_display_esd_cust_get(void);
+
 int primary_display_set_overlay_layer(primary_disp_input_config *input);
 int primary_display_is_alive(void);
 int primary_display_is_sleepd(void);

@@ -3830,7 +3830,7 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA,
 					      0x00000001, 0x1);
 				DSI_OUTREGBIT(cmdq_trigger_handle, struct DSI_INT_STATUS_REG,
-					      DSI_REG[dsi_i]->DSI_INTSTA, RD_RDY, 0x00000001);
+					      DSI_REG[dsi_i]->DSI_INTSTA, RD_RDY, 0x0);
 			}
 #if 0
 			else {	/* DSI1 */
@@ -3838,7 +3838,7 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA,
 					      0x00000001, 0x1);
 				DSI_OUTREGBIT(cmdq_trigger_handle, struct DSI_INT_STATUS_REG,
-					      DSI_REG[dsi_i]->DSI_INTSTA, RD_RDY, 0x00000001);
+					      DSI_REG[dsi_i]->DSI_INTSTA, RD_RDY, 0x0);
 			}
 #endif
 			/* 2. save RX data */

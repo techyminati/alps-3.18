@@ -88,7 +88,7 @@ static WDMA_CONFIG_STRUCT decouple_wdma_config;
 static disp_mem_output_config mem_config;
 static unsigned int primary_session_id =
 MAKE_DISP_SESSION(DISP_SESSION_PRIMARY, 0);
-
+static atomic_t esd_check_bycmdq = ATOMIC_INIT(0);
 static struct task_struct *decouple_trigger_thread;
 static int decouple_trigger_worker_thread(void *data);
 atomic_t decouple_trigger_event = ATOMIC_INIT(0);
@@ -187,6 +187,16 @@ static void _primary_path_esd_check_lock(void)
 static void _primary_path_esd_check_unlock(void)
 {
 	mutex_unlock(&esd_mode_switch_lock);
+}
+
+void primary_display_esd_cust_bycmdq(int enable)
+{
+	atomic_set(&esd_check_bycmdq, enable);
+}
+
+int primary_display_esd_cust_get(void)
+{
+	return atomic_read(&esd_check_bycmdq);
 }
 
 int primary_display_is_directlink_mode(void)
@@ -2198,6 +2208,8 @@ int _esd_check_config_handle_vdo(void)
 {
 	int ret = 0;		/* 0:success , 1:fail */
 
+	primary_display_esd_cust_bycmdq(1);
+
 	/* 1.reset */
 	cmdqRecReset(pgc->cmdq_handle_config_esd);
 
@@ -2233,6 +2245,8 @@ int _esd_check_config_handle_vdo(void)
 
 	if (ret)
 		ret = 1;
+
+	primary_display_esd_cust_bycmdq(0);
 	return ret;
 }
 
@@ -2794,30 +2808,35 @@ static int primary_display_recovery_thread(void *data)
 		_primary_path_lock(__func__);
 		if (pgc->state != DISP_SLEPT) {
 			if (ret == 0) {
-				DISPCHECK("[Primary Recovery]stop path\n");
-				dpmgr_path_stop(pgc->dpmgr_handle,
-						CMDQ_DISABLE);
-
-				DISPCHECK
-				    ("[Primary Recovery]stop cmdq trigger loop\n");
+				DISPCHECK("[Primary Recovery]stop cmdq trigger loop\n");
 				_cmdq_stop_trigger_loop();
+
+				if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
+					DISPCHECK("[ESD]primary display path is busy\n");
+					ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
+							DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
+					DISPCHECK("[ESD]wait frame done ret:%d\n", ret);
+				}
+
+				if (0 != ret) {
+					DISPCHECK("[Primary Recovery]stop path\n");
+					dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
+				}
+
 				DISPCHECK("[Primary Recovery] path reset\n");
-				dpmgr_path_reset(pgc->dpmgr_handle,
-						 CMDQ_DISABLE);
+				dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
 
 				DISPCHECK("[Primary Recovery] path start\n");
-				dpmgr_path_start(pgc->dpmgr_handle,
-						 CMDQ_DISABLE);
+				dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
-				DISPCHECK
-				    ("[Primary Recovery]start cmdq trigger loop\n");
+				DISPCHECK("[Primary Recovery]start cmdq trigger loop\n");
 				_cmdq_start_trigger_loop();
 
 				if (primary_display_is_video_mode()) {
-					/* video mode, need to force trigger here */
-					/* command mode, set DPREC_EVENT_CMDQ_SET_EVENT_ALLOW when trigger loop start */
-					dpmgr_path_trigger(pgc->dpmgr_handle,
-							   NULL, CMDQ_DISABLE);
+					/* for video mode, need to force trigger here */
+					/* for cmd mode, */
+					/* just set DPREC_EVENT_CMDQ_SET_EVENT_ALLOW when trigger loop start */
+					dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
 				}
 			}
 		} else {
