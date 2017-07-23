@@ -305,6 +305,15 @@ typedef struct {
 	unsigned int mva;
 } M4U_CACHE_STRUCT;
 
+typedef struct _M4U_DMA {
+	M4U_PORT_ID port;
+	M4U_DMA_TYPE eDMAType;
+	M4U_DMA_DIR eDMADir;
+	unsigned long va;
+	unsigned int size;
+	unsigned int mva;
+} M4U_DMA_STRUCT;
+
 /* IOCTL commnad */
 #define MTK_M4U_MAGICNO 'g'
 #define MTK_M4U_T_POWER_ON            _IOW(MTK_M4U_MAGICNO, 0, int)
@@ -334,6 +343,6 @@ typedef struct {
 #define MTK_M4U_T_CONFIG_PORT_ARRAY   _IOW(MTK_M4U_MAGICNO, 26, int)
 #define MTK_M4U_T_CONFIG_MAU          _IOW(MTK_M4U_MAGICNO, 27, int)
 #define MTK_M4U_T_CONFIG_TF           _IOW(MTK_M4U_MAGICNO, 28, int)
-
+#define MTK_M4U_T_DMA_OP              _IOW(MTK_M4U_MAGICNO, 29, int)
 
 #endif
