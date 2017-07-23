@@ -2047,10 +2047,7 @@ static int simp_emmc_dump_write(unsigned char *buf, unsigned int len,
 #endif
 
 
-	if (emmc_init == 0) {
-		if (simp_init_emmc() != 0)
-			return ret;
-	}
+	simp_init_emmc();
 
 	for (i = 0; i < (len / 512); i++) {
 		/* code */
