@@ -19,6 +19,7 @@
 #include "mt_sleep.h"
 #include "mt_cpuidle.h"
 
+#include "mt-plat/mtk_rtc.h"
 
 #define pminit_write(addr, val)         mt_reg_sync_writel((val), ((void *)(addr)))
 #define pminit_read(addr)               __raw_readl(IOMEM(addr))
@@ -371,6 +372,7 @@ static int __init mt_power_management_init(void)
 	struct proc_dir_entry *entry = NULL;
 	struct proc_dir_entry *pm_init_dir = NULL;
 
+	pm_power_off = mt_power_off;
 	/* cpu dormant driver init */
 	mt_cpu_dormant_init();
 
