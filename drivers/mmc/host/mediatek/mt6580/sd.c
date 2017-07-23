@@ -1236,7 +1236,7 @@ bool msdc_hwPowerOn(unsigned int powerId, int powerVolt, char *mode_name)
 		reg = reg_vemc_3v3;
 	if (reg == NULL)
 		return false;
-
+	powerVolt = powerVolt * 1000;
 	/* New API voltage use micro V */
 	regulator_set_voltage(reg, powerVolt, powerVolt);
 	regulator_enable(reg);
@@ -3304,8 +3304,17 @@ static void msdc_pm(pm_message_t state, void *data)
 
 		host->suspend = 1;
 		host->pm_state = state;
+
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
+	if (host->id == 2) {
 		atomic_set(&host->ot_work.autok_done, 0);
+
+		/* true if dwork was pending, false otherwise */
+		if (cancel_delayed_work_sync(&(host->set_vcore_workq)) == 0)
+			pr_warn("** suspend- no pending vcore_workq\n");
+		else
+			pr_warn("** suspend- cancel vcore_workq\n");
+	}
 #endif
 
 		pr_err("msdc%d -> %s Suspend",
@@ -3372,6 +3381,12 @@ static void msdc_pm(pm_message_t state, void *data)
 	} else {
 		msdc_gate_clock(host, 1);
 	}
+
+	if (host->hw->host_function == MSDC_SDIO) {
+		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
+		host->mmc->rescan_entered = 0;
+	}
+
 	if (host->hw->host_function == MSDC_EMMC)
 		emmc_do_sleep_awake = 0;
 }
@@ -3863,6 +3878,15 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 				break;
 			default:	/* Response types 1, 3, 4, 5, 6, 7(1b) */
 				*rsp = sdr_read32(SDC_RESP0);
+				/* workaround for latch error */
+				if (((cmd->opcode == 13) || (cmd->opcode == 25)) && (*rsp & R1_OUT_OF_RANGE)
+					&& (host->hw->host_function == MSDC_EMMC)) {
+					pr_err("[%s]: msdc%d XXX CMD<%d> resp<0x%.8x>,bit31=1,force make crc error\n",
+						__func__, host->id, cmd->opcode, *rsp);
+					cmd->error = (unsigned int)-EIO;
+					if (cmd->opcode == 25)
+						msdc_reset_hw(host->id);
+				}
 				break;
 			}
 		} else if (intsts & MSDC_INT_RSPCRCERR) {
@@ -3871,10 +3895,8 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 				__func__, host->id, cmd->opcode, cmd->arg);
 			if ((MMC_RSP_R1B == mmc_resp_type(cmd))
 				&& (host->hw->host_function != MSDC_SDIO)) {
-				pr_err("[%s]: msdc%d XXX CMD<%d> ARG<0x%.8X> CRC not reset hw\n",
+				pr_err("[%s]: msdc%d XXX CMD<%d> ARG<0x%.8X> is R1B, CRC not reset hw...\n",
 					__func__, host->id, cmd->opcode, cmd->arg);
-			} else if (cmd->opcode == 13) {
-				pr_err("XXX CMD<13>CRC not reset hw...\n");
 			} else {
 				msdc_reset_hw(host->id);
 			}
@@ -3887,12 +3909,10 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 				msdc_dump_info(host->id);
 			if ((cmd->opcode == 5) && emmc_do_sleep_awake)
 				msdc_dump_info(host->id);
-			if ((MMC_RSP_R1B == mmc_resp_type(cmd))
+			if (((MMC_RSP_R1B == mmc_resp_type(cmd)) || (cmd->opcode == 13))
 				&& (host->hw->host_function != MSDC_SDIO)) {
-				pr_err("[%s]: msdc%d XXX CMD<%d> ARG<0x%.8X> TMO not reset hw\n",
+				pr_err("[%s]: msdc%d XXX CMD<%d> ARG<0x%.8X> is R1B, TMO not reset hw...\n",
 					__func__, host->id, cmd->opcode, cmd->arg);
-			} else if (cmd->opcode == 13) {
-				pr_err("XXX CMD<13>CRC not reset hw...\n");
 			} else {
 				msdc_reset_hw(host->id);
 			}
@@ -6037,7 +6057,7 @@ int hs400_restore_cmd_tune(int restore)
 		base = mtk_msdc_host[0]->base;
 		if (!restore) {
 			sdr_set_field(EMMC50_PAD_CMD_TUNE, MSDC_EMMC50_PAD_CMD_TUNE_TXDLY,
-				0x8);
+				0x4);
 		}
 	}
 	return 0;
@@ -7904,11 +7924,10 @@ static int msdc_ops_switch_volt(struct mmc_host *mmc, struct mmc_ios *ios)
 
 int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 {
-/* CCJ fix */
-#if 0
+#ifdef CONFIG_SDIOAUTOK_SUPPORT
 	struct msdc_host *host = mmc_priv(mmc);
 
-	if (host->hw->host_function == MSDC_SDIO)
+	if ((host->hw->host_function == MSDC_SDIO) && (host->id == 2))
 		init_tune_sdio(host);
 #endif
 	return 0;
@@ -8439,9 +8458,10 @@ void msdc_dump_gpd_bd(int id)
 	struct gpd_t *gpd;
 	struct bd_t *bd;
 
-	if (id < 0 || id >= HOST_MAX_NUM)
+	if (id < 0 || id >= HOST_MAX_NUM) {
 		pr_err("[%s]: invalid host id: %d\n", __func__, id);
-
+		return;
+	}
 	host = mtk_msdc_host[id];
 	if (host == NULL) {
 		pr_err("[%s]: host0 or host0->dma is NULL\n", __func__);
@@ -8758,7 +8778,7 @@ static int msdc_get_pinctl_settings(struct msdc_host *host)
 	return 0;
 }
 
-static int msdc_get_rigister_settings(struct msdc_host *host)
+static void msdc_get_rigister_settings(struct msdc_host *host)
 {
 	struct mmc_host *mmc = host->mmc;
 	struct device_node *np = mmc->parent->of_node;
@@ -8785,9 +8805,8 @@ static int msdc_get_rigister_settings(struct msdc_host *host)
 		of_property_read_u8(register_setting_node, "wdata_edge", &host->hw->wdata_edge);
 	} else {
 		pr_err("[MSDC%d] register_setting is not found in DT.\n", host->id);
-		return 1;
+		return;
 	}
-
 	/* parse ett */
 	if (of_property_read_u32(register_setting_node, "ett-hs200-cells", &host->hw->ett_hs200_count))
 		pr_err("[MSDC] ett-hs200-cells is not found in DT.\n");
@@ -8876,6 +8895,9 @@ int msdc_of_parse(struct mmc_host *mmc)
 	/* get msdc flag(caps)*/
 	if (of_find_property(np, "msdc-sys-suspend", &len))
 		host->hw->flags |= MSDC_SYS_SUSPEND;
+
+	if (of_find_property(np, "sd_need_power", &len))
+		host->hw->flags |= MSDC_SD_NEED_POWER;
 
 	/*Returns 0 on success, -EINVAL if the property does not exist,
 	* -ENODATA if property does not have a value, and -EOVERFLOW if the
@@ -9036,6 +9058,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 
 #if defined(CFG_DEV_MSDC2)
 	if (strcmp(pdev->dev.of_node->name, "msdc2") == 0) {
+		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
 		/* FIXME: host->hw = &msdc2_hw; */
 		host->hw->clk_src = MSDC30_CLKSRC_200MHZ;
 		host->hw->cmd_edge = MSDC_SMPL_FALLING;
@@ -9078,6 +9101,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 
 #if defined(CFG_DEV_MSDC3)
 	if (strcmp(pdev->dev.of_node->name, "msdc3") == 0) {
+		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
 		host->hw->clk_src = MSDC30_CLKSRC_200MHZ;
 		host->hw->cmd_edge = MSDC_SMPL_RISING;
 		host->hw->rdata_edge = MSDC_SMPL_RISING;
@@ -9356,13 +9380,6 @@ static int msdc_drv_probe(struct platform_device *pdev)
 		sdr_clr_bits(SDC_CFG, SDC_CFG_INSWKUP);
 	}
 	/*config tune at workqueue*/
-	if (!wq_tune) {
-		wq_tune = create_workqueue("msdc-tune");
-		if (!wq_tune) {
-			ret = 1;
-			goto free_irq;
-		}
-	}
 	INIT_WORK(&host->work_tune, msdc_async_tune);
 	host->mrq_tune = NULL;
 
@@ -9422,8 +9439,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	tasklet_kill(&host->card_tasklet);
 
 	mmc_free_host(mmc);
-	if (wq_tune)
-		destroy_workqueue(wq_tune);
+
 out:
 	return ret;
 }
@@ -9468,9 +9484,6 @@ static int msdc_drv_remove(struct platform_device *pdev)
 		release_mem_region(mem->start, mem->end - mem->start + 1);
 
 	mmc_free_host(host->mmc);
-
-	if (wq_tune)
-		destroy_workqueue(wq_tune);
 
 	return 0;
 }
@@ -9602,12 +9615,24 @@ static int __init mt_msdc_init(void)
 #ifdef MSDC_DMA_ADDR_DEBUG
 	msdc_init_dma_latest_address();
 #endif
+	/*config tune at workqueue*/
+	wq_tune = create_workqueue("msdc-tune");
+	if (!wq_tune) {
+		pr_err("msdc create work_queue failed.[%s]:%d", __func__, __LINE__);
+		BUG();
+	}
+
 	return 0;
 }
 
 static void __exit mt_msdc_exit(void)
 {
 	platform_driver_unregister(&mt_msdc_driver);
+
+	if (wq_tune) {
+		destroy_workqueue(wq_tune);
+		wq_tune = NULL;
+	}
 
 #ifdef CONFIG_MTK_HIBERNATION
 	unregister_swsusp_restore_noirq_func(ID_M_MSDC);
