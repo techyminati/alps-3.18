@@ -69,21 +69,22 @@ static unsigned int md1_wdt_bit;
 #define AUXADC_NODE		"mediatek,mt6735-auxadc"
 #define MDCLDMA_NODE		"mediatek,ap_ccif0"
 
-#define DMT_MCUCFG_BASE		(mcucfg_base)
-#define DMT_INFRACFG_AO_BASE	(infracfg_ao_base)
-#define DMT_GIC_DIST_BASE	(gic_id_base)
-#define DMT_GIC_CPU_BASE	(gic_ci_base)
-#define DMT_KP_IRQ_BIT		(kp_irq_bit)
-#define DMT_CONN_WDT_IRQ_BIT	(conn_wdt_irq_bit)
-#define DMT_LOWBATTERY_IRQ_BIT	(lowbattery_irq_bit)
-#define DMT_MD1_WDT_BIT		(md1_wdt_bit)
+#define DMT_MCUCFG_BASE		mcucfg_base
+#define DMT_INFRACFG_AO_BASE	infracfg_ao_base
+#define DMT_GIC_DIST_BASE	gic_id_base
+#define DMT_GIC_CPU_BASE	gic_ci_base
+#define DMT_KP_IRQ_BIT		kp_irq_bit
+#define DMT_CONN_WDT_IRQ_BIT	conn_wdt_irq_bit
+#define DMT_LOWBATTERY_IRQ_BIT	lowbattery_irq_bit
+#define DMT_MD1_WDT_BIT		md1_wdt_bit
 
 #define MP0_CA7L_CACHE_CONFIG	(DMT_MCUCFG_BASE + 0)
 #define MP1_CA7L_CACHE_CONFIG	(DMT_MCUCFG_BASE + 0x200)
 #define L2RSTDISABLE		(1 << 4)
+#define SW_ROM_PD		BIT(31)
 
-#define DMT_BOOTROM_PWR_CTRL	(DMT_INFRACFG_AO_BASE + 0x804)
-#define DMT_BOOTROM_BOOT_ADDR	(DMT_INFRACFG_AO_BASE + 0x800)
+#define DMT_BOOTROM_PWR_CTRL	((void *) (DMT_INFRACFG_AO_BASE + 0x804))
+#define DMT_BOOTROM_BOOT_ADDR	((void *) (DMT_INFRACFG_AO_BASE + 0x800))
 
 #define reg_read(addr)		__raw_readl(IOMEM(addr))
 #define reg_write(addr, val)	mt_reg_sync_writel(val, addr)
@@ -806,28 +807,13 @@ int mt_cpu_dormant(unsigned long flags)
 
 	/* cpu power down and cpu reset flow with idmap. */
 	/* set reset vector */
-	if (unlikely(IS_DORMANT_SNOOP_OFF(flags))) {
-		/*
-		 * workaround :
-		 * needs to enable snoop request before any DVM message broadcasting.
-		 */
-		dormant_data[0].poc.cpu_resume_phys = (void (*)(void))(long)virt_to_phys(cpu_resume);
 #ifdef CONFIG_TRUSTONIC_TEE_SUPPORT
-		mt_secure_call(MC_FC_SLEEP, virt_to_phys(cpu_resume_wrapper), cpuid, 0);
+	mt_secure_call(MC_FC_SLEEP, virt_to_phys(cpu_resume), cpuid, 0);
 #elif defined(CONFIG_TRUSTY)
-		mt_trusty_call(SMC_FC_CPU_DORMANT, virt_to_phys(cpu_resume_wrapper), cpuid, 0);
+	mt_trusty_call(SMC_FC_CPU_DORMANT, virt_to_phys(cpu_resume), cpuid, 0);
 #else
-		mt_smp_set_boot_addr(virt_to_phys(cpu_resume_wrapper), clusterid * 4 + cpuid);
+	writel_relaxed(virt_to_phys(cpu_resume), DMT_BOOTROM_BOOT_ADDR);
 #endif
-	} else {
-#ifdef CONFIG_TRUSTONIC_TEE_SUPPORT
-		mt_secure_call(MC_FC_SLEEP, virt_to_phys(cpu_resume), cpuid, 0);
-#elif defined(CONFIG_TRUSTY)
-		mt_trusty_call(SMC_FC_CPU_DORMANT, virt_to_phys(cpu_resume), cpuid, 0);
-#else
-		mt_smp_set_boot_addr(virt_to_phys(cpu_resume), clusterid * 4 + cpuid);
-#endif
-	}
 
 	DORMANT_LOG(clusterid * MAX_CORES + cpuid, 0x103);
 
@@ -1015,8 +1001,9 @@ int mt_cpu_dormant_init(void)
 
 	mt_dormant_dts_map();
 
-	/* set Boot ROM power-down control to power down */
-	reg_write(DMT_BOOTROM_PWR_CTRL, reg_read(DMT_BOOTROM_PWR_CTRL) | 0x80000000);
+	/* enable bootrom power down mode */
+	writel_relaxed(readl(DMT_BOOTROM_PWR_CTRL) | SW_ROM_PD,
+		       DMT_BOOTROM_PWR_CTRL);
 
 	mt_save_l2ctlr(dormant_data[0].poc.l2ctlr);
 
