@@ -41,7 +41,7 @@
 #include "disp_recorder.h"
 #include "ddp_mmp.h"
 #include "mtk_ovl.h"
-
+#include "mtkfb_debug.h"
 #include "mtkfb_fence.h"
 
 #include <linux/atomic.h>

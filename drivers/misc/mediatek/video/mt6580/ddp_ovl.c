@@ -20,6 +20,7 @@
 #include "ddp_ovl.h"
 #include "ddp_drv.h"
 #include "disp_debug.h"
+#include "mtkfb_debug.h"
 #include "disp_log.h"
 #include "primary_display.h"
 

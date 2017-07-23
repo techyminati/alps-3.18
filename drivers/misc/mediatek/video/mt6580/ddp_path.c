@@ -23,6 +23,7 @@
 #include "disp_drv_platform.h"
 #include "primary_display.h"
 #include "disp_debug.h"
+#include "mtkfb_debug.h"
 #include "ddp_path.h"
 #include "m4u.h"
 #include "ddp_drv.h"

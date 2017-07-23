@@ -69,6 +69,7 @@
 #include "mtk_ovl.h"
 #include "ddp_mmp.h"
 #include "mtkfb_fence.h"
+#include "mtkfb_debug.h"
 
 #ifdef CONFIG_MTK_HDMI_SUPPORT
 #include "extd_hdmi_drv.h"
@@ -330,13 +331,6 @@ int _ioctl_create_session(unsigned long arg)
 
 	if (copy_from_user(&config, argp, sizeof(config))) {
 		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
-		return -EFAULT;
-	}
-
-	if ((config.type == DISP_SESSION_MEMORY)
-	    && (get_ovl1_to_mem_on() == false)) {
-		DISPMSG("[FB]: _ioctl_create_session! line:%d  %d\n", __LINE__,
-			get_ovl1_to_mem_on());
 		return -EFAULT;
 	}
 

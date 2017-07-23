@@ -224,7 +224,7 @@ int primary_display_mem_out_trigger(int blocking, void *callback,
 				    unsigned int userdata);
 int primary_display_switch_mode(int sess_mode, unsigned int session, int force);
 int primary_display_diagnose(void);
-
+int primary_display_signal_recovery(void);
 int primary_display_get_info(void *info);
 int primary_display_capture_framebuffer(unsigned long pbuf);
 int primary_display_capture_framebuffer_ovl(unsigned long pbuf,

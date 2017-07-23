@@ -32,6 +32,7 @@
 #include "ddp_ovl.h"
 #include "disp_log.h"
 #include "disp_debug.h"
+#include "mtkfb_debug.h"
 #include "mtkfb_fence.h"
 #include "primary_display.h"
 #include "mtk_disp_mgr.h"
@@ -1636,7 +1637,6 @@ int dpmgr_init(void)
 	if (ddp_manager_init)
 		return 0;
 	ddp_manager_init = 1;
-	ddp_debug_init();
 	disp_init_irq();
 	disp_register_irq_callback(dpmgr_irq_handler);
 	return 0;

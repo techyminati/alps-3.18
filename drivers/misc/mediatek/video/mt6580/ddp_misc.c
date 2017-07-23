@@ -15,6 +15,7 @@
 
 #include "ddp_reg.h"
 #include "disp_debug.h"
+#include "mtkfb_debug.h"
 #include "ddp_aal.h"
 #include "ddp_pwm.h"
 #include "ddp_dither.h"

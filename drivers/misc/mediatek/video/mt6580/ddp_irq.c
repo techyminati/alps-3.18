@@ -27,6 +27,7 @@
 #include "ddp_drv.h"
 #include "disp_log.h"
 #include "disp_debug.h"
+#include "mtkfb_debug.h"
 #include "primary_display.h"
 
 /* IRQ log print kthread */

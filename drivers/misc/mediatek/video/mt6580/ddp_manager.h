@@ -412,5 +412,8 @@ int dpmgr_path_enable_irq(disp_path_handle dp_handle, void *cmdq_handle, DDP_IRQ
 */
 disp_ddp_path_config *dpmgr_path_get_last_config(disp_path_handle dp_handle);
 
+int dpmgr_module_notify(DISP_MODULE_ENUM module, DISP_PATH_EVENT event);
+
+
 void dpmgr_get_input_buffer(disp_path_handle dp_handle, unsigned long *addr);
 #endif
