@@ -335,6 +335,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 		input->src_phy_addr = (void *)dal_fb_pa;
 		input->layer_id = primary_display_get_option("ASSERT_LAYER");
 		input->layer_enable = 1;
+		input->buffer_source = DISP_BUFFER_MVA;
 		input->src_offset_x = 0;
 		input->src_offset_y = 0;
 		input->src_width = DAL_WIDTH;
