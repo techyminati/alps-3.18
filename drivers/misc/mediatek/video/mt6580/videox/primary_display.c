@@ -593,7 +593,7 @@ static int _build_path_debug_rdma1_dsi0(void)
 	if (pgc->dpmgr_handle) {
 		DISPCHECK("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
 	} else {
-		DISPCHECK("dpmgr create path FAIL\n");
+		DISPERR("dpmgr create path FAIL\n");
 		return -1;
 	}
 
@@ -619,7 +619,7 @@ static int _build_path_debug_rdma1_dsi0(void)
 				  (DISP_HELPER_OPTION_USE_M4U) ? "virtual" :
 				  "physical");
 		} else {
-			DISPCHECK("config M4U Port %s to %s FAIL(ret=%d)\n",
+			DISPERR("config M4U Port %s to %s FAIL(ret=%d)\n",
 				  ddp_get_module_name(DISP_MODULE_RDMA1),
 				  disp_helper_get_option
 				  (DISP_HELPER_OPTION_USE_M4U) ? "virtual" :
@@ -3627,7 +3627,7 @@ int primary_display_wait_for_vsync(void *config)
 	primary_display_idlemgr_kick((char *)__func__, 1);
 
 	if (!islcmconnected) {
-		DISPERR("lcm not connect, use fake vsync\n");
+		pr_debug("lcm not connect, use fake vsync\n");
 		msleep(20);
 		return 0;
 	}
@@ -3812,8 +3812,7 @@ int primary_display_get_lcm_index(void)
 {
 	int index = 0;
 
-	/* DISPFUNC(); */
-
+	DISPFUNC();
 	if (pgc->plcm == NULL) {
 		DISPERR("lcm handle is null\n");
 		return 0;
@@ -3857,7 +3856,7 @@ int primary_display_resume(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	/* DISPFUNC(); */
+	DISPFUNC();
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagStart,
 		       0, 0);
 
@@ -4067,8 +4066,7 @@ int primary_display_start(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	/* DISPFUNC(); */
-
+	DISPFUNC();
 	_primary_path_lock(__func__);
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
@@ -4088,7 +4086,7 @@ int primary_display_stop(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	/* DISPFUNC(); */
+	DISPFUNC();
 	_primary_path_lock(__func__);
 
 	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
@@ -4680,7 +4678,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 					 int need_lock)
 {
 	int sw_only = 0;
-	/* DISPCHECK("primary_display_switch_mode sess_mode %d, session 0x%x\n",sess_mode,session); */
+	DISPDBG("primary_display_switch_mode sess_mode %d, session 0x%x\n", sess_mode, session);
 	if (need_lock)
 		_primary_path_lock(__func__);
 
@@ -6667,7 +6665,7 @@ int primary_display_switch_dst_mode(int mode)
 #ifdef DISP_SWITCH_DST_MODE
 	void *lcm_cmd = NULL;
 
-	/* DISPFUNC(); */
+	DISPFUNC();
 	_primary_path_switch_dst_lock();
 	disp_sw_mutex_lock(&(pgc->capture_lock));
 	if (pgc->plcm->params->type != LCM_TYPE_DSI) {

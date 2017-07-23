@@ -197,7 +197,7 @@ int disp_create_session(disp_session_config *config)
 done:
 	mutex_unlock(&disp_session_lock);
 
-	DISPMSG("new session:0x%x\n", config->session_id);
+	DISPPR_FENCE("new session:0x%x\n", config->session_id);
 	if (DISP_SESSION_TYPE(session) == DISP_SESSION_MEMORY) {
 		/* ovl2mem_init(session); */
 		/* _ovl2mem_out_cached_config.mode = 3; */
@@ -245,6 +245,8 @@ int disp_destroy_session(disp_session_config *config)
 	}
 
 	mutex_unlock(&disp_session_lock);
+	DISPPR_FENCE("destroy_session done\n");
+
 	/* 2. Destroy this session */
 	if (ret == 0)
 		DISPDBG("Destroy session(0x%x)\n", session);
@@ -612,7 +614,10 @@ int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 			info.fence_fd = buf->fence;
 			info.index = buf->idx;
 		} else {
-			DISPPR_ERROR
+			DISPPR_ERROR("prepare fence failed, 0x%08x/l%d/e%d/ion%d/cache%d\n",
+				     info.session_id, info.layer_id, info.layer_en, info.ion_fd,
+				     info.cache_sync);
+			DISPPR_FENCE
 			    ("P+ FAIL /%s%d/l%d/e%d/ion%d/c%d/id%d/ffd%d\n",
 			     disp_session_mode_spy(info.session_id),
 			     DISP_SESSION_DEV(info.session_id), info.layer_id,
@@ -634,6 +639,9 @@ int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 					info.interface_fence_fd = buf2->fence;
 					info.interface_index = buf2->idx;
 				} else {
+					DISPPR_ERROR("prepare fence failed, 0x%08x/l%d/e%d/ion%d/cache%d\n",
+						     info.session_id, info.layer_id, info.layer_en,
+						     info.ion_fd, info.cache_sync);
 					DISPPR_FENCE
 					    ("P+ FAIL /%s%d/l%d/e%d/ion%d/c%d/id%d/ffd%d\n",
 					     disp_session_mode_spy
@@ -651,6 +659,8 @@ int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 			}
 		}
 	} else {
+		DISPPR_ERROR("wrong prepare param, 0x%08x/l%d/e%d/ion%d/cache%d\n", info.session_id,
+			     info.layer_id, info.layer_en, info.ion_fd, info.cache_sync);
 		DISPPR_FENCE("P+ FAIL /%s%d/l%d/e%d/ion%d/c%d/id%d/ffd%d\n",
 			     disp_session_mode_spy(info.session_id),
 			     DISP_SESSION_DEV(info.session_id), info.layer_id,
@@ -1339,10 +1349,11 @@ int _ioctl_set_output_buffer(unsigned long arg)
 	session_id = session_output.session_id;
 	session_info = disp_get_session_sync_info_for_debug(session_id);
 
-	if (session_info) {
-		dprec_start(&session_info->event_setoutput,
-			    session_output.config.buff_idx, 0);
-	}
+	if (session_info)
+		dprec_start(&session_info->event_setoutput, session_output.config.buff_idx, 0);
+	else
+		DISPERR("can't get session_info for session_id:0x%08x\n", session_id);
+
 
 	DISPMSG(" _ioctl_set_output_buffer idx %x\n",
 		session_output.config.buff_idx);
@@ -1606,6 +1617,8 @@ int _ioctl_wait_vsync(unsigned long arg)
 		dprec_start(&session_info->event_waitvsync, 0, 0);
 
 	ret = primary_display_wait_for_vsync(&vsync_config);
+	if (ret != 0)
+		DISPERR("primary_display_wait_for_vsync fail, ret=%d.\n", ret);
 
 	if (session_info)
 		dprec_done(&session_info->event_waitvsync, 0, 0);

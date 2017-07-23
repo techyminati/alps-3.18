@@ -687,7 +687,7 @@ int DSI_WaitVMDone(DISP_MODULE_ENUM module)
 
 	/*...dsi video is always in busy state... */
 	if (_dsi_is_video_mode(module)) {
-		DDPMSG("DSI_WaitVMDone error: should set DSI to CMD mode firstly\n");
+		DDPERR("DSI_WaitVMDone error: should set DSI to CMD mode firstly\n");
 		return -1;
 	}
 
@@ -1832,21 +1832,21 @@ uint32_t DSI_dcs_read_lcm_reg_v2(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, ui
 	for (d = DSI_MODULE_BEGIN(module); d <= DSI_MODULE_END(module); d++) {
 		if (DSI_REG[d]->DSI_MODE_CTRL.MODE) {
 			/* only support cmd mode read */
-			DISPCHECK("DSI Read Fail: DSI Mode is %d\n",
+			DDPERR("DSI Read Fail: DSI Mode is %d\n",
 				  DSI_REG[d]->DSI_MODE_CTRL.MODE);
 			return 0;
 		}
 
 		if (buffer == NULL || buffer_size == 0) {
 			/* illegal parameters */
-			DISPCHECK("DSI Read Fail: buffer=0x%x and buffer_size=%d\n",
+			DDPERR("DSI Read Fail: buffer=0x%x and buffer_size=%d\n",
 				  (unsigned int)buffer, (unsigned int)buffer_size);
 			return 0;
 		}
 
 		do {
 			if (max_try_count == 0) {
-				DISPCHECK("DSI Read Fail: try 5 times\n");
+				DDPERR("DSI Read Fail: try 5 times\n");
 				return 0;
 			}
 
@@ -2971,9 +2971,9 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			     timcon2.CLK_ZERO) * lane_num;
 			v_c = (timcon3.CLK_HS_POST + timcon2.CLK_TRAIL) * lane_num;
 
-			DISPCHECK("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
+			DISPDBG("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
 /* DISPCHECK("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
-			DISPCHECK("===>Will Reconfig in order to fulfill LP clock lane per line\n");
+			DISPDBG("===>Will Reconfig in order to fulfill LP clock lane per line\n");
 
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HFP_WC, (v_b + v_c + DIFF_CLK_LANE_LP));
 			DSI_OUTREG32(cmdq, &new_hfp, AS_UINT32(&DSI_REG[i]->DSI_HFP_WC));
@@ -2981,7 +2981,7 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HSTX_CKL_WC, (v_a - v_b));
 			DSI_OUTREG32(cmdq, &new_hstx_ckl_wc,
 				     AS_UINT32(&DSI_REG[i]->DSI_HSTX_CKL_WC));
-			DISPCHECK("===>new HSTX_CKL_WC=0x%x, HFP_WC=0x%x\n", new_hstx_ckl_wc,
+			DISPDBG("===>new HSTX_CKL_WC=0x%x, HFP_WC=0x%x\n", new_hstx_ckl_wc,
 				  new_hfp.HFP_WC);
 		}
 		/* 2. sync_event_mode */
@@ -2997,9 +2997,9 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			     timcon2.CLK_ZERO) * lane_num;
 			v_c = (timcon3.CLK_HS_POST + timcon2.CLK_TRAIL) * lane_num;
 
-			DISPCHECK("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
+			DISPDBG("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
 /* DISPCHECK("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
-			DISPCHECK("===>Will Reconfig in order to fulfill LP clock lane per line\n");
+			DISPDBG("===>Will Reconfig in order to fulfill LP clock lane per line\n");
 
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HFP_WC, (v_b + v_c + DIFF_CLK_LANE_LP));
 			DSI_OUTREG32(cmdq, &new_hfp, AS_UINT32(&DSI_REG[i]->DSI_HFP_WC));
@@ -3007,7 +3007,7 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HSTX_CKL_WC, (v_a - v_b));
 			DSI_OUTREG32(cmdq, &new_hstx_ckl_wc,
 				     AS_UINT32(&DSI_REG[i]->DSI_HSTX_CKL_WC));
-			DISPCHECK("===>new HSTX_CKL_WC=0x%x, HFP_WC=0x%x\n", new_hstx_ckl_wc,
+			DISPDBG("===>new HSTX_CKL_WC=0x%x, HFP_WC=0x%x\n", new_hstx_ckl_wc,
 				  new_hfp.HFP_WC);
 
 		}
@@ -3024,9 +3024,9 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			     timcon2.CLK_ZERO) * lane_num;
 			v_c = (timcon3.CLK_HS_POST + timcon2.CLK_TRAIL) * lane_num;
 
-			DISPCHECK("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
+			DISPDBG("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
 			/* DISPCHECK("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
-			DISPCHECK("===>Will Reconfig in order to fulfill LP clock lane per line\n");
+			DISPDBG("===>Will Reconfig in order to fulfill LP clock lane per line\n");
 
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HFP_WC, (v_b + v_c + DIFF_CLK_LANE_LP));
 			DSI_OUTREG32(cmdq, &new_hfp, AS_UINT32(&DSI_REG[i]->DSI_HFP_WC));
@@ -3034,7 +3034,7 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HSTX_CKL_WC, (v_a - v_b));
 			DSI_OUTREG32(cmdq, &new_hstx_ckl_wc,
 				     AS_UINT32(&DSI_REG[i]->DSI_HSTX_CKL_WC));
-			DISPCHECK("===>new HSTX_CKL_WC=0x%x, HFP_WC=0x%x\n", new_hstx_ckl_wc,
+			DISPDBG("===>new HSTX_CKL_WC=0x%x, HFP_WC=0x%x\n", new_hstx_ckl_wc,
 				  new_hfp.HFP_WC);
 		}
 	}
@@ -3051,7 +3051,7 @@ int ddp_dsi_config(DISP_MODULE_ENUM module, disp_ddp_path_config *config, void *
 			return 0;
 	}
 	DISPFUNC();
-	DISPCHECK("===>run here 00 Pmaster: clk:%d\n", _dsi_context[0].dsi_params.PLL_CLOCK);
+	DISPDBG("===>run here 00 Pmaster: clk:%d\n", _dsi_context[0].dsi_params.PLL_CLOCK);
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
 		_copy_dsi_params(dsi_config, &(_dsi_context[i].dsi_params));
@@ -3072,7 +3072,7 @@ int ddp_dsi_config(DISP_MODULE_ENUM module, disp_ddp_path_config *config, void *
 
 #ifndef CONFIG_MTK_FPGA
 	if ((MIPITX_IsEnabled(module, cmdq)) && (atomic_read(&PMaster_enable) == 0)) {
-		DISPCHECK("mipitx is already init\n");
+		DISPDBG("mipitx is already init\n");
 		if (dsi_force_config)
 			goto force_config;
 		else
@@ -3080,8 +3080,8 @@ int ddp_dsi_config(DISP_MODULE_ENUM module, disp_ddp_path_config *config, void *
 	} else
 #endif
 	{
-		DISPCHECK("MIPITX is not inited, will config mipitx clock now\n");
-		DISPCHECK("===>Pmaster:CLK SETTING??==> clk:%d\n",
+		DISPDBG("MIPITX is not inited, will config mipitx clock now\n");
+		DISPDBG("===>Pmaster:CLK SETTING??==> clk:%d\n",
 			  _dsi_context[0].dsi_params.PLL_CLOCK);
 		DSI_PHY_clk_setting(module, NULL, dsi_config);
 	}
@@ -3185,7 +3185,7 @@ int ddp_dsi_stop(DISP_MODULE_ENUM module, void *cmdq_handle)
 				      0);
 			DSI_OUTREGBIT(cmdq_handle, struct DSI_START_REG, DSI_REG[1]->DSI_START, DSI_START,
 				      0);
-/* DSI_OUTREG32(NULL, 0xF401A000, 4); */
+			/* DSI_OUTREG32(NULL, 0xF401A000, 4); */
 		}
 		DSI_clk_HSLP_mode(module, cmdq_handle);
 	} else {
@@ -3218,7 +3218,7 @@ int ddp_dsi_switch_lcm_mode(DISP_MODULE_ENUM module, void *params)
 	else if (lcm_cmd.cmd_if == (unsigned int)LCM_INTERFACE_DSI1)
 		i = 1;
 	else {
-		DDPMSG("dsi switch not support this cmd IF:%d\n", lcm_cmd.cmd_if);
+		DDPERR("dsi switch not support this cmd IF:%d\n", lcm_cmd.cmd_if);
 		return -1;
 	}
 
@@ -3259,7 +3259,7 @@ int ddp_dsi_switch_mode(DISP_MODULE_ENUM module, void *cmdq_handle, void *params
 	else if (lcm_cmd.cmd_if == (unsigned int)LCM_INTERFACE_DSI1)
 		i = 1;
 	else {
-		DDPMSG("dsi switch not support this cmd IF:%d\n", lcm_cmd.cmd_if);
+		DDPERR("dsi switch not support this cmd IF:%d\n", lcm_cmd.cmd_if);
 		return -1;
 	}
 
@@ -3505,7 +3505,7 @@ int ddp_dsi_power_on(DISP_MODULE_ENUM module, void *cmdq_handle)
 				ret += enable_clock(MT_CG_DISP1_DSI_DIGITAL, "DSI");
 
 				if (ret > 0)
-					DDPWRN("DISP/DSI " "DSI power manager API return false\n");
+					DDPERR("DISP/DSI " "DSI power manager API return false\n");
 
 			}
 			s_isDsiPowerOn = true;
@@ -3679,10 +3679,10 @@ void dsi_analysis(DISP_MODULE_ENUM module)
 {
 	int i = 0;
 
-	DDPDUMP("==DISP DSI ANALYSIS==\n");
+	DDPMSG("==DISP DSI ANALYSIS==\n");
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
-		DDPDUMP("MIPITX Clock: %d\n", dsi_phy_get_clk(module));
-		DDPDUMP
+		DDPMSG("MIPITX Clock: %d\n", dsi_phy_get_clk(module));
+		DDPMSG
 		    ("DSI%d Start:%x, Busy:%d, DSI_DUAL_EN:%d, MODE:%s, High Speed:%d, FSM State:%s\n",
 		     i, DSI_REG[i]->DSI_START.DSI_START, DSI_REG[i]->DSI_INTSTA.BUSY,
 		     DSI_REG[i]->DSI_COM_CTRL.DSI_DUAL_EN,
@@ -3690,13 +3690,13 @@ void dsi_analysis(DISP_MODULE_ENUM module)
 		     DSI_REG[i]->DSI_PHY_LCCON.LC_HS_TX_EN,
 		     _dsi_cmd_mode_parse_state(DSI_REG[i]->DSI_STATE_DBG6.CMTRL_STATE));
 
-		DDPDUMP
+		DDPMSG
 		    ("DSI%d IRQ,RD_RDY:%d, CMD_DONE:%d, SLEEPOUT_DONE:%d, TE_RDY:%d, VM_CMD_DONE:%d, VM_DONE:%d\n",
 		     i, DSI_REG[i]->DSI_INTSTA.RD_RDY, DSI_REG[i]->DSI_INTSTA.CMD_DONE,
 		     DSI_REG[i]->DSI_INTSTA.SLEEPOUT_DONE, DSI_REG[i]->DSI_INTSTA.TE_RDY,
 		     DSI_REG[i]->DSI_INTSTA.VM_CMD_DONE, DSI_REG[i]->DSI_INTSTA.VM_DONE);
 
-		DDPDUMP("DSI%d Lane Num:%d, Ext_TE_EN:%d, Ext_TE_Edge:%d, HSTX_CKLP_EN:%d\n", i,
+		DDPMSG("DSI%d Lane Num:%d, Ext_TE_EN:%d, Ext_TE_Edge:%d, HSTX_CKLP_EN:%d\n", i,
 			DSI_REG[i]->DSI_TXRX_CTRL.LANE_NUM,
 			DSI_REG[i]->DSI_TXRX_CTRL.EXT_TE_EN,
 			DSI_REG[i]->DSI_TXRX_CTRL.EXT_TE_EDGE,
