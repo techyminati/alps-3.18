@@ -393,12 +393,12 @@ int dpmgr_modify_path(disp_path_handle dp_handle, DDP_SCENARIO_ENUM new_scenario
 		      cmdqRecHandle cmdq_handle, DDP_MODE isvdomode, int sw_only)
 {
 	ddp_path_handle handle = (ddp_path_handle) dp_handle;
-	DDP_SCENARIO_ENUM old_scenario = handle->scenario;
+	DDP_SCENARIO_ENUM old_scenario;
 
 	handle->cmdqhandle = cmdq_handle;
 	handle->scenario = new_scenario;
 	ASSERT(dp_handle != NULL);
-
+	old_scenario = handle->scenario;
 	DISP_LOG_I("modify handle %p from %s to %s\n", handle, ddp_get_scenario_name(old_scenario),
 		   ddp_get_scenario_name(new_scenario));
 
