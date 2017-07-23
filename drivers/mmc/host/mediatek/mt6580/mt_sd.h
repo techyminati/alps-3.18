@@ -9,6 +9,9 @@
 #if !defined(CONFIG_MTK_LEGACY)
 #include <linux/clk.h>
 #endif
+#ifndef FPGA_PLATFORM
+#include <mach/mt_clkmgr.h>
+#endif
 
 /* #define MSDC_DMA_ADDR_DEBUG */
 /* ccyeh #define MSDC_HQA */
@@ -1579,6 +1582,9 @@ do { \
 #define MSDC_EVT_MASK        (MSDC_EVT_ALL)
 
 extern unsigned int sd_debug_zone[HOST_MAX_NUM];
+#ifndef FPGA_PLATFORM
+extern enum cg_clk_id msdc_cg_clk_id[HOST_MAX_NUM];
+#endif
 
 #define N_MSG(evt, fmt, args...) \
 do { \
@@ -1641,9 +1647,8 @@ extern struct msdc_hw msdc3_hw;
 #endif
 
 extern int msdc_setting_parameter(struct msdc_hw *hw, unsigned int *para);
-/* weiping fix power */
 /*workaround for VMC 1.8v -> 1.84v */
-/*extern void upmu_set_rg_vmc_184(kal_uint8 x);*/
+/*extern void upmu_set_rg_vmc_184(unsigned char x);*/
 
 extern void __iomem *msdc_gpio_base;
 extern void __iomem *msdc_io_cfg_left_base;

@@ -47,7 +47,7 @@
 #include <linux/of_irq.h>
 #endif
 #ifdef CONFIG_MTK_AEE_FEATURE
-#include <linux/aee.h>
+#include <mt-plat/aee.h>
 #endif
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
 #include <linux/xlog.h>
@@ -69,6 +69,7 @@
 
 #define MET_USER_EVENT_SUPPORT
 
+#include<mt-plat/upmu_common.h>
 
 /* weiping fix */
 #if 0
@@ -84,13 +85,7 @@
 #include <mach/mt_pmic_wrap.h>
 #endif
 #include <linux/met_drv.h>
-#if 1 /* #ifndef FPGA_PLATFORM */
-#include <mach/mt_pm_ldo.h>
-#include <mach/upmu_common.h>
-#include <mach/upmu_sw.h>
-#include <mach/upmu_hw.h>
 #include <mach/eint.h>
-#endif
 #include <mach/mt_storage_logger.h>
 #include <mach/partition.h>
 #include <mach/emi_mpu.h>
@@ -129,8 +124,8 @@ int drv_mode[HOST_MAX_NUM] = {
 #define MODE_PIO		(0)
 #define MODE_DMA		(1)
 #define MODE_SIZE_DEP	(2)
-	MODE_DMA, /* using DMA or not depend on the size */
-	MODE_DMA,
+	MODE_SIZE_DEP, /* using DMA or not depend on the size */
+	MODE_SIZE_DEP,
 };
 
 unsigned char msdc_clock_src[HOST_MAX_NUM] = {
@@ -1201,8 +1196,6 @@ void msdc_set_smpl(struct msdc_host *host, u8 HS400, u8 mode, u8 type, u8 *edge)
 }
 
 #ifndef FPGA_PLATFORM
-/* weiping fix power*/
-#if 0
 #ifndef CONFIG_MTK_LEGACY
 enum MSDC_LDO_POWER {
 	POWER_LDO_VMCH,
@@ -1284,6 +1277,7 @@ static u32 msdc_ldo_power(u32 on, unsigned int powerId, int voltage_uv,
 static u32 msdc_ldo_power(u32 on, MT65XX_POWER powerId, int voltage_uv,
 							u32 *status)
 {
+#if 0 /* CONFIG_MTK_LEGACY but hwPowerOn(Dwon) API not exist, do nothing */
 	if (on) {
 		if (*status == 0) {
 			pr_warn("msdc LDO<%d> power on<%d>\n", powerId, voltage_uv);
@@ -1309,9 +1303,10 @@ static u32 msdc_ldo_power(u32 on, MT65XX_POWER powerId, int voltage_uv,
 	}
 
 	return 0;
+#endif
 }
 #endif
-#endif /* weiping fix power */
+
 void msdc_set_smt(struct msdc_host *host, int set_smt)
 {
 	switch (host->id) {
@@ -1668,8 +1663,7 @@ static void msdc_pin_pud(struct msdc_host *host, u32 mode)
 	}
 
 }
-/* weiping fix power */
-#if 0
+
 #ifndef CONFIG_MTK_LEGACY
 static void msdc_emmc_power(struct msdc_host *host, u32 on)
 {
@@ -1717,21 +1711,16 @@ static void msdc_sd_power(struct msdc_host *host, u32 on)
 	switch (host->id) {
 	case 1:
 		msdc_set_driving(host, host->hw, 0);
-		msdc_set_rdsel(host, 0);
+		msdc_set_tdrdsel(host, 0);
 		if (host->hw->flags & MSDC_SD_NEED_POWER)
 			msdc_ldo_power(1, POWER_LDO_VMCH, VOL_3000, &g_msdc1_flash);
 		else
 			msdc_ldo_power(on, POWER_LDO_VMCH, VOL_3000, &g_msdc1_flash);
 		msdc_ldo_power(on, POWER_LDO_VMC, VOL_3000, &g_msdc1_io);
-		if (on)
-			upmu_set_rg_vmc_184(0); /* workarond for denali */
+		/* if (on)
+			upmu_set_rg_vmc_184(0);  workarond for denali */
 		break;
-	case 2:
-		msdc_set_driving(host, host->hw, 0);
-		msdc_set_rdsel(host, 0);
-		msdc_ldo_power(on, POWER_LDO_VMC, VOL_3000, &g_msdc2_io);
-		msdc_ldo_power(on, POWER_LDO_VMCH, VOL_3000, &g_msdc2_flash);
-		break;
+
 	default:
 		break;
 	}
@@ -1743,16 +1732,12 @@ static void msdc_sd_power_switch(struct msdc_host *host, u32 on)
 	switch (host->id) {
 	case 1:
 		msdc_ldo_power(on, POWER_LDO_VMC, VOL_1800, &g_msdc1_io);
-		if (on)
-			upmu_set_rg_vmc_184(1); /* workarond for denali */
-		msdc_set_rdsel(host, 1);
+		/* if (on)
+			upmu_set_rg_vmc_184(1);  workarond for denali */
+		msdc_set_tdrdsel(host, 1);
 		msdc_set_driving(host, host->hw, 1);
 		break;
-	case 2:
-		msdc_ldo_power(on, POWER_LDO_VMC, VOL_1800, &g_msdc2_io);
-		msdc_set_rdsel(host, 1);
-		msdc_set_driving(host, host->hw, 1);
-		break;
+
 	default:
 		break;
 	}
@@ -1785,15 +1770,7 @@ static void msdc_emmc_power(struct msdc_host *host, u32 on)
 		}
 	}
 
-	/* Set to 3.0V - 100mV
-	 * 4'b0000: 0 mV
-	 * 4'b0001: -20 mV
-	 * 4'b0010: -40 mV
-	 * 4'b0011: -60 mV
-	 * 4'b0100: -80 mV
-	 * 4'b0101: -100 mV
-	 */
-	msdc_ldo_power(on, MT6328_POWER_LDO_VEMC33, VOL_3000, &g_msdc0_flash);
+	msdc_ldo_power(on, MT6350_POWER_LDO_VEMC33, VOL_3000, &g_msdc0_flash);
 	msdc_dump_ldo_sts(host);
 }
 
@@ -1802,21 +1779,16 @@ static void msdc_sd_power(struct msdc_host *host, u32 on)
 	switch (host->id) {
 	case 1:
 		msdc_set_driving(host, host->hw, 0);
-		msdc_set_rdsel(host, 0);
+		msdc_set_tdrdsel(host, 0);
 		if (host->hw->flags & MSDC_SD_NEED_POWER)
-			msdc_ldo_power(1, MT6328_POWER_LDO_VMCH, VOL_3300, &g_msdc1_flash);
+			msdc_ldo_power(1, MT6350_POWER_LDO_VMCH, VOL_3300, &g_msdc1_flash);
 		else
-			msdc_ldo_power(on, MT6328_POWER_LDO_VMCH, VOL_3300, &g_msdc1_flash);
-		msdc_ldo_power(on, MT6328_POWER_LDO_VMC, VOL_3300, &g_msdc1_io);
-		if (on)
-			upmu_set_rg_vmc_184(0);
+			msdc_ldo_power(on, MT6350_POWER_LDO_VMCH, VOL_3300, &g_msdc1_flash);
+		msdc_ldo_power(on, MT6350_POWER_LDO_VMC, VOL_3300, &g_msdc1_io);
+		/* if (on)
+			upmu_set_rg_vmc_184(0);  workarond for denali */
 		break;
-	case 2:
-		msdc_set_driving(host, host->hw, 0);
-		msdc_set_rdsel(host, 0);
-		msdc_ldo_power(on, MT6328_POWER_LDO_VMC, VOL_3300, &g_msdc2_io);
-		msdc_ldo_power(on, MT6328_POWER_LDO_VMCH, VOL_3300, &g_msdc2_flash);
-		break;
+
 	default:
 		break;
 	}
@@ -1828,17 +1800,13 @@ static void msdc_sd_power_switch(struct msdc_host *host, u32 on)
 {
 	switch (host->id) {
 	case 1:
-		msdc_ldo_power(on, MT6328_POWER_LDO_VMC, VOL_1800, &g_msdc1_io);
-		if (on)
-			upmu_set_rg_vmc_184(1);
-		msdc_set_rdsel(host, 1);
+		msdc_ldo_power(on, MT6350_POWER_LDO_VMC, VOL_1800, &g_msdc1_io);
+		/* if (on)
+			upmu_set_rg_vmc_184(1);  workarond for denali */
+		msdc_set_tdrdsel(host, 1);
 		msdc_set_driving(host, host->hw, 1);
 		break;
-	case 2:
-		msdc_ldo_power(on, MT6328_POWER_LDO_VMC, VOL_1800, &g_msdc2_io);
-		msdc_set_rdsel(host, 1);
-		msdc_set_driving(host, host->hw, 1);
-		break;
+
 	default:
 		break;
 	}
@@ -1879,20 +1847,6 @@ static void msdc_sdio_power(struct msdc_host *host, u32 on)
 	}
 
 }
-#else /* weiping fix power */
-static void msdc_emmc_power(struct msdc_host *host, u32 on)
-{
-}
-static void msdc_sd_power(struct msdc_host *host, u32 on)
-{
-}
-static void msdc_sd_power_switch(struct msdc_host *host, u32 on)
-{
-}
-static void msdc_sdio_power(struct msdc_host *host, u32 on)
-{
-}
-#endif /* weiping fix power */
 #endif
 
 static void msdc_reset_pwr_cycle_counter(struct msdc_host *host)
@@ -4062,12 +4016,6 @@ static unsigned int msdc_command_start(struct msdc_host *host,
 #endif /* end of MTK_MSDC_USE_CMD23 */
 	} else if (opcode == MMC_WRITE_BLOCK) {
 		rawcmd |= ((1 << 11) | (1 << 13));
-#ifdef MTK_MSDC_USE_CACHE
-		if (host->mmc->card && mmc_card_mmc(host->mmc->card)
-		    && (host->mmc->card->ext_csd.cache_ctrl & 0x1))
-			ERR_MSG("[Warning]: Single write(0x%x) when cache is enabled",
-				cmd->arg);
-#endif
 	} else if (opcode == SD_IO_RW_EXTENDED) {
 		if (cmd->data->flags & MMC_DATA_WRITE)
 			rawcmd |= (1 << 13);
@@ -4339,8 +4287,7 @@ unsigned int msdc_do_command(struct msdc_host *host, struct mmc_command *cmd,
 
 	return cmd->error;
 }
-/* weiping fix pio*/
-#if 0
+
 /* The abort condition when PIO read/write
    tmo:
 */
@@ -4365,18 +4312,228 @@ static int msdc_pio_abort(struct msdc_host *host, struct mmc_data *data,
 	}
 	return ret;
 }
-#endif
-/* weiping fix pio*/
-/* sdio_autok.c use these two function, put a dumy function here
- * not modify sdio_autok.c
- */
+
 /*
-   Need to add a timeout, or WDT timeout, system reboot.
-*/
+ * Need to add a timeout, or WDT timeout, system reboot.
+ */
 /* pio mode data read/write */
+#define COMBINE_HM
 int msdc_pio_read(struct msdc_host *host, struct mmc_data *data)
 {
-	return 0;
+	struct scatterlist *sg = data->sg;
+	void __iomem *base = host->base;
+	u32 num = data->sg_len;
+	u32 *ptr;
+	u8 *u8ptr;
+	u32 left = 0;
+	u32 count, size = 0;
+	u32 wints = MSDC_INTEN_DATTMO | MSDC_INTEN_DATCRCERR
+		| MSDC_INTEN_XFER_COMPL;
+	u32 ints = 0;
+	bool get_xfer_done = 0;
+	unsigned long tmo = jiffies + DAT_TIMEOUT;
+	struct page *hmpage = NULL;
+	int i = 0, subpage = 0, totalpages = 0;
+	int flag = 0;
+	ulong kaddr[DIV_ROUND_UP(MAX_SGMT_SZ, PAGE_SIZE)];
+
+	BUG_ON(sg == NULL);
+	/*MSDC_CLR_BIT32(MSDC_INTEN, wints);*/
+	while (1) {
+		if (!get_xfer_done) {
+			ints = sdr_read32(MSDC_INT);
+			latest_int_status[host->id] = ints;
+			ints &= wints;
+			sdr_write32(MSDC_INT, ints);
+		}
+		if (ints & MSDC_INT_DATTMO) {
+			data->error = (unsigned int)-ETIMEDOUT;
+			msdc_dump_info(host->id);
+			msdc_reset_hw(host->id);
+			break;
+		} else if (ints & MSDC_INT_DATCRCERR) {
+			data->error = (unsigned int)-EIO;
+			msdc_reset_hw(host->id);
+			break;
+		} else if (ints & MSDC_INT_XFER_COMPL) {
+			get_xfer_done = 1;
+		}
+		if (get_xfer_done && (num == 0) && (left == 0))
+			break;
+		if (msdc_pio_abort(host, data, tmo))
+			goto end;
+		if ((num == 0) && (left == 0))
+			continue;
+		left = msdc_sg_len(sg, host->dma_xfer);
+		ptr = sg_virt(sg);
+		flag = 0;
+
+		if	((ptr != NULL) &&
+			 !(PageHighMem((struct page *)(sg->page_link & ~0x3))))
+		#ifndef COMBINE_HM
+			goto check_fifo2;
+		#else
+			goto check_fifo1;
+		#endif
+
+		hmpage = (struct page *)(sg->page_link & ~0x3);
+		totalpages = DIV_ROUND_UP((left + sg->offset), PAGE_SIZE);
+		subpage = (left + sg->offset) % PAGE_SIZE;
+
+		if (subpage != 0 || (sg->offset != 0))
+			N_MSG(OPS, "msdc%d: read size or start not align %x, %x, hmpage %lx,sg offset %x\n",
+				host->id,
+				subpage, left, (ulong)hmpage, sg->offset);
+
+		for (i = 0; i < totalpages; i++) {
+			kaddr[i] = (ulong) kmap(hmpage + i);
+			if ((i > 0) && ((kaddr[i] - kaddr[i - 1]) != PAGE_SIZE))
+				flag = 1;
+			if (!kaddr[i])
+				ERR_MSG("msdc0:kmap failed %lx", kaddr[i]);
+		}
+
+		ptr = sg_virt(sg);
+
+		if (ptr == NULL)
+			ERR_MSG("msdc0:sg_virt %p", ptr);
+
+		if (flag == 0)
+		#ifndef COMBINE_HM
+			goto check_fifo2;
+		#else
+			goto check_fifo1;
+		#endif
+
+		/* High memory and more than 1 va address va
+		   and not continuous */
+		/* pr_err("msdc0: kmap not continuous %x %x %x\n",
+			left,kaddr[i],kaddr[i-1]); */
+		for (i = 0; i < totalpages; i++) {
+			left = PAGE_SIZE;
+			ptr = (u32 *) kaddr[i];
+
+			if (i == 0) {
+				left = PAGE_SIZE - sg->offset;
+				ptr = (u32 *) (kaddr[i] + sg->offset);
+			}
+			if ((subpage != 0) && (i == (totalpages-1)))
+				left = subpage;
+
+#ifndef COMBINE_HM
+check_fifo1:
+			if (left == 0)
+				continue;
+#else
+check_fifo1:
+			if ((flag == 1) && (left == 0))
+				continue;
+			else if ((flag == 0) && (left == 0))
+				goto check_fifo_end;
+#endif
+
+			if ((msdc_rxfifocnt() >= MSDC_FIFO_THD) &&
+				(left >= MSDC_FIFO_THD)) {
+				count = MSDC_FIFO_THD >> 2;
+				do {
+#ifdef MTK_MSDC_DUMP_FIFO
+					pr_debug("0x%x ", msdc_fifo_read32());
+#else
+					*ptr++ = msdc_fifo_read32();
+#endif
+				} while (--count);
+				left -= MSDC_FIFO_THD;
+			} else if ((left < MSDC_FIFO_THD) &&
+					msdc_rxfifocnt() >= left) {
+				while (left > 3) {
+#ifdef MTK_MSDC_DUMP_FIFO
+					pr_debug("0x%x ", msdc_fifo_read32());
+#else
+					*ptr++ = msdc_fifo_read32();
+#endif
+					left -= 4;
+				}
+
+				u8ptr = (u8 *) ptr;
+				while (left) {
+#ifdef MTK_MSDC_DUMP_FIFO
+					pr_debug("0x%x ", msdc_fifo_read8());
+#else
+					*u8ptr++ = msdc_fifo_read8();
+#endif
+					left--;
+				}
+			} else {
+				ints = sdr_read32(MSDC_INT);
+				latest_int_status[host->id] = ints;
+
+				if (ints & MSDC_INT_DATCRCERR) {
+					ERR_MSG("[msdc%d] DAT CRC error (0x%x), Left DAT: %d bytes\n",
+						host->id, ints, left);
+					data->error = (unsigned int)-EIO;
+				} else if (ints & MSDC_INT_DATTMO) {
+					ERR_MSG("[msdc%d] DAT TMO error (0x%x), Left DAT: %d bytes\n",
+						host->id, ints, left);
+					data->error = (unsigned int)-ETIMEDOUT;
+				} else {
+					goto skip_msdc_dump_and_reset1;
+				}
+
+#ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
+				if ((atomic_read(&host->ot_work.autok_done)
+					!= 0) ||
+					(host->hw->host_function != MSDC_SDIO) ||
+					(host->mclk <= 50*1000*1000))
+					msdc_dump_info(host->id);
+#else
+				if (ints & MSDC_INT_DATTMO)
+					msdc_dump_info(host->id);
+#endif
+				sdr_write32(MSDC_INT, ints);
+				msdc_reset_hw(host->id);
+				goto end;
+			}
+
+skip_msdc_dump_and_reset1:
+			if (msdc_pio_abort(host, data, tmo))
+				goto end;
+
+			goto check_fifo1;
+		}
+
+check_fifo_end:
+		if (hmpage != NULL) {
+			/* pr_err("read msdc0:unmap %x\n", hmpage); */
+			for (i = 0; i < totalpages; i++)
+				kunmap(hmpage + i);
+
+			hmpage = NULL;
+		}
+		size += msdc_sg_len(sg, host->dma_xfer);
+		sg = sg_next(sg);
+		num--;
+	}
+ end:
+	if (hmpage != NULL) {
+		for (i = 0; i < totalpages; i++)
+			kunmap(hmpage + i);
+		/* pr_err("msdc0 read unmap:\n"); */
+	}
+	data->bytes_xfered += size;
+	N_MSG(FIO, "		PIO Read<%d>bytes", size);
+
+	/* MSDC_CLR_BIT32(MSDC_INTEN, wints); */
+#ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
+	/* auto-K have not done or finished */
+	if ((atomic_read(&host->ot_work.autok_done) == 0) &&
+		(is_card_sdio(host)))
+		return data->error;
+#endif
+
+	if (data->error)
+		ERR_MSG("read pio data->error<%d> left<%d> size<%d>",
+			data->error, left, size);
+	return data->error;
 }
 
 /* please make sure won't using PIO when size >= 512
@@ -4385,9 +4542,214 @@ int msdc_pio_read(struct msdc_host *host, struct mmc_data *data)
 */
 int msdc_pio_write(struct msdc_host *host, struct mmc_data *data)
 {
-	return 0;
-}
+	void __iomem *base = host->base;
+	struct scatterlist *sg = data->sg;
+	u32 num = data->sg_len;
+	u32 *ptr;
+	u8 *u8ptr;
+	u32 left = 0;
+	u32 count, size = 0;
+	u32 wints = MSDC_INTEN_DATTMO | MSDC_INTEN_DATCRCERR
+		| MSDC_INTEN_XFER_COMPL;
+	bool get_xfer_done = 0;
+	unsigned long tmo = jiffies + DAT_TIMEOUT;
+	u32 ints = 0;
+	struct page *hmpage = NULL;
+	int i = 0, totalpages = 0;
+	int flag, subpage = 0;
+	ulong kaddr[DIV_ROUND_UP(MAX_SGMT_SZ, PAGE_SIZE)];
 
+	/* MSDC_CLR_BIT32(MSDC_INTEN, wints); */
+	while (1) {
+		if (!get_xfer_done) {
+			ints = sdr_read32(MSDC_INT);
+			latest_int_status[host->id] = ints;
+			ints &= wints;
+			sdr_write32(MSDC_INT, ints);
+		}
+		if (ints & MSDC_INT_DATTMO) {
+			data->error = (unsigned int)-ETIMEDOUT;
+			msdc_dump_info(host->id);
+			msdc_reset_hw(host->id);
+			break;
+		} else if (ints & MSDC_INT_DATCRCERR) {
+			data->error = (unsigned int)-EIO;
+			msdc_reset_hw(host->id);
+			break;
+		} else if (ints & MSDC_INT_XFER_COMPL) {
+			get_xfer_done = 1;
+			if ((num == 0) && (left == 0))
+				break;
+		}
+		if (msdc_pio_abort(host, data, tmo))
+			goto end;
+		if ((num == 0) && (left == 0))
+			continue;
+		left = msdc_sg_len(sg, host->dma_xfer);
+		ptr = sg_virt(sg);
+
+		flag = 0;
+
+		/* High memory must kmap, if already mapped,
+		   only add counter */
+		if	((ptr != NULL) &&
+			 !(PageHighMem((struct page *)(sg->page_link & ~0x3))))
+		#ifndef COMBINE_HM
+			goto check_fifo2;
+		#else
+			goto check_fifo1;
+		#endif
+
+		hmpage = (struct page *)(sg->page_link & ~0x3);
+		totalpages = DIV_ROUND_UP(left + sg->offset, PAGE_SIZE);
+		subpage = (left + sg->offset) % PAGE_SIZE;
+
+		if ((subpage != 0) || (sg->offset != 0))
+			N_MSG(OPS, "msdc%d: write size or start not align %x, %x, hmpage %lx,sg offset %x\n",
+				host->id,
+				subpage, left, (ulong)hmpage, sg->offset);
+
+		/* Kmap all need pages, */
+		for (i = 0; i < totalpages; i++) {
+			kaddr[i] = (ulong) kmap(hmpage + i);
+			if ((i > 0) && ((kaddr[i] - kaddr[i - 1]) != PAGE_SIZE))
+				flag = 1;
+			if (!kaddr[i])
+				ERR_MSG("msdc0:kmap failed %lx\n", kaddr[i]);
+		}
+
+		ptr = sg_virt(sg);
+
+		if (ptr == NULL)
+			ERR_MSG("msdc0:write sg_virt %p\n", ptr);
+
+		if (flag == 0)
+		#ifndef COMBINE_HM
+			goto check_fifo2;
+		#else
+			goto check_fifo1;
+		#endif
+
+		/* High memory and more than 1 va address va
+		   may be not continuous */
+		/*pr_err(ERR "msdc0:w kmap not continuous %x %x %x\n",
+			left, kaddr[i], kaddr[i-1]);*/
+		for (i = 0; i < totalpages; i++) {
+			left = PAGE_SIZE;
+			ptr = (u32 *) kaddr[i];
+
+			if (i == 0) {
+				left = PAGE_SIZE - sg->offset;
+				ptr = (u32 *) (kaddr[i] + sg->offset);
+			}
+			if (subpage != 0 && (i == (totalpages - 1)))
+				left = subpage;
+
+#ifndef COMBINE_HM
+check_fifo1:
+			if (left == 0)
+				continue;
+#else
+check_fifo1:
+			if ((flag == 1) && (left == 0))
+				continue;
+			else if ((flag == 0) && (left == 0))
+				goto check_fifo_end;
+#endif
+
+			if (left >= MSDC_FIFO_SZ && msdc_txfifocnt() == 0) {
+				count = MSDC_FIFO_SZ >> 2;
+				do {
+					msdc_fifo_write32(*ptr);
+					ptr++;
+				} while (--count);
+				left -= MSDC_FIFO_SZ;
+			} else if (left < MSDC_FIFO_SZ &&
+				   msdc_txfifocnt() == 0) {
+				while (left > 3) {
+					msdc_fifo_write32(*ptr);
+					ptr++;
+					left -= 4;
+				}
+				u8ptr = (u8 *) ptr;
+				while (left) {
+					msdc_fifo_write8(*u8ptr);
+					u8ptr++;
+					left--;
+				}
+			} else {
+				ints = sdr_read32(MSDC_INT);
+				latest_int_status[host->id] = ints;
+
+				if (ints & MSDC_INT_DATCRCERR) {
+					ERR_MSG("[msdc%d] DAT CRC error (0x%x), Left DAT: %d bytes\n",
+						host->id, ints, left);
+					data->error = (unsigned int)-EIO;
+				} else if (ints & MSDC_INT_DATTMO) {
+					ERR_MSG("[msdc%d] DAT TMO error (0x%x), Left DAT: %d bytes\n",
+						host->id, ints, left);
+					data->error = (unsigned int)-ETIMEDOUT;
+				} else {
+					goto skip_msdc_dump_and_reset1;
+				}
+
+#ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
+				if ((atomic_read(&host->ot_work.autok_done)
+					!= 0) ||
+					(host->hw->host_function != MSDC_SDIO) ||
+					(host->mclk <= 50*1000*1000))
+					msdc_dump_info(host->id);
+#else
+				if (ints & MSDC_INT_DATTMO)
+					msdc_dump_info(host->id);
+#endif
+				sdr_write32(MSDC_INT, ints);
+				msdc_reset_hw(host->id);
+				goto end;
+			}
+
+skip_msdc_dump_and_reset1:
+			if (msdc_pio_abort(host, data, tmo))
+				goto end;
+
+			goto check_fifo1;
+		}
+
+check_fifo_end:
+		if (hmpage != NULL) {
+			for (i = 0; i < totalpages; i++)
+				kunmap(hmpage + i);
+
+			hmpage = NULL;
+
+		}
+		size += msdc_sg_len(sg, host->dma_xfer);
+		sg = sg_next(sg);
+		num--;
+	}
+ end:
+	if (hmpage != NULL) {
+		for (i = 0; i < totalpages; i++)
+			kunmap(hmpage + i);
+		pr_err("msdc0 write unmap 0x%x:\n", left);
+	}
+	data->bytes_xfered += size;
+	N_MSG(FIO, "		PIO Write<%d>bytes", size);
+
+#ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
+	/* auto-K have not done or finished */
+	if ((is_card_sdio(host)) &&
+		(atomic_read(&host->ot_work.autok_done) == 0))
+		return data->error;
+#endif
+
+	if (data->error)
+		ERR_MSG("write pio data->error<%d> left<%d> size<%d>",
+			data->error, left, size);
+
+	/*MSDC_CLR_BIT32(MSDC_INTEN, wints);*/
+	return data->error;
+}
 
 static void msdc_dma_start(struct msdc_host *host)
 {
@@ -4662,11 +5024,9 @@ static int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 	/* u32 intsts = 0; */
 	int dma = 0, read = 1, dir = DMA_FROM_DEVICE, send_type = 0;
 	u32 map_sg = 0;
-/*weiping fix pio */
-#if 0
 	unsigned long pio_tmo;
 	unsigned int left = 0;
-#endif
+
 #define SND_DAT 0
 #define SND_CMD 1
 
@@ -4914,10 +5274,6 @@ static int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 				AddStorageTrace(STORAGE_LOGGER_MSG_MSDC_DO, msdc_do_request,
 					"msdc_dma_stop");
 #endif
-/* weiping fix pio */
-#if 1
-		}
-#else
 		} else {
 			/* Turn off dma */
 			if (is_card_sdio(host)) {
@@ -4975,7 +5331,6 @@ static int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 			}
 
 		} /* PIO mode */
-#endif
  stop:
 		/* pio mode will disable autocmd23 */
 		if (l_autocmd23_is_set == 1) {
