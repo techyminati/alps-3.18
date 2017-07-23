@@ -53,6 +53,7 @@ struct __check_irq_type __check_irq_type[] = {
 #endif
 
 #define GIC_ICDISR (GIC_DIST_BASE + 0x80)
+#define WDT_IRQ_BIT_ID 189
 
 /*
  * mt_irq_mask: enable an interrupt.
@@ -630,9 +631,7 @@ struct irq2fiq {
 };
 
 static struct irq2fiq irqs_to_fiq[] = {
-#if 0
 	{.irq = WDT_IRQ_BIT_ID,},
-#endif
 	{.irq = GIC_PPI_WATCHDOG_TIMER,},
 	{.irq = FIQ_SMP_CALL_SGI,}
 };
@@ -733,10 +732,10 @@ static void fiq_isr(struct fiq_glue_handler *h, void *regs, void *svc_sp)
 
 	if (irq == FIQ_SMP_CALL_SGI)
 		fiq_isr_logs[cpu].smp_call_cnt++;
-#if 0
+
 	if (irq == WDT_IRQ_BIT_ID)
 		aee_rr_rec_fiq_step(AEE_FIQ_STEP_FIQ_ISR_BASE);
-#endif
+
 	for (i = 0; i < ARRAY_SIZE(irqs_to_fiq); i++) {
 		if (irqs_to_fiq[i].irq == irq) {
 			if (irqs_to_fiq[i].handler) {
