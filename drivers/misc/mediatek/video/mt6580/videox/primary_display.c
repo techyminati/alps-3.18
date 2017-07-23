@@ -53,7 +53,7 @@
 #include "mt_spm_idle.h"
 #include "mt_spm.h" /* for sodi reg addr define */
 #define mt_eint_set_hw_debounce(eint_num, ms) (void)0
-#define spm_enable_sodi(bool) (void)0
+/* #define spm_enable_sodi(bool) (void)0 */
 
 /* #include "mach/eint.h" */
 #ifndef MT_CG_DISP0_DISP_WDMA0
