@@ -1354,6 +1354,9 @@
 		m_pkup_pl@0 {
 			compatible = "mediatek,m_pkup_pl";
 		};
+		als: als {
+			compatible = "mediatek, als-eint";
+		};
 
 		mtkfb: mtkfb@0 {
 			compatible = "mediatek,mtkfb";
