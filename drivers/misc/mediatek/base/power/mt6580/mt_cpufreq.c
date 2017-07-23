@@ -330,7 +330,11 @@ static struct pmic_wrap_setting pw = {
 		.nr_idx = NR_IDX_DI,
 	},
 };
-
+#if 1
+static DEFINE_SPINLOCK(pmic_wrap_lock);
+#define pmic_wrap_lock(flags) spin_lock_irqsave(&pmic_wrap_lock, flags)
+#define pmic_wrap_unlock(flags) spin_unlock_irqrestore(&pmic_wrap_lock, flags)
+#else
 static DEFINE_MUTEX(pmic_wrap_mutex);
 
 #define pmic_wrap_lock(flags) \
@@ -343,6 +347,8 @@ static DEFINE_MUTEX(pmic_wrap_mutex);
 		flags = (unsigned long)&flags; \
 		mutex_unlock(&pmic_wrap_mutex); \
 	} while (0)
+#endif
+
 static int _spm_dvfs_ctrl_volt(u32 value)
 {
 #define MAX_RETRY_COUNT (100)
