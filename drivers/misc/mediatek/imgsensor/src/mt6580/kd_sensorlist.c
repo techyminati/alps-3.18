@@ -48,6 +48,11 @@
 #define PDAF_DATA_SIZE 4096
 char mtk_ccm_name[camera_info_size] = { 0 };
 
+/* Camera Infos */
+#define PROC_CAMERA_INFOS "driver/camera_infos"
+#define camera_infos_size 128
+char g_cam_infos[camera_infos_size] = {0};
+
 static unsigned int gDrvIndex;
 int cntPWROnMain = 0;
 int cntPWROnSub = 0;
@@ -1651,6 +1656,8 @@ static inline int adopt_CAMERA_HW_CheckIsAlive(void)
 	UINT32 i = 0;
 	MUINT32 sensorID = 0;
 	MUINT32 retLen = 0;
+	MSDK_SENSOR_RESOLUTION_INFO_STRUCT sensorResolution[2], *psensorResolution[2];
+	MUINT32 curr_sensor_id;
 
 	KD_IMGSENSOR_PROFILE_INIT();
 	/* power on sensor */
@@ -1667,6 +1674,7 @@ static inline int adopt_CAMERA_HW_CheckIsAlive(void)
 	/* Camera information */
 	if (gDrvIndex == 0x10000) {
 		memset(mtk_ccm_name, 0, camera_info_size);
+		memset(g_cam_infos, 0, camera_infos_size);
 	}
 
 	if (g_pSensorFunc) {
@@ -1690,6 +1698,19 @@ static inline int adopt_CAMERA_HW_CheckIsAlive(void)
 					snprintf(mtk_ccm_name, sizeof(mtk_ccm_name),
 						 "%s CAM[%d]:%s;", mtk_ccm_name,
 						 g_invokeSocketIdx[i], g_invokeSensorNameStr[i]);
+					psensorResolution[0] = &sensorResolution[0];
+					psensorResolution[1] = &sensorResolution[1];
+					// don't care of the result
+					g_pSensorFunc->SensorGetResolution(psensorResolution);
+					if(g_invokeSocketIdx[i] == DUAL_CAMERA_MAIN_SENSOR)
+						curr_sensor_id = 0;
+					else if(g_invokeSocketIdx[i] == DUAL_CAMERA_SUB_SENSOR)
+						curr_sensor_id = 1;
+					/* fill the cam infos with name/width/height */
+					snprintf(g_cam_infos, sizeof(g_cam_infos),"%s CAM[%d]:%s,Width:%d, Height:%d;",
+								g_cam_infos, g_invokeSocketIdx[i], g_invokeSensorNameStr[i],
+								sensorResolution[curr_sensor_id].SensorFullWidth, sensorResolution[curr_sensor_id].SensorFullHeight);
+
 					err = ERROR_NONE;
 				}
 				if (ERROR_NONE != err) {
@@ -4464,6 +4485,25 @@ static struct file_operations fcamera_proc_fops1 = {
 	.read = seq_read,
 };
 
+/* Camera Infos */
+static int camera_infos_read(struct seq_file *m, void *v)
+{
+   PK_DBG("camera_infos_read %s\n", g_cam_infos);
+   seq_printf(m, "%s\n", g_cam_infos);
+   return 0;
+};
+
+static int proc_camera_infos_open(struct inode *inode, struct file *file)
+{
+    return single_open(file, camera_infos_read, NULL);
+};
+
+static  struct file_operations fcamera_proc_camera_infos_fops = {
+    .owner = THIS_MODULE,
+    .open  = proc_camera_infos_open,
+    .read  = seq_read,
+};
+
 /*=======================================================================
   * CAMERA_HW_i2C_init()
   *=======================================================================*/
@@ -4515,6 +4555,9 @@ static int __init CAMERA_HW_i2C_init(void)
 	memset(mtk_ccm_name, 0, camera_info_size);
 	proc_create(PROC_CAMERA_INFO, 0, NULL, &fcamera_proc_fops1);
 
+	/* Camera Infos */
+    memset(g_cam_infos, 0, camera_infos_size);
+    proc_create(PROC_CAMERA_INFOS, 0, NULL, &fcamera_proc_camera_infos_fops);
 #else
 	/* Register proc file for main sensor register debug */
 	prEntry = create_proc_entry("driver/camsensor", 0, NULL);
