@@ -26,7 +26,7 @@
 /* #include <mach/mt_dcm.h> */
 #include <mach/mt_spm_mtcmos.h>
 /* #include <mach/mt_spm_sleep.h> */
-/* #include <mach/mt_freqhopping.h> */
+#include <mach/mt_freqhopping.h>
 /* #include <mach/mt_gpufreq.h> */
 #include <mach/mt_clkmgr.h>
 
@@ -2786,7 +2786,7 @@ static int sdm_pll_hp_enable_op(struct pll *pll)
 	}
 
 	vco = pll->ops->vco_calc(pll);
-	/* err = freqhopping_config(pll->hp_id, vco, 1); */
+	err = freqhopping_config(pll->hp_id, vco, 1);
 
 	EXIT_FUNC(FUNC_LV_OP);
 	return err;
@@ -2805,7 +2805,7 @@ static int sdm_pll_hp_disable_op(struct pll *pll)
 	}
 
 	vco = pll->ops->vco_calc(pll);
-	/* err = freqhopping_config(pll->hp_id, vco, 0); */
+	err = freqhopping_config(pll->hp_id, vco, 0);
 
 	EXIT_FUNC(FUNC_LV_OP);
 	return err;
@@ -4314,7 +4314,7 @@ int mt_clkmgr_init(void)
 	dump_clk_info();
 
 	initialized = 1;
-	/* mt_freqhopping_init(); */
+	mt_freqhopping_init();
 	clkmux_sel(MT_CLKMUX_MFG_MUX_SEL, MT_CG_UPLL_D3, "clkmgr");
 	EXIT_FUNC(FUNC_LV_API);
 	return 0;
