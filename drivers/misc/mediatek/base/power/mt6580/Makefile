@@ -1,6 +1,7 @@
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/thermal/fakeHeader/
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/base/power/include/
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/base/power/spm_v1
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/base/power/cpuidle_v1/
 
 ifeq ($(CONFIG_ARCH_MT6580),y)
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/videox/
@@ -27,8 +28,6 @@ obj-y += mt-smp.o
 obj-y += hotplug.o
 obj-y += mt-headsmp.o
 obj-y += mt_hotplug.o
-obj-y += mt_cpuidle.o
-obj-y += cpu_dormant-v7.o
 
 obj-y += mt_hotplug_strategy_main.o
 obj-y += mt_hotplug_strategy_core.o
