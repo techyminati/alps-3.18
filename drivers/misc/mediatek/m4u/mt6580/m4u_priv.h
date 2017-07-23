@@ -11,8 +11,8 @@
 #include "m4u_reg.h"
 #include "m4u_pgtable.h"
 
-#define M4UMSG(string, args...)	pr_err("[M4U] "string"\n", ##args)
-#define M4UINFO(string, args...) pr_debug("[M4U] "string"\n", ##args)
+#define M4UMSG(string, args...)	pr_err("[M4U] "string, ##args)
+#define M4UINFO(string, args...) pr_debug("[M4U] "string, ##args)
 
 
 #include "m4u_hw.h"
@@ -238,9 +238,9 @@ extern int gM4U_log_to_uart;
 do {\
 	if (level > gM4U_log_level) {\
 		if (level > gM4U_log_to_uart)\
-			pr_warn("[M4U] "string"\n", ##args);\
+			pr_warn("[M4U] "string, ##args);\
 		else\
-			pr_debug("[M4U] "string"\n", ##args);\
+			pr_debug("[M4U] "string, ##args);\
 	} \
 } while (0)
 
@@ -250,7 +250,7 @@ do {\
 
 
 #define M4UERR(string, args...) do {\
-	pr_err("[M4U] error:"string"\n", ##args);  \
+	pr_err("[M4U] error:"string, ##args);  \
 	aee_kernel_exception("M4U", "[M4U] error:"string, ##args);  \
 } while (0)
 
@@ -258,10 +258,9 @@ do {\
 	char m4u_name[100];\
 	snprintf(m4u_name, 100, "[M4U]"string, ##args); \
 	aee_kernel_warning_api(__FILE__, __LINE__, DB_OPT_MMPROFILE_BUFFER, m4u_name, "[M4U] error"string, ##args);  \
-	pr_err("[M4U] error:"string"\n", ##args);  \
+	pr_err("[M4U] error:"string, ##args);  \
 } while (0)
     /*aee_kernel_warning(m4u_name, "[M4U] error:"string,##args); */
-
 
 #define M4U_PRINT_LOG_OR_SEQ(seq_file, fmt, args...) \
 	do {\
