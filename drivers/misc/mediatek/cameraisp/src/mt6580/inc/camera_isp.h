@@ -30,7 +30,7 @@
 ********************************************************************************/
 extern void ISP_MCLK1_GPIO_EN(bool En);
 extern void ISP_MCLK2_GPIO_EN(bool En);
-/*#define ENABLE_KD_SENSORLIST*/
+#define ENABLE_KD_SENSORLIST
 
 /* 89serial IC , for HW FBC */
 #define _89SERIAL_
