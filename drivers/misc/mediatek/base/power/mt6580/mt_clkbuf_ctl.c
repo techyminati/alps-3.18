@@ -29,6 +29,10 @@
 #include <mach/mt_clkmgr.h>
 #include "mt_clkbuf_ctl_internal.h"
 
+#ifndef CONFIG_MTK_LEGACY
+#include <linux/of.h>
+#endif				/* ! CONFIG_MTK_LEGACY */
+
 #define clk_buf_err(fmt, args...)       \
 	pr_debug(fmt, ##args)
 #define clk_buf_warn(fmt, args...)      \
@@ -154,7 +158,7 @@ unsigned int CLK_BUF1_STATUS, CLK_BUF2_STATUS, CLK_BUF3_STATUS, CLK_BUF4_STATUS;
 static int audio_ref_count = 1;
 static void clk_buf_ctrl_buf1(CLK_BUF_SWCTRL_STATUS_T *status)
 {
-	clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]);
+	/* clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]); */
 #ifndef RF_CLK_BUF_BRING_UP	/* test for bring up */
 	if (CLK_BUF2_STATUS != CLOCK_BUFFER_HW_CONTROL) {
 		if (status[1] == CLK_BUF_SW_DISABLE) {
@@ -176,7 +180,7 @@ static void clk_buf_ctrl_buf1(CLK_BUF_SWCTRL_STATUS_T *status)
 
 static void clk_buf_ctrl_buf2(CLK_BUF_SWCTRL_STATUS_T *status)
 {
-	clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]);
+	/* clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]); */
 #ifndef RF_CLK_BUF_BRING_UP	/* test for bring up */
 	if (CLK_BUF3_STATUS != CLOCK_BUFFER_HW_CONTROL) {
 		if (status[2] == CLK_BUF_SW_DISABLE) {
@@ -201,7 +205,7 @@ static void clk_buf_ctrl_buf2(CLK_BUF_SWCTRL_STATUS_T *status)
 
 static void clk_buf_ctrl_buf3(CLK_BUF_SWCTRL_STATUS_T *status)
 {
-	clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]);
+	/* clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]); */
 #ifndef RF_CLK_BUF_BRING_UP	/* test for bring up */
 	if (CLK_BUF4_STATUS != CLOCK_BUFFER_HW_CONTROL) {
 		if (status[3] == CLK_BUF_SW_DISABLE) {
@@ -414,19 +418,26 @@ bool clk_buf_init(void)
 	unsigned long flags;
 #ifndef CONFIG_MTK_LEGACY
 	struct device_node *node;
+	static u32 vals[4];
 
-	node = of_find_compatible_node(NULL, NULL, "mediatek, rf_clock_buffer");
+	node = of_find_compatible_node(NULL, NULL, "mediatek,rf_clock_buffer");
 	if (node) {
-		of_property_read_u32_array(node, "buffer1", &CLK_BUF1_STATUS, 1);
-		of_property_read_u32_array(node, "buffer2", &CLK_BUF2_STATUS, 1);
-		of_property_read_u32_array(node, "buffer3", &CLK_BUF3_STATUS, 1);
-		of_property_read_u32_array(node, "buffer4", &CLK_BUF4_STATUS, 1);
+		int err;
+
+		err = of_property_read_u32_array(node, "mediatek,clkbuf-config", vals, 4);
+		if (err) {
+			clk_buf_err("%s can't find array of mediatek,clkbuf-config\n", __func__);
+			vals[0] = CLOCK_BUFFER_HW_CONTROL;
+			vals[1] = CLOCK_BUFFER_SW_CONTROL;
+			vals[2] = CLOCK_BUFFER_SW_CONTROL;
+			vals[3] = CLOCK_BUFFER_SW_CONTROL;
+		}
+		CLK_BUF1_STATUS = vals[0];
+		CLK_BUF2_STATUS = vals[1];
+		CLK_BUF3_STATUS = vals[2];
+		CLK_BUF4_STATUS = vals[3];
 	} else {
 		clk_buf_err("%s can't find compatible node\n", __func__);
-		CLK_BUF1_STATUS = CLOCK_BUFFER_HW_CONTROL;
-		CLK_BUF2_STATUS = CLOCK_BUFFER_SW_CONTROL;
-		CLK_BUF3_STATUS = CLOCK_BUFFER_SW_CONTROL;
-		CLK_BUF4_STATUS = CLOCK_BUFFER_SW_CONTROL;
 	}
 #endif				/* ! CONFIG_MTK_LEGACY */
 

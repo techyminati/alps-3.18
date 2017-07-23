@@ -1546,6 +1546,12 @@
 		};/* End of regulators_supply */
 	};/* End of mt_pmic_regulator */
 
+	rf_clock_buffer_ctrl:rf_clock_buffer {
+		compatible = "mediatek,rf_clock_buffer";
+		#mediatek,clkbuf-quantity = <4>;
+		#mediatek,clkbuf-config = <2 1 1 1>;
+	};
+
 };
 
 &eintc {
