@@ -43,10 +43,10 @@
 static unsigned int ccif_irqid[MAX_MD_NUM];
 static unsigned int ccif_wdt_irqid[MAX_MD_NUM];
 
-#define CH_MSG(fmt, args...)        pr_notice("[hlp] (0)" fmt, ##args)
-#define CH_MSG_INF(idx, tag, fmt, args...)    pr_notice("[" tag "] (%d)" fmt, (idx+1), ##args)
+#define CH_MSG(fmt, args...)        pr_warn("[hlp] (0)" fmt, ##args)
+#define CH_MSG_INF(idx, tag, fmt, args...)    pr_warn("[" tag "] (%d)" fmt, (idx+1), ##args)
 #define CH_DBG_MSG(idx, tag, fmt, args...)    pr_debug("[" tag "] (%d)" fmt, (idx+1), ##args)
-#define CH_DBG_COM_MSG(fmt, args...)        pr_notice("[hlp] (0)" fmt, ##args)
+#define CH_DBG_COM_MSG(fmt, args...)        pr_warn("[hlp] (0)" fmt, ##args)
 #define CH_ERR(fmt, args...)        pr_err("[err] (0)" fmt, ##args)
 #define CH_ERR_INF(idx, tag, fmt, args...)    pr_err("[" tag "] (%d)" fmt, (idx+1), ##args)
 
@@ -66,7 +66,6 @@ static unsigned int ccif_wdt_irqid[MAX_MD_NUM];
 #define FEATURE_GET_MD_BAT_VOL
 #define FEATURE_PM_IPO_H	/*disable for bring up */
 /*#define FEATURE_DFO_EN					  Always bring up*/
-#define CCCI_GET_GPIO_VAL
 
 #endif
 
@@ -755,80 +754,31 @@ void get_md_post_fix(int md_id, char buf[], char buf_ex[])
 /*provide API called by ccci module                                                                           */
 /**/
 /***************************************************************************/
-#ifdef CCCI_GET_GPIO_VAL
+#if defined(FEATURE_GET_MD_GPIO_NUM)
+#ifndef GPIO_SIM_SWITCH_DAT_PIN
 #define GPIO_SIM_SWITCH_DAT_PIN (34)
+#endif
+
+#ifndef GPIO_SIM_SWITCH_CLK_PIN
 #define GPIO_SIM_SWITCH_CLK_PIN (67)
+#endif
 
-struct mt_gpio_modem_info {
-	char name[40];
-	int num;
+struct gpio_item {
+	char gpio_name_from_md[64];
+	char gpio_name_from_dts[64];
+	int dummy_value;
 };
-static struct mt_gpio_modem_info mt_gpio_info[] = {
-	{"GPIO_MD_TEST", 800},
-#ifdef GPIO_AST_CS_PIN
-	{"GPIO_AST_HIF_CS", GPIO_AST_CS_PIN},
-#endif
-#ifdef GPIO_AST_CS_PIN_NCE
-	{"GPIO_AST_HIF_CS_ID", GPIO_AST_CS_PIN_NCE},
-#endif
-#ifdef GPIO_AST_RST_PIN
-	{"GPIO_AST_Reset", GPIO_AST_RST_PIN},
-#endif
-#ifdef GPIO_AST_CLK32K_PIN
-	{"GPIO_AST_CLK_32K", GPIO_AST_CLK32K_PIN},
-#endif
-#ifdef GPIO_AST_CLK32K_PIN_CLK
-	{"GPIO_AST_CLK_32K_CLKM", GPIO_AST_CLK32K_PIN_CLK},
-#endif
-#ifdef GPIO_AST_WAKEUP_PIN
-	{"GPIO_AST_Wakeup", GPIO_AST_WAKEUP_PIN},
-#endif
-#ifdef GPIO_AST_INTR_PIN
-	{"GPIO_AST_INT", GPIO_AST_INTR_PIN},
-#endif
-#ifdef GPIO_AST_WAKEUP_INTR_PIN
-	{"GPIO_AST_WAKEUP_INT", GPIO_AST_WAKEUP_INTR_PIN},
-#endif
-#ifdef GPIO_AST_AFC_SWITCH_PIN
-	{"GPIO_AST_AFC_Switch", GPIO_AST_AFC_SWITCH_PIN},
-#endif
-#ifdef GPIO_FDD_BAND_SUPPORT_DETECT_1ST_PIN
-	{"GPIO_FDD_Band_Support_Detection_1", GPIO_FDD_BAND_SUPPORT_DETECT_1ST_PIN},
-#endif
-#ifdef GPIO_FDD_BAND_SUPPORT_DETECT_2ND_PIN
-	{"GPIO_FDD_Band_Support_Detection_2", GPIO_FDD_BAND_SUPPORT_DETECT_2ND_PIN},
-#endif
-#ifdef GPIO_FDD_BAND_SUPPORT_DETECT_3RD_PIN
-	{"GPIO_FDD_Band_Support_Detection_3", GPIO_FDD_BAND_SUPPORT_DETECT_3RD_PIN},
-#endif
-#ifdef GPIO_SIM_SWITCH_CLK_PIN
-	{"GPIO_SIM_SWITCH_CLK", GPIO_SIM_SWITCH_CLK_PIN},
-#endif
-#ifdef GPIO_SIM_SWITCH_DAT_PIN
-	{"GPIO_SIM_SWITCH_DAT", GPIO_SIM_SWITCH_DAT_PIN},
-#endif
-/*if you have new GPIO pin add bellow*/
-
+static struct gpio_item gpio_mapping_table[] = {
+	{"GPIO_AST_Reset", "GPIO_AST_RESET", -1},
+	{"GPIO_AST_Wakeup", "GPIO_AST_WAkEUP", -1},
+	{"GPIO_AST_AFC_Switch", "GPIO_AST_AFC_SWITCH", -1},
+	{"GPIO_FDD_BAND_Support_Detection_1", "GPIO_FDD_BAND_SUPPORT_DETECT_1ST_PIN", -1},
+	{"GPIO_FDD_BAND_Support_Detection_2", "GPIO_FDD_BAND_SUPPORT_DETECT_2ND_PIN", -1},
+	{"GPIO_FDD_BAND_Support_Detection_3", "GPIO_FDD_BAND_SUPPORT_DETECT_3RD_PIN", -1},
+	{"GPIO_SIM_SWITCH_CLK", "GPIO_SIM_SWITCH_CLK_PIN", GPIO_SIM_SWITCH_CLK_PIN},
+	{"GPIO_SIM_SWITCH_DAT", "GPIO_SIM_SWITCH_DAT_PIN", GPIO_SIM_SWITCH_DAT_PIN},
 };
-
-static int mt_get_md_gpio(char *gpio_name, int len)
-{
-	unsigned int i;
-	unsigned long number;
-
-	for (i = 0; i < ARRAY_SIZE(mt_gpio_info); i++) {
-		if (!strncmp(gpio_name, mt_gpio_info[i].name, len)) {
-			number = mt_gpio_info[i].num;
-			CH_MSG_INF(-1, "hlp", "Modern get number=%d, name:%s\n", mt_gpio_info[i].num, gpio_name);
-			/*mt_gpio_pin_decrypt(&number);*/
-			return number;
-		}
-	}
-	CH_MSG_INF(-1, "hlp", "Modem gpio name can't match!!!\n");
-	return -1;
-}
 #endif
-
 
 AP_IMG_TYPE get_ap_img_ver(void)
 {
@@ -853,25 +803,44 @@ int get_td_eint_info(int md_id, char *eint_name, unsigned int len)
 int get_md_gpio_info(int md_id, char *gpio_name, unsigned int len)
 {
 #if defined(FEATURE_GET_MD_GPIO_NUM)
-#if defined(CONFIG_MTK_LEGACY)
-		return mt_get_md_gpio(gpio_name, len);
-#else
-#ifdef CCCI_GET_GPIO_VAL
-		CH_MSG_INF(md_id, "hlp",  "get_md_gpio old workaround.\n");
-		return mt_get_md_gpio(gpio_name, len);
-#else
-		struct device_node *node = of_find_compatible_node(NULL, NULL, "mediatek,MD_USE_GPIO");
-		int gpio_id = -1;
+	int i = 0;
+	struct device_node *node = NULL;
+	int gpio_id = -1;
 
-		if (node)
-			of_property_read_u32(node, gpio_name, &gpio_id);
-		else
-			CH_MSG_INF(md_id, "hlp", "MD_USE_GPIO is not set in device tree,need to check?\n");
+
+	CH_DBG_MSG(-1, "hlp", "searching %s in device tree\n", gpio_name);
+	for (i = 0; i < ARRAY_SIZE(gpio_mapping_table); i++) {
+		if (!strncmp(gpio_name, gpio_mapping_table[i].gpio_name_from_md, len))
+			break;
+	}
+
+	node = of_find_compatible_node(NULL, NULL, "mediatek,gpio_usage_mapping");
+	if (!node) {
+		if (i < ARRAY_SIZE(gpio_mapping_table))
+			gpio_id = gpio_mapping_table[i].dummy_value;
+		CH_MSG_INF(-1, "hlp", "MD_USE_GPIO is not set in device tree, use dummy value %d\n", gpio_id);
 		return gpio_id;
-#endif
-#endif
+	}
+	if (i < ARRAY_SIZE(gpio_mapping_table)) {
+		CH_MSG_INF(-1, "hlp", "%s found in device tree\n", gpio_mapping_table[i].gpio_name_from_dts);
+		of_property_read_u32(node, gpio_mapping_table[i].gpio_name_from_dts, &gpio_id);
+	}
+	/* if gpio_name_from_md and gpio_name_from_dts are the same,
+	   it will not be listed in gpio_mapping_table,
+	   so try read directly from device tree here.
+	*/
+	if (gpio_id < 0)
+		of_property_read_u32(node, gpio_name, &gpio_id);
+	/* no device tree node can be read, then return dummy value*/
+	if (gpio_id < 0 && i < ARRAY_SIZE(gpio_mapping_table)) {
+		gpio_id = gpio_mapping_table[i].dummy_value;
+		CH_MSG_INF(-1, "hlp", "%s id use dummy value %d\n", gpio_name, gpio_id);
+	}  else
+		CH_MSG_INF(-1, "hlp", "%s id %d\n", gpio_name, gpio_id);
+	return gpio_id;
+
 #else
-		return -1;
+	return -1;
 #endif
 
 }
