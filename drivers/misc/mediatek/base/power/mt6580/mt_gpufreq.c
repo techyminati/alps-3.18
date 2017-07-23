@@ -37,7 +37,7 @@
 #include "mach/mt_clkmgr.h"
 #include "mt_cpufreq.h"
 #include "mt_gpufreq.h"
-#include "sync_write.h"
+#include "mt-plat/sync_write.h"
 /* #include "mach/mt_freqhopping.h" */
 /* #include "mach/mt_static_power.h" */
 #ifndef GPUDVFS_WORKAROUND_FOR_GIT
