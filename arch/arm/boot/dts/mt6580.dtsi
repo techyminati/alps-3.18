@@ -100,10 +100,11 @@
 						alloc-ranges = <0 0x80000000 0 0x80000000>;
 				};
 
-				pstore-reserved-memory {
-						compatible = "pstore-reserve-memory";
+				pstore-reserved-memory@83f10000 {
+						compatible = "mediatek,pstore";
 						reg = <0 0x83f10000 0 0xe0000>;
 				};
+
 				ram_console-reserved-memory@83f00000 {
 						compatible = "mediatek,ram_console";
 						reg = <0 0x83f00000 0 0x10000>;
