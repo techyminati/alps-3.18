@@ -45,10 +45,10 @@
 #include <linux/wakelock.h>
 #endif
 
-#define LOG_CONSTRAINT_ADJ      (0)
+#define LOG_CONSTRAINT_ADJ      (1)
 #if (LOG_CONSTRAINT_ADJ == 1)
 /* for kernel log reduction */
-#include <linux/p r i n t k.h>
+#include <linux/printk.h>
 #endif
 
 #include "inc/camera_isp_FrmB.h"
@@ -5360,8 +5360,8 @@ static MINT32 ISP_open(struct inode *pInode, struct file *pFile)
 	}
 
 	#if (LOG_CONSTRAINT_ADJ == 1)
-	g_log_def_constraint = detect_count;
-	detect_count = 200;
+	g_log_def_constraint = get_detect_count();
+	set_detect_count(g_log_def_constraint+150);
 	#endif
 
 	/* default cam 1 */
@@ -5462,7 +5462,7 @@ static MINT32 ISP_release(struct inode *pInode, struct file *pFile)
 	}
 
 	#if (LOG_CONSTRAINT_ADJ == 1)
-	detect_count = g_log_def_constraint;
+	set_detect_count(g_log_def_constraint);
 	#endif
 
 	LOG_DBG("Curr UserCount(%d), (process, pid, tgid)=(%s, %d, %d), last user",
