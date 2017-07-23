@@ -120,7 +120,7 @@ static fm_s32 fm_bop_top_write(fm_u16 addr, fm_u32 value, fm_u8 *buf, fm_s32 siz
 
 	return FM_TOP_WRITE_BOP_SIZE + 2;
 }
-
+/*
 static fm_s32 fm_bop_top_rd_until(fm_u16 addr, fm_u32 mask, fm_u32 value, fm_u8 *buf, fm_s32 size)
 {
 	if (size < (FM_TOP_RD_UNTIL_BOP_SIZE + 2))
@@ -149,7 +149,7 @@ static fm_s32 fm_bop_top_rd_until(fm_u16 addr, fm_u32 mask, fm_u32 value, fm_u8 
 
 	return FM_TOP_RD_UNTIL_BOP_SIZE + 2;
 }
-
+*/
 /*
  * mt6580_pwrup_clock_on - Wholechip FM Power Up: step 1, FM Digital Clock enable
  * @buf - target buf

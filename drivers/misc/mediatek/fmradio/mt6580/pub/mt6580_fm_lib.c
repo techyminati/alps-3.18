@@ -719,6 +719,8 @@ static fm_s32 mt6580_enable_pmic_tldo(void)
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
+
+	return ret;
 }
 
 static fm_s32 mt6580_disable_pmic_tldo(void)
@@ -830,6 +832,8 @@ static fm_s32 mt6580_disable_pmic_tldo(void)
 		WCN_DBG(FM_ALT | CHIP, " pwrup wr CONN_RF_CG failed\n");
 		return ret;
 	}
+
+	return ret;
 }
 
 static fm_s32 mt6580_PowerUp(fm_u16 *chip_id, fm_u16 *device_id)
@@ -963,8 +967,6 @@ static fm_s32 mt6580_PowerDown(void)
 	fm_s32 ret = 0;
 	fm_u16 pkt_size;
 	fm_u16 dataRead;
-	fm_u32 tem;
-	fm_u32 host_reg = 0;
 
 	WCN_DBG(FM_DBG | CHIP, "pwr down seq\n");
 
@@ -1002,7 +1004,6 @@ static fm_bool mt6580_SetFreq(fm_u16 freq)
 	fm_s32 ret = 0;
 	fm_u16 pkt_size;
 	fm_u16 chan_para = 0;
-	fm_u32 reg_val = 0;
 	fm_u16 freq_reg = 0;
 
 	fm_cb_op->cur_freq_set(freq);
