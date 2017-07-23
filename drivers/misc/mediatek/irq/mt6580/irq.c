@@ -1144,9 +1144,6 @@ static atomic_t wdt_enter_fiq;
 static void fiq_isr(struct fiq_glue_handler *h, void *regs, void *svc_sp)
 {
 #ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
-	if (atomic_xchg(&wdt_enter_fiq, 1) != 0)
-		aee_fiq_ipi_cpu_stop(irqs_to_fiq[2].arg, regs, svc_sp);
-
 	(irqs_to_fiq[0].handler)(irqs_to_fiq[0].arg, regs, svc_sp);
 
 #else
