@@ -17,6 +17,15 @@
 #include "val_log.h"
 #include "drv_api.h"
 
+/* #define VCODEC_DEBUG */
+#ifdef VCODEC_DEBUG
+#undef MODULE_MFV_LOGD
+#define MODULE_MFV_LOGD MODULE_MFV_LOGE
+#else
+#undef MODULE_MFV_LOGD
+#define MODULE_MFV_LOGD(...)
+#endif
+
 /* ============================================================== */
 /* For Hybrid HW */
 /* spinlock : OalHWContextLock */
