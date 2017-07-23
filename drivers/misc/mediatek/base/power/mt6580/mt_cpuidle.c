@@ -63,7 +63,7 @@ static unsigned int md1_wdt_bit;
 #define INFRACFG_AO_NODE	"mediatek,INFRACFG_AO"
 #define GIC_NODE		"arm,cortex-a7-gic"
 #define KP_NODE			"mediatek,mt6580-keypad"
-#define CONSYS_NODE		"mediatek,CONSYS"
+#define CONSYS_NODE		"mediatek,mt6580-consys"
 #define AUXADC_NODE		"mediatek,mt6735-auxadc"
 #define MDCLDMA_NODE		"mediatek,ap_ccif0"
 
