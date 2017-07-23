@@ -25,7 +25,7 @@
 
 #define CMDQ_INIT_FREE_TASK_COUNT       (8)
 #define CMDQ_MAX_THREAD_COUNT           (16)
-#define CMDQ_MAX_HIGH_PRIORITY_THREAD_COUNT (6)	/* Thread that are high-priority (display threads) */
+#define CMDQ_MAX_HIGH_PRIORITY_THREAD_COUNT (7)	/* Thread that are high-priority (display threads) */
 #define CMDQ_MIN_SECURE_THREAD_ID		(-1)
 #define CMDQ_MAX_SECURE_THREAD_COUNT	(0)
 #define CMDQ_MAX_RECORD_COUNT           (1024)
@@ -69,11 +69,15 @@
 #endif
 
 typedef enum CMDQ_HW_THREAD_PRIORITY_ENUM {
-	CMDQ_THR_PRIO_NORMAL = 0,	/* nomral (lowest) priority */
-	CMDQ_THR_PRIO_DISPLAY_TRIGGER = 1,	/* trigger loop (enables display mutex) */
+	CMDQ_THR_PRIO_SUPERLOW = 0,	/* low priority monitor loop */
 
-	CMDQ_THR_PRIO_DISPLAY_ESD = 3,	/* display ESD check (every 2 secs) */
-	CMDQ_THR_PRIO_DISPLAY_CONFIG = 3,	/* display config (every frame) */
+	CMDQ_THR_PRIO_NORMAL = 1,	/* nomral priority */
+	CMDQ_THR_PRIO_DISPLAY_TRIGGER = 2,	/* trigger loop (enables display mutex) */
+
+	CMDQ_THR_PRIO_DISPLAY_ESD = 4,	/* display ESD check (every 2 secs) */
+	CMDQ_THR_PRIO_DISPLAY_CONFIG = 4,	/* display config (every frame) */
+
+	CMDQ_THR_PRIO_SUPERHIGH = 5,	/* High priority monitor loop */
 
 	CMDQ_THR_PRIO_MAX = 7,	/* maximum possible priority */
 } CMDQ_HW_THREAD_PRIORITY_ENUM;
