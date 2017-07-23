@@ -9,7 +9,7 @@
 
 #include "m4u.h"
 #include "m4u_reg.h"
-#include "m4u_pgtable.h"
+#include "../2.0/m4u_pgtable.h"
 
 #define M4UMSG(string, args...)	pr_err("[M4U] "string, ##args)
 #define M4UINFO(string, args...) pr_debug("[M4U] "string, ##args)
@@ -32,7 +32,7 @@
 #define MMProfileStart(...)
 #define MMP_Event unsigned int
 #else
-#include <linux/mmprofile.h>
+#include <mmprofile.h>
 
 extern void MMProfileEnable(int enable);
 extern void MMProfileStart(int start);
