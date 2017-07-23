@@ -3763,10 +3763,11 @@ int primary_display_resume(void)
 			       MMProfileFlagPulse, 1, 6);
 		DISPERR
 		    ("[POWER]Fatal error, we didn't trigger display path but it's already busy\n");
+		primary_display_diagnose();
 		ret = -1;
 		/* goto done; */
 	}
-	primary_display_diagnose();
+
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 7);
 	if (primary_display_is_video_mode()) {
