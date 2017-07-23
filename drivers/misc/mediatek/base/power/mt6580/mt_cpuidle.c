@@ -745,7 +745,7 @@ __naked void cpu_resume_wrapper(void)
 	register int val;
 
 #ifdef CONFIG_MTK_RAM_CONSOLE
-	reg_write(get_data_nommu(sleep_aee_rec_cpu_dormant), 0x401);
+	reg_write(get_data_nommu(sleep_aee_rec_cpu_dormant_pa), 0x401);
 #endif
 
 	/*
