@@ -3133,7 +3133,7 @@ static int msdc_ett_offline_to_driver(struct msdc_host *host)
 static void msdc_clksrc_onoff(struct msdc_host *host, u32 on)
 {
 	void __iomem *base = host->base;
-	u32 div, mode, hs400_src;
+	u32 div, mode, hs400_src = 0;
 
 	if (on) {
 		if (0 == host->core_clkon) {
@@ -5831,7 +5831,7 @@ static int msdc_app_cmd(struct mmc_host *mmc, struct msdc_host *host)
 
 static int msdc_lower_freq(struct msdc_host *host)
 {
-	u32 div, mode, hs400_src;
+	u32 div, mode, hs400_src = 0;
 	void __iomem *base = host->base;
 
 	ERR_MSG("need to lower freq");
