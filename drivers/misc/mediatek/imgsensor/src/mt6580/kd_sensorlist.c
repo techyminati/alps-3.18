@@ -105,7 +105,6 @@ struct regulator *regSubVCAMD = NULL;
 #define PK_INF(fmt, args...)     pr_debug(PFX "[%s] " fmt, __func__, ##args)
 
 #undef DEBUG_CAMERA_HW_K
-#define DEBUG_CAMERA_HW_K
 #ifdef DEBUG_CAMERA_HW_K
 #define PK_DBG PK_DBG_FUNC
 #define PK_ERR(fmt, arg...)         pr_err(PFX "[%s] " fmt, __func__, ##arg)
