@@ -323,6 +323,37 @@ int mt_get_gpio_mode_base(unsigned long pin)
 	return ((data >> (GPIO_MODE_BITS * bit)) & mask);
 
 }
+/*---------------------------------------------------------------------------*/
+int mt_set_gpio_slew_rate_base(unsigned long pin, unsigned long enable)
+{
+	return RSUCCESS;
+}
+
+/*---------------------------------------------------------------------------*/
+int mt_get_gpio_slew_rate_base(unsigned long pin)
+{
+	return RSUCCESS;
+}
+/*---------------------------------------------------------------------------*/
+int mt_set_gpio_pull_resistor_base(unsigned long pin, unsigned long resistors)
+{
+	return RSUCCESS;
+}
+/*---------------------------------------------------------------------------*/
+int mt_get_gpio_pull_resistor_base(unsigned long pin)
+{
+	return RSUCCESS;
+}
+/*---------------------------------------------------------------------------*/
+int mt_set_gpio_driving_base(unsigned long pin, unsigned long strength)
+{
+	return RSUCCESS;
+}
+/*---------------------------------------------------------------------------*/
+int mt_get_gpio_driving_base(unsigned long pin)
+{
+	return RSUCCESS;
+}
 
 /*---------------------------------------------------------------------------*/
 void fill_addr_reg_array(PIN_addr *addr, PIN_addr_t *addr_t)
