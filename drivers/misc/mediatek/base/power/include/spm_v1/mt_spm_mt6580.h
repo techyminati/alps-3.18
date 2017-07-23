@@ -256,7 +256,6 @@ extern u32 spm_irq_7;
 
 /* Wakeup Source*/
 #if 1
-#define SPM_WAKE_SRC_
 #define SPM_WAKE_SRC_LIST	{	\
 	SPM_WAKE_SRC(0, SPM_MERGE),	/* PCM timer, TWAM or CPU */	\
 	SPM_WAKE_SRC(1, AUDIO_REQ), /* new */	\
