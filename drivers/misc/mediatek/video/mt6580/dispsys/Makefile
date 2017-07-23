@@ -1,7 +1,8 @@
 # drivers/dispsys
 
-ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/ \
-             -I$(srctree)/drivers/misc/mediatek/videox/$(MTK_PLATFORM)/ \
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/include/ \
+             -I$(srctree)/drivers/misc/mediatek/video/common/ \
+             -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/videox \
              -I$(srctree)/drivers/misc/mediatek/cmdq/$(MTK_PLATFORM)/ \
              -I$(srctree)/drivers/misc/mediatek/cmdq/ \
              -I$(srctree)/drivers/misc/mediatek/base/power/mt6580/ \
@@ -36,8 +37,6 @@ obj-y += ddp_irq.o
 obj-y += ddp_info.o
 obj-y += ddp_color_format.o
 
-obj-y += data_rgb888_64x64.o
-obj-y += data_rgb888_64x64_golden.o
 
 obj-y += ddp_mmp.o
 obj-y += ddp_met.o

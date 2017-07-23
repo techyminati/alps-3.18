@@ -19,9 +19,10 @@ ifneq ($(CONFIG_MTK_FB), y)
 obj-y += mtkfb_dummy.o
 endif
 
-ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/     \
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/include/     \
+             -I$(srctree)/drivers/misc/mediatek/video/common/      \
+             -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/dispsys   \
              -I$(srctree)/drivers/misc/mediatek/sync/      \
-             -I$(srctree)/drivers/misc/mediatek/dispsys/$(MTK_PLATFORM)   \
              -I$(srctree)/drivers/misc/mediatek/m4u/$(MTK_PLATFORM)       \
              -I$(srctree)/drivers/misc/mediatek/cmdq/$(MTK_PLATFORM)      \
              -I$(srctree)/drivers/misc/mediatek/cmdq/      \
