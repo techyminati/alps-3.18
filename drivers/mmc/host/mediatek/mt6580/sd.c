@@ -1698,9 +1698,10 @@ static void msdc_sd_power(struct msdc_host *host, u32 on)
 			msdc_ldo_power(1, POWER_LDO_VMCH, VOL_3000, &g_msdc1_flash);
 		else
 			msdc_ldo_power(on, POWER_LDO_VMCH, VOL_3000, &g_msdc1_flash);
+		/* set VMC CAL for 3.3V case */
+		if (on)
+			pmic_config_interface(0x052a, g_msdc_vmc_cal_org, 0xf, 0x9);
 		msdc_ldo_power(on, POWER_LDO_VMC, VOL_3000, &g_msdc1_io);
-		/* if (on)
-			upmu_set_rg_vmc_184(0);  workarond for denali */
 		break;
 
 	default:
@@ -1713,9 +1714,10 @@ static void msdc_sd_power_switch(struct msdc_host *host, u32 on)
 {
 	switch (host->id) {
 	case 1:
+		/* trim VMC CAL shift for 1.8V case */
+		if (on)
+			pmic_config_interface(0x052a, g_msdc_vmc_cal_shift, 0xf, 0x9);
 		msdc_ldo_power(on, POWER_LDO_VMC, VOL_1800, &g_msdc1_io);
-		/* if (on)
-			upmu_set_rg_vmc_184(1);  workarond for denali */
 		msdc_set_tdrdsel(host, 1);
 		msdc_set_driving(host, host->hw, 1);
 		break;
@@ -9165,6 +9167,24 @@ static int msdc_drv_probe(struct platform_device *pdev)
 				pr_debug("msdc1 EINT get irq # %d\n", cd_irq);
 		} else
 			pr_debug("can't find msdc1_ins-eint compatible node\n");
+	}
+
+	/* get VMC CAL */
+	if ((pdev->id == 1) && (host->hw->host_function == MSDC_SD)) {
+		pmic_read_interface(0x052a, &g_msdc_vmc_cal_org, 0xf, 0x9);
+
+		/* shift CAL result +40mV */
+		if ((g_msdc_vmc_cal_org & 0x7) >= 2)
+			g_msdc_vmc_cal_shift = g_msdc_vmc_cal_org - 2;
+		else if (g_msdc_vmc_cal_org & 0x8) {
+			g_msdc_vmc_cal_shift = 0x8; /* max value */
+		} else {
+			if (g_msdc_vmc_cal_org == 0x0)
+				g_msdc_vmc_cal_shift = 0xe;
+			else if (g_msdc_vmc_cal_org == 0x1)
+				g_msdc_vmc_cal_shift = 0xf;
+		}
+		pr_err("msdc1 VMC CAL org = 0x%x, shift = 0x%x\n", g_msdc_vmc_cal_org, g_msdc_vmc_cal_shift);
 	}
 
 	/* Set host parameters to mmc */
