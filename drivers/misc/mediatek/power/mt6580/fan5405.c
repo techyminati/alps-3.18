@@ -21,7 +21,6 @@
 #include <linux/workqueue.h>
 
 #include <mt-plat/charging.h>
-#include <mt-plat/mt_typedefs.h>
 #include <mt-plat/mt_gpio.h>
 
 #define fan5405_SLAVE_ADDR_WRITE   0xD4
