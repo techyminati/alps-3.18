@@ -203,13 +203,13 @@ int get_hw_ocv(void)
 #if defined(SWCHR_POWER_PATH)
 	adc_result_reg = pmic_get_register_value(PMIC_RG_ADC_OUT_WAKEUP_SWCHR);
 	adc_result = (adc_result_reg * r_val_temp * VOLTAGE_FULL_RANGE) / ADC_PRECISE;
-	bm_print(BM_LOG_CRTI, "[oam] get_hw_ocv (swchr) : adc_result_reg=%d, adc_result=%d\n",
-		 adc_result_reg, adc_result);
+	bm_err("[oam] get_hw_ocv (swchr) : adc_result_reg=%d, adc_result=%d, start_sel=%d\n",
+		 adc_result_reg, adc_result, pmic_get_register_value(PMIC_STRUP_AUXADC_START_SEL));
 #else
 	adc_result_reg = pmic_get_register_value(PMIC_RG_ADC_OUT_WAKEUP_PCHR);
 	adc_result = (adc_result_reg * r_val_temp * VOLTAGE_FULL_RANGE) / ADC_PRECISE;
-	bm_print(BM_LOG_CRTI, "[oam] get_hw_ocv (pchr) : adc_result_reg=%d, adc_result=%d\n",
-		 adc_result_reg, adc_result);
+	bm_err("[oam] get_hw_ocv (pchr) : adc_result_reg=%d, adc_result=%d, start_sel=%d\n",
+		 adc_result_reg, adc_result, pmic_get_register_value(PMIC_STRUP_AUXADC_START_SEL));
 #endif
 
 	adc_result += g_hw_ocv_tune_value;
