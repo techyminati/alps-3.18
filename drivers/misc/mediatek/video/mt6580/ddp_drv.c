@@ -300,7 +300,7 @@ static int disp_probe(struct platform_device *pdev)
 
 	/* power on MMSYS for early porting */
 #ifdef CONFIG_MTK_FPGA
-	pr_debug("[DISP Probe] power MMSYS:0x%lx,0x%lx\n", DISP_REG_CONFIG_MMSYS_CG_CLR0,
+	DISPMSG("[DISP Probe] power MMSYS:0x%lx,0x%lx\n", DISP_REG_CONFIG_MMSYS_CG_CLR0,
 	       DISP_REG_CONFIG_MMSYS_CG_CLR1);
 	DISP_REG_SET(NULL, DISP_REG_CONFIG_MMSYS_CG_CLR0, 0xFFFFFFFF);
 	DISP_REG_SET(NULL, DISP_REG_CONFIG_MMSYS_CG_CLR1, 0xFFFFFFFF);
@@ -338,7 +338,7 @@ static void disp_shutdown(struct platform_device *pdev)
 /* PM suspend */
 static int disp_suspend(struct platform_device *pdev, pm_message_t mesg)
 {
-	pr_debug("\n\n==== DISP suspend is called ====\n");
+	DISPMSG("\n\n==== DISP suspend is called ====\n");
 
 	return 0;
 }
@@ -346,7 +346,7 @@ static int disp_suspend(struct platform_device *pdev, pm_message_t mesg)
 /* PM resume */
 static int disp_resume(struct platform_device *pdev)
 {
-	pr_debug("\n\n==== DISP resume is called ====\n");
+	DISPMSG("\n\n==== DISP resume is called ====\n");
 
 	return 0;
 }

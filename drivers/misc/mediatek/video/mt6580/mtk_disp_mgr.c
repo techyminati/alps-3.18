@@ -484,45 +484,7 @@ int _ioctl_trigger_session(unsigned long arg)
 	return ret;
 }
 
-/* create fence for present fence */
-#if 0				/* use separate timeline */
-int _ioctl_prepare_present_fence(unsigned long arg)
-{
-	int ret = 0;
-	void __user *argp = (void __user *)arg;
-	struct fence_data data;
-	static struct sw_sync_timeline *timeline;
-	static unsigned int fence_idx;
 
-	if (timeline == NULL) {
-		timeline = timeline_create("present_fence_timeline");
-		if (timeline) {
-			DISPMSG("create present_fence_timeline success: %p\n",
-				timeline);
-		} else {
-			DISPERR("create present_fence_timeline failed!\n");
-		}
-	}
-	/* create fence */
-	data.fence = MTK_FB_INVALID_FENCE_FD;
-	data.value = ++fence_idx;
-	ret = fence_create(timeline, &data);
-	if (ret != 0) {
-		DISPPR_ERROR("%s%d,layer%d create Fence Object failed!\n",
-			     disp_session_mode_spy(session_id),
-			     DISP_SESSION_DEV(session_id), timeline_id);
-		ret = -EFAULT;
-	}
-
-	if (copy_to_user(argp, &data, sizeof(struct fence_data))) {
-		pr_debug("[FB Driver]: copy_to_user failed! line:%d\n",
-		       __LINE__);
-		ret = -EFAULT;
-	}
-
-	return ret;
-}
-#else
 extern disp_sync_info * _get_sync_info(unsigned int session_id,
 				      unsigned int timeline_id);
 int _ioctl_prepare_present_fence(unsigned long arg)
@@ -592,8 +554,6 @@ int _ioctl_prepare_present_fence(unsigned long arg)
 
 	return ret;
 }
-
-#endif
 
 int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 {
@@ -840,14 +800,12 @@ static int _sync_convert_fb_layer_to_ovl_struct(unsigned int session_id,
 	dst->src_alpha = src->src_alpha;
 	dst->dst_alpha = src->dst_alpha;
 
-#if 1
 	if (DISP_FORMAT_XRGB8888 == src->src_fmt ||
 	    DISP_FORMAT_XBGR8888 == src->src_fmt ||
 	    DISP_FORMAT_RGBX8888 == src->src_fmt ||
 	    DISP_FORMAT_BGRX8888 == src->src_fmt) {
 		dst->aen = false;
 	}
-#endif
 
 	/* set src width, src height */
 	dst->src_x = src->src_offset_x;
@@ -1008,14 +966,13 @@ static int _sync_convert_fb_layer_to_disp_input(unsigned int session_id,
 	dst->sur_aen = src->sur_aen;
 	dst->src_alpha = src->src_alpha;
 	dst->dst_alpha = src->dst_alpha;
-#if 1
+
 	if (DISP_FORMAT_ARGB8888 == src->src_fmt
 	    || DISP_FORMAT_ABGR8888 == src->src_fmt
 	    || DISP_FORMAT_RGBA8888 == src->src_fmt
 	    || DISP_FORMAT_BGRA8888 == src->src_fmt) {
 		dst->aen = true;
 	}
-#endif
 
 	/* set src width, src height */
 	dst->src_x = src->src_offset_x;
@@ -1113,7 +1070,7 @@ static int set_memory_buffer(disp_session_input_config *input)
 						     &(input->config[i]),
 						     &ovl2mem_in_cached_config
 						     [layer_id], dst_mva);
-		/* /disp_sync_put_cached_layer_info(session_id, layer_id, &input->config[i], get_ovl2mem_ticket()); */
+
 		mtkfb_update_buf_ticket(session_id, layer_id,
 					input->config[i].next_buff_idx,
 					get_ovl2mem_ticket());
@@ -1145,12 +1102,7 @@ static int set_memory_buffer(disp_session_input_config *input)
 
 	return 0;
 }
-/*
-static int set_external_buffer(disp_session_input_config *input)
-{
-	return 0;
-}
-*/
+
 static int set_primary_buffer(disp_session_input_config *input)
 {
 	int i = 0;
@@ -1563,7 +1515,7 @@ int _ioctl_get_is_driver_suspend(unsigned long arg)
 	unsigned int is_suspend = 0;
 
 	is_suspend = primary_display_is_sleepd();
-	pr_debug("ioctl_get_is_driver_suspend, is_suspend=%d\n", is_suspend);
+	DISPDBG("ioctl_get_is_driver_suspend, is_suspend=%d\n", is_suspend);
 	if (copy_to_user(argp, &is_suspend, sizeof(int))) {
 		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;
@@ -1684,29 +1636,17 @@ const char *_session_ioctl_spy(unsigned int cmd)
 {
 	switch (cmd) {
 	case DISP_IOCTL_CREATE_SESSION:
-		{
-			return "DISP_IOCTL_CREATE_SESSION";
-		}
+		return "DISP_IOCTL_CREATE_SESSION";
 	case DISP_IOCTL_DESTROY_SESSION:
-		{
-			return "DISP_IOCTL_DESTROY_SESSION";
-		}
+		return "DISP_IOCTL_DESTROY_SESSION";
 	case DISP_IOCTL_TRIGGER_SESSION:
-		{
-			return "DISP_IOCTL_TRIGGER_SESSION";
-		}
+		return "DISP_IOCTL_TRIGGER_SESSION";
 	case DISP_IOCTL_SET_INPUT_BUFFER:
-		{
-			return "DISP_IOCTL_SET_INPUT_BUFFER";
-		}
+		return "DISP_IOCTL_SET_INPUT_BUFFER";
 	case DISP_IOCTL_PREPARE_INPUT_BUFFER:
-		{
-			return "DISP_IOCTL_PREPARE_INPUT_BUFFER";
-		}
+		return "DISP_IOCTL_PREPARE_INPUT_BUFFER";
 	case DISP_IOCTL_WAIT_FOR_VSYNC:
-		{
-			return "DISP_IOCL_WAIT_FOR_VSYNC";
-		}
+		return "DISP_IOCL_WAIT_FOR_VSYNC";
 	case DISP_IOCTL_GET_SESSION_INFO:
 		return "DISP_IOCTL_GET_SESSION_INFO";
 	case DISP_IOCTL_AAL_EVENTCTL:
@@ -1746,9 +1686,7 @@ const char *_session_ioctl_spy(unsigned int cmd)
 	case DISP_IOCTL_GET_DISPLAY_CAPS:
 		return "DISP_IOCTL_GET_DISPLAY_CAPS";
 	default:
-		{
-			return "unknown";
-		}
+		return "unknown";
 	}
 }
 
@@ -1756,7 +1694,7 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = -1;
 
-	/* DISPMSG("mtk_disp_mgr_ioctl, cmd=%s, arg=0x%08x\n", _session_ioctl_spy(cmd), arg); */
+	DISPDBG("mtk_disp_mgr_ioctl, cmd=%s, arg=0x%08x\n", _session_ioctl_spy(cmd), arg);
 
 	switch (cmd) {
 	case DISP_IOCTL_CREATE_SESSION:
@@ -1773,7 +1711,6 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		}
 	case DISP_IOCTL_GET_PRESENT_FENCE:
 		{
-			/* return _ioctl_prepare_buffer(arg, PREPARE_PRESENT_FENCE); */
 			return _ioctl_prepare_present_fence(arg);
 		}
 	case DISP_IOCTL_PREPARE_INPUT_BUFFER:
@@ -1853,10 +1790,9 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		}
 	default:
 		{
-			DISPERR
-			    ("[session]ioctl not supported, cmd nr=0x%08x, cmd size=0x%08x\n",
-			     (unsigned int)_IOC_NR(cmd),
-			     (unsigned int)_IOC_SIZE(cmd));
+			DISPERR("[session]ioctl not supported, cmd nr=0x%08x, cmd size=0x%08x\n",
+				(unsigned int)_IOC_NR(cmd),
+				(unsigned int)_IOC_SIZE(cmd));
 		}
 	}
 
@@ -1890,7 +1826,6 @@ static const struct file_operations mtk_disp_mgr_fops = {
 #ifdef CONFIG_COMPAT
 	.compat_ioctl = mtk_disp_mgr_compat_ioctl,
 #endif
-
 	.open = mtk_disp_mgr_open,
 	.release = mtk_disp_mgr_release,
 	.flush = mtk_disp_mgr_flush,
@@ -1902,7 +1837,7 @@ static int mtk_disp_mgr_probe(struct platform_device *pdev)
 	struct class_device;
 	struct class_device *class_dev = NULL;
 
-	pr_debug("mtk_disp_mgr_probe called!\n");
+	DISPMSG("mtk_disp_mgr_probe called!\n");
 
 	if (alloc_chrdev_region(&mtk_disp_mgr_devno, 0, 1, DISP_SESSION_DEVICE))
 		return -EFAULT;

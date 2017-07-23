@@ -396,9 +396,6 @@ static void mmsys_config_dump_reg(void)
 	DISPMSG("(0x890)MM_DUMMY        =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_DUMMY));
 	DISPMSG("(0x8a0)DISP_VALID_0    =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_DISP_DL_VALID_0));
 	DISPMSG("(0x8a8)DISP_READY_0    =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_DISP_DL_READY_0));
-	/* DDPMSG("(0xc08)C08             =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_C08                  )); */
-	/* DDPMSG("(0x40 )C09             =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_C09                  )); */
-	/* DDPMSG("(0x44 )C10             =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_C10                  )); */
 }
 
 /* ------ clock:
@@ -420,7 +417,6 @@ ovl0 -> ovl0_mout_ready=1 means engines after ovl_mout are ready for receiving d
 ovl0 -> ovl0_mout_valid=1 means engines before ovl0_mout is OK,
 	ovl0_mout_valid=0 means ovl can not transfer data to ovl0_mout, means ovl0 or before engines are not ready.
 */
-
 static void mmsys_config_dump_analysis(void)
 {
 	unsigned int i = 0;
@@ -443,11 +439,6 @@ static void mmsys_config_dump_analysis(void)
 	if ((DISP_REG_GET(DISP_REG_CLK_CFG_0_MM_CLK) >> 31) & 0x1)
 		DISPERR("mmsys clock abnormal!!\n");
 
-#if 0
-	DISPDMP("PLL clock=0x%x\n", DISP_REG_GET(DISP_REG_VENCPLL_CON0));
-	if (!(DISP_REG_GET(DISP_REG_VENCPLL_CON0) & 0x1))
-		DISPERR("PLL clock abnormal!!\n");
-#endif
 	reg = DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0);
 
 	for (i = 0; i <= 1; i++) {
@@ -464,51 +455,6 @@ static void mmsys_config_dump_analysis(void)
 			strcat(clock_on, ddp_clock_1(i));
 	}
 	DISPDMP("clock on modules:%s\n", clock_on);
-#if 0
-	DISPDMP("clock_ef setting:%u,%u\n",
-		DISP_REG_GET(DISP_REG_CONFIG_C09), DISP_REG_GET(DISP_REG_CONFIG_C10));
-#endif
-
-#if 0
-	DISPDMP("clock_mm setting:%u\n", DISP_REG_GET(DISP_REG_CONFIG_C11));
-	if (DISP_REG_GET(DISP_REG_CONFIG_C11) & 0xff000000 != 0xff000000) {
-		DISPDMP("error, MM clock bit 24~bit31 should be 1, but real value=0x%x",
-			DISP_REG_GET(DISP_REG_CONFIG_C11));
-	}
-#endif
-#if 0
-	if (((DISP_REG_GET(DISP_REG_CONFIG_C09) >> 7) & 0x7) == 5 &&
-	    ((DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_0) & 0xfff) > 1200 ||
-	     (DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_1) & 0xfffff) > 1920)) {
-		DISPERR("check clock1 setting error:(120,192),(%d, %d)\n",
-		       DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_0) & 0xfff,
-		       DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_1) & 0xfffff);
-	} else if (((DISP_REG_GET(DISP_REG_CONFIG_C09) >> 8) & 0x3) == 3 &&
-		   ((DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_0) & 0xfff) > 800 ||
-		    (DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_1) & 0xfffff) > 1280)) {
-		DISPERR("check clock1 setting error:(80,128),(%d, %d)\n",
-		       DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_0) & 0xfff,
-		       DISP_REG_GET(DISP_REG_RDMA_SIZE_CON_1) & 0xfffff);
-	}
-	if (((DISP_REG_GET(DISP_REG_CONFIG_C10) >> 7) & 0x7) == 5 &&
-	    ((DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) & 0xfff) > 1200 ||
-	     ((DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) >> 16) & 0xfff) >
-	     1920)) {
-		DISPERR("check clock2 setting error:(120,192),(%d, %d)\n",
-		       DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) & 0xfff,
-		       (DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) >> 16) &
-		       0xfff);
-	} else if (((DISP_REG_GET(DISP_REG_CONFIG_C10) >> 8) & 0x3) == 3
-		   && ((DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) & 0xfff) >
-		       800
-		       || ((DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) >> 16) &
-			   0xfff) > 1280)) {
-		DISPERR("check clock2 setting error:(80,128),(%d, %d)\n",
-		       DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) & 0xfff,
-		       (DISP_REG_GET(DISP_REG_OVL_ROI_SIZE + DISP_OVL_INDEX_OFFSET * 1) >> 16) &
-		       0xfff);
-	}
-#endif
 	DISPDMP("valid0=0x%x, valid1=0x%x, ready0=0x%x, ready1=0x%x, greq=0%x\n",
 		valid0, valid1, ready0, ready1, greq);
 	for (i = 0; i < 32; i++) {
@@ -786,23 +732,15 @@ static void dsi_dump_reg(DISP_MODULE_ENUM module)
 	if (DISP_MODULE_DSI0) {
 		DISPDMP("==DISP DSI0 REGS==\n");
 		for (i = 0; i < 25 * 16; i += 16) {
-			pr_debug("DSI0+%04x : 0x%08x  0x%08x  0x%08x  0x%08x\n", i,
+			DISPDMP("DSI0+%04x : 0x%08x  0x%08x  0x%08x  0x%08x\n", i,
 			       INREG32(DISPSYS_DSI0_BASE + i), INREG32(DISPSYS_DSI0_BASE + i + 0x4),
 			       INREG32(DISPSYS_DSI0_BASE + i + 0x8),
 			       INREG32(DISPSYS_DSI0_BASE + i + 0xc));
 		}
-		pr_debug("DSI0 CMDQ+0x200 : 0x%08x  0x%08x  0x%08x  0x%08x\n",
+		DISPDMP("DSI0 CMDQ+0x200 : 0x%08x  0x%08x  0x%08x  0x%08x\n",
 		       INREG32(DISPSYS_DSI0_BASE + 0x200), INREG32(DISPSYS_DSI0_BASE + 0x200 + 0x4),
 		       INREG32(DISPSYS_DSI0_BASE + 0x200 + 0x8),
 		       INREG32(DISPSYS_DSI0_BASE + 0x200 + 0xc));
-#if 0
-		DISPDMP("==DISP MIPI REGS==\n");
-		for (i = 0; i < 10 * 16; i += 16) {
-			DISPDMP("MIPI+%04x : 0x%08x  0x%08x  0x%08x  0x%08x\n", i,
-			       INREG32(MIPITX_BASE + i), INREG32(MIPITX_BASE + i + 0x4),
-			       INREG32(MIPITX_BASE + i + 0x8), INREG32(MIPITX_BASE + i + 0xc));
-		}
-#endif
 	}
 }
 
@@ -810,10 +748,6 @@ static void dpi_dump_analysis(void)
 {
 	DISPDMP("==DISP DPI ANALYSIS==\n");
 	DISPDMP("DPI clock=0x%x\n", DISP_REG_GET(DISP_REG_CLK_CFG_6_DPI));
-#if 0
-	if ((DISP_REG_GET(DISP_REG_VENCPLL_CON0) >> 7) & 0x1)
-		DISPDMP("DPI clock abnormal!!\n");
-#endif
 	DISPDMP("DPI  clock_clear=%d\n", (DISP_REG_GET(DISP_REG_CLK_CFG_6_CLR) >> 7) & 0x1);
 }
 

@@ -27,48 +27,35 @@
 #include <asm/cacheflush.h>
 #include <linux/module.h>
 
-/* /common part */
 #define DAL_BPP             (2)
 #define DAL_WIDTH           (DISP_GetScreenWidth())
 #define DAL_HEIGHT          (DISP_GetScreenHeight())
 
 #ifdef CONFIG_MTK_FB_SUPPORT_ASSERTION_LAYER
-
 #include "mtkfb_console.h"
-
 /* --------------------------------------------------------------------------- */
 #define DAL_FORMAT          (DISP_FORMAT_RGB565)
 #define DAL_BG_COLOR        (dal_bg_color)
 #define DAL_FG_COLOR        (dal_fg_color)
-
 #define RGB888_To_RGB565(x) ((((x) & 0xF80000) >> 8) |                      \
 			     (((x) & 0x00FC00) >> 5) |                      \
 			     (((x) & 0x0000F8) >> 3))
-
 #define MAKE_TWO_RGB565_COLOR(high, low)  (((low) << 16) | (high))
-
 #define DAL_LOG(fmt, arg...)	pr_debug("DISP/DAL " fmt, ##arg)
 /* --------------------------------------------------------------------------- */
-
 static MFC_HANDLE mfc_handle;
 static void *dal_fb_addr;
 static unsigned long dal_fb_pa;
-
-/* static BOOL  dal_shown   = FALSE; */
 static unsigned int dal_fg_color = RGB888_To_RGB565(DAL_COLOR_WHITE);
 static unsigned int dal_bg_color = RGB888_To_RGB565(DAL_COLOR_RED);
 static char dal_print_buffer[1024];
 bool dal_shown = false;
 unsigned int isAEEEnabled = 0;
-/* extern OVL_CONFIG_STRUCT cached_layer_config[DDP_OVL_LAYER_MUN]; */
-
-/* DECLARE_MUTEX(dal_sem); */
 DEFINE_SEMAPHORE(dal_sem);
 /* --------------------------------------------------------------------------- */
 
 uint32_t DAL_GetLayerSize(void)
 {
-	/* xuecheng, avoid lcdc read buffersize+1 issue */
 	return DAL_WIDTH * DAL_HEIGHT * DAL_BPP + 4096;
 }
 
@@ -106,19 +93,18 @@ DAL_STATUS DAL_Init(unsigned long layerVA, unsigned long layerPA)
 {
 	MFC_STATUS ret;
 
-	pr_debug("%s, layerVA=0x%lx, layerPA=0x%lx\n", __func__, layerVA, layerPA);
+	DISPMSG("%s, layerVA=0x%lx, layerPA=0x%lx\n", __func__, layerVA, layerPA);
 
 	dal_fb_addr = (void *)layerVA;
 	dal_fb_pa = layerPA;
 
 	ret = MFC_Open(&mfc_handle, dal_fb_addr, DAL_WIDTH, DAL_HEIGHT, DAL_BPP, DAL_FG_COLOR, DAL_BG_COLOR);
 	if (MFC_STATUS_OK != ret) {
-		pr_debug("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
+		DISPMSG("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
 			__func__, __LINE__, ret);
 		return ret;
 	}
 
-	/* DAL_Clean(); */
 	DAL_SetScreenColor(DAL_COLOR_RED);
 
 	return DAL_STATUS_OK;
@@ -133,7 +119,7 @@ DAL_STATUS DAL_SetColor(unsigned int fgColor, unsigned int bgColor)
 		return DAL_STATUS_NOT_READY;
 
 	if (down_interruptible(&dal_sem)) {
-		pr_debug("DISP/DAL " "Can't get semaphore in %s()\n", __func__);
+		DISPMSG("DISP/DAL " "Can't get semaphore in %s()\n", __func__);
 		return DAL_STATUS_LOCK_FAIL;
 	}
 
@@ -142,7 +128,7 @@ DAL_STATUS DAL_SetColor(unsigned int fgColor, unsigned int bgColor)
 
 	ret = MFC_SetColor(mfc_handle, dal_fg_color, dal_bg_color);
 	if (MFC_STATUS_OK != ret) {
-		pr_debug("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
+		DISPMSG("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
 			__func__, __LINE__, ret);
 		return ret;
 	}
@@ -155,46 +141,6 @@ EXPORT_SYMBOL(DAL_SetColor);
 
 DAL_STATUS DAL_Dynamic_Change_FB_Layer(unsigned int isAEEEnabled)
 {
-#if 0
-	static int ui_layer_tdshp;
-
-	pr_debug("[DDP] DAL_Dynamic_Change_FB_Layer, isAEEEnabled=%d\n", isAEEEnabled);
-
-	if (DISP_DEFAULT_UI_LAYER_ID == DISP_CHANGED_UI_LAYER_ID) {
-		pr_debug("[DDP] DAL_Dynamic_Change_FB_Layer, no dynamic switch\n");
-		return DAL_STATUS_OK;
-	}
-
-	if (isAEEEnabled == 1) {
-		/* change ui layer from DISP_DEFAULT_UI_LAYER_ID to DISP_CHANGED_UI_LAYER_ID */
-		memcpy((void *)(&cached_layer_config[DISP_CHANGED_UI_LAYER_ID]),
-		       (void *)(&cached_layer_config[DISP_DEFAULT_UI_LAYER_ID]),
-		       sizeof(OVL_CONFIG_STRUCT));
-		ui_layer_tdshp =
-		    cached_layer_config[DISP_DEFAULT_UI_LAYER_ID].isTdshp;
-		cached_layer_config[DISP_DEFAULT_UI_LAYER_ID].isTdshp = 0;
-		/* change global variable value, else error-check will find layer 2, 3 enable tdshp together */
-		disp_path_change_tdshp_status(DISP_DEFAULT_UI_LAYER_ID, 0);
-		FB_LAYER = DISP_CHANGED_UI_LAYER_ID;
-	} else {
-		memcpy((void *)(&cached_layer_config[DISP_DEFAULT_UI_LAYER_ID]),
-		       (void *)(&cached_layer_config[DISP_CHANGED_UI_LAYER_ID]),
-		       sizeof(OVL_CONFIG_STRUCT));
-		cached_layer_config[DISP_DEFAULT_UI_LAYER_ID].isTdshp =
-		    ui_layer_tdshp;
-		FB_LAYER = DISP_DEFAULT_UI_LAYER_ID;
-		memset((void *)(&cached_layer_config[DISP_CHANGED_UI_LAYER_ID]),
-		       0, sizeof(OVL_CONFIG_STRUCT));
-	}
-
-	/* no matter memcpy or memset, layer ID should not be changed */
-	cached_layer_config[DISP_DEFAULT_UI_LAYER_ID].layer =
-	    DISP_DEFAULT_UI_LAYER_ID;
-	cached_layer_config[DISP_CHANGED_UI_LAYER_ID].layer =
-	    DISP_CHANGED_UI_LAYER_ID;
-	cached_layer_config[DISP_DEFAULT_UI_LAYER_ID].isDirty = 1;
-	cached_layer_config[DISP_CHANGED_UI_LAYER_ID].isDirty = 1;
-#endif
 	return DAL_STATUS_OK;
 }
 
@@ -210,20 +156,17 @@ DAL_STATUS DAL_Clean(void)
 	if (NULL == mfc_handle)
 		return DAL_STATUS_NOT_READY;
 
-	/* if (LCD_STATE_POWER_OFF == LCD_GetState()) */
-		/* return DAL_STATUS_LCD_IN_SUSPEND; */
-
 	MMProfileLogEx(ddp_mmp_get_events()->dal_clean, MMProfileFlagStart, 0,
 		       0);
 
 	if (down_interruptible(&dal_sem)) {
-		pr_debug("DISP/DAL " "Can't get semaphore in %s()\n", __func__);
+		DISPMSG("DISP/DAL " "Can't get semaphore in %s()\n", __func__);
 		return DAL_STATUS_LOCK_FAIL;
 	}
 
 	r = MFC_ResetCursor(mfc_handle);
 	if (MFC_STATUS_OK != r) {
-		pr_debug("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
+		DISPMSG("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
 			__func__, __LINE__, r);
 		return r;
 	}
@@ -284,7 +227,7 @@ int is_DAL_Enabled(void)
 	int ret = 0;
 
 	if (down_interruptible(&dal_sem)) {
-		pr_debug("DISP/DAL " "Can't get semaphore in %s()\n", __func__);
+		DISPMSG("DISP/DAL " "Can't get semaphore in %s()\n", __func__);
 		return DAL_STATUS_LOCK_FAIL;
 	}
 
@@ -319,14 +262,14 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 	MMProfileLogEx(ddp_mmp_get_events()->dal_printf, MMProfileFlagStart, 0,
 		       0);
 	if (down_interruptible(&dal_sem)) {
-		pr_debug("DISP/DAL " "Can't get semaphore in %s()\n",  __func__);
+		DISPMSG("DISP/DAL " "Can't get semaphore in %s()\n",  __func__);
 		return DAL_STATUS_LOCK_FAIL;
 	}
 
 	if (isAEEEnabled == 0) {
 		MFC_STATUS r;
 
-		pr_debug("[DDP] isAEEEnabled from 0 to 1, ASSERT_LAYER=%d, dal_fb_pa %lx\n",
+		DISPMSG("[DDP] isAEEEnabled from 0 to 1, ASSERT_LAYER=%d, dal_fb_pa %lx\n",
 			primary_display_get_option("ASSERT_LAYER"), dal_fb_pa);
 
 		isAEEEnabled = 1;
@@ -335,7 +278,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 		r = MFC_Open(&mfc_handle, dal_fb_addr, DAL_WIDTH, DAL_HEIGHT,
 					  DAL_BPP, DAL_FG_COLOR, DAL_BG_COLOR);
 		if (MFC_STATUS_OK != r) {
-			pr_debug("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
+			DISPMSG("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
 				__func__, __LINE__, r);
 			return r;
 		}
@@ -373,7 +316,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 
 	r = MFC_Print(mfc_handle, dal_print_buffer);
 	if (MFC_STATUS_OK != r) {
-		pr_debug("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
+		DISPMSG("DISP/DAL: Warning: call MFC_XXX function failed in %s(), line: %d, ret: %x\n",
 			__func__, __LINE__, r);
 		return r;
 	}
@@ -431,7 +374,7 @@ EXPORT_SYMBOL(DAL_SetColor);
 
 DAL_STATUS DAL_Clean(void)
 {
-	pr_debug("[MTKFB_DAL] DAL_Clean is not implemented\n");
+	DISPMSG("[MTKFB_DAL] DAL_Clean is not implemented\n");
 	return DAL_STATUS_OK;
 }
 EXPORT_SYMBOL(DAL_Clean);
@@ -439,7 +382,7 @@ EXPORT_SYMBOL(DAL_Clean);
 DAL_STATUS DAL_Printf(const char *fmt, ...)
 {
 	NOT_REFERENCED(fmt);
-	pr_debug("[MTKFB_DAL] DAL_Printf is not implemented\n");
+	DISPMSG("[MTKFB_DAL] DAL_Printf is not implemented\n");
 	return DAL_STATUS_OK;
 }
 EXPORT_SYMBOL(DAL_Printf);
@@ -454,9 +397,5 @@ DAL_STATUS DAL_SetScreenColor(DAL_COLOR color)
 	return DAL_STATUS_OK;
 }
 EXPORT_SYMBOL(DAL_SetScreenColor);
-#endif				/* CONFIG_MTK_FB_SUPPORT_ASSERTION_LAYER */
+#endif	/* CONFIG_MTK_FB_SUPPORT_ASSERTION_LAYER */
 
-#ifdef DAL_LOWMEMORY_ASSERT
-
-/* EXPORT_SYMBOL(DAL_LowMemoryOff); */
-#endif

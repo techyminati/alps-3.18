@@ -270,7 +270,7 @@ MFC_STATUS MFC_SetColor(MFC_HANDLE handle,
 		return MFC_STATUS_INVALID_ARGUMENT;
 
 	if (down_interruptible(&ctxt->sem)) {
-		pr_debug("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
+		pr_err("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
 		BUG();
 		return MFC_STATUS_LOCK_FAIL;
 	}
@@ -291,7 +291,7 @@ MFC_STATUS MFC_ResetCursor(MFC_HANDLE handle)
 		return MFC_STATUS_INVALID_ARGUMENT;
 
 	if (down_interruptible(&ctxt->sem)) {
-		pr_debug("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
+		pr_err("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
 		BUG();
 		return MFC_STATUS_LOCK_FAIL;
 	}
@@ -311,7 +311,7 @@ MFC_STATUS MFC_Print(MFC_HANDLE handle, const char *str)
 		return MFC_STATUS_INVALID_ARGUMENT;
 
 	if (down_interruptible(&ctxt->sem)) {
-		pr_debug("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
+		pr_err("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
 		BUG();
 		return MFC_STATUS_LOCK_FAIL;
 	}
@@ -337,7 +337,7 @@ MFC_STATUS MFC_SetMem(MFC_HANDLE handle, const char *str, uint32_t color)
 		return MFC_STATUS_INVALID_ARGUMENT;
 
 	if (down_interruptible(&ctxt->sem)) {
-		pr_debug("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
+		pr_err("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
 		BUG();
 		return MFC_STATUS_LOCK_FAIL;
 	}
@@ -367,7 +367,7 @@ MFC_STATUS MFC_LowMemory_Printf(MFC_HANDLE handle, const char *str,
 		return MFC_STATUS_INVALID_ARGUMENT;
 
 	if (down_interruptible(&ctxt->sem)) {
-		pr_debug("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
+		pr_err("[MFC] ERROR: Can't get semaphore in %s()\n", __func__);
 		BUG();
 		return MFC_STATUS_LOCK_FAIL;
 	}

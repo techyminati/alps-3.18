@@ -685,7 +685,7 @@ void mtkfb_process_dbg_opt(const char *opt)
 			pr_err("DISP/%s: errno %d\n", __func__, ret);
 
 		if (addr) {
-			pr_debug("Read register 0x%lx: 0x%08x\n", addr,
+			DISPMSG("Read register 0x%lx: 0x%08x\n", addr,
 			       INREG32(addr));
 		} else {
 			return;
@@ -796,7 +796,7 @@ void mtkfb_process_dbg_opt(const char *opt)
 				gCapturePriLayerDownX = 20;
 			if (gCapturePriLayerDownY == 0)
 				gCapturePriLayerDownY = 20;
-			pr_debug("dump_layer En %d DownX %d DownY %d,Num %d",
+			DISPMSG("dump_layer En %d DownX %d DownY %d,Num %d",
 			       gCapturePriLayerEnable, gCapturePriLayerDownX,
 			       gCapturePriLayerDownY, gCapturePriLayerNum);
 
@@ -804,7 +804,7 @@ void mtkfb_process_dbg_opt(const char *opt)
 			gCapturePriLayerEnable = 0;
 			gCaptureWdmaLayerEnable = 0;
 			gCapturePriLayerNum = OVL_LAYER_NUM;
-			pr_debug("dump_layer En %d\n", gCapturePriLayerEnable);
+			DISPMSG("dump_layer En %d\n", gCapturePriLayerEnable);
 		}
 	} else if (0 == strncmp(opt, "bkl:", 4)) {
 		char *p = (char *)opt + 4;
@@ -814,7 +814,7 @@ void mtkfb_process_dbg_opt(const char *opt)
 		if (ret)
 			pr_err("DISP/%s: errno %d\n", __func__, ret);
 
-		pr_debug("mtkfb_process_dbg_opt(), set backlight level = %ld\n",
+		DISPMSG("mtkfb_process_dbg_opt(), set backlight level = %ld\n",
 			       level);
 		primary_display_setbacklight(level);
 	} else {
@@ -823,7 +823,7 @@ void mtkfb_process_dbg_opt(const char *opt)
 
 	return;
 Error:
-	pr_debug("parse command error!\n\n%s", MTKFB_STR_HELP);
+	DISPMSG("parse command error!\n\n%s", MTKFB_STR_HELP);
 }
 
 /* --------------------------------------------------------------------------- */
@@ -840,7 +840,7 @@ static ssize_t layer_debug_open(struct inode *inode, struct file *file)
 	    DISP_GetScreenWidth() * DISP_GetScreenHeight() * 2 + 32;
 	dbgopt->working_buf = (unsigned long)vmalloc(dbgopt->working_size);
 	if (dbgopt->working_buf == 0)
-		pr_debug("DISP/DBG Vmalloc to get temp buffer failed\n");
+		DISPMSG("DISP/DBG Vmalloc to get temp buffer failed\n");
 
 	return 0;
 }
@@ -858,7 +858,7 @@ static ssize_t layer_debug_write(struct file *file,
 	MTKFB_LAYER_DBG_OPTIONS *dbgopt =
 	    (MTKFB_LAYER_DBG_OPTIONS *) file->private_data;
 
-	pr_debug("DISP/DBG " "mtkfb_layer%d write is not implemented yet\n",
+	DISPMSG("DISP/DBG " "mtkfb_layer%d write is not implemented yet\n",
 		       dbgopt->layer_index);
 
 	return count;
