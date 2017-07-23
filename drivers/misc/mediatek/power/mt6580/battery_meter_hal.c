@@ -1,5 +1,6 @@
 #include <linux/delay.h>
 #include <asm/div64.h>
+#include <linux/delay.h>
 
 #include <mt-plat/upmu_common.h>
 
@@ -15,13 +16,13 @@
 #define STATUS_OK    0
 #define STATUS_UNSUPPORTED    -1
 #define VOLTAGE_FULL_RANGE     1800
-#define ADC_PRECISE           32768  /* 15 bits*/
+#define ADC_PRECISE           32768	/* 15 bits */
 
 /*============================================================ */
 /*global variable*/
 /*============================================================ */
 signed int chip_diff_trim_value_4_0 = 0;
-signed int chip_diff_trim_value = 0; /* unit = 0.1*/
+signed int chip_diff_trim_value = 0;	/* unit = 0.1 */
 
 signed int g_hw_ocv_tune_value = 8;
 
@@ -47,8 +48,10 @@ void get_hw_chip_diff_trim_value(void)
 
 	chip_diff_trim_value_4_0 = reg_val_1 | (reg_val_2 << 3);
 
-	bm_print(BM_LOG_FULL, "[Chip_Trim] Reg[0x%x]=0x%x, Reg[0x%x]=0x%x, chip_diff_trim_value_4_0=%d\n",
-	0x01C4, upmu_get_reg_value(0x01C4), 0x01C6, upmu_get_reg_value(0x01C6), chip_diff_trim_value_4_0);
+	bm_print(BM_LOG_FULL,
+		 "[Chip_Trim] Reg[0x%x]=0x%x, Reg[0x%x]=0x%x, chip_diff_trim_value_4_0=%d\n",
+		 0x01C4, upmu_get_reg_value(0x01C4), 0x01C6, upmu_get_reg_value(0x01C6),
+		 chip_diff_trim_value_4_0);
 
 #else
 	bm_print(BM_LOG_FULL, "[Chip_Trim] need check reg number\n");
@@ -57,8 +60,8 @@ void get_hw_chip_diff_trim_value(void)
 	switch (chip_diff_trim_value_4_0) {
 	case 0:
 		chip_diff_trim_value = 1000;
-			bm_print(BM_LOG_FULL, "[Chip_Trim] chip_diff_trim_value = 1000\n");
-			break;
+		bm_print(BM_LOG_FULL, "[Chip_Trim] chip_diff_trim_value = 1000\n");
+		break;
 	case 1:
 		chip_diff_trim_value = 1005;
 		break;
@@ -150,12 +153,12 @@ void get_hw_chip_diff_trim_value(void)
 		chip_diff_trim_value = 925;
 		break;
 	default:
-	bm_print(BM_LOG_FULL, "[Chip_Trim] Invalid value(%d)\n", chip_diff_trim_value_4_0);
-	break;
+		bm_print(BM_LOG_FULL, "[Chip_Trim] Invalid value(%d)\n", chip_diff_trim_value_4_0);
+		break;
 	}
 
 	bm_print(BM_LOG_FULL, "[Chip_Trim] %d,%d\n",
-	chip_diff_trim_value_4_0, chip_diff_trim_value);
+		 chip_diff_trim_value_4_0, chip_diff_trim_value);
 #endif
 }
 
@@ -166,7 +169,7 @@ signed int use_chip_trim_value(signed int not_trim_val)
 #else
 	signed int ret_val = 0;
 
-	ret_val = ((not_trim_val*chip_diff_trim_value)/1000);
+	ret_val = ((not_trim_val * chip_diff_trim_value) / 1000);
 
 	bm_print(BM_LOG_FULL, "[use_chip_trim_value] %d -> %d\n", not_trim_val, ret_val);
 
@@ -188,12 +191,12 @@ int get_hw_ocv(void)
 	adc_result_reg = pmic_get_register_value(PMIC_RG_ADC_OUT_WAKEUP_SWCHR);
 	adc_result = (adc_result_reg * r_val_temp * VOLTAGE_FULL_RANGE) / ADC_PRECISE;
 	bm_print(BM_LOG_CRTI, "[oam] get_hw_ocv (swchr) : adc_result_reg=%d, adc_result=%d\n",
-	adc_result_reg, adc_result);
+		 adc_result_reg, adc_result);
 #else
 	adc_result_reg = pmic_get_register_value(PMIC_RG_ADC_OUT_WAKEUP_PCHR);
 	adc_result = (adc_result_reg * r_val_temp * VOLTAGE_FULL_RANGE) / ADC_PRECISE;
 	bm_print(BM_LOG_CRTI, "[oam] get_hw_ocv (pchr) : adc_result_reg=%d, adc_result=%d\n",
-	adc_result_reg, adc_result);
+		 adc_result_reg, adc_result);
 #endif
 
 	adc_result += g_hw_ocv_tune_value;
@@ -236,7 +239,8 @@ static signed int read_adc_v_bat_sense(void *data)
 #if defined(CONFIG_POWER_EXT)
 	*(signed int *)(data) = 4201;
 #else
-	*(signed int *)(data) = PMIC_IMM_GetOneChannelValue(MT6350_AUX_BATSNS, *(signed int *)(data), 1);
+	*(signed int *)(data) =
+	    PMIC_IMM_GetOneChannelValue(MT6350_AUX_BATSNS, *(signed int *)(data), 1);
 #endif
 
 	return STATUS_OK;
@@ -249,7 +253,8 @@ static signed int read_adc_v_i_sense(void *data)
 #if defined(CONFIG_POWER_EXT)
 	*(signed int *)(data) = 4202;
 #else
-	*(signed int *)(data) = PMIC_IMM_GetOneChannelValue(MT6350_AUX_ISENSE, *(signed int *)(data), 1);
+	*(signed int *)(data) =
+	    PMIC_IMM_GetOneChannelValue(MT6350_AUX_ISENSE, *(signed int *)(data), 1);
 #endif
 
 	return STATUS_OK;
@@ -284,8 +289,10 @@ static signed int read_adc_v_bat_temp(void *data)
 	*(signed int *)(data) = ret;
 
 #else
-	bm_print(BM_LOG_FULL, "[read_adc_v_charger] return PMIC_IMM_GetOneChannelValue(4,times,1);\n");
-	*(signed int *)(data) = PMIC_IMM_GetOneChannelValue(MT6350_AUX_BATON1, *(signed int *)(data), 1);
+	bm_print(BM_LOG_FULL,
+		 "[read_adc_v_charger] return PMIC_IMM_GetOneChannelValue(4,times,1);\n");
+	*(signed int *)(data) =
+	    PMIC_IMM_GetOneChannelValue(MT6350_AUX_BATON1, *(signed int *)(data), 1);
 #endif
 #endif
 
@@ -298,8 +305,9 @@ static signed int read_adc_v_charger(void *data)
 	*(signed int *)(data) = 5001;
 #else
 	signed int val;
+
 	val = PMIC_IMM_GetOneChannelValue(MT6350_AUX_VCDT, *(signed int *)(data), 1);
-	val = (((R_CHARGER_1+R_CHARGER_2) * 100 * val) / R_CHARGER_2) / 100;
+	val = (((R_CHARGER_1 + R_CHARGER_2) * 100 * val) / R_CHARGER_2) / 100;
 
 	*(signed int *)(data) = val;
 #endif
@@ -335,7 +343,120 @@ static signed int fgauge_set_columb_interrupt(void *data)
 	return STATUS_OK;
 }
 
-static signed int(*bm_func[BATTERY_METER_CMD_NUMBER]) (void *data);
+
+
+
+#if defined(CONFIG_MTK_HAFG_20)
+signed char is_lbat_int = KAL_TRUE;
+void fg_bat_l_int_handler(void)
+{
+	bm_print(BM_LOG_CRTI, "[fg_bat_l_int_handler]\n");
+
+	pmic_set_register_value(PMIC_RG_LBAT_IRQ_EN_MIN, 0);
+	pmic_set_register_value(PMIC_RG_LBAT_EN_MIN, 0);
+	pmic_set_register_value(PMIC_RG_INT_EN_BAT_L, 0);
+	is_lbat_int = KAL_TRUE;
+
+}
+
+
+#endif
+static signed int fgauge_set_low_battery_interrupt(void *data)
+{
+#if defined(CONFIG_MTK_HAFG_20)
+	unsigned int voltage = *(unsigned int *)(data);
+	unsigned int rawdata;
+	static int eint_init;
+
+	if (eint_init == 0) {
+		pmic_register_interrupt_callback(2, fg_bat_l_int_handler);
+		eint_init = 1;
+	}
+
+	is_lbat_int = KAL_FALSE;
+
+	pmic_turn_on_clock(KAL_TRUE);
+
+	rawdata = voltage * 4096 / 1800 / 4;
+
+	bm_print(BM_LOG_CRTI, "[fgauge_set_low_battery_interrupt] Battery voltage %d %d\n", rawdata,
+		 voltage);
+
+	/* 0:set interrupt */
+	pmic_set_register_value(PMIC_RG_INT_EN_BAT_L, 1);
+
+	/* 1.setup min voltage threshold 3.4v */
+	pmic_set_register_value(PMIC_RG_LBAT_VOLT_MIN, rawdata);
+
+	/* 2.setup detection period */
+	pmic_set_register_value(PMIC_RG_LBAT_DET_PRD_19_16, 0x0);
+	pmic_set_register_value(PMIC_RG_LBAT_DET_PRD_15_0, 0x12f);
+
+	/* 3.setup max/min debounce time */
+	pmic_set_register_value(PMIC_RG_LBAT_DEBT_MIN, 0x5a);	/*15mins */
+
+	/* 4.turn on IRQ */
+	pmic_set_register_value(PMIC_RG_LBAT_IRQ_EN_MIN, 0x1);
+
+	/* 5. turn on LowBattery Detection */
+	pmic_set_register_value(PMIC_RG_LBAT_EN_MIN, 1);
+#endif
+
+	return STATUS_OK;
+}
+
+static signed int fgauge_get_low_battery_interrupt_status(void *data)
+{
+#if defined(CONFIG_MTK_HAFG_20)
+	*(signed int *)(data) = is_lbat_int;
+#else
+	*(signed int *)(data) = KAL_FALSE;
+#endif
+
+	return STATUS_OK;
+}
+
+
+void trigger_hw_ocv(void)
+{
+	pmic_set_register_value(PMIC_STRUP_AUXADC_START_SEL, 0x1);
+	/* udelay(50); */
+	pmic_set_register_value(PMIC_STRUP_AUXADC_START_SW, 0x0);
+	/* udelay(50); */
+	pmic_set_register_value(PMIC_STRUP_AUXADC_START_SW, 0x1);
+
+	while (pmic_get_register_value(PMIC_RG_ADC_RDY_WAKEUP_PCHR) == 0) {
+		bm_print(BM_LOG_FULL, "[trigger_hw_ocv] delay\n");
+		udelay(100);
+	}
+}
+
+
+static signed int get_refresh_hw_ocv(void *data)
+{
+#if defined(CONFIG_MTK_HAFG_20)
+
+	signed int hwocv1, hwocv2;
+
+	pmic_turn_on_clock(1);
+	udelay(30);
+	hwocv1 = get_hw_ocv();
+	trigger_hw_ocv();
+	hwocv2 = get_hw_ocv();
+	bm_print(BM_LOG_CRTI, "[bat_get_zcv]%d %d\n", hwocv1, hwocv2);
+	pmic_set_register_value(PMIC_STRUP_AUXADC_START_SEL, 0x0);
+	pmic_turn_on_clock(0);
+
+	*(signed int *)(data) = hwocv2;
+
+#else
+	*(signed int *)(data) = 0;
+#endif
+	return STATUS_OK;
+}
+
+
+static signed int (*bm_func[BATTERY_METER_CMD_NUMBER]) (void *data);
 
 signed int bm_ctrl_cmd(BATTERY_METER_CTRL_CMD cmd, void *data)
 {
@@ -357,16 +478,21 @@ signed int bm_ctrl_cmd(BATTERY_METER_CTRL_CMD cmd, void *data)
 		bm_func[BATTERY_METER_CMD_DUMP_REGISTER] = dump_register_fgadc;
 		bm_func[BATTERY_METER_CMD_SET_COLUMB_INTERRUPT] = fgauge_set_columb_interrupt;
 		bm_func[BATTERY_METER_CMD_GET_BATTERY_PLUG_STATUS] = read_battery_plug_out_status;
+		bm_func[BATTERY_METER_CMD_SET_LOW_BAT_INTERRUPT] = fgauge_set_low_battery_interrupt;
+		bm_func[BATTERY_METER_CMD_GET_LOW_BAT_INTERRUPT_STATUS] =
+		    fgauge_get_low_battery_interrupt_status;
+		bm_func[BATTERY_METER_CMD_GET_REFRESH_HW_OCV] = get_refresh_hw_ocv;
+
 	}
 
 	if (cmd < BATTERY_METER_CMD_NUMBER) {
-		if (bm_func[cmd] == NULL)
+		if (bm_func[cmd] == NULL) {
 			bm_print(BM_LOG_FULL, "[bm_ctrl_cmd] NULL cmd=%d\n", cmd);
-		else
-			status = bm_func[cmd](data);
+			return STATUS_UNSUPPORTED;
+		}
+		status = bm_func[cmd] (data);
 	} else
 		return STATUS_UNSUPPORTED;
 
 	return status;
 }
-
