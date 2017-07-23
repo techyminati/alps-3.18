@@ -71,7 +71,7 @@
 #define  ENABLE_MEM_SIZE_CHECK
 /******EMI MPU protect configure******/
 /* disable for bring up            */
-#define  ENABLE_EMI_PROTECTION
+/*#define  ENABLE_EMI_PROTECTION*/
 /******md memory remap configure******/
 #define  ENABLE_MEM_REMAP_HW
 /******md wake up workaround******/

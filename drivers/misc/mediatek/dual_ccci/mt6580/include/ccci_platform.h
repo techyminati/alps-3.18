@@ -5,10 +5,7 @@
 #include <linux/version.h>
 #include <linux/fs.h>
 #include <mach/irqs.h>
-#include <mach/mt_irq.h>
-#include <mach/mt_reg_base.h>
-#include <mach/mt_typedefs.h>
-#include <mach/mt_boot.h>
+#include <mt-plat/mt_boot.h>
 #include <mt-plat/sync_write.h>
 #include <linux/memory.h>
 #include <linux/string.h>
@@ -115,31 +112,31 @@
 /*  DSP check image header */
 struct GFH_HEADER {
 	/* bit23-bit0="MMM", not31-bit24:header version number=1 */
-	U32 m_magic_ver;
+	unsigned int m_magic_ver;
 	/* the size of GFH structure */
-	U16 m_size;
+	unsigned short m_size;
 	/* m_type=0, struct GFH_FILE_INFO_v1; m_type=0x104, struct GFH_CHECK_CFG_v1 */
-	U16 m_type;
+	unsigned short m_type;
 };
 
 struct GFH_FILE_INFO_v1 {
 	struct GFH_HEADER m_gfh_hdr;	/* m_type=0 */
-	U8 m_identifier[12];	/* "FILE_INFO" */
-	U32 m_file_ver;		/* bit16=0:3G, bit16=1:2G;  bit17=0:release, bit17=1:debug */
-	U16 m_file_type;	/* DSP_ROM:0x0104; DSP_BL:0x0003 */
-	U8 md_id;		/* MD_SYS1: 1, MD_SYS2: 2 */
-	U8 dummy2;
-	U32 dummy3[7];
+	unsigned char m_identifier[12];	/* "FILE_INFO" */
+	unsigned int m_file_ver;		/* bit16=0:3G, bit16=1:2G;  bit17=0:release, bit17=1:debug */
+	unsigned short m_file_type;	/* DSP_ROM:0x0104; DSP_BL:0x0003 */
+	unsigned char md_id;		/* MD_SYS1: 1, MD_SYS2: 2 */
+	unsigned char dummy2;
+	unsigned int dummy3[7];
 };
 
 struct GFH_CHECK_CFG_v1 {
 	struct GFH_HEADER m_gfh_hdr;	/* m_type=0x104, m_size=0xc8 */
-	U32 m_product_ver;	/* 0x0:invalid; 0x1:debug version; 0x2:release version */
-	U32 m_image_type;	/* 0x0:invalid; 0x1:2G modem; 0x2: 3G modem */
-	U8 m_platform_id[16];	/* chip version, ex:MT6573_S01 */
-	U8 m_project_id[64];	/* build version, ex: MAUI.11A_MD.W11.31 */
-	U8 m_build_time[64];	/* build time, ex: 2011/8/4 04:19:30 */
-	U8 reserved[64];
+	unsigned int m_product_ver;	/* 0x0:invalid; 0x1:debug version; 0x2:release version */
+	unsigned int m_image_type;	/* 0x0:invalid; 0x1:2G modem; 0x2: 3G modem */
+	unsigned char m_platform_id[16];	/* chip version, ex:MT6573_S01 */
+	unsigned char m_project_id[64];	/* build version, ex: MAUI.11A_MD.W11.31 */
+	unsigned char m_build_time[64];	/* build time, ex: 2011/8/4 04:19:30 */
+	unsigned char reserved[64];
 };
 
 enum PRODUCT_VER_TYPE {
@@ -149,20 +146,20 @@ enum PRODUCT_VER_TYPE {
 };
 
 struct MD_CHECK_HEADER {
-	U8 check_header[12];	/* magic number is "CHECK_HEADER" */
-	U32 header_verno;	/* header structure version number */
-	U32 product_ver;	/* 0x0:invalid; 0x1:debug version; 0x2:release version */
-	U32 image_type;		/* 0x0:invalid; 0x1:2G modem; 0x2: 3G modem */
-	U8 platform[16];	/* MT6573_S01 or MT6573_S02 */
-	U8 build_time[64];	/* build time string */
-	U8 build_ver[64];	/* project version, ex:11A_MD.W11.28 */
-	U8 bind_sys_id;		/* bind to md sys id, MD SYS1: 1, MD SYS2: 2 */
-	U8 ext_attr;		/* no shrink: 0, shrink: 1 */
-	U8 reserved[2];		/* for reserved */
-	U32 mem_size;		/* md ROM/RAM image size requested by md */
-	U32 md_img_size;	/* md image size, exclude head size */
-	U32 reserved_info;	/* for reserved */
-	U32 size;		/* the size of this structure */
+	unsigned char check_header[12];	/* magic number is "CHECK_HEADER" */
+	unsigned int header_verno;	/* header structure version number */
+	unsigned int product_ver;	/* 0x0:invalid; 0x1:debug version; 0x2:release version */
+	unsigned int image_type;		/* 0x0:invalid; 0x1:2G modem; 0x2: 3G modem */
+	unsigned char platform[16];	/* MT6573_S01 or MT6573_S02 */
+	unsigned char build_time[64];	/* build time string */
+	unsigned char build_ver[64];	/* project version, ex:11A_MD.W11.28 */
+	unsigned char bind_sys_id;		/* bind to md sys id, MD SYS1: 1, MD SYS2: 2 */
+	unsigned char ext_attr;		/* no shrink: 0, shrink: 1 */
+	unsigned char reserved[2];		/* for reserved */
+	unsigned int mem_size;		/* md ROM/RAM image size requested by md */
+	unsigned int md_img_size;	/* md image size, exclude head size */
+	unsigned int reserved_info;	/* for reserved */
+	unsigned int size;		/* the size of this structure */
 };
 
 struct CCCI_REGION_LAYOUT {

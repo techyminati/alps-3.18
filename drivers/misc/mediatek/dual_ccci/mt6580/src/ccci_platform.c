@@ -207,7 +207,7 @@ int get_dts_settings(int md_id)
 			     (md_id + 1));
 		/*  return -1; */
 	} else {
-		ap_infra_base = of_iomap(node, 0);
+		ap_infra_base = (unsigned int)of_iomap(node, 0);
 		CCCI_MSG_INF(md_id, "plt", "md%d get reg ap_infra_base:0x%x!\n",
 			     (md_id + 1), ap_infra_base);
 	}
@@ -220,7 +220,7 @@ int get_dts_settings(int md_id)
 			     (md_id + 1));
 		/*  return -1; */
 	} else {
-		ap_mcu_reg_base = of_iomap(node, 0);
+		ap_mcu_reg_base = (unsigned int)of_iomap(node, 0);
 		CCCI_MSG_INF(md_id, "plt",
 			     "md%d get reg ap_mcu_reg_base:0x%x!\n",
 			     (md_id + 1), ap_mcu_reg_base);
@@ -230,7 +230,7 @@ int get_dts_settings(int md_id)
 	if (!node) {
 		CCCI_ERR_INF(md_id, "plt", "md%d AP_MD_DBGMODE_CFGREG is not set in DT!\n", (md_id+1));
 	} else {
-		md1_dbg_mode_ptr = of_iomap(node, 0);
+		md1_dbg_mode_ptr = (unsigned long)of_iomap(node, 0);
 		CCCI_MSG_INF(md_id, "plt", "md%d get reg md1_dbg_mode_ptr:0x%pa!\n", (md_id + 1), &md1_dbg_mode_ptr);
 	}
 	if (md_id == MD_SYS1)
@@ -248,8 +248,8 @@ int get_dts_settings(int md_id)
 		return -1;
 	}
 
-	s_ccif_hw_info.reg_base = of_iomap(node, 0);
-	s_ccif_hw_info.md_reg_base = of_iomap(node, 1);
+	s_ccif_hw_info.reg_base = (unsigned int)of_iomap(node, 0);
+	s_ccif_hw_info.md_reg_base = (unsigned int)of_iomap(node, 1);
 	s_ccif_hw_info.irq_id = irq_of_parse_and_map(node, 0);
 	md_wdt_irq_id[md_id] = irq_of_parse_and_map(node, 1);
 
@@ -1623,7 +1623,7 @@ static int check_md_header(int md_id,
 					image->img_info.md_img_size =
 					    head->md_img_size;
 				}
-				/* image->size -= 0x1A0; /* workaround for md not check in check header */
+				/* image->size -= 0x1A0; workaround for md not check in check header */
 				CCCI_MSG_INF(md_id, "ctl",
 					       "(MD)[img_size]=%x, (AP)[img_size]=%x\n",
 					       head->md_img_size, image->size);
