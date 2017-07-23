@@ -602,10 +602,10 @@
 			apxgpt2_count = <0x10008028>;
 		};
 
-		BUS_DBG@0x1020B000 {
-			compatible = "mediatek,BUS_DBG";
-			reg = <0x1020B000 0x1000>;
-			interrupts = <0 73 0x8>;
+		bus_dbg@1020b000 {
+			compatible = "mediatek,bus_dbg-v2";
+			reg = <0x1020b000 0x1000>;
+			interrupts = <GIC_SPI 73 IRQ_TYPE_LEVEL_LOW>;
 			two_stage_timeout = <1>;
 		};
 
