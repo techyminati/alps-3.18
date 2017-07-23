@@ -4470,16 +4470,6 @@ static int _config_ovl_input(disp_session_input_config *session_input,
 
 		layer = input_cfg->layer_id;
 		ovl_cfg = &(data_config->ovl_config[layer]);
-		if (session_input->setter != SESSION_USER_AEE) {
-			if (isAEEEnabled
-			    && layer ==
-			    primary_display_get_option("ASSERT_LAYER")) {
-				pr_debug("skip AEE layer %d\n", layer);
-				continue;
-			}
-		} else {
-			DISPMSG("set AEE layer %d\n", layer);
-		}
 		_convert_disp_input_to_ovl(ovl_cfg, input_cfg);
 
 		if (ovl_cfg->layer_en)
@@ -4590,13 +4580,8 @@ int primary_display_config_input_multiple(disp_session_input_config *
 	cmdqRecHandle cmdq_handle;
 
 	_primary_path_lock(__func__);
-
-	if (pgc->state == DISP_SLEPT) {
-		DISPMSG("%s, skip because primary dipslay is sleep\n",
-			__func__);
-		goto done;
-	}
 	primary_display_idlemgr_kick((char *)__func__, 0);
+
 	/* hope we can use only 1 input struct for input config, just set layer number */
 	if (primary_display_is_decouple_mode()) {
 		disp_handle = pgc->ovl2mem_path_handle;
@@ -4604,6 +4589,21 @@ int primary_display_config_input_multiple(disp_session_input_config *
 	} else {
 		disp_handle = pgc->dpmgr_handle;
 		cmdq_handle = pgc->cmdq_handle_config;
+	}
+
+	if (pgc->state == DISP_SLEPT) {
+		pr_debug("%s, skip because primary dipslay is slept\n", __func__);
+
+		if (isAEEEnabled &&
+			session_input->setter == SESSION_USER_AEE &&
+			session_input->config[0].layer_id == primary_display_get_option("ASSERT_LAYER")) {
+			disp_ddp_path_config *data_config = dpmgr_path_get_last_config(disp_handle);
+			int layer = session_input->config[0].layer_id;
+
+			ret = _convert_disp_input_to_ovl(&(data_config->ovl_config[layer]),
+					&session_input->config[0]);
+		}
+		goto done;
 	}
 
 	if (_should_config_ovl_input())
