@@ -536,6 +536,7 @@ struct mt_cpu_dvfs {
 	int dvfs_disable_count;
 	bool dvfs_disable_by_ptpod;
 	bool dvfs_disable_by_suspend;
+	bool dvfs_disable_by_early_suspend;
 	bool dvfs_disable_by_procfs;
 
 	/* limit for thermal */
@@ -1830,6 +1831,12 @@ static unsigned int _calc_new_opp_idx(struct mt_cpu_dvfs *p, int new_opp_idx)
 		cpufreq_info("%s(): thermal limited freq, idx = %d\n", __func__, new_opp_idx);
 	}
 
+	/* for early suspend */
+	if (p->dvfs_disable_by_early_suspend) {
+		new_opp_idx = 3;
+		cpufreq_ver("%s(): for early suspend, idx = %d\n", __func__, new_opp_idx);
+	}
+
 	/* for suspend */
 	if (p->dvfs_disable_by_suspend)
 		new_opp_idx = p->idx_normal_max_opp;
@@ -2020,6 +2027,8 @@ static void _mt_cpufreq_lcm_status_switch(int onoff)
 			if (!cpu_dvfs_is_available(p))
 				continue;
 
+			p->dvfs_disable_by_early_suspend = false;
+
 #ifdef CONFIG_CPU_FREQ
 			policy = cpufreq_cpu_get(p->cpu_id);
 			if (policy) {
@@ -2040,6 +2049,8 @@ static void _mt_cpufreq_lcm_status_switch(int onoff)
 			if (!cpu_dvfs_is_available(p))
 				continue;
 
+			p->dvfs_disable_by_early_suspend = true;
+
 			p->idx_opp_tbl_for_late_resume = p->idx_opp_tbl;
 
 #ifdef CONFIG_CPU_FREQ
@@ -2047,7 +2058,7 @@ static void _mt_cpufreq_lcm_status_switch(int onoff)
 			if (policy) {
 				cpufreq_driver_target(
 					policy,
-					cpu_dvfs_get_freq_by_idx(p, 4), CPUFREQ_RELATION_L);
+					cpu_dvfs_get_freq_by_idx(p, 3), CPUFREQ_RELATION_L);
 				cpufreq_cpu_put(policy);
 			}
 #endif
