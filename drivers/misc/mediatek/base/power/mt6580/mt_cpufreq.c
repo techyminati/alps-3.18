@@ -1146,9 +1146,7 @@ static unsigned int get_cur_volt_pmic_wrap(struct mt_cpu_dvfs *p)
 	FUNC_ENTER(FUNC_LV_LOCAL);
 
 	do {
-#ifndef CPUDVFS_WORKAROUND_FOR_GIT
 		pwrap_read(PMIC_ADDR_VCORE_VOSEL_ON, &rdata);
-#endif
 	} while (rdata == PMIC_VAL_TO_VOLT(0) && retry_cnt--);
 
 	rdata = PMIC_VAL_TO_VOLT(rdata);

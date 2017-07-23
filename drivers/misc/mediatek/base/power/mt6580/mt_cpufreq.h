@@ -53,8 +53,7 @@ typedef void (*cpuVoltsampler_func) (enum mt_cpu_dvfs_id, unsigned int mv);
 #define CPUDVFS_WORKAROUND_FOR_GIT	1
 
 /* PMIC WRAP ADDR */
-/* #ifdef CONFIG_OF */
-#ifndef CPUDVFS_WORKAROUND_FOR_GIT
+#ifdef CONFIG_OF
 extern void __iomem *pwrap_base;
 #define PWRAP_BASE_ADDR     ((unsigned int)pwrap_base)
 #else
@@ -63,6 +62,7 @@ extern void __iomem *pwrap_base;
 #endif
 
 /* PMIC WRAP */
+extern s32 pwrap_read(u32 adr, u32 *rdata);
 extern void mt_cpufreq_set_pmic_phase(enum pmic_wrap_phase_id phase);
 extern void mt_cpufreq_set_pmic_cmd(enum pmic_wrap_phase_id phase, int idx,
 						    unsigned int cmd_wdata);
