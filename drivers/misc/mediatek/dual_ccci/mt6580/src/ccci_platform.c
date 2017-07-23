@@ -568,14 +568,14 @@ void ccci_rpc_work_helper(int md_id, int *p_pkt_num, struct RPC_PKT pkt[],
 			if (!masp_secure_algo_init()) {
 				CCCI_MSG_INF(md_id, "rpc",
 					     "masp_secure_algo_init fail!\n");
-				ASSERT(0);
+				BUG_ON(1);
 			}
 
 			CCCI_RPC_MSG(md_id,
 				     "RPC_SECURE_ALGO_OP: Dir=0x%08X, Addr=0x%08X, Len=0x%08X, Seed=0x%016llX\n",
 				     Direction, ContentAddr, ContentLen,
 				     *(long long *)CustomSeed.sed);
-			masp_secure_algo(Direction, ContentAddr, ContentLen,
+			masp_secure_algo(Direction, (unsigned char *)ContentAddr, ContentLen,
 					 CustomSeed.sed, ResText);
 
 			if (!masp_secure_algo_deinit())
