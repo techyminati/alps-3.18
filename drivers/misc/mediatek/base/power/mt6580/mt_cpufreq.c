@@ -1497,7 +1497,7 @@ static int setup_power_table(struct mt_cpu_dvfs *p)
 
 	/* sort power table */
 	for (i = p->nr_opp_tbl * possible_cpu; i > 0; i--) {
-		for (j = 1; j <= i; j++) {
+		for (j = 1; j < i; j++) {
 			if (p->power_tbl[j - 1].cpufreq_power < p->power_tbl[j].cpufreq_power) {
 				struct mt_cpu_power_info tmp;
 
