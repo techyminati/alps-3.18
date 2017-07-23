@@ -1198,7 +1198,7 @@
 			compatible = "mediatek,ISP_PIPEM";
 		};
 		kd_camera_hw1:kd_camera_hw1@15008000 {
-			compatible = "mediatek,CAMERA_HW";
+			compatible = "mediatek,camera_hw";
 			reg = <0x15008000 0x1000>;  /* SENINF_ADDR */
 			vcama-supply = <&mt_pmic_vcama_ldo_reg>;
 			vcamd-supply = <&mt_pmic_vcamd_ldo_reg>;
@@ -1207,7 +1207,7 @@
 
 		};
 		kd_camera_hw2:kd_camera_hw2@15008000 {
-			compatible = "mediatek,CAMERA_HW2";
+			compatible = "mediatek,camera_hw2";
 			reg = <0x15008000 0x1000>;  /* SENINF_ADDR */
 		};
 		seninf_top@15008000 {

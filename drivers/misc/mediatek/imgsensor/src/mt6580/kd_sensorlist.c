@@ -2960,10 +2960,12 @@ bool Get_Cam_Regulator(void)
 
 	if (1) {
 		/* check if customer camera node defined */
-		node = of_find_compatible_node(NULL, NULL, "mediatek,mt_pmic_regulator_supply");
+		node = of_find_compatible_node(NULL, NULL, "mediatek,camera_hw");
 		if (node) {
-			name = of_get_property(node, "MAIN_CAMERA_POWER_A", NULL);
+
+			name = of_get_property(node, "vcama_sub", NULL);
 			if (name == NULL) {
+
 				if (regVCAMA == NULL) {
 					regVCAMA = regulator_get(sensor_device, "vcama");
 				}
@@ -2977,33 +2979,31 @@ bool Get_Cam_Regulator(void)
 					regVCAMAF = regulator_get(sensor_device, "vcamaf");
 				}
 			} else {
-				PK_DBG("Camera customer regulator name =%s!\n", name);
 				/* backup original dev.of_node */
 				kd_node = sensor_device->of_node;
 				/* if customer defined, get customized camera regulator node */
 				sensor_device->of_node =
 				    of_find_compatible_node(NULL, NULL,
-							    "mediatek,regulator_supply");
+							    "mediatek,camera_hw");
 				/* 若你需要sub也定義的話，需要自己加上
 				   if (regVCAMA == NULL) {
 				   regVCAMA_SUB = regulator_get(sensor_device, "SUB_CAMERA_POWER_A");
 				   }
 				 */
 				if (regVCAMA == NULL) {
-					regVCAMA =
-					    regulator_get(sensor_device, "MAIN_CAMERA_POWER_A");
+						regVCAMA = regulator_get(sensor_device, "vcama");
 				}
 				if (regVCAMD == NULL) {
-					regVCAMD =
-					    regulator_get(sensor_device, "MAIN_CAMERA_POWER_D");
+						regVCAMD = regulator_get(sensor_device, "vcamd");
+				}
+				if (regSubVCAMD == NULL) {
+						regSubVCAMD = regulator_get(sensor_device, "vcamd_sub");
 				}
 				if (regVCAMIO == NULL) {
-					regVCAMIO =
-					    regulator_get(sensor_device, "MAIN_CAMERA_POWER_IO");
+						regVCAMIO = regulator_get(sensor_device, "vcamio");
 				}
 				if (regVCAMAF == NULL) {
-					regVCAMAF =
-					    regulator_get(sensor_device, "MAIN_CAMERA_POWER_AF");
+						regVCAMAF = regulator_get(sensor_device, "vcamaf");
 				}
 				/* restore original dev.of_node */
 				sensor_device->of_node = kd_node;
@@ -3762,7 +3762,7 @@ static int CAMERA_HW_i2c_remove(struct i2c_client *client)
 
 #ifdef CONFIG_OF
 static const struct of_device_id CAMERA_HW_i2c_of_ids[] = {
-    { .compatible = "mediatek,CAMERA_MAIN", },
+    { .compatible = "mediatek,camera_main", },
 	{}
 };
 #endif
@@ -3961,7 +3961,7 @@ static int CAMERA_HW_i2c_remove2(struct i2c_client *client)
 ********************************************************************************/
 #ifdef CONFIG_OF
     static const struct of_device_id CAMERA_HW2_i2c_driver_of_ids[] = {
-	{ .compatible = "mediatek,CAMERA_SUB", },
+	{ .compatible = "mediatek,camera_sub", },
 	{}
     };
 #endif
@@ -4059,7 +4059,7 @@ static int CAMERA_HW_resume2(struct platform_device *pdev)
 
 #ifdef CONFIG_OF
 static const struct of_device_id CAMERA_HW2_of_ids[] = {
-	{.compatible = "mediatek,CAMERA_HW2",},
+	{.compatible = "mediatek,camera_hw2",},
 	{}
 };
 #endif
@@ -4401,7 +4401,7 @@ static int CAMERA_HW_Reg_Debug3(struct file *file, const char *buffer, size_t co
 /* You can refer to CAMERA_HW_probe & CAMERA_HW_i2c_probe */
 #ifdef CONFIG_OF
 static const struct of_device_id CAMERA_HW_of_ids[] = {
-	{.compatible = "mediatek,CAMERA_HW",},
+	{.compatible = "mediatek,camera_hw",},
 	{}
 };
 #endif
