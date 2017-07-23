@@ -43,11 +43,6 @@
 #define MTK_FB_DFO_DISABLE
 
 /**
- * Enable idle screen low power mode.
- */
-#define MTK_DISP_IDLE_LP
-
-/**
  * Support manual control MUTEX HW_DCM
  */
 #define MANUAL_MUTEX_HW_DCM
