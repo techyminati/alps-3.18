@@ -1152,7 +1152,9 @@ unsigned int mt_gpufreq_target(unsigned int idx)
 	mutex_lock(&mt_gpufreq_lock);
 
 	if (mt_gpufreq_ready == false) {
+#ifndef GPUDVFS_WORKAROUND_FOR_GIT
 		gpufreq_warn("GPU DVFS not ready!\n");
+#endif
 		mutex_unlock(&mt_gpufreq_lock);
 		return -ENOSYS;
 	}
@@ -1292,7 +1294,9 @@ unsigned int mt_gpufreq_voltage_enable_set(unsigned int enable)
 	mutex_lock(&mt_gpufreq_lock);
 
 	if (mt_gpufreq_ready == false) {
+#ifndef GPUDVFS_WORKAROUND_FOR_GIT
 		gpufreq_warn("@%s: GPU DVFS not ready!\n", __func__);
+#endif
 		mutex_unlock(&mt_gpufreq_lock);
 		return -ENOSYS;
 	}
@@ -1319,7 +1323,9 @@ EXPORT_SYMBOL(mt_gpufreq_get_dvfs_table_num);
 unsigned int mt_gpufreq_get_freq_by_idx(unsigned int idx)
 {
 	if (mt_gpufreq_ready == false) {
+#ifndef GPUDVFS_WORKAROUND_FOR_GIT
 		gpufreq_warn("@%s: GPU DVFS not ready!\n", __func__);
+#endif
 		return -ENOSYS;
 	}
 
