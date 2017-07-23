@@ -261,8 +261,8 @@
 			interrupts = <0 110 0x0>;
 		};
 
-		cpu_dbgapb: cpu_dbgapb@10170000 {
-			compatible = "mediatek,mt6580-dbg_debug";
+		cpu_dbgapb: cpu_dbgapb {
+			compatible = "mediatek,hw_dbg";
 			num = <4>;
 			reg = <0x10170000 0x2000
 				0x10172000 0x2000
