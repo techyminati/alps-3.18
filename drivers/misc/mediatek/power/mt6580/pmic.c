@@ -81,7 +81,7 @@
 #endif
 #include <mach/mt_spm_mtcmos.h>
 #if defined(CONFIG_MTK_RTC)
-#include <mach/mtk_rtc.h>
+#include <mtk_rtc.h>
 #endif
 /* #include <mach/pmic.h> TBD */
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
@@ -2512,7 +2512,7 @@ void pwrkey_int_handler(void)
 				if (long_pwrkey_press) {	/* 500ms */
 					PMICLOG
 					    ("Power Key Pressed during kernel power off charging, reboot OS\r\n");
-					arch_reset(0, NULL);
+					/*TODO arch_reset(0, NULL);*/
 				}
 			}
 		}
@@ -2607,8 +2607,6 @@ void accdet_int_handler(void)
 #ifdef CONFIG_MTK_RTC
 void rtc_int_handler(void)
 {
-	unsigned int ret = 0;
-
 	PMICLOG("[rtc_int_handler]....\n");
 #ifndef CONFIG_EARLY_LINUX_PORTING
 	rtc_irq_handler();
