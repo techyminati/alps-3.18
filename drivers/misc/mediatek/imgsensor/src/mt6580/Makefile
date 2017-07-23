@@ -1,29 +1,37 @@
 #
 # Makefile for misc devices that really don't fit anywhere else.
+#
+
+
 
 define FILTER_PROJECT_DRV
-ifeq ($(wildcard $(srctree)/drivers/misc/mediatek/mach/$(MTK_PLATFORM)/$(ARCH_MTK_PROJECT)/imgsensor/$(1)),)
+ifeq ($(wildcard $(srctree)/drivers/misc/mediatek/imgsensor/src/$(MTK_PLATFORM)/camera_project/$(ARCH_MTK_PROJECT)/$(1)),)
 platform_drv += $(1)
+else
+project_drv += camera_project/$(ARCH_MTK_PROJECT)/$(1)
 endif
 endef
 
-obj-y				+= kd_sensorlist.o
-obj-y				+= camera_hw/
+MTK_PLATFORM := $(subst ",,$(CONFIG_MTK_PLATFORM))
+ARCH_MTK_PROJECT := $(subst ",,$(CONFIG_ARCH_MTK_PROJECT))
 
-$(warning "xilog ARCH_MTK_PROJECT:$(ARCH_MTK_PROJECT)")
-# for tb6580p1 special
-ifeq ($(ARCH_MTK_PROJECT),tb6580p1)
-  obj-y += ov5670_mipi_raw_32bit/
-  obj-y += ov5671_mipi_raw/
+obj-y				+= kd_sensorlist.o
+
+$(info -= project path  $(srctree)/drivers/misc/mediatek/imgsensor/src/$(MTK_PLATFORM)/camera_project/$(ARCH_MTK_PROJECT)/ =-)
+
+ifneq ($(wildcard $(srctree)/drivers/misc/mediatek/imgsensor/src/$(MTK_PLATFORM)/camera_project/$(ARCH_MTK_PROJECT)/camera_hw),)
+obj-y				+= camera_project/$(ARCH_MTK_PROJECT)/camera_hw/
+$(info by porject kd_camera_hw)
 else
-  # for tb6580p2 special
-  ifeq ($(ARCH_MTK_PROJECT),tb6580p2)
-    obj-y += ov5670_mipi_raw_32bit/
-    obj-y += ov5671_mipi_raw/
-  else
-    $(foreach drv,$(subst $\",,$(CONFIG_CUSTOM_KERNEL_IMGSENSOR)),$(eval $(call FILTER_PROJECT_DRV,$(drv))))
-    custom_kernel_imgsensor := $(addsuffix /, $(shell echo $(platform_drv)))
-    obj-y += $(custom_kernel_imgsensor)
-    $(info imgsensor drv by platform $(platform_drv))
-  endif
+obj-y                           += camera_hw/
 endif
+
+$(foreach drv,$(subst $\",,$(CONFIG_CUSTOM_KERNEL_IMGSENSOR)),$(eval $(call FILTER_PROJECT_DRV,$(drv))))
+custom_kernel_imgsensor_by_platform := $(addsuffix /, $(shell echo $(platform_drv)))
+custom_kernel_imgsensor_by_project := $(addsuffix /, $(shell echo $(project_drv)))
+
+obj-y += $(custom_kernel_imgsensor_by_platform)
+obj-y += $(custom_kernel_imgsensor_by_project)
+
+$(info imgsensor drv by platform $(platform_drv))
+$(info imgsensor drv by project $(project_drv))
