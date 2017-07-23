@@ -162,19 +162,9 @@ static int slp_chk_mtcmos_pll_stat;
 /* LOCK */
 static DEFINE_SPINLOCK(clock_lock);
 
-#define clkmgr_lock(flags) \
-do { \
-	spin_lock_irqsave(&clock_lock, flags); \
-	pr_info("spin_lock_irqsave\n"); \
-} while (0)
-
-#define clkmgr_unlock(flags) \
-do { \
-	spin_unlock_irqrestore(&clock_lock, flags); \
-	pr_info("spin_unlock_irqrestore\n"); \
-} while (0)
-
-#define clkmgr_locked()  (spin_is_locked(&clock_lock))
+#define clkmgr_lock(flags) spin_lock_irqsave(&clock_lock, flags)
+#define clkmgr_unlock(flags) spin_unlock_irqrestore(&clock_lock, flags)
+#define clkmgr_locked() (spin_is_locked(&clock_lock))
 
 int clkmgr_is_locked(void)
 {
