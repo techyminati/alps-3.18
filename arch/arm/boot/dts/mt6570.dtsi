@@ -101,7 +101,14 @@
 		reg = <0 0x10008000 0 0x1000>;
 		interrupts = <GIC_SPI 152 IRQ_TYPE_LEVEL_LOW>;
 	};
-
+	timer {
+		compatible = "arm,armv7-timer";
+		interrupts = <GIC_PPI 13 IRQ_TYPE_LEVEL_LOW>, /*Secure Physical Timer Event*/
+			<GIC_PPI 14 IRQ_TYPE_LEVEL_LOW>, /*Non-Secure Physical Timer Event*/
+			<GIC_PPI 11 IRQ_TYPE_LEVEL_LOW>, /*Virtual Timer Event*/
+			<GIC_PPI 10 IRQ_TYPE_LEVEL_LOW>; /*Hypervisor Timer Event*/
+			clock-frequency = <13000000>;
+	};
 	efusec@10009000 {
 		compatible = "mediatek,efusec";
 		reg = <0 0x10009000 0 0x1000>;
