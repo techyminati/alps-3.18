@@ -3146,7 +3146,7 @@ void unregister_larb_monitor(struct larb_monitor *handler)
 #endif  /* CONFIG_CLKMGR_EMULATION */
 }
 EXPORT_SYMBOL(unregister_larb_monitor);
-#if 0
+
 static void larb_clk_prepare(int larb_idx)
 {
 	ENTER_FUNC(FUNC_LV_BODY);
@@ -3171,7 +3171,6 @@ static void larb_clk_finish(int larb_idx)
 
 	switch (larb_idx) {
 	case MT_LARB0:
-		clk_writel(MMSYS_CG_SET0, SMI_COMMON_BIT | SMI_LARB0_BIT);
 		break;
 	case MT_LARB1:
 		clk_writel(IMG_CG_SET, LARB1_SMI_CKPDN_BIT);
@@ -3219,7 +3218,6 @@ static void larb_restore(int larb_idx)
 
 	EXIT_FUNC(FUNC_LV_BODY);
 }
-#endif
 
 /* SUBSYS variable & function */
 #define SYS_TYPE_MODEM    0
@@ -3323,7 +3321,7 @@ static int dis_sys_enable_op(struct subsys *sys)
 #endif
 	enable_clock_locked(cg_clk);
 	err = spm_mtcmos_ctrl_disp(STA_POWER_ON);
-	/* larb_restore(MT_LARB0); */
+	larb_restore(MT_LARB0);
 	return err;
 }
 
@@ -3335,7 +3333,8 @@ static int dis_sys_disable_op(struct subsys *sys)
 #ifdef SYS_LOG
 	pr_debug("[%s]: sys->name=%s\n", __func__, sys->name);
 #endif
-	/* larb_backup(MT_LARB0); */
+	larb_backup(MT_LARB0);
+	clk_writel(MMSYS_CG_SET0, SMI_COMMON_BIT | SMI_LARB0_BIT);
 	err = spm_mtcmos_ctrl_disp(STA_POWER_DOWN);
 	disable_clock_locked(cg_clk);
 	return err;
@@ -3379,7 +3378,7 @@ static int img_sys_enable_op(struct subsys *sys)
 	pr_debug("[%s]: sys->name=%s\n", __func__, sys->name);
 #endif
 	err = spm_mtcmos_ctrl_isp(STA_POWER_ON);
-	/* larb_restore(MT_LARB1); */
+	larb_restore(MT_LARB1);
 
 	return err;
 }
@@ -3392,7 +3391,7 @@ static int img_sys_disable_op(struct subsys *sys)
 	pr_debug("[%s]: sys->name=%s\n", __func__, sys->name);
 #endif
 
-	/* larb_backup(MT_LARB1); */
+	larb_backup(MT_LARB1);
 	err = spm_mtcmos_ctrl_isp(STA_POWER_DOWN);
 	return err;
 }
