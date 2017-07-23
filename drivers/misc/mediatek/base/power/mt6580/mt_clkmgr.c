@@ -31,7 +31,7 @@
 #include <mach/mt_clkmgr.h>
 
 #include <mt-plat/sync_write.h>
-#include <mt_spm_cpu.h>
+#include <mt_spm.h>
 
 #ifdef CONFIG_OF
 #include <linux/of.h>
