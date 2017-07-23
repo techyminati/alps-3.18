@@ -91,6 +91,7 @@ extern struct MTKFB_MMP_Events_t {
 
 extern unsigned int gEnableUartLog;
 extern unsigned int gMobilelog;
+extern unsigned int gFencelog;
 extern unsigned int gLoglevel;
 extern unsigned int gRcdlevel;
 

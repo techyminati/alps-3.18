@@ -74,6 +74,7 @@
 /* --------------------------------------------------------------------------- */
 unsigned int gEnableUartLog = 0;
 unsigned int gMobilelog = 1;
+unsigned int gFencelog = 0; /*Fence Log*/
 unsigned int gLoglevel = 3; /*DISPMSG level is DEFAULT_LEVEL==3*/
 unsigned int gRcdlevel = 0;
 /* for video mode */
