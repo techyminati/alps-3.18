@@ -1,3 +1,5 @@
+ccflags-y  += -I$(srctree)/drivers/misc/mediatek/thermal/fakeHeader/
+
 obj-y += mt_spm_mtcmos.o
 obj-y += mt_clkmgr_common.o
 obj-y += mt_clkmgr.o
