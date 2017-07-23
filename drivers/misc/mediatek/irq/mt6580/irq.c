@@ -560,10 +560,22 @@ static void mt_gic_dist_init(void)
 
 }
 
-/* set the priority mask to 0x00 for masking all irqs to this cpu */
+/* set irq as highest priority to signal core */
+void mt_gic_set_priority(unsigned int irq)
+{
+	unsigned int bit_offset = (irq%4)*8;
+	unsigned int reg_offset = irq/4*4;
+	u32 val = readl(IOMEM(GIC_DIST_BASE +
+			GIC_DIST_PRI + reg_offset));
+
+	writel_relaxed(val&(~(0xff<<bit_offset)),
+		IOMEM(GIC_DIST_BASE + GIC_DIST_PRI + reg_offset));
+}
+
+/* set the priority mask to 0x10 for masking all irqs to this cpu */
 void gic_set_primask(void)
 {
-	writel_relaxed(0x00, GIC_CPU_BASE + GIC_CPU_PRIMASK);
+	writel_relaxed(0x10, GIC_CPU_BASE + GIC_CPU_PRIMASK);
 }
 
 /* restore the priority mask value */
