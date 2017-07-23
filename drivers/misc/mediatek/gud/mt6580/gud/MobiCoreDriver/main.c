@@ -1516,7 +1516,7 @@ static int __init mobicore_init(void)
 	dev_set_name(mcd, "mcd");
 #ifdef CONFIG_OF
 	struct device_node *node;
-	unsigned int irq_info[3] = {0, 0, 0};
+	/* unsigned int irq_info[3] = {0, 0, 0}; */
 #endif
 
 	/* Do not remove or change the following trace.
