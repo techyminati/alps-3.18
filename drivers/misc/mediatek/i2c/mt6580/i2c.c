@@ -41,7 +41,7 @@
 /* #include <mach/dma.h> */
 /* #include <mach/mt_reg_base.h> */
 /* #include "mach/memory.h" */
-#include <mt_i2c.h>
+#include "mt_i2c.h"
 #include <mt-plat/mt_gpio.h>
 #include <mt-plat/sync_write.h>
 
