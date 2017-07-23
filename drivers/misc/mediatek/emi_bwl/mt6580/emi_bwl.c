@@ -268,7 +268,7 @@ static ssize_t con_sce_store(struct device_driver *driver,
 	return count;
 }
 
-DRIVER_ATTR(concurrency_scenario, 0644, con_sce_show, con_sce_store);
+DRIVER_ATTR(concurrency_scenario, 0664, con_sce_show, con_sce_store);
 
 /*
  * emi_bwl_mod_init: module init function.
