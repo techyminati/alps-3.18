@@ -1063,6 +1063,10 @@
 			interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_LOW>;
 		};
 
+		lcm: lcm {
+			compatible = "mediatek,mt6580-lcm";
+		};
+
 		DISPSYS@0x14007000 {
 			compatible = "mediatek,DISPSYS";
 			reg = <0x14000000 0x1000>,/*DISP_SYS */
@@ -1084,7 +1088,6 @@
 			<0x14016000 0x1000>,	/*DISP_SMI_LARB0 */
 			<0x14017000 0x1000>,	/*DISP_SMI_COMMOM*/
 			<0x14018000 0x1000>;	/*MIPITX0,real chip would use this*/
-
 
 			interrupts = <0 0 8>, /*DISP_SYS */
 									<0 119 8>, /*DISP_OVL0 */
