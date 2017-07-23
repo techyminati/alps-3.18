@@ -410,7 +410,8 @@ DSI_STATUS DSI_DisableClk(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 
 void DSI_sw_clk_trail(int module_idx)
 {
-	DEFINE_SPINLOCK(s_lock);
+	static DEFINE_SPINLOCK(s_lock);
+
 	unsigned long flags;
 
 	register unsigned long *SW_CTRL_CON0_addr;
