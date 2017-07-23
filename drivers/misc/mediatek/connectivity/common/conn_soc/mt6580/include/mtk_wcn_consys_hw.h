@@ -288,7 +288,7 @@ extern struct CONSYS_BASE_ADDRESS conn_reg;
 */
 extern INT32 mtk_wcn_consys_hw_init(VOID);
 extern INT32 mtk_wcn_consys_hw_deinit(VOID);
-extern INT32 mtk_wcn_consys_hw_pwr_off(VOID);
+extern INT32 mtk_wcn_consys_hw_pwr_off(UINT32 co_clock_type);
 extern INT32 mtk_wcn_consys_hw_pwr_on(UINT32 co_clock_type);
 extern INT32 mtk_wcn_consys_hw_rst(UINT32 co_clock_type);
 extern INT32 mtk_wcn_consys_hw_bt_paldo_ctrl(UINT32 enable);
