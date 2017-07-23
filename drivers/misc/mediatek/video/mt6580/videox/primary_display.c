@@ -1466,6 +1466,7 @@ static int _DC_switch_to_DL_fast(void)
 	data_config_dl->rdma_config.pitch = 0;
 	data_config_dl->rdma_dirty = 1;
 	memcpy(data_config_dl->ovl_config, ovl_config, sizeof(ovl_config));
+	data_config_dl->ovl_dirty = 1;
 	ret = dpmgr_path_config(pgc->dpmgr_handle, data_config_dl, pgc->cmdq_handle_config);
 
 	/* use blocking flush to make sure all config is done, then stop/start trigger loop */
