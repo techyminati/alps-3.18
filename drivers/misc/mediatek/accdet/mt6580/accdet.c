@@ -979,7 +979,7 @@ static ssize_t accdet_store_call_state(struct device_driver *ddri, const char *b
 {
 	int ret;
 
-	ret = kstrtoint(buf, 0, &call_status);
+	ret = kstrtoint(buf, 10, &call_status);
 	if (ret != 0) {
 		ACCDET_DEBUG("accdet: Invalid values\n");
 		return -EINVAL;
@@ -1045,7 +1045,7 @@ static ssize_t store_accdet_start_debug_thread(struct device_driver *ddri, const
 	int error;
 	int ret;
 
-	ret = kstrtoint(buf, 0, &start_flag);
+	ret = kstrtoint(buf, 10, &start_flag);
 	if (ret != 0) {
 		ACCDET_DEBUG("accdet: Invalid values\n");
 		return -EINVAL;
@@ -1072,7 +1072,7 @@ static ssize_t store_accdet_set_headset_mode(struct device_driver *ddri, const c
 	int value;
 	int ret;
 
-	ret = kstrtoint(buf, 0, &value);
+	ret = kstrtoint(buf, 10, &value);
 	if (ret != 0) {
 		ACCDET_DEBUG("accdet: Invalid values\n");
 		return -EINVAL;
@@ -1088,7 +1088,7 @@ static ssize_t store_accdet_dump_register(struct device_driver *ddri, const char
 	int value;
 	int ret;
 
-	ret = kstrtoint(buf, 0, &value);
+	ret = kstrtoint(buf, 10, &value);
 	if (ret != 0) {
 		ACCDET_DEBUG("accdet: Invalid values\n");
 		return -EINVAL;
