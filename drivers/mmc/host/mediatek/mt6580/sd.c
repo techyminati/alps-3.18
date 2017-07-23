@@ -2174,6 +2174,7 @@ static void msdc_set_timeout(struct msdc_host *host, u32 ns, u32 clks)
 		, host->id, ns, clks, sdr_read32(MSDC_CFG), (host->sclk / 1000));
 }
 
+#if 0
 /* msdc_eirq_sdio() will be called when EIRQ(for WIFI) */
 static void msdc_eirq_sdio(void *data)
 {
@@ -2188,6 +2189,7 @@ static void msdc_eirq_sdio(void *data)
 	}
 #endif
 }
+#endif
 
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
 
