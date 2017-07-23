@@ -1,7 +1,7 @@
 #include <linux/delay.h>
 #include <linux/kthread.h>
-#include <mach/sync_write.h>
-#include <mach/mt_boot_common.h>
+#include <mt-plat/sync_write.h>
+#include <mt-plat/mt_boot_common.h>
 #include <mach/mt_clkmgr.h>
 #include "ccci_off.h"
 
@@ -45,8 +45,8 @@ static void internal_md_power_down(void)
 	#define TDD_HALT_CFG_ADDR(base)				((volatile unsigned int *)((base) + 0x0000))
 	#define TDD_HALT_STATUS_ADDR(base)			((volatile unsigned int *)((base) + 0x0002))
 
-	unsigned short status;
-	unsigned short i;
+	/*unsigned short status;*/
+	/*unsigned short i;*/
 	unsigned int md_topsm_base, modem2g_topsm_base, tdd_base;
 
 	pr_notice("[ccci-off]internal md disabled, so power down!\n");
@@ -187,8 +187,8 @@ static int __init modem_off_init(void)
 	modem_power_down();
 #else
 #ifdef CONFIG_MTK_KERNEL_POWER_OFF_CHARGING
-	if ((g_boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT) || (g_boot_mode == LOW_POWER_OFF_CHARGING_BOOT)) {
-		pr_debug("[ccci-off]power off MD in charging mode %d\n", g_boot_mode);
+	if ((get_boot_mode() == KERNEL_POWER_OFF_CHARGING_BOOT) || (get_boot_mode() == LOW_POWER_OFF_CHARGING_BOOT)) {
+		pr_debug("[ccci-off]power off MD in charging mode %d\n", get_boot_mode());
 		modem_power_down();
 	}
 #endif

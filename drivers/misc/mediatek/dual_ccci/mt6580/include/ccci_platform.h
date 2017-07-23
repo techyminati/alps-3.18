@@ -9,7 +9,7 @@
 #include <mach/mt_reg_base.h>
 #include <mach/mt_typedefs.h>
 #include <mach/mt_boot.h>
-#include <mach/sync_write.h>
+#include <mt-plat/sync_write.h>
 #include <linux/memory.h>
 #include <linux/string.h>
 #include <ccci_platform_cfg.h>
