@@ -70,7 +70,8 @@
 /* #include <mach/battery_meter.h> TBD */
 /* #include <mach/eint.h> TBD */
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
-#include <mach/mt_boot.h>
+#include <mt-plat/mt_boot.h>
+
 #endif
 /* #include <mach/mt_gpio.h> TBD */
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
@@ -85,7 +86,7 @@
 #endif
 /* #include <mach/pmic.h> TBD */
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
-#include <mach/system.h>
+/*#include <mach/system.h>*/
 #endif
 /* #include <mach/upmu_common.h> */
 #include <mt-plat/upmu_common.h>
@@ -95,7 +96,7 @@
 /*
  * PMIC extern variable
  */
-#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
+#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING_FIX)
 static bool long_pwrkey_press;
 static unsigned long timer_pre;
 static unsigned long timer_pos;
@@ -2491,13 +2492,13 @@ static struct pmic_interrupts interrupts[] = {
 
 void pwrkey_int_handler(void)
 {
-#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
+#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING_FIX)
 	static bool key_press;
 #endif
 
 	PMICLOG("[pwrkey_int_handler] Press pwrkey %d\n", pmic_get_register_value(PMIC_PWRKEY_DEB));
 	if (pmic_get_register_value(PMIC_PWRKEY_DEB) == 1) {
-#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
+#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING_FIX)
 		if (g_boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT) {
 			if (key_press == true) {
 				key_press = false;
@@ -2523,7 +2524,7 @@ void pwrkey_int_handler(void)
 		pmic_set_register_value(PMIC_RG_PWRKEY_INT_SEL, 0);
 	} else {
 		PMICLOG("[pwrkey_int_handler] Press pwrkey\n");
-#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
+#if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING_FIX)
 		if (g_boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT) {
 			key_press = KAL_TRUE;
 			timer_pre = sched_clock();

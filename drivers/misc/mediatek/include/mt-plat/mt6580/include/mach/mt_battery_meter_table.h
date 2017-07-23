@@ -1,7 +1,7 @@
 #ifndef _CUST_BATTERY_METER_TABLE_H
 #define _CUST_BATTERY_METER_TABLE_H
 
-#include <mach/battery_meter.h>
+#include <mt-plat/battery_meter.h>
 
 /* ============================================================*/
 /* define*/
@@ -921,10 +921,10 @@ R_PROFILE_STRUCT r_profile_temperature[] = {
 /* function prototype*/
 /* ============================================================*/
 int fgauge_get_saddles(void);
-BATTERY_PROFILE_STRUCT_P fgauge_get_profile(kal_uint32 temperature);
+BATTERY_PROFILE_STRUCT_P fgauge_get_profile(unsigned int temperature);
 
 int fgauge_get_saddles_r_table(void);
-R_PROFILE_STRUCT_P fgauge_get_profile_r_table(kal_uint32 temperature);
+R_PROFILE_STRUCT_P fgauge_get_profile_r_table(unsigned int temperature);
 
 #endif
 

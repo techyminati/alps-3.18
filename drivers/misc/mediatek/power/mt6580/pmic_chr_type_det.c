@@ -28,6 +28,7 @@
 #include <asm/uaccess.h>
 
 /* #include <mach/upmu_common.h> TBD */
+#include <mt-plat/charging.h>
 #include <mt-plat/upmu_common.h>
 #include <mach/upmu_sw.h>
 #include <mach/upmu_hw.h>

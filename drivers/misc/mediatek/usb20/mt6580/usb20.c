@@ -45,6 +45,7 @@
 /* GIT K318 WORKAROUND */
 /* #include <mach/mt_boot_common.h> */
 
+
 static DEFINE_SEMAPHORE(power_clock_lock);
 static u32 cable_mode = CABLE_MODE_NORMAL;
 /* add for linux kernel 3.10 */
@@ -370,7 +371,7 @@ bool usb_cable_connected(void)
 
 /* #ifdef CONFIG_POWER_EXT */
 	/* if (mt_get_charger_type() */
-#ifdef CONFIG_MTK_SMART_BATTERY
+#ifdef CONFIG_MTK_SMART_BATTERY_FIX
 	 if ((mt_get_charger_type() == STANDARD_HOST) || (mt_get_charger_type() == CHARGING_HOST)
 /* #else */
 /* if (upmu_is_chr_det() */

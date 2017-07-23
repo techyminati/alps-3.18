@@ -41,7 +41,7 @@
 #define BATTERY_AVERAGE_SIZE	30
 
 /* charger error check */
-/*#define BAT_LOW_TEMP_PROTECT_ENABLE         /* stop charging if temp < MIN_CHARGE_TEMPERATURE*/
+/*#define BAT_LOW_TEMP_PROTECT_ENABLE          stop charging if temp < MIN_CHARGE_TEMPERATURE*/
 #define V_CHARGER_ENABLE	0	/* 1:ON , 0:OFF	*/
 #define V_CHARGER_MAX	6500	/* 6.5 V*/
 #define V_CHARGER_MIN	4400	/* 4.4 V*/

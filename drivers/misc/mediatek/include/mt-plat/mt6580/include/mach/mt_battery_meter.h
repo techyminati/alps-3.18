@@ -74,7 +74,7 @@
 #define BATTERYPSEUDO100	90
 #define BATTERYPSEUDO1	4
 
-/*#define Q_MAX_BY_SYS	/*8. Qmax variant by system drop voltage.*/
+/*#define Q_MAX_BY_SYS	8. Qmax variant by system drop voltage.*/
 /*#define SHUTDOWN_GAUGE0*/
 #define SHUTDOWN_GAUGE1_XMINS
 #define SHUTDOWN_GAUGE1_MINS	60
@@ -110,10 +110,10 @@
 #define CLOSE_POWEROFF_WAKEUP_PERIOD	30	/*30 s*/
 
 #define INIT_SOC_BY_SW_SOC
-/*#define SYNC_UI_SOC_IMM			/*3. UI SOC sync to FG SOC immediately*/
+/*#define SYNC_UI_SOC_IMM			3. UI SOC sync to FG SOC immediately*/
 #define MTK_ENABLE_AGING_ALGORITHM	/*6. Q_MAX aging algorithm*/
 #define MD_SLEEP_CURRENT_CHECK	/*5. Gauge Adjust by OCV 9. MD sleep current check*/
-/*#define Q_MAX_BY_CURRENT		/*7. Qmax variant by current loading.*/
+/*#define Q_MAX_BY_CURRENT		7. Qmax variant by current loading.*/
 
 /*#define FG_BAT_INT*/
 /*#define IS_BATTERY_REMOVE_BY_PMIC*/

@@ -335,16 +335,11 @@ static signed int fgauge_set_columb_interrupt(void *data)
 	return STATUS_OK;
 }
 
-static signed int fgauge_read_columb_accurate(void *data)
-{
-	return 0;
-}
-
 static signed int(*bm_func[BATTERY_METER_CMD_NUMBER]) (void *data);
 
 signed int bm_ctrl_cmd(BATTERY_METER_CTRL_CMD cmd, void *data)
 {
-	signed int status;
+	signed int status = STATUS_UNSUPPORTED;
 	static signed int init = -1;
 
 	if (init == -1) {

@@ -166,7 +166,7 @@ static unsigned int charging_hw_init(void *data)
 #else
 	pmic_set_register_value(PMIC_RG_VBAT_OV_VTH, 1);	/*VBAT_OV_VTH, 4.3V,*/
 #endif
-	pmic_set_register_value(PMIC_RG_BATON_EN, 1);	/*BATON_EN
+	pmic_set_register_value(PMIC_RG_BATON_EN, 1);	/*BATON_EN*/
 
 	/*Tim, for TBAT*/
 	pmic_set_register_value(PMIC_RG_BATON_HT_EN, 0);	/*BATON_HT_EN*/
@@ -436,7 +436,7 @@ static unsigned int charging_set_platform_reset(void *data)
 #else
 	battery_log(BAT_LOG_CRTI, "charging_set_platform_reset\n");
 
-	arch_reset(0, NULL);
+/*	arch_reset(0, NULL);*/
 #endif
 
 	return status;
@@ -625,10 +625,6 @@ static unsigned int charging_set_ta_current_pattern(void *data)
 	return status;
 }
 
-static unsigned int charging_get_error_state(void *data)
-{
-	return STATUS_UNSUPPORTED;
-}
 
 static unsigned int charging_set_error_state(void *data)
 {
