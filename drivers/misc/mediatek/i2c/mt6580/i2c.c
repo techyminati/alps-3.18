@@ -856,7 +856,7 @@ static s32 _i2c_transfer_interface(struct mt_i2c_t *i2c)
 	}
 #endif
 	I2CINFO(I2C_T_TRANSFERFLOW, "Before start .....\n");
-#ifdef I2C_DEBUG_FS
+#if defined(I2C_DEBUG_FS) && defined(CONFIG_MTK_LEGACY)
 #if defined(GPIO_I2C0_SDA_PIN) && defined(GPIO_I2C1_SDA_PIN) && defined(GPIO_I2C2_SDA_PIN)
 	I2CLOG("I2C0_SDA=%d,I2C0_SCL=%d,I2C1_SDA=%d,I2C1_SCL=%d,I2C2_SDA=%d,I2C2_SCL=%d\n",
 	       mt_get_gpio_in(GPIO_I2C0_SDA_PIN), mt_get_gpio_in(GPIO_I2C0_SCA_PIN),
@@ -1611,9 +1611,7 @@ static s32 mt_i2c_resume(struct platform_device *pdev)
 #endif
 
 static const struct of_device_id mt_i2c_of_match[] = {
-	{.compatible = "mediatek,I2C0",},
-	{.compatible = "mediatek,I2C1",},
-	{.compatible = "mediatek,I2C2",},
+	{.compatible = "mediatek,mt6580-i2c",},
 	{},
 };
 
@@ -1639,7 +1637,7 @@ static s32 __init mt_i2c_init(void)
 	struct device_node *ap_dma_node;
 
 	/* ioremap the AP_DMA base and use offset get the I2C DMA base */
-	ap_dma_node = of_find_compatible_node(NULL, NULL, "mediatek,AP_DMA");
+	ap_dma_node = of_find_compatible_node(NULL, NULL, "mediatek,ap_dma");
 	if (!ap_dma_node) {
 		I2CERR("Cannot find AP_DMA node\n");
 		return -ENODEV;
