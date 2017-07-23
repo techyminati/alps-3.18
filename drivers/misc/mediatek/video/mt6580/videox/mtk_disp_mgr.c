@@ -529,7 +529,7 @@ int _ioctl_prepare_present_fence(unsigned long arg)
 	if (copy_from_user
 	    (&preset_fence_struct, (void __user *)arg,
 	     sizeof(disp_present_fence))) {
-		pr_debug("[FB Driver]: copy_from_user failed! line:%d\n",
+		DISPERR("[FB Driver]: copy_from_user failed! line:%d\n",
 		       __LINE__);
 		return (-EFAULT);
 	}
@@ -567,7 +567,7 @@ int _ioctl_prepare_present_fence(unsigned long arg)
 	preset_fence_struct.present_fence_index = data.value;
 	if (copy_to_user
 	    (argp, &preset_fence_struct, sizeof(preset_fence_struct))) {
-		pr_debug("[FB Driver]: copy_to_user failed! line:%d\n",
+		DISPERR("[FB Driver]: copy_to_user failed! line:%d\n",
 		       __LINE__);
 		ret = -EFAULT;
 	}
@@ -593,7 +593,7 @@ int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 	struct mtkfb_fence_buf_info *buf, *buf2;
 
 	if (copy_from_user(&info, (void __user *)arg, sizeof(info))) {
-		pr_debug("[FB Driver]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB Driver]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 
@@ -660,7 +660,7 @@ int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 		info.index = 0;
 	}
 	if (copy_to_user(argp, &info, sizeof(info))) {
-		pr_debug("[FB Driver]: copy_to_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB Driver]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;
 	}
 	return ret;
@@ -1254,7 +1254,7 @@ int _ioctl_set_input_buffer(unsigned long arg)
 	disp_session_sync_info *session_info;
 
 	if (copy_from_user(&session_input, argp, sizeof(session_input))) {
-		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 	session_input.setter = SESSION_USER_HWC;
@@ -1332,7 +1332,7 @@ int _ioctl_set_output_buffer(unsigned long arg)
 	disp_session_sync_info *session_info;
 
 	if (copy_from_user(&session_output, argp, sizeof(session_output))) {
-		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 
@@ -1492,7 +1492,7 @@ int _ioctl_get_lcm_index(unsigned long arg)
 	int index = primary_display_get_lcm_index();
 
 	if (copy_to_user(argp, &index, sizeof(int))) {
-		DISPMSG("display drvier: get lcm index failed\n");
+		DISPERR("display drvier: get lcm index failed\n");
 		ret = -EFAULT;
 	}
 	return ret;
@@ -1506,7 +1506,7 @@ int _ioctl_get_info(unsigned long arg)
 	unsigned int session_id = 0;
 
 	if (copy_from_user(&info, argp, sizeof(info))) {
-		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 
@@ -1527,7 +1527,7 @@ int _ioctl_get_info(unsigned long arg)
 	}
 
 	if (copy_to_user(argp, &info, sizeof(info))) {
-		DISPMSG("[FB]: copy_to_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;
 	}
 
@@ -1541,9 +1541,9 @@ int _ioctl_get_is_driver_suspend(unsigned long arg)
 	unsigned int is_suspend = 0;
 
 	is_suspend = primary_display_is_sleepd();
-	DISPMSG("ioctl_get_is_driver_suspend, is_suspend=%d\n", is_suspend);
+	pr_debug("ioctl_get_is_driver_suspend, is_suspend=%d\n", is_suspend);
 	if (copy_to_user(argp, &is_suspend, sizeof(int))) {
-		DISPMSG("[FB]: copy_to_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;
 	}
 
@@ -1557,7 +1557,7 @@ int _ioctl_get_display_caps(unsigned long arg)
 	void __user *argp = (void __user *)arg;
 
 	if (copy_from_user(&caps_info, argp, sizeof(caps_info))) {
-		DISPMSG("[FB]: copy_to_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;
 	}
 #ifdef DISP_HW_MODE_CAP
@@ -1582,7 +1582,7 @@ int _ioctl_get_display_caps(unsigned long arg)
 		caps_info.max_layer_num);
 
 	if (copy_to_user(argp, &caps_info, sizeof(caps_info))) {
-		DISPMSG("[FB]: copy_to_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;
 	}
 
@@ -1597,7 +1597,7 @@ int _ioctl_wait_vsync(unsigned long arg)
 	disp_session_sync_info *session_info;
 
 	if (copy_from_user(&vsync_config, argp, sizeof(vsync_config))) {
-		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 
@@ -1620,7 +1620,7 @@ int _ioctl_set_vsync(unsigned long arg)
 	unsigned int fps = 0;
 
 	if (copy_from_user(&fps, argp, sizeof(unsigned int))) {
-		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 
@@ -1650,7 +1650,7 @@ int _ioctl_set_session_mode(unsigned long arg)
 	disp_session_config config_info;
 
 	if (copy_from_user(&config_info, argp, sizeof(disp_session_config))) {
-		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		DISPERR("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
 	return set_session_mode(&config_info, 0);
