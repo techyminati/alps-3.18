@@ -2051,7 +2051,6 @@ void msdc_ungate_clock(struct msdc_host *host)
 	spin_unlock_irqrestore(&host->clk_gate_lock, flags);
 }
 
-#if 0 /* peter mark check if no mark */
 /* do we need sync object or not */
 void msdc_clk_status(int *status)
 {
@@ -2072,7 +2071,6 @@ void msdc_clk_status(int *status)
 	}
 	*status = g_clk_gate;
 }
-#endif
 
 #if 0
 static void msdc_dump_card_status(struct msdc_host *host, u32 status)
@@ -2262,7 +2260,7 @@ static void msdc_select_clksrc(struct msdc_host *host, int clksrc)
 	if (ori_clksrc != clksrc)
 		clkmux_sel(mux_id[host->id], clksrc, name);
 #else
-	/* peter check when rainier ccf ready */
+	/* No CCF */
 	if (host->id != 0) {
 		pr_err("NOT Support msdc%d switch pll souce[%s]%d\n",
 			host->id, __func__, __LINE__);
@@ -8640,7 +8638,7 @@ int msdc_drv_pm_restore_noirq(struct device *device)
 #endif
 
 #ifndef CONFIG_MTK_CLKMGR
-/* peter check when rainier ccf ready */
+/* No CCF */
 static int msdc_get_ccf_clk_pointer(struct platform_device *pdev,
 				struct msdc_host *host)
 {

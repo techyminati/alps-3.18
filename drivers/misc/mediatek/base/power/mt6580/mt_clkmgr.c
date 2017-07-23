@@ -4319,7 +4319,7 @@ int mt_clkmgr_init(void)
 	return 0;
 }
 
-#ifndef CONFIG_MTK_MMC
+#ifndef CONFIG_MMC_MTK
 void msdc_clk_status(int *status)
 {
 	*status = 0;
