@@ -6,7 +6,7 @@
 #include "ddp_aal.h"
 #include "ddp_gamma.h"
 #include "disp_event.h"
-#include "DpDataType.h"
+/* #include "DpDataType.h" */
 
 
 typedef struct {
@@ -42,7 +42,7 @@ typedef struct {
 	int layer;
 
 	unsigned long addr;
-	DpColorFormat fmt;
+	unsigned int fmt;	/* change from "DpColorFormat fmt;", due to uninclude "DpDataType.h" */
 
 	int x;
 	int y;
