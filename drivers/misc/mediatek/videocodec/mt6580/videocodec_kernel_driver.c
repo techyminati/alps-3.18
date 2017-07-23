@@ -2436,7 +2436,7 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
 				return -EFAULT;
 			}
 			/* tempory remark, must enable after function check-in */
-			/* rTempCoreLoading.Loading = get_cpu_load(rTempCoreLoading.CPUid); */
+			rTempCoreLoading.Loading = get_cpu_load(rTempCoreLoading.CPUid);
 			ret =
 			    copy_to_user(user_data_addr, &rTempCoreLoading,
 					 sizeof(VAL_VCODEC_CORE_LOADING_T));
