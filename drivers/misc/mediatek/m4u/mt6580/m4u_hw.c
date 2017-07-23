@@ -68,6 +68,8 @@ int m4u_invalid_tlb(int m4u_id, int L2_en, int isInvAll, unsigned int mva_start,
 
 	reg |= F_MMU_INV_EN_L1;
 
+	spin_lock(&gM4u_reg_lock);
+
 	M4U_WriteReg32(m4u_base, REG_INVLID_SEL, reg);
 
 	if (isInvAll) {
@@ -100,6 +102,8 @@ int m4u_invalid_tlb(int m4u_id, int L2_en, int isInvAll, unsigned int mva_start,
 #if (M4U_DVT != 0)
 	M4ULOG_MID("m4u_invalid_tlb (%d) 0x%x~0x%x\n", isInvAll, mva_start, mva_end);
 #endif
+
+	spin_unlock(&gM4u_reg_lock);
 
 	return 0;
 }
