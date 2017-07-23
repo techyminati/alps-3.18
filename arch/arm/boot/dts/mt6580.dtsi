@@ -7,6 +7,7 @@
  */
 
 
+#include "mt6580-pinfunc.h"
 
 / {
 	model = "MT6580";
@@ -613,6 +614,22 @@
 			interrupts = <0 36 0x8>;
 		};
 
+		syscfg_pctl_a: syscfg_pctl_a@0x10005000 {
+			compatible = "mediatek,mt6580-pctl-a-syscfg", "syscon";
+			reg = <0x10211000 0x1000>;
+		};
+
+		pio: pinctrl@0x10005000 {
+			compatible = "mediatek,mt6580-pinctrl";
+			reg = <0x10005000 0x1000>;
+			mediatek,pctl-regmap = <&syscfg_pctl_a>;
+			pins-are-numbered;
+			gpio-controller;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+
+		};
 		i2c0: I2C0@0x11009000 {
 			compatible = "mediatek,I2C0";
 			cell-index = <0>;
