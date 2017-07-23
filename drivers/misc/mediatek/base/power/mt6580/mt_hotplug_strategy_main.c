@@ -77,9 +77,9 @@ struct hps_ctxt_struct hps_ctxt = {
 	.big_cpu_id_max = 0,
 
 	/* algo config */
-	.up_threshold = DEF_CPU_UP_THRESHOLD,
+	.up_threshold = DEF_CPU_UP_THRESHOLD - 15,
 	.up_times = DEF_CPU_UP_TIMES,
-	.down_threshold = DEF_CPU_DOWN_THRESHOLD,
+	.down_threshold = DEF_CPU_DOWN_THRESHOLD - 15,
 	.down_times = DEF_CPU_DOWN_TIMES,
 	.input_boost_enabled = EN_CPU_INPUT_BOOST,
 	.input_boost_cpu_num = DEF_CPU_INPUT_BOOST_CPU_NUM,
