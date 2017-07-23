@@ -175,7 +175,6 @@ struct cust_mt65xx_led *get_cust_led_dtsi(void)
 	int mode, data;
 	int pwm_config[5] = { 0 };
 
-	LEDS_DEBUG("get_cust_led_dtsi: get the leds info from device tree\n");
 	if (pled_dtsi == NULL) {
 		/* this can allocat an new struct array */
 		pled_dtsi = kmalloc(MT65XX_LED_TYPE_TOTAL *
@@ -1005,8 +1004,6 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 	case MT65XX_LED_MODE_CUST_LCM:
 		if (strcmp(cust->name, "lcd-backlight") == 0)
 			bl_brightness_hal = level;
-		LEDS_DEBUG("brightness_set_cust:backlight control by LCM\n");
-		/* warning for this API revork */
 		return ((cust_brightness_set) (cust->data)) (level, bl_div_hal);
 
 	case MT65XX_LED_MODE_CUST_BLS_PWM:
