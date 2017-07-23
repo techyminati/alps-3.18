@@ -923,3 +923,39 @@ void sub_debug_deinit(void)
 		debugfs_remove(mtkfb_layer_dbgfs[i]);
 }
 
+unsigned int ddp_dump_reg_to_buf(unsigned int start_module, unsigned long *addr)
+{
+	unsigned int cnt = 0;
+	unsigned long reg_addr;
+
+	switch (start_module) {
+	case 0:
+		/* DISP_MODULE_WDMA0: */
+		reg_addr = DISP_REG_WDMA_INTEN;
+
+		while (reg_addr <= DISP_REG_WDMA_PRE_ADD2) {
+			addr[cnt++] = DISP_REG_GET(reg_addr);
+			reg_addr += 4;
+		}
+		/* fallthrough */
+	case 1:
+		/* DISP_MODULE_OVL: */
+		reg_addr = DISP_REG_OVL_STA;
+
+		while (reg_addr <= DISP_REG_OVL_L3_PITCH) {
+			addr[cnt++] = DISP_REG_GET(reg_addr);
+			reg_addr += 4;
+		}
+		/* fallthrough */
+	case 2:
+		/* DISP_MODULE_RDMA: */
+		reg_addr = DISP_REG_RDMA_INT_ENABLE;
+
+		while (reg_addr <= DISP_REG_RDMA_PRE_ADD_1) {
+			addr[cnt++] = DISP_REG_GET(reg_addr);
+			reg_addr += 4;
+		}
+		break;
+	}
+	return cnt * sizeof(unsigned long);
+}

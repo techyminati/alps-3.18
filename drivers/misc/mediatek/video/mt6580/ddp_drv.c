@@ -85,7 +85,44 @@ typedef struct {
 	spinlock_t node_lock;
 } disp_node_struct;
 
+
+static struct kobject kdispobj;
 /*****************************************************************************/
+/*****************************************************************************/
+/* sysfs for access information */
+/* --------------------------------------// */
+static ssize_t disp_kobj_show(struct kobject *kobj, struct attribute *attr, char *buffer)
+{
+	int size = 0x0;
+
+	if (0 == strcmp(attr->name, "dbg1"))
+		size = ddp_dump_reg_to_buf(2, (unsigned long *)buffer);
+	else if (0 == strcmp(attr->name, "dbg2"))
+		size = ddp_dump_reg_to_buf(1, (unsigned long *)buffer);
+	else if (0 == strcmp(attr->name, "dbg3"))
+		size = ddp_dump_reg_to_buf(0, (unsigned long *)buffer);
+
+	return size;
+}
+
+/* --------------------------------------// */
+
+static struct kobj_type disp_kobj_ktype = {
+	.sysfs_ops = &(const struct sysfs_ops){
+					 .show = disp_kobj_show,
+					 .store = NULL},
+	.default_attrs = (struct attribute *[]){
+						&(struct attribute){
+								    .name = "dbg1",	/* disp, dbg1 */
+								    .mode = S_IRUGO},
+						&(struct attribute){
+								    .name = "dbg2",	/* disp, dbg2 */
+								    .mode = S_IRUGO},
+						&(struct attribute){
+								    .name = "dbg3",	/* disp, dbg3 */
+								    .mode = S_IRUGO},
+						NULL}
+};
 static long disp_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	/* disp_node_struct *pNode = (disp_node_struct *) file->private_data; */
@@ -318,6 +355,14 @@ static int disp_probe(struct platform_device *pdev)
 	/* m4u_register_fault_callback(M4U_PORT_DISP_OVL1, disp_m4u_callback, 0); */
 	/* m4u_register_fault_callback(M4U_PORT_DISP_RDMA1, disp_m4u_callback, 0); */
 	/* m4u_register_fault_callback(M4U_PORT_DISP_WDMA1, disp_m4u_callback, 0); */
+
+	/* sysfs */
+	DISPDBG("sysfs disp +");
+	/* add kobject */
+	if (kobject_init_and_add(&kdispobj, &disp_kobj_ktype, NULL, "disp") < 0) {
+		DISPDBG("fail to add disp\n");
+		return -ENOMEM;
+	}
 
 	DISPDBG("dispsys probe done.\n");
 	/* NOT_REFERENCED(class_dev); */
