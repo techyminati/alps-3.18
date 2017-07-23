@@ -379,7 +379,7 @@ void mt_set_intr_ack_hal(uint32_t pwm_intr_ack_bit)
 	SETREG32(PWM_INT_ACK, 1 << pwm_intr_ack_bit);
 }
 
-void mt_set_pwm_buf0_addr_hal(uint32_t pwm_no, uint32_t *addr)
+void mt_set_pwm_buf0_addr_hal(uint32_t pwm_no, dma_addr_t addr)
 {
 	unsigned long reg_buff0_addr;
 
