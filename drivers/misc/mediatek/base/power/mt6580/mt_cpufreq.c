@@ -1656,7 +1656,7 @@ void mt_cpufreq_thermal_protect(unsigned int limited_power)
 {
 	FUNC_ENTER(FUNC_LV_API);
 
-	cpufreq_info("%s(): limited_power = %d\n", __func__, limited_power);
+	cpufreq_ver("%s(): limited_power = %d\n", __func__, limited_power);
 
 #ifdef CONFIG_CPU_FREQ
 	{
@@ -1713,7 +1713,7 @@ void mt_cpufreq_thermal_protect(unsigned int limited_power)
 			}
 		}
 
-		cpufreq_info("found = %d, limited_max_freq = %d, limited_max_ncpu = %d\n", found,
+		cpufreq_ver("found = %d, limited_max_freq = %d, limited_max_ncpu = %d\n", found,
 			     p->limited_max_freq, p->limited_max_ncpu);
 
 		cpufreq_unlock(flag);	/* <- unlock */
@@ -1785,7 +1785,7 @@ static int _thermal_limited_verify(struct mt_cpu_dvfs *p, int new_opp_idx)
 			break;
 	}
 
-	cpufreq_info("%s(): idx = %d, limited_max_ncpu = %d, limited_max_freq = %d\n", __func__, i,
+	cpufreq_ver("%s(): idx = %d, limited_max_ncpu = %d, limited_max_freq = %d\n", __func__, i,
 		     p->limited_max_ncpu, p->limited_max_freq);
 
 	for (; i < p->nr_opp_tbl * possible_cpu; i++) {
@@ -2027,7 +2027,7 @@ static void _mt_cpufreq_lcm_status_switch(int onoff)
 #ifdef CONFIG_CPU_FREQ
 	struct cpufreq_policy *policy;
 #endif
-	cpufreq_info("@%s: LCM is %s\n", __func__, (onoff) ? "on" : "off");
+	cpufreq_ver("@%s: LCM is %s\n", __func__, (onoff) ? "on" : "off");
 
 	/* onoff = 0: LCM OFF */
 	/* others: LCM ON */
