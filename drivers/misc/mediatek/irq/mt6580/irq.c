@@ -11,6 +11,7 @@
 #include <linux/irqdomain.h>
 #include <linux/device.h>
 #include <linux/platform_device.h>
+#include <linux/irqchip/mt-gic.h>
 #if defined(CONFIG_FIQ_GLUE)
 #include <asm/fiq.h>
 #include <asm/fiq_glue.h>
@@ -20,6 +21,26 @@
 #include <mt-plat/sync_write.h>
 #include <mach/irqs.h>
 #include <mach/mt_secure_api.h>
+
+#define GIC_ICDISR (GIC_DIST_BASE + 0x80)
+#define GIC_ICDISER0 (GIC_DIST_BASE + 0x100)
+#define GIC_ICDISER1 (GIC_DIST_BASE + 0x104)
+#define GIC_ICDISER2 (GIC_DIST_BASE + 0x108)
+#define GIC_ICDISER3 (GIC_DIST_BASE + 0x10C)
+#define GIC_ICDISER4 (GIC_DIST_BASE + 0x110)
+#define GIC_ICDISER5 (GIC_DIST_BASE + 0x114)
+#define GIC_ICDISER6 (GIC_DIST_BASE + 0x118)
+#define GIC_ICDISER7 (GIC_DIST_BASE + 0x11C)
+#define GIC_ICDISER8 (GIC_DIST_BASE + 0x120)
+#define GIC_ICDICER0 (GIC_DIST_BASE + 0x180)
+#define GIC_ICDICER1 (GIC_DIST_BASE + 0x184)
+#define GIC_ICDICER2 (GIC_DIST_BASE + 0x188)
+#define GIC_ICDICER3 (GIC_DIST_BASE + 0x18C)
+#define GIC_ICDICER4 (GIC_DIST_BASE + 0x190)
+#define GIC_ICDICER5 (GIC_DIST_BASE + 0x194)
+#define GIC_ICDICER6 (GIC_DIST_BASE + 0x198)
+#define GIC_ICDICER7 (GIC_DIST_BASE + 0x19C)
+#define GIC_ICDICER8 (GIC_DIST_BASE + 0x1A0)
 
 void __iomem *GIC_DIST_BASE;
 void __iomem *GIC_CPU_BASE;
@@ -549,6 +570,253 @@ void mt_enable_ppi(int irq)
 }
 
 /*
+ * mt_PPI_mask_all: disable all PPI interrupts
+ * @mask: pointer to struct mtk_irq_mask for storing the original mask value.
+ * Return 0 for success; return negative values for failure.
+ */
+int mt_PPI_mask_all(struct mtk_irq_mask *mask)
+{
+	unsigned long flags;
+
+	if (mask) {
+#if defined(CONFIG_FIQ_GLUE)
+		local_fiq_disable();
+#endif
+		spin_lock_irqsave(&irq_lock, flags);
+		mask->mask0 = readl(IOMEM(GIC_ICDISER0));
+
+		mt_reg_sync_writel(0xFFFFFFFF, GIC_ICDICER0);
+
+		spin_unlock_irqrestore(&irq_lock, flags);
+#if defined(CONFIG_FIQ_GLUE)
+		local_fiq_enable();
+#endif
+
+		mask->header = IRQ_MASK_HEADER;
+		mask->footer = IRQ_MASK_FOOTER;
+
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
+/*
+ * mt_PPI_mask_restore: restore all PPI interrupts
+ * @mask: pointer to struct mtk_irq_mask for storing the original mask value.
+ * Return 0 for success; return negative values for failure.
+ */
+int mt_PPI_mask_restore(struct mtk_irq_mask *mask)
+{
+	unsigned long flags;
+
+	if (!mask)
+		return -1;
+
+	if (mask->header != IRQ_MASK_HEADER)
+		return -1;
+
+	if (mask->footer != IRQ_MASK_FOOTER)
+		return -1;
+
+#if defined(CONFIG_FIQ_GLUE)
+	local_fiq_disable();
+#endif
+	spin_lock_irqsave(&irq_lock, flags);
+
+	mt_reg_sync_writel(mask->mask0, GIC_ICDISER0);
+
+	spin_unlock_irqrestore(&irq_lock, flags);
+#if defined(CONFIG_FIQ_GLUE)
+	local_fiq_enable();
+#endif
+
+	return 0;
+}
+
+/*
+ * mt_SPI_mask_all: disable all SPI interrupts
+ * @mask: pointer to struct mtk_irq_mask for storing the original mask value.
+ * Return 0 for success; return negative values for failure.
+ */
+int mt_SPI_mask_all(struct mtk_irq_mask *mask)
+{
+	unsigned long flags;
+
+	if (mask) {
+#if defined(CONFIG_FIQ_GLUE)
+		local_fiq_disable();
+#endif
+		spin_lock_irqsave(&irq_lock, flags);
+
+		mask->mask1 = readl(IOMEM(GIC_ICDISER1));
+		mask->mask2 = readl(IOMEM(GIC_ICDISER2));
+		mask->mask3 = readl(IOMEM(GIC_ICDISER3));
+		mask->mask4 = readl(IOMEM(GIC_ICDISER4));
+		mask->mask5 = readl(IOMEM(GIC_ICDISER5));
+		mask->mask6 = readl(IOMEM(GIC_ICDISER6));
+		mask->mask7 = readl(IOMEM(GIC_ICDISER7));
+		mask->mask8 = readl(IOMEM(GIC_ICDISER8));
+
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER1));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER2));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER3));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER4));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER5));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER6));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER7));
+		mt_reg_sync_writel(0xFFFFFFFF, GIC_ICDICER8);
+
+		spin_unlock_irqrestore(&irq_lock, flags);
+#if defined(CONFIG_FIQ_GLUE)
+		local_fiq_enable();
+#endif
+
+		mask->header = IRQ_MASK_HEADER;
+		mask->footer = IRQ_MASK_FOOTER;
+
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
+/*
+ * mt_SPI_mask_restore: restore all SPI interrupts
+ * @mask: pointer to struct mtk_irq_mask for storing the original mask value.
+ * Return 0 for success; return negative values for failure.
+ */
+int mt_SPI_mask_restore(struct mtk_irq_mask *mask)
+{
+	unsigned long flags;
+
+	if (!mask)
+		return -1;
+
+	if (mask->header != IRQ_MASK_HEADER)
+		return -1;
+
+	if (mask->footer != IRQ_MASK_FOOTER)
+		return -1;
+
+#if defined(CONFIG_FIQ_GLUE)
+	local_fiq_disable();
+#endif
+	spin_lock_irqsave(&irq_lock, flags);
+
+	mt_reg_sync_writel(mask->mask1, IOMEM(GIC_ICDISER1));
+	mt_reg_sync_writel(mask->mask2, IOMEM(GIC_ICDISER2));
+	mt_reg_sync_writel(mask->mask3, IOMEM(GIC_ICDISER3));
+	mt_reg_sync_writel(mask->mask4, IOMEM(GIC_ICDISER4));
+	mt_reg_sync_writel(mask->mask5, IOMEM(GIC_ICDISER5));
+	mt_reg_sync_writel(mask->mask6, IOMEM(GIC_ICDISER6));
+	mt_reg_sync_writel(mask->mask7, IOMEM(GIC_ICDISER7));
+	mt_reg_sync_writel(mask->mask8, GIC_ICDISER8);
+
+	spin_unlock_irqrestore(&irq_lock, flags);
+#if defined(CONFIG_FIQ_GLUE)
+	local_fiq_enable();
+#endif
+
+	return 0;
+}
+
+/*
+ * mt_irq_mask_all: disable all interrupts
+ * @mask: pointer to struct mtk_irq_mask for storing the original mask value.
+ * Return 0 for success; return negative values for failure.
+ * (This is ONLY used for the idle current measurement by the factory mode.)
+ */
+int mt_irq_mask_all(struct mtk_irq_mask *mask)
+{
+	unsigned long flags;
+
+	if (mask) {
+#if defined(CONFIG_FIQ_GLUE)
+		local_fiq_disable();
+#endif
+		spin_lock_irqsave(&irq_lock, flags);
+
+		mask->mask0 = readl(IOMEM(GIC_ICDISER0));
+		mask->mask1 = readl(IOMEM(GIC_ICDISER1));
+		mask->mask2 = readl(IOMEM(GIC_ICDISER2));
+		mask->mask3 = readl(IOMEM(GIC_ICDISER3));
+		mask->mask4 = readl(IOMEM(GIC_ICDISER4));
+		mask->mask5 = readl(IOMEM(GIC_ICDISER5));
+		mask->mask6 = readl(IOMEM(GIC_ICDISER6));
+		mask->mask7 = readl(IOMEM(GIC_ICDISER7));
+		mask->mask8 = readl(IOMEM(GIC_ICDISER8));
+
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER0));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER1));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER2));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER3));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER4));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER5));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER6));
+		mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDICER7));
+		mt_reg_sync_writel(0xFFFFFFFF, GIC_ICDICER8);
+
+		spin_unlock_irqrestore(&irq_lock, flags);
+#if defined(CONFIG_FIQ_GLUE)
+		local_fiq_enable();
+#endif
+
+		mask->header = IRQ_MASK_HEADER;
+		mask->footer = IRQ_MASK_FOOTER;
+
+		return 0;
+	} else {
+		return -1;
+	}
+}
+
+/*
+ * mt_irq_mask_restore: restore all interrupts
+ * @mask: pointer to struct mtk_irq_mask for storing the original mask value.
+ * Return 0 for success; return negative values for failure.
+ * (This is ONLY used for the idle current measurement by the factory mode.)
+ */
+int mt_irq_mask_restore(struct mtk_irq_mask *mask)
+{
+	unsigned long flags;
+
+	if (!mask)
+		return -1;
+
+	if (mask->header != IRQ_MASK_HEADER)
+		return -1;
+
+	if (mask->footer != IRQ_MASK_FOOTER)
+		return -1;
+
+#if defined(CONFIG_FIQ_GLUE)
+	local_fiq_disable();
+#endif
+	spin_lock_irqsave(&irq_lock, flags);
+
+	mt_reg_sync_writel(mask->mask0, IOMEM(GIC_ICDISER0));
+	mt_reg_sync_writel(mask->mask1, IOMEM(GIC_ICDISER1));
+	mt_reg_sync_writel(mask->mask2, IOMEM(GIC_ICDISER2));
+	mt_reg_sync_writel(mask->mask3, IOMEM(GIC_ICDISER3));
+	mt_reg_sync_writel(mask->mask4, IOMEM(GIC_ICDISER4));
+	mt_reg_sync_writel(mask->mask5, IOMEM(GIC_ICDISER5));
+	mt_reg_sync_writel(mask->mask6, IOMEM(GIC_ICDISER6));
+	mt_reg_sync_writel(mask->mask7, IOMEM(GIC_ICDISER7));
+	mt_reg_sync_writel(mask->mask8, GIC_ICDISER8);
+
+	spin_unlock_irqrestore(&irq_lock, flags);
+#if defined(CONFIG_FIQ_GLUE)
+	local_fiq_enable();
+#endif
+
+	return 0;
+}
+
+/*
+#define GIC_DIST_PENDING_SET			0x200
+#define GIC_DIST_PENDING_CLEAR		  0x280
+
  * mt_irq_set_pending_for_sleep: pending an interrupt for the sleep manager's use
  * @irq: interrupt id
  * (THIS IS ONLY FOR SLEEP FUNCTION USE. DO NOT USE IT YOURSELF!)
