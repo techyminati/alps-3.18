@@ -1446,13 +1446,15 @@ do { \
 do { \
 	unsigned int tv = sdr_read32(reg);    \
 	tv &= ~(field); \
-	tv |= ((val) << (uffs((unsigned int)field) - 1)); \
+	if (uffs((unsigned int)field) > 0) \
+		tv |= ((val) << (uffs((unsigned int)field) - 1)); \
 	sdr_write32(reg, tv); \
 } while (0)
 #define sdr_get_field(reg, field, val) \
 do { \
 	unsigned int tv = sdr_read32(reg);    \
-	val = ((tv & (field)) >> (uffs((unsigned int)field) - 1)); \
+	if (uffs((unsigned int)field) > 0) \
+		val = ((tv & (field)) >> (uffs((unsigned int)field) - 1)); \
 } while (0)
 #define sdr_set_field_discrete(reg, field, val) \
 do { \

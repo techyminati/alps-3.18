@@ -738,7 +738,7 @@ static unsigned char msdc_ioconfig_names[MSDC_IOCONFIG_ITEMS][16] = {
 void msdc_dump_ioconfig_padctl(struct msdc_host *host)
 {
 	unsigned int i;
-	unsigned int val;
+	unsigned int val = 0;
 	void __iomem *base;
 
 	if (host->id == 0)
@@ -769,7 +769,7 @@ static void dump_audio_info(void)
 */
 static void dump_axi_bus_info(void)
 {
-	return; /*weiping fix */
+#if 0
 	if (infracfg_ao_reg_base && infracfg_reg_base && pericfg_reg_base) {
 		pr_err("=============== AXI BUS INFO =============");
 		pr_err("reg[0x10001224]=0x%x", sdr_read32(infracfg_ao_reg_base + 0x224));
@@ -781,6 +781,8 @@ static void dump_axi_bus_info(void)
 	} else
 		pr_err("infracfg_ao_reg=%p,infracfg_reg_base=%p,pericfg_reg_base=%p\n",
 			infracfg_ao_reg_base, infracfg_reg_base, pericfg_reg_base);
+#endif
+	return;
 }
 
 static void dump_emi_info(void)
@@ -788,7 +790,7 @@ static void dump_emi_info(void)
 	unsigned int i = 0;
 	unsigned int addr = 0;
 
-	return;	/*weiping fix */
+#if 0
 	if (emi_reg_base) {
 		pr_err("=============== EMI INFO =============");
 		pr_err("before, reg[0x102034e8]=0x%x",
@@ -810,6 +812,9 @@ static void dump_emi_info(void)
 		}
 	} else
 		pr_err("emi_reg_base = %p\n", emi_reg_base);
+#endif
+
+	return;
 }
 #endif
 
@@ -1964,7 +1969,7 @@ static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 	unsigned long flags;
 
 	if (host == NULL) {
-		ERR_MSG("WARN: host is NULL");
+		pr_err("WARN: host is NULL\n");
 		return;
 	}
 	host->card_inserted = 0;
@@ -2670,7 +2675,7 @@ int msdc_reinit(struct msdc_host *host)
 	unsigned long tmo = 12;
 
 	if (!host) {
-		ERR_MSG("msdc_host is NULL");
+		pr_err("msdc_host is NULL\n");
 		return -1;
 	}
 	if (host->hw->host_function != MSDC_SD)
@@ -2782,7 +2787,6 @@ static u32 msdc_status_verify_case1(struct msdc_host *host,
 		}
 
 		state = R1_CURRENT_STATE(status);
-		ERR_MSG("check card state<%d>", state);
 		if (state == 5 || state == 6) {
 			ERR_MSG("state<%d> need cmd12 to stop", state);
 			msdc_send_stop(host);	/* don't tuning */
@@ -2880,7 +2884,7 @@ static u32 msdc_status_verify_case4(struct msdc_host *host,
 	u32 state = 0;
 	u32 err = 0;		/*0: can tune normaly; 1: tune pass; */
 
-	if (cmd->arg && (0x1UL << 15))
+	if (cmd->arg & (0x1UL << 15))
 		return MSDC_VERIFY_NEED_NOT_TUNE;
 
 	while (1) {
@@ -3550,7 +3554,7 @@ int msdc_cache_ctrl(struct msdc_host *host, unsigned int enable,
 	return err;
 }
 
-int msdc_get_cache_region(void)
+static void get_emmc_cache_info(struct work_struct *work)
 {
 #ifdef MTK_MSDC_USE_CACHE
 	struct msdc_host *host;
@@ -3578,17 +3582,24 @@ int msdc_get_cache_region(void)
 	} else {
 		g_usrdata_part_start = (sector_t) (-1);
 		g_usrdata_part_end = (sector_t) (-1);
-		pr_debug("There is no userdata info\n");
+		pr_err("There is no userdata info\n");
 	}
 
 	pr_debug("msdc0:cache(0x%lld~0x%lld), usrdata(0x%lld~0x%lld)\n",
 		g_cache_part_start, g_cache_part_end,
 		g_usrdata_part_start, g_usrdata_part_end);
 #endif
-		return 0;
 }
 EXPORT_SYMBOL(msdc_get_cache_region);
 #endif
+
+static struct delayed_work get_cache_info;
+static int __init init_get_cache_work(void)
+{
+	INIT_DELAYED_WORK(&get_cache_info, get_emmc_cache_info);
+	schedule_delayed_work(&get_cache_info, 100);
+	return 0;
+}
 
 /*--------------------------------------------------------------------------*/
 /* mmc_host_ops members                                                     */
@@ -6580,9 +6591,9 @@ int msdc_tune_read(struct msdc_host *host)
 	sdr_get_field(MSDC_PATCH_BIT0, MSDC_PB0_RD_DAT_SEL, orig_dsmpl);
 	cur_rxdly0 = sdr_read32(MSDC_DAT_RDDLY0);
 	cur_rxdly1 = sdr_read32(MSDC_DAT_RDDLY1);
-	pr_err("msdc%d TUNE_READ: dsmpl<%d> rxdly0<0x%x> rxdly1<0x%x>;"
+	/*pr_err("msdc%d TUNE_READ: dsmpl<%d> rxdly0<0x%x> rxdly1<0x%x>;"
 		"dsel<%d> dl_cksel<%d> sfreq.<%d>", host->id, orig_dsmpl, cur_rxdly0,
-		cur_rxdly1, orig_dsel, orig_dl_cksel, host->sclk);
+		cur_rxdly1, orig_dsel, orig_dl_cksel, host->sclk);*/
 
 	return result;
 }
@@ -6822,33 +6833,15 @@ static void msdc_dump_trans_error(struct msdc_host *host,
 	}
 #endif
 
-	ERR_MSG("XXX CMD<%d><0x%x> Error<%d> Resp<0x%x>",
-		cmd->opcode, cmd->arg, cmd->error, cmd->resp[0]);
+	if (data)
+		ERR_MSG("XXX DAT block<%d> Error<%d>", data->blocks, data->error);
+	if (stop)
+		ERR_MSG("XXX STOP<%d><0x%x> Error<%d> Resp<0x%x>",
+			stop->opcode, stop->arg, stop->error, stop->resp[0]);
+	if (sbc)
+		ERR_MSG("XXX SBC<%d><0x%x> Error<%d> Resp<0x%x>",
+			sbc->opcode, sbc->arg, sbc->error, sbc->resp[0]);
 
-	if (data) {
-		if (host->suspend == 1)
-			ERR_MSG("XXX DAT block<%d> Error<%d>", data->blocks, data->error);
-		else
-			pr_debug("msdc%d XXX DAT block<%d> Error<%d>\n",
-				host->id, data->blocks, data->error);
-	}
-	if (stop) {
-		if (host->suspend == 1)
-			ERR_MSG("XXX STOP<%d><0x%x> Error<%d> Resp<0x%x>",
-				stop->opcode, stop->arg, stop->error, stop->resp[0]);
-		else
-			pr_debug("msdc%d XXX STOP<%d><0x%x> Error<%d> Resp<0x%x>\n",
-				host->id, stop->opcode, stop->arg, stop->error, stop->resp[0]);
-	}
-
-	if (sbc) {
-		if (host->suspend == 1)
-			ERR_MSG("XXX SBC<%d><0x%x> Error<%d> Resp<0x%x>",
-				sbc->opcode, sbc->arg, sbc->error, sbc->resp[0]);
-		else
-			pr_debug("msdc%d XXX SBC<%d><0x%x> Error<%d> Resp<0x%x>\n",
-				host->id, sbc->opcode, sbc->arg, sbc->error, sbc->resp[0]);
-	}
 #ifdef MTK_SDIO30_ONLINE_TUNING_SUPPORT
 	if ((host->hw->host_function == MSDC_SDIO) && (cmd) && (data) &&
 	    ((cmd->error == -EIO) || (data->error == -EIO))) {
@@ -8056,7 +8049,7 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
 					intsts = MSDC_INT_DATCRCERR;
 					g_err_tune_dbg_count--;
 				}
-				pr_err("%s:make error cmd:%d,arg=%d,error type=%d,count=%d\n"
+				pr_err("%s:make error cmd:%d,arg=%d,error type=%d,count=%d\n",
 					__func__, g_err_tune_dbg_cmd, g_err_tune_dbg_arg,
 					g_err_tune_dbg_error, g_err_tune_dbg_count);
 			}
@@ -8100,9 +8093,9 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
 					host->mrq->cmd->opcode, host->mrq->cmd->arg);
 			} else if (intsts & MSDC_INT_DATCRCERR) {
 				data->error = (unsigned int)-EIO;
-				ERR_MSG("XXX CMD<%d> Arg<0x%.8x> MSDC_INT_DATCRCERR,SDC_DCRC_STS<0x%x>",
+				/*ERR_MSG("XXX CMD<%d> Arg<0x%.8x> MSDC_INT_DATCRCERR,SDC_DCRC_STS<0x%x>",
 					host->mrq->cmd->opcode,	host->mrq->cmd->arg,
-					sdr_read32(SDC_DCRC_STS));
+					sdr_read32(SDC_DCRC_STS));*/
 			}
 			goto tune;
 		}
@@ -9677,7 +9670,7 @@ static void __exit mt_msdc_exit(void)
 module_init(mt_msdc_init);
 module_exit(mt_msdc_exit);
 #ifdef CONFIG_MTK_EMMC_SUPPORT
-late_initcall_sync(msdc_get_cache_region);
+late_initcall_sync(init_get_cache_work);
 #endif
 MODULE_LICENSE("GPL");
 MODULE_DESCRIPTION("MediaTek SD/MMC Card Driver");

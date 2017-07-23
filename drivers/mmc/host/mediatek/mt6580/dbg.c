@@ -167,7 +167,7 @@ static void msdc_set_field(void __iomem *address, unsigned int start_bit, unsign
 {
 	unsigned long field;
 
-	if (start_bit > 31 || start_bit < 0 || len > 32 || len <= 0)
+	if (start_bit > 31 || start_bit < 0 || len >= 32 || len <= 0)
 		pr_err("[****SD_Debug****]reg filed beyoned (0~31) or length beyoned (1~32)\n");
 	else {
 		field = ((1 << len) - 1) << start_bit;
@@ -183,7 +183,7 @@ static void msdc_get_field(void __iomem *address, unsigned int start_bit, unsign
 {
 	unsigned long field;
 
-	if (start_bit > 31 || start_bit < 0 || len > 32 || len <= 0)
+	if (start_bit > 31 || start_bit < 0 || len >= 32 || len <= 0)
 		pr_err("[****SD_Debug****]reg filed beyoned (0~31) or length beyoned (1~32)\n");
 	else {
 		field = ((1 << len) - 1) << start_bit;
@@ -1052,7 +1052,7 @@ void msdc_ett_hs400(struct msdc_host *host, int count, int voltage)
 	unsigned int ds_dly1 = 0, ds_dly3 = 0, orig_ds_dly1 = 0, orig_ds_dly3 = 0;
 
 	if (!host || !host->mmc || !host->mmc->card) {
-		pr_err(" there is no card initialized in host[%d]\n", host->id);
+		pr_err(" there is no card initialized in host\n");
 		return;
 	}
 
@@ -2153,7 +2153,7 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 #ifdef CONFIG_MTK_CLKMGR
 			disable_clock(msdc_cg_clk_id[id], "SD");
 #else
-			clk_disable_unprepare(host->clock_control);
+			clk_disable(host->clock_control);
 #endif
 #endif
 		}
@@ -2315,6 +2315,22 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 		thread_num = p2;
 		compare_count = p3;
 		multi_address = p4;
+		if (id >= HOST_MAX_NUM || id < 0) {
+			pr_err(" bad host id: %d\n", id);
+		return -1;
+	}
+	if (thread_num > MAX_THREAD_NUM_FOR_SMP) {	/* && (multi_address != 0)) */
+		pr_err(" too much thread for SMP test, thread_num=%d\n", thread_num);
+		return -1;
+	}
+	if (compare_count < 0) {
+		pr_err("illegal compare count!\n");
+		return -1;
+	}
+	if (multi_address < 0) {
+		pr_err("illegal test address!\n");
+		return -1;
+	}
 		smp_test_on_one_host(thread_num, id, compare_count, multi_address);
 	} else if (cmd == SMP_TEST_ON_ALL_HOST) {
 		thread_num = p1;
