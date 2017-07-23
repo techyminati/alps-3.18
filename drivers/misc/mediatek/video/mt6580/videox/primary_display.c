@@ -24,6 +24,7 @@
 #include "ddp_drv.h"
 #include "ddp_reg.h"
 #include "ddp_ovl.h"
+#include "ddp_rdma.h"
 #include "ddp_manager.h"
 #include "ddp_mmp.h"
 #include "ddp_debug.h"

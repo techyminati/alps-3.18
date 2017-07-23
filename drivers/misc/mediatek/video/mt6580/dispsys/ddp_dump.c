@@ -6,6 +6,7 @@
 #include "ddp_ovl.h"
 #include "ddp_wdma.h"
 #include "ddp_rdma.h"
+#include "ddp_rdma_ex.h"
 #include "ddp_irq.h"
 #include "primary_display.h"
 
