@@ -137,16 +137,6 @@
 						compatible = "mediatek, minirdump";
 						reg = <0 0x83ff0000 0 0x10000>;
 				};
-
-				preloader-reserved-memory@82000000 {
-						compatible = "mediatek,preloader";
-						reg = <0 0x82000000 0 0x200000>;
-				};
-
-				lk-reserved-memory@81e00000 {
-						compatible = "mediatek,lk";
-						reg = <0 0x81e00000 0 0x100000>;
-				};
 		};
 
 		gic: interrupt-controller@10210000 {
