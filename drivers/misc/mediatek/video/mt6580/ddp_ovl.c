@@ -468,7 +468,7 @@ int ovl_layer_config(DISP_MODULE_ENUM module,
 		color_matrix = 7;
 		break;		/* BT709 */
 	default:
-		DISPMSG("use default yuv_range=%d!\n", yuv_range);
+		DISPDBG("use default yuv_range=%d!\n", yuv_range);
 		color_matrix = 4;
 	}
 	/* DDPMSG("color matrix=%d.\n", color_matrix); */
@@ -479,7 +479,7 @@ int ovl_layer_config(DISP_MODULE_ENUM module,
 		DISPERR("source from memory, but addr is 0!\n");
 		ASSERT(0);
 	}
-	DISPMSG(
+	DISPDBG(
 	"ovl%d, layer=%d, source=%s, off(x=%d, y=%d), dst(%d, %d, %d, %d), pitch=%d, fmt=%s, addr=%lx, keyEn=%d, key=%d, aen=%d, alpha=%d, sur_aen=%d,sur_alpha=0x%x, constant_color=0x%x, yuv_range=%d\n",
 	       idx, layer, (source == 0) ? "memory" : "dim", src_x, src_y, dst_x, dst_y,
 	       dst_w, dst_h, src_pitch, ovl_intput_format_name(fmt, input_swap),
@@ -551,17 +551,11 @@ static void ovl_store_regs(DISP_MODULE_ENUM module)
 	int i = 0;
 	int idx = ovl_index(module);
 	unsigned int idx_offset = idx * DISP_OVL_INDEX_OFFSET;
-#if 0
-	static const unsigned long regs[] = {
-		DISP_REG_OVL_ROI_SIZE, DISP_REG_OVL_ROI_BGCLR,
-	};
-#else
 	static unsigned long regs[3];
 
 	regs[0] = DISP_REG_OVL_ROI_SIZE + idx_offset;
 	regs[1] = DISP_REG_OVL_ROI_BGCLR + idx_offset;
 	regs[2] = DISP_REG_OVL_DATAPATH_CON + idx_offset;
-#endif
 
 	reg_back_cnt[idx] = sizeof(regs) / sizeof(unsigned long);
 	ASSERT(reg_back_cnt[idx] <= OVL_REG_BACK_MAX);
@@ -571,7 +565,7 @@ static void ovl_store_regs(DISP_MODULE_ENUM module)
 		reg_back[idx][i].address = regs[i];
 		reg_back[idx][i].value = DISP_REG_GET(regs[i]);
 	}
-	DISPMSG("store %d cnt registers on ovl %d\n", reg_back_cnt[idx], idx);
+	DISPDBG("store %d cnt registers on ovl %d\n", reg_back_cnt[idx], idx);
 
 }
 
@@ -584,7 +578,7 @@ static void ovl_restore_regs(DISP_MODULE_ENUM module, void *handle)
 		i--;
 		DISP_REG_SET(handle, reg_back[idx][i].address, reg_back[idx][i].value);
 	}
-	DISPMSG("restore %d cnt registers on ovl %d\n", reg_back_cnt[idx], idx);
+	DISPDBG("restore %d cnt registers on ovl %d\n", reg_back_cnt[idx], idx);
 	reg_back_cnt[idx] = 0;
 }
 
@@ -592,7 +586,7 @@ int ovl_clock_on(DISP_MODULE_ENUM module, void *handle)
 {
 	int idx = ovl_index(module);
 
-	DISPMSG("ovl%d_clock_on\n", idx);
+	DISPDBG("ovl%d_clock_on\n", idx);
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		enable_clock(MT_CG_DISP0_DISP_OVL0, "OVL0");
@@ -604,7 +598,7 @@ int ovl_clock_off(DISP_MODULE_ENUM module, void *handle)
 {
 	int idx = ovl_index(module);
 
-	DISPMSG("ovl%d_clock_off\n", idx);
+	DISPDBG("ovl%d_clock_off\n", idx);
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		disable_clock(MT_CG_DISP0_DISP_OVL0, "OVL0");
@@ -616,7 +610,7 @@ int ovl_resume(DISP_MODULE_ENUM module, void *handle)
 {
 	int idx = ovl_index(module);
 
-	DISPMSG("ovl%d_resume\n", idx);
+	DISPDBG("ovl%d_resume\n", idx);
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		enable_clock(MT_CG_DISP0_DISP_OVL0, "OVL0");
@@ -629,7 +623,7 @@ int ovl_suspend(DISP_MODULE_ENUM module, void *handle)
 {
 	int idx = ovl_index(module);
 
-	DISPMSG("ovl%d_suspend\n", idx);
+	DISPDBG("ovl%d_suspend\n", idx);
 	ovl_store_regs(module);
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
@@ -707,8 +701,8 @@ void ovl_get_info(int idx, void *data)
 								      layer_off +
 								      DISP_REG_OVL_L0_CON));
 		}
-		DISPMSG("ovl_get_info:layer%d,en %d,w %d,h %d,bpp %d,addr %lu\n",
-		       i, p->layer_en, p->src_w, p->src_h, p->bpp, p->addr);
+		DISPDBG("ovl_get_info:layer%d,en %d,w %d,h %d,bpp %d,addr %lu\n",
+			i, p->layer_en, p->src_w, p->src_h, p->bpp, p->addr);
 	}
 }
 
@@ -716,7 +710,7 @@ static int ovl_check_input_param(OVL_CONFIG_STRUCT *config)
 {
 	if ((config->addr == 0 && config->source == 0) || config->dst_w == 0 || config->dst_h == 0) {
 		DISPERR("ovl layer %d parameter invalidate, addr=%lu, w=%d, h=%d\n",
-		       config->layer, config->addr, config->dst_w, config->dst_h);
+			config->layer, config->addr, config->dst_w, config->dst_h);
 		ASSERT(0);
 		return -1;
 	}

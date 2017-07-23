@@ -97,12 +97,12 @@ static int disp_open(struct inode *inode, struct file *file)
 {
 	disp_node_struct *pNode = NULL;
 
-	DISPMSG("enter disp_open() process:%s\n", current->comm);
+	DISPDBG("enter disp_open() process:%s\n", current->comm);
 
 	/* Allocate and initialize private data */
 	file->private_data = kmalloc(sizeof(disp_node_struct), GFP_ATOMIC);
 	if (NULL == file->private_data) {
-		DISPMSG("Not enough entry for DISP open operation\n");
+		DISPERR("Not enough entry for DISP open operation\n");
 		return -ENOMEM;
 	}
 
@@ -126,7 +126,7 @@ static int disp_release(struct inode *inode, struct file *file)
 	disp_node_struct *pNode = NULL;
 	/* unsigned int index = 0; */
 
-	DISPMSG("enter disp_release() process:%s\n", current->comm);
+	DISPDBG("enter disp_release() process:%s\n", current->comm);
 
 	pNode = (disp_node_struct *) file->private_data;
 
@@ -289,7 +289,7 @@ static int disp_probe(struct platform_device *pdev)
 				return ret;
 			}
 		}
-		DISPMSG("DT, i=%d, module=%s, map_addr=%p, map_irq=%d, reg_pa=0x%lx, irq=%d\n",
+		DISPDBG("DT, i=%d, module=%s, map_addr=%p, map_irq=%d, reg_pa=0x%lx, irq=%d\n",
 		       i, ddp_get_reg_module_name(i), dispsys_dev->regs[i], dispsys_dev->irq[i],
 		       ddp_reg_pa_base[i], ddp_irq_num[i]);
 	}
@@ -300,7 +300,7 @@ static int disp_probe(struct platform_device *pdev)
 
 	/* power on MMSYS for early porting */
 #ifdef CONFIG_MTK_FPGA
-	DISPMSG("[DISP Probe] power MMSYS:0x%lx,0x%lx\n", DISP_REG_CONFIG_MMSYS_CG_CLR0,
+	DISPDBG("[DISP Probe] power MMSYS:0x%lx,0x%lx\n", DISP_REG_CONFIG_MMSYS_CG_CLR0,
 	       DISP_REG_CONFIG_MMSYS_CG_CLR1);
 	DISP_REG_SET(NULL, DISP_REG_CONFIG_MMSYS_CG_CLR0, 0xFFFFFFFF);
 	DISP_REG_SET(NULL, DISP_REG_CONFIG_MMSYS_CG_CLR1, 0xFFFFFFFF);
@@ -311,7 +311,7 @@ static int disp_probe(struct platform_device *pdev)
 	ddp_path_init();
 
 	/* init M4U callback */
-	DISPMSG("register m4u callback\n");
+	DISPDBG("register m4u callback\n");
 	m4u_register_fault_callback(M4U_PORT_DISP_OVL0, disp_m4u_callback, 0);
 	m4u_register_fault_callback(M4U_PORT_DISP_RDMA0, disp_m4u_callback, 0);
 	m4u_register_fault_callback(M4U_PORT_DISP_WDMA0, disp_m4u_callback, 0);
@@ -319,7 +319,7 @@ static int disp_probe(struct platform_device *pdev)
 	/* m4u_register_fault_callback(M4U_PORT_DISP_RDMA1, disp_m4u_callback, 0); */
 	/* m4u_register_fault_callback(M4U_PORT_DISP_WDMA1, disp_m4u_callback, 0); */
 
-	DISPMSG("dispsys probe done.\n");
+	DISPDBG("dispsys probe done.\n");
 	/* NOT_REFERENCED(class_dev); */
 	return 0;
 }
@@ -338,7 +338,7 @@ static void disp_shutdown(struct platform_device *pdev)
 /* PM suspend */
 static int disp_suspend(struct platform_device *pdev, pm_message_t mesg)
 {
-	DISPMSG("\n\n==== DISP suspend is called ====\n");
+	DISPDBG("\n\n==== DISP suspend is called ====\n");
 
 	return 0;
 }
@@ -346,7 +346,7 @@ static int disp_suspend(struct platform_device *pdev, pm_message_t mesg)
 /* PM resume */
 static int disp_resume(struct platform_device *pdev)
 {
-	DISPMSG("\n\n==== DISP resume is called ====\n");
+	DISPDBG("\n\n==== DISP resume is called ====\n");
 
 	return 0;
 }
@@ -384,7 +384,7 @@ static int __init disp_init(void)
 {
 	int ret = 0;
 
-	DISPMSG("Register the disp driver\n");
+	DISPDBG("Register the disp driver\n");
 	if (platform_driver_register(&dispsys_of_driver)) {
 		DISPERR("failed to register disp driver\n");
 		/* platform_device_unregister(&disp_device); */

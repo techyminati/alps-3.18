@@ -567,26 +567,23 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 		}
 	}
 
-	DISPMSG("sodi low threshold(%d) high threshold(%d)\n", (sodi_threshold & 0x3ff),
+	DISPDBG("RDMA sodi low threshold(%d) high threshold(%d)\n", (sodi_threshold & 0x3ff),
 	       (sodi_threshold & 0xffc00) >> 10);
 
 	DISP_REG_SET(handle, idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_THRESHOLD_FOR_SODI,
 		     sodi_threshold);
 
-	/* DDPDBG("FIFO_VALID_Size      = 0x%03x = %d\n", fifo_valid_size     , fifo_valid_size     ); */
-	/* DDPDBG("ultra_low_level      = 0x%03x = %d\n", ultra_low_level     , ultra_low_level     ); */
-	/* DDPDBG("pre_ultra_low_level  = 0x%03x = %d\n", pre_ultra_low_level , pre_ultra_low_level ); */
 	DISP_REG_SET_FIELD(handle, FIFO_CON_FLD_OUTPUT_VALID_FIFO_THRESHOLD,
 			   idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_FIFO_CON, fifo_valid_size);
 
-	DISPMSG("FIFO_VALID_Size      = 0x%03x = %d\n", fifo_valid_size, fifo_valid_size);
-	DISPMSG("ultra_low_level      = 0x%03x = %d\n", ultra_low_level, ultra_low_level);
-	DISPMSG("pre_ultra_low_level  = 0x%03x = %d\n", pre_ultra_low_level, pre_ultra_low_level);
-	DISPMSG("pre_ultra_high_level = 0x%03x = %d\n", pre_ultra_high_level, pre_ultra_high_level);
-	DISPMSG("ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs, ultra_high_ofs);
-	DISPMSG("pre_ultra_low_ofs    = 0x%03x = %d\n", pre_ultra_low_ofs, pre_ultra_low_ofs);
-	DISPMSG("pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs, pre_ultra_high_ofs);
-	DISPMSG("sodi low threshold(%d) high threshold(%d)\n",
+	DISPDBG("RDMA FIFO_VALID_Size      = 0x%03x = %d\n", fifo_valid_size, fifo_valid_size);
+	DISPDBG("RDMA ultra_low_level      = 0x%03x = %d\n", ultra_low_level, ultra_low_level);
+	DISPDBG("RDMA pre_ultra_low_level  = 0x%03x = %d\n", pre_ultra_low_level, pre_ultra_low_level);
+	DISPDBG("RDMA pre_ultra_high_level = 0x%03x = %d\n", pre_ultra_high_level, pre_ultra_high_level);
+	DISPDBG("RDMA ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs, ultra_high_ofs);
+	DISPDBG("RDMA pre_ultra_low_ofs    = 0x%03x = %d\n", pre_ultra_low_ofs, pre_ultra_low_ofs);
+	DISPDBG("RDMA pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs, pre_ultra_high_ofs);
+	DISPDBG("RDMA sodi low threshold(%d) high threshold(%d)\n",
 		(sodi_threshold & 0x3ff),
 		(sodi_threshold & 0xffc00) >> 10);
 
@@ -614,8 +611,8 @@ int rdma_config(DISP_MODULE_ENUM module,
 
 	unsigned int idx = rdma_index(module);
 
-	DISPMSG
-	    ("RDMAConfig idx %d, mode %d, address 0x%lx, inputformat %s, pitch %u, width %u, height %u\n",
+	DISPDBG
+	    ("RDMA Config idx %d, mode %d, address 0x%lx, inputformat %s, pitch %u, width %u, height %u\n",
 	     idx, mode, address, rdma_intput_format_name(inputFormat, input_swap), pitch, width,
 	     height);
 	ASSERT(idx <= RDMA_INSTANCES);
@@ -780,8 +777,7 @@ void rdma_dump_analysis(DISP_MODULE_ENUM module)
 		DISP_REG_GET(DISP_REG_RDMA_OUT_P_CNT + DISP_RDMA_INDEX_OFFSET * idx),
 		DISP_REG_GET(DISP_REG_RDMA_OUT_LINE_CNT + DISP_RDMA_INDEX_OFFSET * idx),
 		rdma_start_time[idx],
-		rdma_end_time[idx]
-	    );
+		rdma_end_time[idx]);
 	DISPDMP("irq cnt: start=%d, end=%d, underflow=%d, targetline=%d\n",
 		rdma_start_irq_cnt[idx],
 		rdma_done_irq_cnt[idx],

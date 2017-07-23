@@ -1419,7 +1419,7 @@ int dpmgr_check_status(disp_path_handle dp_handle)
 
 	/* dump path */
 	{
-		DISPRCD("path:");
+		DISPMSG("path:");
 		for (i = 0; i < module_num; i++)
 			DISPMSG("%s-", ddp_get_module_name(modules[i]));
 		DISPMSG("\n");

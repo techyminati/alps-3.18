@@ -70,7 +70,7 @@ int disp_register_irq_callback(DDP_IRQ_CALLBACK cb)
 		DISPERR("not enough irq callback entries for module\n");
 		return -1;
 	}
-	DISPMSG("register callback on %d\n", i);
+	DISPIRQ("register callback on %d\n", i);
 	irq_callback_table[i] = cb;
 	return 0;
 }
@@ -347,7 +347,7 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 
 			}
 			if (reg_val & (1 << 4)) {
-				DISPMSG("rdma%d, pix(%d,%d,%d,%d)\n",
+				DISPIRQ("rdma%d, pix(%d,%d,%d,%d)\n",
 				       index,
 				       DISP_REG_GET(DISP_REG_RDMA_IN_P_CNT +
 						    DISP_RDMA_INDEX_OFFSET * index),
@@ -425,7 +425,7 @@ static int disp_irq_log_kthread_func(void *data)
 
 	while (1) {
 		wait_event_interruptible(disp_irq_log_wq, disp_irq_log_module);
-		DISPMSG("disp_irq_log_kthread_func dump intr register: disp_irq_log_module=%d\n",
+		DISPIRQ("disp_irq_log_kthread_func dump intr register: disp_irq_log_module=%d\n",
 		       disp_irq_log_module);
 		for (i = 0; i < DISP_MODULE_NUM; i++) {
 			if ((disp_irq_log_module & (1 << i)) != 0)

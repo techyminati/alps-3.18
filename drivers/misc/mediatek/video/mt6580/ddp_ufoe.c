@@ -23,26 +23,26 @@ static bool ufoe_enable;
 
 static void ufoe_dump(void)
 {
-	DISPMSG("==DISP UFOE REGS==\n");
-	DISPMSG("(0x000)UFOE_START =0x%x\n", DISP_REG_GET(DISP_REG_UFO_START));
-	DISPMSG("(0x000)UFOE_CFG0 =0x%x\n", DISP_REG_GET(DISP_REG_UFO_CFG_0B));
-	DISPMSG("(0x000)UFOE_CFG1 =0x%x\n", DISP_REG_GET(DISP_REG_UFO_CFG_1B));
-	DISPMSG("(0x000)UFOE_WIDTH =0x%x\n", DISP_REG_GET(DISP_REG_UFO_FRAME_WIDTH));
-	DISPMSG("(0x000)UFOE_HEIGHT =0x%x\n", DISP_REG_GET(DISP_REG_UFO_FRAME_HEIGHT));
-	DISPMSG("(0x000)UFOE_PAD  =0x%x\n", DISP_REG_GET(DISP_REG_UFO_CR0P6_PAD));
+	DISPDBG("==DISP UFOE REGS==\n");
+	DISPDBG("(0x000)UFOE_START =0x%x\n", DISP_REG_GET(DISP_REG_UFO_START));
+	DISPDBG("(0x000)UFOE_CFG0 =0x%x\n", DISP_REG_GET(DISP_REG_UFO_CFG_0B));
+	DISPDBG("(0x000)UFOE_CFG1 =0x%x\n", DISP_REG_GET(DISP_REG_UFO_CFG_1B));
+	DISPDBG("(0x000)UFOE_WIDTH =0x%x\n", DISP_REG_GET(DISP_REG_UFO_FRAME_WIDTH));
+	DISPDBG("(0x000)UFOE_HEIGHT =0x%x\n", DISP_REG_GET(DISP_REG_UFO_FRAME_HEIGHT));
+	DISPDBG("(0x000)UFOE_PAD  =0x%x\n", DISP_REG_GET(DISP_REG_UFO_CR0P6_PAD));
 }
 
 static int ufoe_init(DISP_MODULE_ENUM module, void *handle)
 {
 	enable_clock(MT_CG_DISP0_DISP_UFOE, "ufoe");
-	DISPMSG("ufoe_clock on CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
+	DISPDBG("ufoe_clock on CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
 	return 0;
 }
 
 static int ufoe_deinit(DISP_MODULE_ENUM module, void *handle)
 {
 	disable_clock(MT_CG_DISP0_DISP_UFOE, "ufoe");
-	DISPMSG("ufoe_clock off CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
+	DISPDBG("ufoe_clock off CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
 	return 0;
 }
 
@@ -51,7 +51,7 @@ int ufoe_start(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 	if (ufoe_enable)
 		DISP_REG_SET_FIELD(cmdq, START_FLD_DISP_UFO_START, DISP_REG_UFO_START, 1);
 
-	DISPMSG("ufoe_start, ufoe_start:0x%x\n", DISP_REG_GET(DISP_REG_UFO_START));
+	DISPDBG("ufoe_start, ufoe_start:0x%x\n", DISP_REG_GET(DISP_REG_UFO_START));
 	return 0;
 }
 
@@ -59,7 +59,7 @@ int ufoe_start(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 int ufoe_stop(DISP_MODULE_ENUM module, void *cmdq_handle)
 {
 	DISP_REG_SET_FIELD(cmdq_handle, START_FLD_DISP_UFO_START, DISP_REG_UFO_START, 0);
-	DISPMSG("ufoe_stop, ufoe_start:0x%x\n", DISP_REG_GET(DISP_REG_UFO_START));
+	DISPDBG("ufoe_stop, ufoe_start:0x%x\n", DISP_REG_GET(DISP_REG_UFO_START));
 	return 0;
 }
 
@@ -115,14 +115,14 @@ static int ufoe_config(DISP_MODULE_ENUM module, disp_ddp_path_config *pConfig, v
 static int ufoe_clock_on(DISP_MODULE_ENUM module, void *handle)
 {
 	enable_clock(MT_CG_DISP0_DISP_UFOE, "ufoe");
-	DISPMSG("ufoe_clock on CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
+	DISPDBG("ufoe_clock on CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
 	return 0;
 }
 
 static int ufoe_clock_off(DISP_MODULE_ENUM module, void *handle)
 {
 	disable_clock(MT_CG_DISP0_DISP_UFOE, "ufoe");
-	DISPMSG("ufoe_clock off CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
+	DISPDBG("ufoe_clock off CG 0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
 	return 0;
 }
 
@@ -130,7 +130,7 @@ static int ufoe_reset(DISP_MODULE_ENUM module, void *handle)
 {
 	DISP_REG_SET_FIELD(handle, START_FLD_DISP_UFO_SW_RST_ENGINE, DISP_REG_UFO_START, 1);
 	DISP_REG_SET_FIELD(handle, START_FLD_DISP_UFO_SW_RST_ENGINE, DISP_REG_UFO_START, 0);
-	DISPMSG("ufoe reset done\n");
+	DISPDBG("ufoe reset done\n");
 	return 0;
 }
 

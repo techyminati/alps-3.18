@@ -208,12 +208,12 @@ void wdma_calc_ultra(unsigned int idx, unsigned int width, unsigned int height, 
 	DISP_REG_SET(handle, idx * DISP_WDMA_INDEX_OFFSET + DISP_REG_WDMA_BUF_CON2, 0x1B010E22);
 	DISP_REG_SET(handle, idx * DISP_WDMA_INDEX_OFFSET + DISP_REG_WDMA_BUF_CON1, 0xD0100080);
 
-	/* DISPMSG("ultra_low_ofs        = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs        ); */
-	/* DISPMSG("ultra_low_ofs        = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs        ); */
-	/* DISPMSG("pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs   ); */
-	/* DISPMSG("pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs   ); */
-	/* DISPMSG("ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs       ); */
-	/* DISPMSG("ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs       ); */
+	DISPDBG("WDMA ultra_low_ofs      = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs);
+	DISPDBG("WDMA ultra_low_ofs      = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs);
+	DISPDBG("WDMA pre_ultra_high_ofs = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs);
+	DISPDBG("WDMA pre_ultra_high_ofs = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs);
+	DISPDBG("WDMA ultra_high_ofs     = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs);
+	DISPDBG("WDMA ultra_high_ofs     = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs);
 }
 
 static int wdma_config(DISP_MODULE_ENUM module,
@@ -237,7 +237,7 @@ static int wdma_config(DISP_MODULE_ENUM module,
 	int color_matrix = 0x2;	/* 0010 RGB_TO_BT601 */
 	unsigned int idx_offst = idx * DISP_WDMA_INDEX_OFFSET;
 
-	DISPMSG(
+	DISPDBG(
 		"module %s, src(w=%d,h=%d), clip(x=%d,y=%d,w=%d,h=%d),out_fmt=%s,dst_address=0x%lx,dst_p=%d,spific_alfa= %d,alpa=%d,handle=%p\n",
 		ddp_get_module_name(module),
 		srcWidth,
@@ -292,7 +292,8 @@ static int wdma_config(DISP_MODULE_ENUM module,
 static int wdma_clock_on(DISP_MODULE_ENUM module, void *handle)
 {
 	unsigned int idx = wdma_index(module);
-	/* DISPMSG("wmda%d_clock_on\n",idx); */
+
+	DISPDBG("wmda%d_clock_on\n", idx);
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		enable_clock(MT_CG_DISP0_DISP_WDMA0, "WDMA0");
@@ -303,7 +304,8 @@ static int wdma_clock_on(DISP_MODULE_ENUM module, void *handle)
 static int wdma_clock_off(DISP_MODULE_ENUM module, void *handle)
 {
 	unsigned int idx = wdma_index(module);
-	/* DISPMSG("wdma%d_clock_off\n",idx); */
+
+	DISPDBG("wdma%d_clock_off\n", idx);
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		disable_clock(MT_CG_DISP0_DISP_WDMA0, "WDMA0");
@@ -445,8 +447,6 @@ static int wdma_config_l(DISP_MODULE_ENUM module, disp_ddp_path_config *pConfig,
 			    config->dstPitch, config->useSpecifiedAlpha, config->alpha, handle);
 	return 0;
 }
-
-/* wdma */
 
 DDP_MODULE_DRIVER ddp_driver_wdma = {
 	.module = DISP_MODULE_WDMA0,
