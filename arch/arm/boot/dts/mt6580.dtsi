@@ -230,8 +230,8 @@
 			reg = <0x10009000 0x1000>;
 		};
 
-		SEJ@0x1000A000 {
-			compatible = "mediatek,SEJ";
+		hacc@0x1000A000 {
+			compatible = "mediatek,hacc";
 			reg = <0x1000A000 0x1000>;
 			interrupts = <0 110 0x0>;
 		};
