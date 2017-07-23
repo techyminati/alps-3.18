@@ -49,7 +49,7 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_fdt.h>
-/* #include <linux/of_irq.h> TBD */
+#include <linux/of_irq.h>
 #include <linux/platform_device.h>
 #include <linux/proc_fs.h>
 #include <linux/regulator/driver.h>
@@ -89,9 +89,6 @@
 #endif
 /* #include <mach/upmu_common.h> */
 #include <mt-plat/upmu_common.h>
-#if defined(CONFIG_MTK_KEYPAD)
-#include <mtk_kpd.h>
-#endif
 #include <pmic.h>
 #include <pmic_dvt.h>
 
@@ -147,7 +144,7 @@ unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigne
 	mutex_lock(&pmic_access_mutex);
 
 	/* mt_read_byte(RegNum, &pmic_reg); */
-#if defined(CONFIG_PMIC_WRAP)
+#if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
 #endif
 	pmic_reg = rdata;
@@ -182,7 +179,7 @@ unsigned int pmic_config_interface(unsigned int RegNum, unsigned int val, unsign
 	mutex_lock(&pmic_access_mutex);
 
 	/* 1. mt_read_byte(RegNum, &pmic_reg); */
-#if defined(CONFIG_PMIC_WRAP)
+#if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
 #endif
 	pmic_reg = rdata;
@@ -197,7 +194,7 @@ unsigned int pmic_config_interface(unsigned int RegNum, unsigned int val, unsign
 	pmic_reg |= (val << SHIFT);
 
 	/* 2. mt_write_byte(RegNum, pmic_reg); */
-#if defined(CONFIG_PMIC_WRAP)
+#if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(1, (RegNum), pmic_reg, &rdata);
 #endif
 	if (return_value != 0) {
@@ -238,7 +235,7 @@ unsigned int pmic_read_interface_nolock(unsigned int RegNum, unsigned int *val, 
 	unsigned int rdata = 0xFFFF;
 
 	/*mt_read_byte(RegNum, &pmic_reg); */
-#if defined(CONFIG_PMIC_WRAP)
+#if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
 #endif
 	pmic_reg = rdata;
@@ -272,7 +269,7 @@ unsigned int pmic_config_interface_nolock(unsigned int RegNum, unsigned int val,
 	/* pmic wrapper has spinlock protection. pmic do not to do it again */
 
 	/*1. mt_read_byte(RegNum, &pmic_reg); */
-#if defined(CONFIG_PMIC_WRAP)
+#if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
 #endif
 	pmic_reg = rdata;
@@ -287,7 +284,7 @@ unsigned int pmic_config_interface_nolock(unsigned int RegNum, unsigned int val,
 	pmic_reg |= (val << SHIFT);
 
 	/*2. mt_write_byte(RegNum, pmic_reg); */
-#if defined(CONFIG_PMIC_WRAP)
+#if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(1, (RegNum), pmic_reg, &rdata);
 #endif
 	if (return_value != 0) {
@@ -2520,7 +2517,7 @@ void pwrkey_int_handler(void)
 			}
 		}
 #endif
-#ifdef CONFIG_MTK_KEYPAD
+#ifdef CONFIG_KEYBOARD_MTK
 		kpd_pwrkey_pmic_handler(0x0);
 #endif
 		pmic_set_register_value(PMIC_RG_PWRKEY_INT_SEL, 0);
@@ -2533,7 +2530,7 @@ void pwrkey_int_handler(void)
 			PMICLOG("[pmic_thread_kthread] timer_pre = %ld, \r\n", timer_pre);
 		}
 #endif
-#ifdef CONFIG_MTK_KEYPAD
+#ifdef CONFIG_KEYBOARD_MTK
 		kpd_pwrkey_pmic_handler(0x1);
 #endif
 		pmic_set_register_value(PMIC_RG_PWRKEY_INT_SEL, 1);
@@ -2544,11 +2541,12 @@ void pwrkey_int_handler(void)
 /*
  * PMIC Interrupt callback
  */
-#ifndef CONFIG_MTK_KEYPAD
+#ifndef CONFIG_KEYBOARD_MTK
 void kpd_pmic_rstkey_handler(unsigned long pressed)
 {
 }
 #endif
+
 void homekey_int_handler(void)
 {
 	PMICLOG("[homekey_int_handler] Press homekey %d\n",
@@ -2664,7 +2662,7 @@ void wake_up_pmic(void)
 }
 EXPORT_SYMBOL(wake_up_pmic);
 
-#ifdef CONFIG_MTK_LEGACY
+#if 0 /* #ifdef CONFIG_MTK_LEGACY */
 void mt_pmic_eint_irq(void)
 {
 	PMICLOG("[mt_pmic_eint_irq] receive interrupt\n");
@@ -2673,8 +2671,11 @@ void mt_pmic_eint_irq(void)
 #else
 irqreturn_t mt_pmic_eint_irq(int irq, void *desc)
 {
+
 	PMICLOG("[mt_pmic_eint_irq] receive interrupt\n");
+	disable_irq_nosync(irq);
 	wake_up_pmic();
+
 	return IRQ_HANDLED;
 }
 #endif
@@ -2722,17 +2723,13 @@ void pmic_register_interrupt_callback(unsigned int intNo, void (EINT_FUNC_PTR) (
 
 }
 
-#ifndef CONFIG_MTK_LEGACY
 int g_pmic_irq;
-#endif
 void PMIC_EINT_SETTING(void)
 {
-#ifndef CONFIG_MTK_LEGACY
 #ifdef CONFIG_OF
 	int ret = 0;
 	unsigned int ints[2] = { 0, 0 };
 	struct device_node *node;
-#endif
 #endif
 	upmu_set_reg_value(MT6350_INT_CON0, 0);
 	upmu_set_reg_value(MT6350_INT_CON1, 0);
@@ -2762,7 +2759,7 @@ void PMIC_EINT_SETTING(void)
 #endif
 	pmic_enable_interrupt(20, 1, "PMIC");
 
-#ifdef CONFIG_MTK_LEGACY
+#if 0 /* #ifdef CONFIG_MTK_LEGACY */
 /*
 	mt_eint_set_hw_debounce(g_eint_pmic_num, g_cust_eint_mt_pmic_debounce_cn);
 	mt_eint_registration(g_eint_pmic_num, g_cust_eint_mt_pmic_type, mt_pmic_eint_irq, 0);
@@ -2782,12 +2779,13 @@ TBD */
 
 		enable_irq(g_pmic_irq);
 	} else
-		PMICLOG("can't find compatible node\n", __func__);
+		PMICLOG("%s can't find compatible node\n", __func__);
 #endif
 	PMICLOG("[CUST_EINT] CUST_EINT_MT_PMIC_MT6350_NUM=%d\n", g_eint_pmic_num);
 	PMICLOG("[CUST_EINT] CUST_EINT_PMIC_DEBOUNCE_CN=%d\n", g_cust_eint_mt_pmic_debounce_cn);
 	PMICLOG("[CUST_EINT] CUST_EINT_PMIC_TYPE=%d\n", g_cust_eint_mt_pmic_type);
 	PMICLOG("[CUST_EINT] CUST_EINT_PMIC_DEBOUNCE_EN=%d\n", g_cust_eint_mt_pmic_debounce_en);
+
 }
 
 static void pmic_int_handler(void)
@@ -2860,12 +2858,13 @@ static int pmic_thread_kthread(void *x)
 #endif
 
 		set_current_state(TASK_INTERRUPTIBLE);
-#ifdef CONFIG_MTK_LEGACY
+#if 0 /* #ifdef CONFIG_MTK_LEGACY */
 #if 0				/* TBD */
 		mt_eint_unmask(g_eint_pmic_num);	/* need fix */
 #endif
 #else
-		disable_irq(g_pmic_irq);
+		if (g_pmic_irq != 0)
+			enable_irq(g_pmic_irq);
 #endif
 		schedule();
 	}
