@@ -1171,6 +1171,12 @@ void msdc_set_smpl(struct msdc_host *host, u8 HS400, u8 mode, u8 type, u8 *edge)
 		if (mode == MSDC_SMPL_RISING || mode == MSDC_SMPL_FALLING) {
 			sdr_set_field(MSDC_IOCON, MSDC_IOCON_R_D_SMPL_SEL, 0);
 			/* sdr_set_field(MSDC_IOCON, MSDC_IOCON_R_D_SMPL, mode); */
+
+			/* DDR mode or HS400 fix 0 */
+			if ((ddr_mode == 2) || (ddr_mode == 3))
+				sdr_set_field(MSDC_PATCH_BIT0, MSDC_PB0_RD_DAT_SEL, 0);
+			else
+				sdr_set_field(MSDC_PATCH_BIT0, MSDC_PB0_RD_DAT_SEL, mode);
 		} else if ((mode == MSDC_SMPL_SEPARATE) && (edge != NULL)
 		&& (sizeof(edge) == 8)) {
 			sdr_set_field(MSDC_IOCON, MSDC_IOCON_R_D_SMPL_SEL, 1);
@@ -2541,7 +2547,8 @@ static u32 msdc_power_tuning(struct msdc_host *host)
 			spin_lock(&host->lock);
 			sdr_get_field(MSDC_IOCON, MSDC_IOCON_DDLSEL, host->hw->ddlsel);
 			sdr_get_field(MSDC_IOCON, MSDC_IOCON_RSPL, host->hw->cmd_edge);
-			sdr_get_field(MSDC_IOCON, MSDC_IOCON_R_D_SMPL, host->hw->rdata_edge);
+			/* sdr_get_field(MSDC_IOCON, MSDC_IOCON_R_D_SMPL, host->hw->rdata_edge); */
+			sdr_get_field(MSDC_PATCH_BIT0, MSDC_PB0_RD_DAT_SEL, host->hw->rdata_edge);
 			sdr_get_field(MSDC_IOCON, MSDC_IOCON_W_D_SMPL, host->hw->wdata_edge);
 			host->saved_para.pad_tune0 = sdr_read32(MSDC_PAD_TUNE0);
 			host->saved_para.ddly0 = sdr_read32(MSDC_DAT_RDDLY0);
