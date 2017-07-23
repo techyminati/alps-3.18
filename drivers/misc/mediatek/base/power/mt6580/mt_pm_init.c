@@ -14,7 +14,7 @@
 #include <mt_cpufreq.h>
 #include <mt_gpufreq.h>
 #include <mt-plat/sync_write.h>
-
+#include <mt_spm.h>
 
 
 #define pminit_write(addr, val)         mt_reg_sync_writel((val), ((void *)(addr)))
@@ -367,6 +367,8 @@ static int __init mt_power_management_init(void)
 {
 	struct proc_dir_entry *entry = NULL;
 	struct proc_dir_entry *pm_init_dir = NULL;
+
+	spm_module_init();
 
 	mt_clkmgr_init();
 
