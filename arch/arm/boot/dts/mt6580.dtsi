@@ -148,6 +148,14 @@
 		#size-cells = <1>;
 		ranges = <0 0 0 0xffffffff>;
 
+		chipid@08000000 {
+			compatible = "mediatek,chipid";
+			reg = <0x08000000 0x0004>,
+					<0x08000004 0x0004>,
+					<0x08000008 0x0004>,
+					<0x0800000C 0x0004>;
+		};
+
 		TOPCKGEN@0x10000000 {
 			compatible = "mediatek,TOPCKGEN";
 			reg = <0x10000000 0x1000>;
@@ -1240,8 +1248,6 @@
 		MTKFB@0 {
 			compatible = "mediatek,MTKFB";
 		};
-
-
 	};
 
 	MOBICORE {
