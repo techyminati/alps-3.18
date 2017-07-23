@@ -109,11 +109,7 @@
 #define cpufreq_err(fmt, args...)	pr_err(TAG"[ERROR]"fmt, ##args)
 #define cpufreq_warn(fmt, args...)	pr_warn(TAG"[WARNING]"fmt, ##args)
 #define cpufreq_info(fmt, args...)	pr_warn(TAG""fmt, ##args)
-#define cpufreq_dbg(fmt, args...) \
-	do { \
-		if (func_lv_mask) \
-			cpufreq_info(fmt, ##args); \
-	} while (0)
+#define cpufreq_dbg(fmt, args...)	pr_debug(TAG""fmt, ##args)
 #define cpufreq_ver(fmt, args...) \
 	do { \
 		if (func_lv_mask) \
