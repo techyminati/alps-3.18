@@ -1920,6 +1920,7 @@ static int rwThread(void *data)
 	return 0;
 }
 
+#ifdef CONFIG_MTK_EMMC_CACHE
 static int msdc_check_emmc_cache_status(struct msdc_host *host)
 {
 	BUG_ON(!host);
@@ -1940,6 +1941,7 @@ static int msdc_check_emmc_cache_status(struct msdc_host *host)
 
 	return host->mmc->card->ext_csd.cache_ctrl;
 }
+
 static int msdc_enable_emmc_cache(struct msdc_host *host, int enable)
 {
 	int err;
@@ -1970,6 +1972,7 @@ out:
 	mmc_put_card(host->mmc->card);
 	return err;
 }
+#endif
 
 static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t count,
 				     loff_t *data)
@@ -2734,6 +2737,7 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 		}
 	}
 #endif
+#ifdef CONFIG_MTK_EMMC_CACHE
 	else if (cmd == MMC_EDC_EMMC_CACHE) {
 		pr_err
 		    ("==========================MSDC Cache Feature Test ==============================\n");
@@ -2757,7 +2761,9 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 				break;
 			}
 		}
-	} else if (cmd == MMC_DUMP_GPD) {
+	}
+#endif
+	else if (cmd == MMC_DUMP_GPD) {
 		pr_err
 		    ("==========================MSDC DUMP GPD/BD ==============================\n");
 		id = p1;

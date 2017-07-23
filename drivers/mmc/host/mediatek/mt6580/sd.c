@@ -5143,9 +5143,12 @@ static int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 				dma_unmap_sg(mmc_dev(mmc), data->sg, data->sg_len, dir);
 			}
 		}
+
+#ifdef CONFIG_MTK_EMMC_SUPPORT
 		if ((cmd->opcode == MMC_SEND_EXT_CSD) &&
 			(host->hw->host_function == MSDC_EMMC))
 			msdc_get_ext_csd(data, host);
+#endif
 
 		host->blksz = 0;
 
@@ -9021,10 +9024,15 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	pr_debug("[%s]: pwr gpio dir = 0x%x\n", __func__, l_val);
 #endif
 
-	if (strcmp(pdev->dev.of_node->name, "msdc0") == 0)
+	if (strcmp(pdev->dev.of_node->name, "msdc0") == 0) {
 		pdev->id = 0;
+#ifndef CONFIG_MTK_EMMC_SUPPORT
+		return -ENODEV;
+#endif
+	}
 	else if (strcmp(pdev->dev.of_node->name, "msdc1") == 0)
 		pdev->id = 1;
+
 
 #if defined(CFG_DEV_MSDC2)
 	if (strcmp(pdev->dev.of_node->name, "msdc2") == 0) {
@@ -9308,6 +9316,9 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	/* host->timer.expires = jiffies + HZ; */
 	host->timer.function = msdc_timer_pm;
 	host->timer.data = (unsigned long)host;
+
+	if ((pdev->id == 1) && (host->hw->host_function == MSDC_SD))
+		msdc_select_clksrc(host, host->hw->clk_src);
 
 	ret = request_irq((unsigned int)host->irq, msdc_irq, IRQF_TRIGGER_NONE, DRV_NAME,
 			host);
