@@ -41,7 +41,7 @@ ifeq ($(CONFIG_MTK_ENABLE_MD2), y)
 ccflags-y  += -DMTK_ENABLE_MD2
 endif
 ifeq ($(CONFIG_MTK_SECURITY_SW_SUPPORT), y)
-ccflags-y += -I$(srctree)/drivers/misc/mediatek/masp/asf/asf_export_inc
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/masp/asfv2/asf_export_inc
 ccflags-y  += -DENABLE_MD_IMG_SECURITY_FEATURE
 endif
 ifeq ($(CONFIG_MTK_SEC_MODEM_NVRAM_ANTI_CLONE), y)
