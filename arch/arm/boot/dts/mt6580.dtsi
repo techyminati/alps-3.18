@@ -169,8 +169,8 @@
 			who want to use same query flow to get basic GIC info.
 			EX: eint might want to know max GIC nr by */
 		alias-gic {
-		compatible = "mtk,alias-gic";
-		reg = <0 0x10211000 0 0x1000>; /* only dist base is enough */
+			compatible = "mediatek,alias-gic";
+			reg = <0 0x10211000 0 0x1000>; /* only dist base is enough */
 		};
 
 		timer {

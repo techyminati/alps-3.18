@@ -271,26 +271,14 @@ static int mt_irq_set_type(struct irq_data *data, unsigned int flow_type)
 
 int mt_get_supported_irq_num(void)
 {
-	struct device_node *node;
-	void __iomem *dist_base;
 	int ret = 0;
 
-	/* usually, common eic goes with common gic.
-	   However, common eic can also go with not common gic
-	   as long as we provide an alias-gic node. */
-	node = of_find_compatible_node(NULL, NULL, "mtk,mt-gic");
-	if (!node) {
-		node = of_find_compatible_node(NULL, NULL, "mtk,alias-gic");
-		if (!node) {
-			pr_notice("%s can't find node for gic\n", __func__);
-			return ret;
-		}
-	}
+	if (GIC_DIST_BASE) {
+		ret = ((readl_relaxed(GIC_DIST_BASE + GIC_DIST_CTR) & 0x1f) + 1) * 32;
+		pr_debug("gic supported max = %d\n", ret);
+	} else
+		pr_warn("gic dist_base is unknown\n");
 
-	dist_base = of_iomap(node, 0);
-	ret = readl_relaxed(dist_base + GIC_DIST_CTR) & 0x1f;
-	ret = (ret + 1) * 32;
-	pr_notice("gic supported max = %d\n", ret);
 	return ret;
 }
 EXPORT_SYMBOL(mt_get_supported_irq_num);
