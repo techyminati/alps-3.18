@@ -40,5 +40,9 @@ int request_fiq(int irq, fiq_isr_handler handler,
 		unsigned long irq_flags, void *arg);
 
 void irq_raise_softirq(const struct cpumask *mask, unsigned int irq);
+
+int request_trusty_fiq(struct device *tdev, int irq, fiq_isr_handler handler,
+		unsigned long irq_flags, void *arg);
+
 #endif
 #endif

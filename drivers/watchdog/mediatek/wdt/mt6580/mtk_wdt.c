@@ -24,6 +24,11 @@
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #endif
+
+#include <linux/trusty/trusty.h>
+#include <linux/trusty/smcall.h>
+#include <asm/fiq_glue.h>
+
 #include <mt-plat/aee.h>
 #include <mt-plat/sync_write.h>
 #include <ext_wd_drv.h>
@@ -575,8 +580,20 @@ static int mtk_wdt_probe(struct platform_device *dev)
 	    request_irq(AP_RGU_WDT_IRQ_ID, (irq_handler_t) mtk_wdt_isr, IRQF_TRIGGER_FALLING,
 			"mt_wdt", NULL);
 #else
+#ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
+	{
+
+	pr_debug("******** MTK WDT register trusty fiq ********\n");
+	ret = request_trusty_fiq(NULL, AP_RGU_WDT_IRQ_ID, wdt_fiq, IRQF_TRIGGER_FALLING, NULL);
+	if (ret) {
+		pr_err("mtk_wdt_probe: smc for request trusty fiq failed\n");
+		BUG_ON(1);
+	}
+	}
+#else
 	pr_debug("******** MTK WDT register fiq ********\n");
 	ret = request_fiq(AP_RGU_WDT_IRQ_ID, wdt_fiq, IRQF_TRIGGER_FALLING, NULL);
+#endif
 #endif
 
 	if (ret != 0) {

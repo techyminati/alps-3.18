@@ -21,6 +21,8 @@
 #include <mt-plat/sync_write.h>
 #include <mach/irqs.h>
 #include <mach/mt_secure_api.h>
+#include <linux/trusty/trusty.h>
+#include <linux/trusty/smcall.h>
 
 #define GIC_ICDISR (GIC_DIST_BASE + 0x80)
 #define GIC_ICDISER0 (GIC_DIST_BASE + 0x100)
@@ -123,7 +125,7 @@ static void mt_irq_ack(struct irq_data *data)
 {
 	u32 irq = data->irq;
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	mt_reg_sync_writel(irq, IOMEM(GIC_CPU_BASE + GIC_CPU_AEOI));
 #else
 	mt_reg_sync_writel(irq, IOMEM(GIC_CPU_BASE + GIC_CPU_EOI));
@@ -540,7 +542,7 @@ static void mt_gic_dist_init(void)
 	set_irq_flags(FIQ_DBG_SGI, IRQF_VALID | IRQF_PROBE);
 #endif
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	/* when enable FIQ
 	 * set all global interrupts as non-secure interrupts
 	 */
@@ -552,7 +554,7 @@ static void mt_gic_dist_init(void)
 	/*
 	 * enable secure and non-secure interrupts on Distributor
 	 */
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	mt_reg_sync_writel(3, IOMEM(GIC_DIST_BASE + GIC_DIST_CTRL));
 #else
 	mt_reg_sync_writel(1, IOMEM(GIC_DIST_BASE + GIC_DIST_CTRL));
@@ -623,14 +625,14 @@ static void mt_gic_cpu_init(void)
 				   IOMEM(GIC_DIST_BASE + GIC_DIST_PRI +
 					 i * 4 / 4));
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	/* when enable FIQ */
 	/* set PPI and SGI interrupts as non-secure interrupts */
 	mt_reg_sync_writel(0xFFFFFFFF, IOMEM(GIC_ICDISR));
 #endif
 	mt_reg_sync_writel(0xF0, IOMEM(GIC_CPU_BASE + GIC_CPU_PRIMASK));
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	/* enable SBPR, FIQEn, EnableNS and EnableS */
 	/* SBPR=1, IRQ and FIQ use the same BPR bit */
 	/* FIQEn=1,forward group 0 interrupts using the FIQ signal
@@ -734,7 +736,7 @@ int mt_PPI_mask_all(struct mtk_irq_mask *mask)
 	unsigned long flags;
 
 	if (mask) {
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 		local_fiq_disable();
 #endif
 		spin_lock_irqsave(&irq_lock, flags);
@@ -743,7 +745,7 @@ int mt_PPI_mask_all(struct mtk_irq_mask *mask)
 		mt_reg_sync_writel(0xFFFFFFFF, GIC_ICDICER0);
 
 		spin_unlock_irqrestore(&irq_lock, flags);
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 		local_fiq_enable();
 #endif
 
@@ -774,7 +776,7 @@ int mt_PPI_mask_restore(struct mtk_irq_mask *mask)
 	if (mask->footer != IRQ_MASK_FOOTER)
 		return -1;
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	local_fiq_disable();
 #endif
 	spin_lock_irqsave(&irq_lock, flags);
@@ -782,7 +784,7 @@ int mt_PPI_mask_restore(struct mtk_irq_mask *mask)
 	mt_reg_sync_writel(mask->mask0, GIC_ICDISER0);
 
 	spin_unlock_irqrestore(&irq_lock, flags);
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	local_fiq_enable();
 #endif
 
@@ -799,7 +801,7 @@ int mt_SPI_mask_all(struct mtk_irq_mask *mask)
 	unsigned long flags;
 
 	if (mask) {
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 		local_fiq_disable();
 #endif
 		spin_lock_irqsave(&irq_lock, flags);
@@ -823,7 +825,7 @@ int mt_SPI_mask_all(struct mtk_irq_mask *mask)
 		mt_reg_sync_writel(0xFFFFFFFF, GIC_ICDICER8);
 
 		spin_unlock_irqrestore(&irq_lock, flags);
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 		local_fiq_enable();
 #endif
 
@@ -854,7 +856,7 @@ int mt_SPI_mask_restore(struct mtk_irq_mask *mask)
 	if (mask->footer != IRQ_MASK_FOOTER)
 		return -1;
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	local_fiq_disable();
 #endif
 	spin_lock_irqsave(&irq_lock, flags);
@@ -869,7 +871,7 @@ int mt_SPI_mask_restore(struct mtk_irq_mask *mask)
 	mt_reg_sync_writel(mask->mask8, GIC_ICDISER8);
 
 	spin_unlock_irqrestore(&irq_lock, flags);
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	local_fiq_enable();
 #endif
 
@@ -887,7 +889,7 @@ int mt_irq_mask_all(struct mtk_irq_mask *mask)
 	unsigned long flags;
 
 	if (mask) {
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 		local_fiq_disable();
 #endif
 		spin_lock_irqsave(&irq_lock, flags);
@@ -913,7 +915,7 @@ int mt_irq_mask_all(struct mtk_irq_mask *mask)
 		mt_reg_sync_writel(0xFFFFFFFF, GIC_ICDICER8);
 
 		spin_unlock_irqrestore(&irq_lock, flags);
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 		local_fiq_enable();
 #endif
 
@@ -945,7 +947,7 @@ int mt_irq_mask_restore(struct mtk_irq_mask *mask)
 	if (mask->footer != IRQ_MASK_FOOTER)
 		return -1;
 
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	local_fiq_disable();
 #endif
 	spin_lock_irqsave(&irq_lock, flags);
@@ -961,7 +963,7 @@ int mt_irq_mask_restore(struct mtk_irq_mask *mask)
 	mt_reg_sync_writel(mask->mask8, GIC_ICDISER8);
 
 	spin_unlock_irqrestore(&irq_lock, flags);
-#if defined(CONFIG_FIQ_GLUE)
+#if defined(CONFIG_MTK_KERNEL_IN_SECURE_MODE)
 	local_fiq_enable();
 #endif
 
@@ -1119,11 +1121,22 @@ int mt_enable_fiq(int irq)
 	return -1;
 }
 
+#ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
+static atomic_t wdt_enter_fiq;
+#endif
+
 /*
  * fiq_isr: FIQ handler.
  */
 static void fiq_isr(struct fiq_glue_handler *h, void *regs, void *svc_sp)
 {
+#ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
+	if (atomic_xchg(&wdt_enter_fiq, 1) != 0)
+		aee_fiq_ipi_cpu_stop(irqs_to_fiq[2].arg, regs, svc_sp);
+
+	(irqs_to_fiq[0].handler)(irqs_to_fiq[0].arg, regs, svc_sp);
+
+#else
 	unsigned int iar, irq;
 	int cpu, i;
 
@@ -1172,6 +1185,7 @@ static void fiq_isr(struct fiq_glue_handler *h, void *regs, void *svc_sp)
 	fiq_isr_logs[cpu].in_fiq_isr = 0;
 	mt_reg_sync_writel(iar, IOMEM(GIC_CPU_BASE + GIC_CPU_EOI));
 	dsb();
+#endif
 }
 
 /*
@@ -1254,18 +1268,32 @@ static struct fiq_glue_handler fiq_handler = {
 	.fiq = fiq_isr,
 };
 
+#ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
+int request_trusty_fiq(struct device *tdev, int irq, fiq_isr_handler handler,
+		unsigned long irq_flags, void *arg)
+{
+	return request_fiq(irq, handler, irq_flags, arg);
+}
+#endif
+
 static int __init_fiq(void)
 {
 	int ret;
 
 	register_cpu_notifier(&fiq_notifier);
 
-	ret = fiq_glue_register_handler(&fiq_handler);
-	if (ret)
-		pr_err("fail to register fiq_glue_handler\n");
-	else
-		fiq_glued = 1;
+#ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
+	/* set atomic enter for wdt */
+	atomic_set(&wdt_enter_fiq, 0);
+#endif
 
+	ret = fiq_glue_register_handler(&fiq_handler);
+	if (ret) {
+		pr_err("fail to register fiq_glue_handler\n");
+		goto done;
+	} else
+		fiq_glued = 1;
+done:
 	return ret;
 }
 
@@ -1285,7 +1313,9 @@ int request_fiq(int irq, fiq_isr_handler handler, unsigned long irq_flags,
 {
 	int i;
 	unsigned long flags;
+#ifndef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
 	struct irq_data data;
+#endif
 
 	if (!fiq_glued)
 		__init_fiq();
@@ -1299,7 +1329,10 @@ int request_fiq(int irq, fiq_isr_handler handler, unsigned long irq_flags,
 			irqs_to_fiq[i].arg = arg;
 
 			spin_unlock_irqrestore(&irq_lock, flags);
-
+#ifdef CONFIG_TRUSTY_WDT_FIQ_ARMV7_SUPPORT
+			if (trusty_fast_call32_nodev(SMC_FC_REQUEST_FIQ, irq, true, 0) != 0)
+				return -1;
+#else
 			__set_security(irq);
 			__raise_priority(irq);
 			data.irq = irq;
@@ -1309,7 +1342,7 @@ int request_fiq(int irq, fiq_isr_handler handler, unsigned long irq_flags,
 			mb();
 
 			mt_irq_unmask(&data);
-
+#endif
 			return 0;
 		}
 
