@@ -263,7 +263,7 @@ static int setFlashDrv(int sensorDev, int strobeId)
 	return 0;
 }
 
-
+/*
 static int decFlash(void)
 {
 	int i;
@@ -286,7 +286,7 @@ static int decFlash(void)
 			}
 	return 0;
 }
-
+*/
 /*
 static int closeFlash(void)
 {
@@ -326,7 +326,7 @@ static int closeFlash(void)
 
 /* /}@@ */
 static int gLowPowerVbat = LOW_BATTERY_LEVEL_0;
-
+/*
 static void Lbat_protection_powerlimit_flash(LOW_BATTERY_LEVEL level)
 {
 	logI("Lbat_protection_powerlimit_flash %d (%d %d %d %d)\n", level, LOW_BATTERY_LEVEL_0,
@@ -343,14 +343,16 @@ static void Lbat_protection_powerlimit_flash(LOW_BATTERY_LEVEL level)
 		decFlash();
 		gLowPowerVbat = LOW_BATTERY_LEVEL_2;
 	} else {
+*/
 		/* unlimit cpu and gpu */
+/*
 	}
 }
-
+*/
 
 
 static int gLowPowerPer = BATTERY_PERCENT_LEVEL_0;
-
+/*
 static void bat_per_protection_powerlimit_flashlight(BATTERY_PERCENT_LEVEL level)
 {
 	logI("bat_per_protection_powerlimit_flashlight %d (%d %d %d)\n", level,
@@ -363,10 +365,12 @@ static void bat_per_protection_powerlimit_flashlight(BATTERY_PERCENT_LEVEL level
 		decFlash();
 		gLowPowerPer = BATTERY_PERCENT_LEVEL_1;
 	} else {
+*/
 		/* unlimit cpu and gpu */
+/*
 	}
 }
-
+*/
 
 /*
 static int gLowPowerOc=BATTERY_OC_LEVEL_0;
