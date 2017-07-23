@@ -60,9 +60,12 @@
 #ifndef MT_CG_DISP0_DISP_WDMA0
 #define MT_CG_DISP0_DISP_WDMA0	(13+64)
 #endif
-/* #include <mach/mt_gpio.h> */
-/* #include <cust_gpio_usage.h> */
+#if defined(CONFIG_MTK_LEGACY)
 #include <mt-plat/mt_gpio.h>
+/* #include <cust_gpio_usage.h> */
+#else
+#include "disp_dts_gpio.h"
+#endif
 #include <mt-plat/aee.h>
 #include "disp_session.h"
 #include "disp_helper.h"
@@ -5196,13 +5199,17 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps)
 #ifdef GPIO_DSI_TE_PIN
 		/* 1.set GPIO107 eint mode */
 		/* mt_set_gpio_mode(GPIO_DSI_TE_PIN, GPIO_DSI_TE_PIN_M_GPIO); */
+#ifdef CONFIG_MTK_LEGACY
 		mt_set_gpio_mode(GPIO_DSI_TE_PIN, GPIO_DSI_TE_PIN_M_EINT);
+#else
+		disp_dts_gpio_select_state(DTS_GPIO_STATE_TE_MODE_GPIO);
+#endif
 		eint_flag++;
 #endif
 		/* 2.register eint */
 		node =
 		    of_find_compatible_node(NULL, NULL,
-					    "mediatek, DSI_TE-eint");
+					    "mediatek, dsi_te-eint");
 		if (node) {
 			of_property_read_u32_array(node, "debounce", ints,
 						   ARRAY_SIZE(ints));
@@ -5214,7 +5221,7 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps)
 			irq = irq_of_parse_and_map(node, 0);
 			if (request_irq
 			    (irq, _esd_check_ext_te_irq_handler,
-			     IRQF_TRIGGER_NONE, "DSI_TE-eint", NULL)) {
+			     IRQF_TRIGGER_NONE, "dsi_te-eint", NULL)) {
 				DISPCHECK
 				    ("[ESD]EINT IRQ (%d) LINE NOT AVAILABLE!!\n",
 				     irq);
@@ -6717,6 +6724,16 @@ int primary_display_cmdq_set_reg(unsigned int addr, unsigned int val)
 	return 0;
 }
 
+
+/* To use GPIO DSI_TE as an EINT for checking if device is alive or not.
+ * Notice: this function is supposed to be invoked if only if using VDO mode, or
+ *         MMSYS cannot get TE signal anymore due to as an EINT. CMD mode will
+ *         occur no TE problem.
+ *
+ *  @param mode    - 0: to disable ESD checking, 1: to enable, otherwise: do nothing.
+ *  @return        - -1: ESD checking is disabled in customization.
+ *                 -  0: OK.
+ */
 int primary_display_switch_esd_mode(int mode)
 {
 	/* DISPFUNC(); */
@@ -6743,15 +6760,20 @@ int primary_display_switch_esd_mode(int mode)
 				int irq;
 				u32 ints[2] = { 0, 0 };
 #ifdef GPIO_DSI_TE_PIN
+#ifdef CONFIG_MTK_LEGACY
 				/* 1.set GPIO107 eint mode */
 				/* mt_set_gpio_mode(GPIO_DSI_TE_PIN, GPIO_DSI_TE_PIN_M_GPIO); */
 				mt_set_gpio_mode(GPIO_DSI_TE_PIN,
 						 GPIO_DSI_TE_PIN_M_EINT);
+#else
+				/* set TE pin to mode "GPIO" (if possible, if failed, don't care) */
+				disp_dts_gpio_select_state(DTS_GPIO_STATE_TE_MODE_GPIO);
+#endif
 #endif
 				/* 2.register eint */
 				node =
 				    of_find_compatible_node(NULL, NULL,
-							    "mediatek, DSI_TE-eint");
+							    "mediatek, dsi_te-eint");
 				if (node) {
 					/* DISPMSG("node 0x%x\n", node); */
 					of_property_read_u32_array(node,
@@ -6765,7 +6787,7 @@ int primary_display_switch_esd_mode(int mode)
 					irq = irq_of_parse_and_map(node, 0);
 					if (request_irq
 					    (irq, _esd_check_ext_te_irq_handler,
-					     IRQF_TRIGGER_NONE, "DSI_TE-eint",
+					     IRQF_TRIGGER_NONE, "dsi_te-eint",
 					     NULL)) {
 						DISPERR
 						    ("[ESD]EINT IRQ LINE NOT AVAILABLE!!\n");
@@ -6792,17 +6814,22 @@ int primary_display_switch_esd_mode(int mode)
 			/* unregister eint */
 			node =
 			    of_find_compatible_node(NULL, NULL,
-						    "mediatek, DSI_TE-eint");
+						    "mediatek, dsi_te-eint");
 			/* DISPMSG("node 0x%x\n", node); */
 			if (node) {
 				irq = irq_of_parse_and_map(node, 0);
 				free_irq(irq, NULL);
 			}
 #ifdef GPIO_DSI_TE_PIN
+#ifdef CONFIG_MTK_LEGACY
 			/* set GPIO107 DSI TE mode */
 			mt_set_gpio_mode(GPIO_DSI_TE_PIN,
 					 GPIO_DSI_TE_PIN_M_DSI_TE);
 		}
+#else
+			/* set TE pin to mode "TE" (if possible, if failed, don't care) */
+			disp_dts_gpio_select_state(DTS_GPIO_STATE_TE_MODE_TE);
+#endif
 #endif
 	}
 	/* DISPMSG("primary_display_switch_esd_mode end\n"); */

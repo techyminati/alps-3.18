@@ -1335,9 +1335,14 @@
 			compatible = "mediatek,m_pkup_pl";
 		};
 
-		MTKFB@0 {
-			compatible = "mediatek,MTKFB";
+		mtkfb: mtkfb@0 {
+			compatible = "mediatek,mtkfb";
 		};
+
+		dsi_te: dsi_te {
+			compatible = "mediatek, dsi_te-eint";
+		};
+
 	};
 
 	MOBICORE {

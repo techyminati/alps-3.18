@@ -3,8 +3,12 @@
 /* #include <cust_leds_def.h> */
 /* #include <mach/mt_reg_base.h> */
 #include <mach/mt_clkmgr.h>
-/* #include <mach/mt_gpio.h> */
+#if defined(CONFIG_MTK_LEGACY)
+#include <mt-plat/mt_gpio.h>
 /* #include <cust_gpio_usage.h> */
+#else
+#include "disp_dts_gpio.h"
+#endif
 #include "ddp_log.h"
 #include "ddp_reg.h"
 #include "ddp_pwm.h"
@@ -399,35 +403,26 @@ static void disp_pwm_enable_debug(const char *cmd)
 
 static void disp_pwm_test_pin_mux(void)
 {
-#ifndef CONFIG_MTK_FPGA
+/* #ifndef CONFIG_MTK_FPGA */
 	const unsigned long reg_base = pwm_get_reg_base(DISP_PWM1);
 
 #ifdef CONFIG_MTK_LEGACY
-	/* workaround comment for kernel 3.18 bring up */
-	/*
-	mt_set_gpio_mode(GPIO55, GPIO_MODE_07);
-	mt_set_gpio_dir(GPIO55, GPIO_DIR_OUT);
+	/* mt_set_gpio_mode(GPIO66, GPIO_MODE_01);  */	/* For DVT PIN MUX verification only, not normal path */
+	/* mt_set_gpio_dir(GPIO66, GPIO_DIR_OUT);   */	/* For DVT PIN MUX verification only, not normal path */
 
-	mt_set_gpio_mode(GPIO69, GPIO_MODE_01);
-	mt_set_gpio_dir(GPIO69, GPIO_DIR_OUT);
-
-	mt_set_gpio_mode(GPIO129, GPIO_MODE_02);
-	mt_set_gpio_dir(GPIO129, GPIO_DIR_OUT);
-
-	enable_clock(MT_CG_PERI_DISP_PWM, "PWM");
-	*/
+	/* enable_clock(MT_CG_PWM_MM_SW_CG, "PWM"); */
 #else
-	disp_clk_enable(DISP_PWM);
-	disp_dts_gpio_select_state(DTS_GPIO_STATE_PWM_TEST_PINMUX_55);
-	disp_dts_gpio_select_state(DTS_GPIO_STATE_PWM_TEST_PINMUX_69);
-	disp_dts_gpio_select_state(DTS_GPIO_STATE_PWM_TEST_PINMUX_129);
+	/* disp_clk_enable(DISP_PWM); */
+	disp_dts_gpio_select_state(DTS_GPIO_STATE_PWM_TEST_PINMUX_66);
+	/* disp_dts_gpio_select_state(DTS_GPIO_STATE_PWM_TEST_PINMUX_66); */
+	enable_clock(MT_CG_PWM_MM_SW_CG, "PWM");
 #endif
 	DISP_REG_MASK(NULL, reg_base + DISP_PWM_CON_1_OFF, 512 << 16, 0x1fff << 16);
 	DISP_REG_MASK(NULL, reg_base + DISP_PWM_EN_OFF, 0x1, 0x1);
 	DISP_REG_SET(NULL, reg_base + 0x20, 3);
 	DISP_REG_MASK(NULL, reg_base + DISP_PWM_COMMIT_OFF, 1, ~0);
 	DISP_REG_MASK(NULL, reg_base + DISP_PWM_COMMIT_OFF, 0, ~0);
-#endif
+/* #endif */
 }
 
 

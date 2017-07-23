@@ -21,8 +21,12 @@
 #include "ddp_reg.h"
 #include "primary_display.h"
 #include "display_recorder.h"
+#ifdef CONFIG_MTK_LEGACY
 #include <mt-plat/mt_gpio.h>
 /* #include <cust_gpio_usage.h> */
+#else
+#include "disp_dts_gpio.h"
+#endif
 #include <mach/mt_clkmgr.h>
 #include "mtkfb_fence.h"
 #include "disp_helper.h"
@@ -912,7 +916,7 @@ static void process_dbg_opt(const char *opt)
 		msleep(20);
 		DISP_CPU_REG_SET(DISPSYS_CONFIG_BASE + 0x150, 1);
 #else
-#if 0
+#ifdef CONFIG_MTK_LEGACY
 		mt_set_gpio_mode(GPIO106 | 0x80000000, GPIO_MODE_00);
 		mt_set_gpio_dir(GPIO106 | 0x80000000, GPIO_DIR_OUT);
 		mt_set_gpio_out(GPIO106 | 0x80000000, GPIO_OUT_ONE);
@@ -920,6 +924,12 @@ static void process_dbg_opt(const char *opt)
 		mt_set_gpio_out(GPIO106 | 0x80000000, GPIO_OUT_ZERO);
 		msleep(20);
 		mt_set_gpio_out(GPIO106 | 0x80000000, GPIO_OUT_ONE);
+#else
+		ret = disp_dts_gpio_select_state(DTS_GPIO_STATE_LCM_RST_OUT1);
+		msleep(20);
+		ret |= disp_dts_gpio_select_state(DTS_GPIO_STATE_LCM_RST_OUT0);
+		msleep(20);
+		ret |= disp_dts_gpio_select_state(DTS_GPIO_STATE_LCM_RST_OUT1);
 #endif
 #endif
 	} else if (0 == strncmp(opt, "lcm0_reset0", 11)) {

@@ -19,8 +19,12 @@
 #include "ddp_irq.h"
 #include "ddp_dsi.h"
 #include "ddp_log.h"
-/* #include <mach/mt_gpio.h> */
+#if defined(CONFIG_MTK_LEGACY)
+#include <mt-plat/mt_gpio.h>
 /* #include <cust_gpio_usage.h> */
+#else
+#include "disp_dts_gpio.h"
+#endif
 #include "ddp_mmp.h"
 #include "primary_display.h"
 #include "debug.h"
@@ -2564,7 +2568,16 @@ int DSI_Send_ROI(DISP_MODULE_ENUM module, void *handle, unsigned int x, unsigned
 
 static void lcm_set_reset_pin(uint32_t value)
 {
+#if 1
 	DSI_OUTREG32(NULL, DISPSYS_CONFIG_BASE + 0x150, value);
+#else
+#if !defined(CONFIG_MTK_LEGACY)
+	if (value)
+		disp_dts_gpio_select_state(DTS_GPIO_STATE_LCM_RST_OUT1);
+	else
+		disp_dts_gpio_select_state(DTS_GPIO_STATE_LCM_RST_OUT0);
+#endif
+#endif
 }
 
 static void lcm_udelay(uint32_t us)
