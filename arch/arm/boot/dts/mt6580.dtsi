@@ -809,8 +809,8 @@
 			/*clock-names = "btifc","apdmac";*/
 		};/* End of btif */
 
-		mt3326-gps@0xffffffff {
-			compatible = "mediatek,mt3326-gps";
+		gps {
+			compatible = "mediatek,gps";
 		};
 
 
