@@ -80,6 +80,7 @@
 
 
 unsigned int gEnable_DSI_ClkTrail;
+unsigned int recovery_wait = 0;
 int primary_display_use_cmdq = CMDQ_DISABLE;
 int primary_display_use_m4u = 1;
 DISP_PRIMARY_PATH_MODE primary_display_mode = DIRECT_LINK_MODE;
@@ -542,7 +543,7 @@ static struct hrtimer cmd_mode_update_timer;
 static int is_fake_timer_inited;
 static enum hrtimer_restart _DISP_CmdModeTimer_handler(struct hrtimer *timer)
 {
-	DISPMSG("fake timer, wake up\n");
+	DISPDBG("fake timer, wake up\n");
 	dpmgr_signal_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
 
 	hrtimer_forward_now(timer, ns_to_ktime(16666666));
@@ -1528,7 +1529,7 @@ static int config_display_m4u_port(void)
 	sPort.Direction = 0;
 	ret = m4u_config_port(&sPort);
 	if (ret == 0) {
-		DISPMSG("config M4U Port %s to %s SUCCESS\n",
+		DISPDBG("config M4U Port %s to %s SUCCESS\n",
 			  ddp_get_module_name(DISP_MODULE_OVL0),
 			  primary_display_use_m4u ? "virtual" : "physical");
 	} else {
@@ -1670,13 +1671,12 @@ static int _build_path_direct_link(void)
 {
 	int ret = 0;
 
-	/* DISPFUNC(); */
 	pgc->mode = DIRECT_LINK_MODE;
 	pgc->dpmgr_handle =
 	    dpmgr_create_path(DDP_SCENARIO_PRIMARY_DISP,
 			      pgc->cmdq_handle_config);
 	if (pgc->dpmgr_handle) {
-		DISPMSG("dpmgr create path SUCCESS(0x%p)\n",
+		DISPDBG("dpmgr create path SUCCESS(0x%p)\n",
 			  pgc->dpmgr_handle);
 	} else {
 		DISPERR("dpmgr create path FAIL\n");
@@ -1820,7 +1820,7 @@ static int _convert_disp_input_to_ovl(OVL_CONFIG_STRUCT *dst,
 
 	dst->addr = (unsigned long)src->src_phy_addr;
 	if ((unsigned int long)src->src_phy_addr == 0)
-		DISPMSG("_convert_disp_input_to_ovl, src->src_phy_addr=0x%08lx\n",
+		DISPERR("_convert_disp_input_to_ovl, src->src_phy_addr=0x%08lx\n",
 			(unsigned int long)src->src_phy_addr);
 	dst->vaddr = (unsigned long)src->src_base_addr;
 	dst->src_x = src->src_offset_x;
@@ -2183,7 +2183,7 @@ int primary_display_esd_check(void)
 	dprec_logger_start(DPREC_LOGGER_ESD_CHECK, 0, 0);
 	MMProfileLogEx(ddp_mmp_get_events()->esd_check_t, MMProfileFlagStart, 0,
 		       0);
-	/* DISPCHECK("[ESD]ESD check begin\n"); */
+	DISPMSG("[ESD]ESD check begin\n");
 
 	_primary_path_lock(__func__);
 	if (pgc->state == DISP_SLEPT) {
@@ -2343,9 +2343,9 @@ destroy_cmdq:
 		_primary_path_lock(__func__);
 
 		/* / 1: stop path */
-		DISPMSG("[ESD]display cmdq trigger loop stop[begin]\n");
+		DISPDBG("[ESD]display cmdq trigger loop stop[begin]\n");
 		_cmdq_stop_trigger_loop();
-		DISPMSG("[ESD]display cmdq trigger loop stop[end]\n");
+		DISPDBG("[ESD]display cmdq trigger loop stop[end]\n");
 
 		if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
 			DISPMSG("[ESD]primary display path is busy\n");
@@ -2356,9 +2356,9 @@ destroy_cmdq:
 			DISPMSG("[ESD]wait frame done ret:%d\n", ret);
 		}
 
-		DISPMSG("[ESD]stop dpmgr path[begin]\n");
+		DISPDBG("[ESD]stop dpmgr path[begin]\n");
 		dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
-		DISPMSG("[ESD]stop dpmgr path[end]\n");
+		DISPDBG("[ESD]stop dpmgr path[end]\n");
 
 		if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
 			DISPMSG
@@ -2369,9 +2369,9 @@ destroy_cmdq:
 			DISPMSG("[ESD]wait frame done ret:%d\n", ret);
 		}
 
-		DISPMSG("[ESD]reset display path[begin]\n");
+		DISPDBG("[ESD]reset display path[begin]\n");
 		dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
-		DISPMSG("[ESD]reset display path[end]\n");
+		DISPDBG("[ESD]reset display path[end]\n");
 
 		/* / 2: do esd check (!!!) */
 		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
@@ -2389,13 +2389,13 @@ destroy_cmdq:
 			       MMProfileFlagPulse,
 			       primary_display_is_video_mode(), 3);
 
-		DISPMSG("[ESD]start dpmgr path[begin]\n");
+		DISPDBG("[ESD]start dpmgr path[begin]\n");
 		dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
-		DISPMSG("[ESD]start dpmgr path[end]\n");
+		DISPDBG("[ESD]start dpmgr path[end]\n");
 
-		DISPMSG("[ESD]start cmdq trigger loop[begin]\n");
+		DISPDBG("[ESD]start cmdq trigger loop[begin]\n");
 		_cmdq_start_trigger_loop();
-		DISPMSG("[ESD]start cmdq trigger loop[end]\n");
+		DISPDBG("[ESD]start cmdq trigger loop[end]\n");
 
 		_primary_path_unlock(__func__);
 	}
@@ -2409,6 +2409,7 @@ done:
 
 	/* Lock which is used to avoid esd and suspend affect */
 	_primary_path_esd_check_unlock();
+	DISPMSG("[ESD]ESD check end\n");
 	return ret;
 
 }
@@ -2516,9 +2517,9 @@ int primary_display_esd_recovery(void)
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 3);
 
-	DISPMSG("[ESD]stop dpmgr path[begin]\n");
+	DISPDBG("[ESD]stop dpmgr path[begin]\n");
 	dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
-	DISPMSG("[ESD]stop dpmgr path[end]\n");
+	DISPDBG("[ESD]stop dpmgr path[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 4);
 
@@ -2531,29 +2532,29 @@ int primary_display_esd_recovery(void)
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 5);
 
-	DISPMSG("[ESD]display cmdq trigger loop stop[begin]\n");
+	DISPDBG("[ESD]display cmdq trigger loop stop[begin]\n");
 	_cmdq_stop_trigger_loop();
-	DISPMSG("[ESD]display cmdq trigger loop stop[end]\n");
+	DISPDBG("[ESD]display cmdq trigger loop stop[end]\n");
 
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 6);
 
-	DISPMSG("[ESD]reset display path[begin]\n");
+	DISPDBG("[ESD]reset display path[begin]\n");
 	dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
-	DISPMSG("[ESD]reset display path[end]\n");
+	DISPDBG("[ESD]reset display path[end]\n");
 
-	DISPMSG("[POWER]lcm suspend[begin]\n");
+	DISPDBG("[POWER]lcm suspend[begin]\n");
 	disp_lcm_suspend(pgc->plcm);
-	DISPMSG("[POWER]lcm suspend[end]\n");
-	DISPMSG("[ESD]lcm force init[begin]\n");
+	DISPDBG("[POWER]lcm suspend[end]\n");
+	DISPDBG("[ESD]lcm force init[begin]\n");
 	disp_lcm_init(pgc->plcm, 1);
-	DISPMSG("[ESD]lcm force init[end]\n");
+	DISPDBG("[ESD]lcm force init[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 8);
 
-	DISPMSG("[ESD]start dpmgr path[begin]\n");
+	DISPDBG("[ESD]start dpmgr path[begin]\n");
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
-	DISPMSG("[ESD]start dpmgr path[end]\n");
+	DISPDBG("[ESD]start dpmgr path[end]\n");
 	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
 		DISPERR
 		    ("[ESD]Fatal error, we didn't trigger display path but it's already busy\n");
@@ -2563,9 +2564,9 @@ int primary_display_esd_recovery(void)
 
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 9);
-	DISPMSG("[ESD]start cmdq trigger loop[begin]\n");
+	DISPDBG("[ESD]start cmdq trigger loop[begin]\n");
 	_cmdq_start_trigger_loop();
-	DISPMSG("[ESD]start cmdq trigger loop[end]\n");
+	DISPDBG("[ESD]start cmdq trigger loop[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 10);
 	if (primary_display_is_video_mode()) {
@@ -2588,17 +2589,17 @@ void primary_display_esd_check_enable(int enable)
 {
 	if (_need_do_esd_check()) {
 		if (_need_register_eint() && eint_flag != 2) {
-			DISPMSG
+			DISPDBG
 			    ("[ESD]Please check DCT setting about GPIO107/EINT107\n");
 			return;
 		}
 
 		if (enable) {
-			DISPMSG("[ESD]esd check thread wakeup\n");
+			DISPDBG("[ESD]esd check thread wakeup\n");
 			atomic_set(&esd_check_task_wakeup, 1);
 			wake_up_interruptible(&esd_check_task_wq);
 		} else {
-			DISPMSG("[ESD]esd check thread stop\n");
+			DISPDBG("[ESD]esd check thread stop\n");
 			atomic_set(&esd_check_task_wakeup, 0);
 		}
 	}
@@ -2686,23 +2687,19 @@ static int primary_display_recovery_thread(void *data)
 					     (&primary_recovery_task_wakeup));
 		atomic_set(&primary_recovery_task_wakeup, 0);
 		DISPMSG("[Primary Recovery] begin ret %d\n", ret);
+
+		DISPMSG("[Primary Recovery]stop ESD check firstly\n");
+		primary_display_esd_check_enable(0);
+
+		recovery_wait = 1;
 		_primary_path_lock(__func__);
 		if (pgc->state != DISP_SLEPT) {
 			if (ret == 0) {
 				DISPMSG("[Primary Recovery]stop cmdq trigger loop\n");
 				_cmdq_stop_trigger_loop();
 
-				if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
-					DISPMSG("[ESD]primary display path is busy\n");
-					ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle,
-							DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
-					DISPMSG("[ESD]wait frame done ret:%d\n", ret);
-				}
-
-				if (0 != ret) {
-					DISPMSG("[Primary Recovery]stop path\n");
-					dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
-				}
+				DISPMSG("[Primary Recovery]stop path\n");
+				dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
 
 				DISPMSG("[Primary Recovery] path reset\n");
 				dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
@@ -2710,23 +2707,26 @@ static int primary_display_recovery_thread(void *data)
 				DISPMSG("[Primary Recovery] path start\n");
 				dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
-				DISPMSG("[Primary Recovery]start cmdq trigger loop\n");
-				_cmdq_start_trigger_loop();
-
 				if (primary_display_is_video_mode()) {
 					/* for video mode, need to force trigger here */
 					/* for cmd mode, */
 					/* just set DPREC_EVENT_CMDQ_SET_EVENT_ALLOW when trigger loop start */
 					dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
 				}
-			}
-		} else {
-			DISPMSG
-			    ("[Primary Recovery] can not recovery path in suspend\n");
-		}
-		_primary_path_unlock(__func__);
-		DISPMSG("[Primary Recovery]  end\n");
 
+				DISPMSG("[Primary Recovery]start cmdq trigger loop\n");
+				_cmdq_start_trigger_loop();
+			}
+		} else
+			DISPMSG("[Primary Recovery] can not recovery path in suspend\n");
+
+		msleep(20);
+		_primary_path_unlock(__func__);
+
+		DISPMSG("[Primary Recovery]restart ESD check at end\n");
+		primary_display_esd_check_enable(1);
+		DISPMSG("[Primary Recovery]  end\n");
+		recovery_wait = 0;
 		if (kthread_should_stop())
 			break;
 	}
@@ -3408,7 +3408,7 @@ int primary_display_wait_for_vsync(void *config)
 
 			while (g_skip != pgc->force_fps_skip_count) {
 				g_skip++;
-				DISPMSG("vsync|skip %d\n", g_skip);
+				DISPDBG("vsync|skip %d\n", g_skip);
 				ret =
 				    dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 							     DISP_PATH_EVENT_IF_VSYNC,
@@ -3442,7 +3442,7 @@ int primary_display_wait_for_vsync(void *config)
 		    dpmgr_wait_event(pgc->dpmgr_handle,
 				     DISP_PATH_EVENT_IF_VSYNC);
 	}
-	/* DISPMSG("vsync signaled\n"); */
+	DISPDBG("vsync signaled\n");
 	c->vsync_ts = get_current_time_us();
 	c->vsync_cnt++;
 
@@ -3461,7 +3461,7 @@ int primary_suspend_release_fence(void)
 	unsigned int i = 0;
 
 	for (i = 0; i < HW_OVERLAY_COUNT; i++) {
-		DISPMSG("mtkfb_release_layer_fence session=0x%x, layerid=%d\n",
+		DISPDBG("mtkfb_release_layer_fence session=0x%x, layerid=%d\n",
 			session, i);
 		mtkfb_release_layer_fence(session, i);
 	}
@@ -3516,16 +3516,16 @@ int primary_display_suspend(void)
 		       MMProfileFlagPulse, 0, 2);
 
 	if (disp_helper_get_option(DISP_HELPER_OPTION_USE_CMDQ)) {
-		DISPMSG("[POWER]display cmdq trigger loop stop[begin]\n");
+		DISPDBG("[POWER]display cmdq trigger loop stop[begin]\n");
 		_cmdq_stop_trigger_loop();
-		DISPMSG("[POWER]display cmdq trigger loop stop[end]\n");
+		DISPDBG("[POWER]display cmdq trigger loop stop[end]\n");
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 3);
 
-	DISPMSG("[POWER]primary display path stop[begin]\n");
+	DISPDBG("[POWER]primary display path stop[begin]\n");
 	dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
-	DISPMSG("[POWER]primary display path stop[end]\n");
+	DISPDBG("[POWER]primary display path stop[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 4);
 
@@ -3541,20 +3541,20 @@ int primary_display_suspend(void)
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 5);
 
-	DISPMSG("[POWER]lcm suspend[begin]\n");
+	DISPDBG("[POWER]lcm suspend[begin]\n");
 	disp_lcm_suspend(pgc->plcm);
-	DISPMSG("[POWER]lcm suspend[end]\n");
+	DISPDBG("[POWER]lcm suspend[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 6);
-	DISPMSG("[POWER]primary display path Release Fence[begin]\n");
+	DISPDBG("[POWER]primary display path Release Fence[begin]\n");
 	primary_suspend_release_fence();
-	DISPMSG("[POWER]primary display path Release Fence[end]\n");
+	DISPDBG("[POWER]primary display path Release Fence[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 7);
 
-	DISPMSG("[POWER]dpmanager path power off[begin]\n");
+	DISPDBG("[POWER]dpmanager path power off[begin]\n");
 	dpmgr_path_power_off(pgc->dpmgr_handle, CMDQ_DISABLE);
-	DISPMSG("[POWER]dpmanager path power off[end]\n");
+	DISPDBG("[POWER]dpmanager path power off[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 8);
 
@@ -3582,7 +3582,6 @@ int primary_display_get_lcm_index(void)
 {
 	int index = 0;
 
-	DISPFUNC();
 	if (pgc->plcm == NULL) {
 		DISPERR("lcm handle is null\n");
 		return 0;
@@ -3597,16 +3596,16 @@ int primary_display_get_lcm_index(void)
 int primary_display_ipoh_restore(void)
 {
 	DISPMSG("primary_display_ipoh_restore In\n");
-	DISPMSG("ESD check stop[begin]\n");
+	DISPDBG("ESD check stop[begin]\n");
 	primary_display_esd_check_enable(0);
-	DISPMSG("ESD check stop[end]\n");
+	DISPDBG("ESD check stop[end]\n");
 	if (NULL != pgc->cmdq_handle_trigger) {
 		struct TaskStruct *pTask = pgc->cmdq_handle_trigger->pRunningTask;
 
 		if (NULL != pTask) {
-			DISPMSG("[Primary_display]display cmdq trigger loop stop[begin]\n");
+			DISPDBG("[Primary_display]display cmdq trigger loop stop[begin]\n");
 			_cmdq_stop_trigger_loop();
-			DISPMSG("[Primary_display]display cmdq trigger loop stop[end]\n");
+			DISPDBG("[Primary_display]display cmdq trigger loop stop[end]\n");
 		}
 	}
 	DISPMSG("primary_display_ipoh_restore Out\n");
@@ -3615,9 +3614,9 @@ int primary_display_ipoh_restore(void)
 
 int primary_display_ipoh_recover(void)
 {
-	DISPMSG("%s In\n", __func__);
+	DISPMSG("%s begin\n", __func__);
 	_cmdq_start_trigger_loop();
-	DISPMSG("%s Out\n", __func__);
+	DISPMSG("%s end\n", __func__);
 	return 0;
 }
 
@@ -3626,7 +3625,7 @@ int primary_display_resume(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPFUNC();
+	DISPMSG("primary_display_resume begin\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagStart,
 		       0, 0);
 
@@ -3638,9 +3637,9 @@ int primary_display_resume(void)
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 1);
 
-	DISPMSG("dpmanager path power on[begin]\n");
+	DISPDBG("dpmanager path power on[begin]\n");
 	dpmgr_path_power_on(pgc->dpmgr_handle, CMDQ_DISABLE);
-	DISPMSG("dpmanager path power on[end]\n");
+	DISPDBG("dpmanager path power on[end]\n");
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 2);
@@ -3662,7 +3661,7 @@ int primary_display_resume(void)
 		pgc->state = DISP_ALIVE;
 		goto done;
 	}
-	DISPMSG("[POWER]dpmanager re-init[begin]\n");
+	DISPDBG("[POWER]dpmanager re-init[begin]\n");
 
 	{
 		LCM_PARAMS *lcm_param = NULL;
@@ -3728,13 +3727,13 @@ int primary_display_resume(void)
 			       MMProfileFlagPulse, 2, 2);
 		data_config->dst_dirty = 0;
 	}
-	DISPMSG("[POWER]dpmanager re-init[end]\n");
+	DISPDBG("[POWER]dpmanager re-init[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 3);
 
-	DISPMSG("[POWER]lcm resume[begin]\n");
+	DISPDBG("[POWER]lcm resume[begin]\n");
 	disp_lcm_resume(pgc->plcm);
-	DISPMSG("[POWER]lcm resume[end]\n");
+	DISPDBG("[POWER]lcm resume[end]\n");
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 4);
@@ -3749,13 +3748,13 @@ int primary_display_resume(void)
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 5);
-	DISPMSG("[POWER]dpmgr path start[begin]\n");
+	DISPDBG("[POWER]dpmgr path start[begin]\n");
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
 	if (primary_display_is_decouple_mode())
 		dpmgr_path_start(pgc->ovl2mem_path_handle, CMDQ_DISABLE);
 
-	DISPMSG("[POWER]dpmgr path start[end]\n");
+	DISPDBG("[POWER]dpmgr path start[end]\n");
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 6);
@@ -3781,9 +3780,9 @@ int primary_display_resume(void)
 		       0, 8);
 
 	if (disp_helper_get_option(DISP_HELPER_OPTION_USE_CMDQ)) {
-		DISPMSG("[POWER]start cmdq[begin]\n");
+		DISPDBG("[POWER]start cmdq[begin]\n");
 		_cmdq_start_trigger_loop();
-		DISPMSG("[POWER]start cmdq[end]\n");
+		DISPDBG("[POWER]start cmdq[end]\n");
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 9);
@@ -3794,9 +3793,9 @@ int primary_display_resume(void)
 
 	if (!primary_display_is_video_mode()) {
 		/*refresh black picture of ovl bg */
-		DISPMSG("[POWER]triggger cmdq[begin]\n");
+		DISPDBG("[POWER]triggger cmdq[begin]\n");
 		_trigger_display_interface(1, NULL, 0);
-		DISPMSG("[POWER]triggger cmdq[end]\n");
+		DISPDBG("[POWER]triggger cmdq[end]\n");
 		mdelay(16);	/* wait for one frame for pms workarround!!!! */
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
@@ -3837,6 +3836,8 @@ done:
 #endif
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagEnd,
 		       0, 0);
+
+	DISPMSG("primary_display_resume end\n");
 	return 0;
 }
 
@@ -3941,7 +3942,7 @@ int primary_display_trigger(int blocking, void *callback, int need_merge)
 	}
 
 	if (blocking)
-		DISPMSG("%s, change blocking to non blocking trigger\n",
+		DISPDBG("%s, change blocking to non blocking trigger\n",
 			__func__);
 
 	dprec_logger_start(DPREC_LOGGER_PRIMARY_TRIGGER, 0, 0);
@@ -4125,7 +4126,7 @@ int primary_display_config_output(disp_mem_output_config *output)
 
 	if (primary_display_is_decouple_mode()) {
 
-		DISPMSG("config output for decoule mirror\n");
+		DISPDBG("config output for decoule mirror\n");
 		/*decouple mirror mode */
 		ASSERT(output != NULL);
 		/* config ovl to mem mode path */
@@ -4165,7 +4166,7 @@ int primary_display_config_output(disp_mem_output_config *output)
 		pgc->need_trigger_dcMirror_out = 1;
 
 	} else {
-		DISPMSG("config output for direct mirror\n");
+		DISPDBG("config output for direct mirror\n");
 		/*direct link  mirror mode */
 		cmdq_handle = pgc->cmdq_handle_config;
 		dpmgr_path_add_memout(pgc->dpmgr_handle, ENGINE_OVL0,
@@ -4455,7 +4456,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 {
 	int sw_only = 0;
 
-	DISPMSG("primary_display_switch_mode sess_mode %d, session 0x%x\n", sess_mode, session);
+	DISPDBG("primary_display_switch_mode sess_mode %d, session 0x%x\n", sess_mode, session);
 	if (need_lock)
 		_primary_path_lock(__func__);
 
@@ -4478,7 +4479,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		/* dl to dc */
 		DL_switch_to_DC_fast(sw_only);
 		pgc->session_mode = sess_mode;
-		DISPMSG("primary display is %s mode now\n",
+		DISPDBG("primary display is %s mode now\n",
 			session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
 			       MMProfileFlagPulse, pgc->session_mode,
@@ -4489,7 +4490,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		DISPMSG("primary display DC_switch_to_DL_fast\n");
 		DC_switch_to_DL_fast(sw_only);
 		pgc->session_mode = sess_mode;
-		DISPMSG("primary display is %s mode now\n",
+		DISPDBG("primary display is %s mode now\n",
 			session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
 			       MMProfileFlagPulse, pgc->session_mode,
@@ -4499,7 +4500,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		   && sess_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE) {
 		/* dl to dl mirror */
 		pgc->session_mode = sess_mode;
-		DISPMSG("primary display is %s mode now\n",
+		DISPDBG("primary display is %s mode now\n",
 			session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
 			       MMProfileFlagPulse, pgc->session_mode,
@@ -4508,7 +4509,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
 		/*dl mirror to dl */
 		pgc->session_mode = sess_mode;
-		DISPMSG("primary display is %s mode now\n",
+		DISPDBG("primary display is %s mode now\n",
 			session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
 			       MMProfileFlagPulse, pgc->session_mode,
@@ -4518,7 +4519,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		/* dl to dc mirror  mirror */
 		DL_switch_to_DC_fast(sw_only);
 		pgc->session_mode = sess_mode;
-		DISPMSG("primary display is %s mode now\n",
+		DISPDBG("primary display is %s mode now\n",
 			session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
 			       MMProfileFlagPulse, pgc->session_mode,
@@ -4530,7 +4531,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 		DISPMSG("primary display DC_Mirror_switch_to_DL_fast\n");
 		DC_switch_to_DL_fast(sw_only);
 		pgc->session_mode = sess_mode;
-		DISPMSG("primary display is %s mode now\n",
+		DISPDBG("primary display is %s mode now\n",
 			session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
 			       MMProfileFlagPulse, pgc->session_mode,
@@ -4733,6 +4734,10 @@ static int _primary_path_idlemgr_monitor_thread(void *data)
 
 		/* before HWC trigger, idlemgr is blocked. */
 		if (is_hwc_enabled == 0)
+			continue;
+
+		/* when display path recovery, idlemgr is blocked. */
+		if (recovery_wait == 1)
 			continue;
 
 		_primary_path_lock(__func__);
@@ -5445,7 +5450,7 @@ int primary_display_enable_path_cg(int enable)
 {
 	int ret = 0;
 
-	DISPMSG("%s primary display's path cg\n",
+	DISPDBG("%s primary display's path cg\n",
 		enable ? "enable" : "disable");
 	_primary_path_lock(__func__);
 
@@ -5532,35 +5537,35 @@ int _set_backlight_by_cpu(unsigned int level)
 	if (primary_display_is_video_mode()) {
 		disp_lcm_set_backlight(pgc->plcm, NULL, level);
 	} else {
-		DISPMSG("[BL]display cmdq trigger loop stop[begin]\n");
+		DISPDBG("[BL]display cmdq trigger loop stop[begin]\n");
 		if (primary_display_cmdq_enabled())
 			_cmdq_stop_trigger_loop();
 
-		DISPMSG("[BL]display cmdq trigger loop stop[end]\n");
+		DISPDBG("[BL]display cmdq trigger loop stop[end]\n");
 
 		if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
-			DISPMSG("[BL]primary display path is busy\n");
+			DISPDBG("[BL]primary display path is busy\n");
 			ret =
 			    dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 						     DISP_PATH_EVENT_FRAME_DONE,
 						     HZ * 1);
-			DISPMSG("[BL]wait frame done ret:%d\n", ret);
+			DISPDBG("[BL]wait frame done ret:%d\n", ret);
 		}
 
-		DISPMSG("[BL]stop dpmgr path[begin]\n");
+		DISPDBG("[BL]stop dpmgr path[begin]\n");
 		dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
-		DISPMSG("[BL]stop dpmgr path[end]\n");
+		DISPDBG("[BL]stop dpmgr path[end]\n");
 		if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
-			DISPMSG
+			DISPDBG
 			    ("[BL]primary display path is busy after stop\n");
 			dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 						 DISP_PATH_EVENT_FRAME_DONE,
 						 HZ * 1);
-			DISPMSG("[BL]wait frame done ret:%d\n", ret);
+			DISPDBG("[BL]wait frame done ret:%d\n", ret);
 		}
-		DISPMSG("[BL]reset display path[begin]\n");
+		DISPDBG("[BL]reset display path[begin]\n");
 		dpmgr_path_reset(pgc->dpmgr_handle, CMDQ_DISABLE);
-		DISPMSG("[BL]reset display path[end]\n");
+		DISPDBG("[BL]reset display path[end]\n");
 
 		MMProfileLogEx(ddp_mmp_get_events()->primary_set_bl,
 			       MMProfileFlagPulse, 0, 2);
@@ -5570,15 +5575,15 @@ int _set_backlight_by_cpu(unsigned int level)
 		MMProfileLogEx(ddp_mmp_get_events()->primary_set_bl,
 			       MMProfileFlagPulse, 0, 3);
 
-		DISPMSG("[BL]start dpmgr path[begin]\n");
+		DISPDBG("[BL]start dpmgr path[begin]\n");
 		dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
-		DISPMSG("[BL]start dpmgr path[end]\n");
+		DISPDBG("[BL]start dpmgr path[end]\n");
 
 		if (primary_display_cmdq_enabled()) {
-			DISPMSG("[BL]start cmdq trigger loop[begin]\n");
+			DISPDBG("[BL]start cmdq trigger loop[begin]\n");
 			_cmdq_start_trigger_loop();
 		}
-		DISPMSG("[BL]start cmdq trigger loop[end]\n");
+		DISPDBG("[BL]start cmdq trigger loop[end]\n");
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->primary_set_bl, MMProfileFlagPulse,
 		       0, 7);
@@ -5736,7 +5741,7 @@ int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
 		return 0;
 	}
 
-	DISPMSG("primary capture: begin\n");
+	DISPDBG("primary capture: begin\n");
 
 	switch (fb_format) {
 	case MTK_FB_FORMAT_RGB888:
@@ -5841,12 +5846,12 @@ int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
 		_primary_path_unlock(__func__);
 		_cmdq_set_config_handle_dirty_mira(cmdq_handle);
 		_cmdq_flush_config_handle_mira(cmdq_handle, 0);
-		DISPMSG("primary capture: Flush add memout mva(0x%x)\n", mva);
+		DISPDBG("primary capture: Flush add memout mva(0x%x)\n", mva);
 
 		/*wait wdma0 sof */
 		cmdqRecWait(cmdq_wait_handle, CMDQ_EVENT_DISP_WDMA0_SOF);
 		cmdqRecFlush(cmdq_wait_handle);
-		DISPMSG("primary capture: Flush wait wdma sof\n");
+		DISPDBG("primary capture: Flush wait wdma sof\n");
 
 		cmdqRecReset(cmdq_handle);
 		_cmdq_insert_wait_frame_done_token_mira(cmdq_handle);
@@ -5857,7 +5862,7 @@ int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
 		_cmdq_set_config_handle_dirty_mira(cmdq_handle);
 		/* flush remove memory to cmdq */
 		_cmdq_flush_config_handle_mira(cmdq_handle, 1);
-		DISPMSG("primary capture: Flush remove memout\n");
+		DISPDBG("primary capture: Flush remove memout\n");
 
 		dpmgr_path_memout_clock(pgc->dpmgr_handle, 0);
 	}
@@ -5872,7 +5877,7 @@ out:
 		m4u_destroy_client(m4uClient);
 
 	disp_sw_mutex_unlock(&(pgc->capture_lock));
-	DISPMSG("primary capture: end\n");
+	DISPDBG("primary capture: end\n");
 
 	return ret;
 }
@@ -5890,8 +5895,6 @@ int primary_display_capture_framebuffer(unsigned long pbuf)
 	unsigned int i = 0;
 	unsigned long ttt = 0;
 
-	DISPMSG("w_res=%d, h_yres=%d, pixel_bpp=%d, w_fb=%d, fbsize=%d, fbaddress=0x%lx\n",
-		w_xres, h_yres, pixel_bpp, w_fb, fbsize, fbaddress);
 	fbv = (unsigned long)ioremap(fbaddress, fbsize);
 	DISPMSG("w_xres = %d, h_yres = %d, w_fb = %d, pixel_bpp = %d, fbsize = %d, fbaddress = 0x%lx\n",
 		w_xres, h_yres, w_fb, pixel_bpp, fbsize, fbaddress);
@@ -5907,7 +5910,7 @@ int primary_display_capture_framebuffer(unsigned long pbuf)
 		       (void *)(fbv + i * w_fb * pixel_bpp),
 		       w_xres * pixel_bpp);
 	}
-	DISPMSG("capture framebuffer cost %ld us\n", get_current_time_us() - ttt);
+	DISPDBG("capture framebuffer cost %ld us\n", get_current_time_us() - ttt);
 	iounmap((void *)fbv);
 
 	return -1;
@@ -5951,7 +5954,7 @@ uint32_t DISP_GetVRamSizeBoot(char *cmdline)
 	char *p = NULL;
 	uint32_t vramSize = 0;
 
-	DISPMSG("%s, cmdline=%s\n", __func__, cmdline);
+	DISPMSG("%s, cmdline = %s\n", __func__, cmdline);
 	p = strstr(cmdline, "vram=");
 	if (p == NULL) {
 		vramSize = 0x3000000;
@@ -6048,7 +6051,7 @@ int primary_display_check_path(char *stringbuf, int buf_len)
 {
 	int len = 0;
 
-	DISPMSG("primary_display_check_path() check signal status:\n");
+	DISPINFO("primary_display_check_path() check signal status:\n");
 	if (stringbuf) {
 		len +=
 		    scnprintf(stringbuf + len, buf_len - len,
@@ -6149,59 +6152,59 @@ int primary_display_check_path(char *stringbuf, int buf_len)
 			      IS_READY(READY_BIT1(DDP_SIGNAL_DIS0_SEL__DSI0)),
 			      IS_VALID(READY_BIT1(DDP_SIGNAL_DIS0_SEL__DSI0)));
 	} else {
-		DISPMSG
+		DISPINFO
 		    ("|--------------------------------------------------------------------------------------|\n");
-		DISPMSG
+		DISPINFO
 		    ("READY0=0x%08x, READY1=0x%08x, VALID0=0x%08x, VALID1=0x%08x\n",
 		     DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a0),
 		     DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a4),
 		     DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a8),
 		     DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8ac));
-		DISPMSG("OVL0\t\t\t%s\t%s\n",
+		DISPINFO("OVL0\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_OVL0__OVL0_MOUT)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_OVL0__OVL0_MOUT)));
-		DISPMSG("OVL0_MOUT:\t\t%s\t%s\n",
+		DISPINFO("OVL0_MOUT:\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_OVL0_MOUT0__COLOR_SIN1)),
 			IS_VALID(READY_BIT1
 				 (DDP_SIGNAL_OVL0_MOUT0__COLOR_SIN1)));
-		DISPMSG("COLOR0_SEL:\t\t%s\t%s\n",
+		DISPINFO("COLOR0_SEL:\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_COLOR_SEL__COLOR)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_COLOR_SEL__COLOR)));
-		DISPMSG("COLOR0:\t\t\t%s\t%s\n",
+		DISPINFO("COLOR0:\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_COLOR__CCORR)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_COLOR__CCORR)));
-		DISPMSG("CCORR:\t\t%s\t%s\n",
+		DISPINFO("CCORR:\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_CCORR__AAL)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_CCORR__AAL)));
-		DISPMSG("AAL0:\t\t\t%s\t%s\n",
+		DISPINFO("AAL0:\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_AAL__GAMMA)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_AAL__GAMMA)));
-		DISPMSG("GAMMA:\t\t\t%s\t%s\n",
+		DISPINFO("GAMMA:\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_GAMMA__DITHER)),
 			IS_VALID(READY_BIT1(DDP_SIGNAL_GAMMA__DITHER)));
-		DISPMSG("DITHER:\t\t\t%s\t%s\n",
+		DISPINFO("DITHER:\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_DITHER__DITHER_MOUT)),
 			IS_VALID(READY_BIT1(DDP_SIGNAL_DITHER__DITHER_MOUT)));
-		DISPMSG("DITHER_MOUT:\t\t%s\t%s\n",
+		DISPINFO("DITHER_MOUT:\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_DITHER_MOUT0__RDMA0)),
 			IS_VALID(READY_BIT1(DDP_SIGNAL_DITHER_MOUT0__RDMA0)));
-		DISPMSG("RDMA0:\t\t\t%s\t%s\n",
+		DISPINFO("RDMA0:\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_RDMA0__RDMA0_SOUT)),
 			IS_VALID(READY_BIT1(DDP_SIGNAL_RDMA0__RDMA0_SOUT)));
-		DISPMSG("RDMA0_SOUT:\t\t%s\t%s\n",
+		DISPINFO("RDMA0_SOUT:\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_RDMA0_SOUT0__UFOE_SIN0)),
 			IS_VALID(READY_BIT1
 				 (DDP_SIGNAL_RDMA0_SOUT0__UFOE_SIN0)));
-		DISPMSG("UFOE_SEL:\t\t%s\t%s\n",
+		DISPINFO("UFOE_SEL:\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_UFOE_SEL__UFOE)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_UFOE_SEL__UFOE)));
-		DISPMSG("UFOE:\t\t\t%s\t%s\n",
+		DISPINFO("UFOE:\t\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_UFOE__UFOE_MOUT)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_UFOE__UFOE_MOUT)));
-		DISPMSG("UFOE_MOUT:\t\t%s\t%s\n",
+		DISPINFO("UFOE_MOUT:\t\t%s\t%s\n",
 			IS_READY(READY_BIT0(DDP_SIGNAL_UFOE_MOUT0__DSI0_SIN0)),
 			IS_VALID(READY_BIT0(DDP_SIGNAL_UFOE_MOUT0__DSI0_SIN0)));
-		DISPMSG("DSI0_SEL:\t\t%s\t%s\n",
+		DISPINFO("DSI0_SEL:\t\t%s\t%s\n",
 			IS_READY(READY_BIT1(DDP_SIGNAL_DIS0_SEL__DSI0)),
 			IS_VALID(READY_BIT1(DDP_SIGNAL_DIS0_SEL__DSI0)));
 	}

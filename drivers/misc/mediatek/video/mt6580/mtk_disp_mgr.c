@@ -116,7 +116,7 @@ static int mtk_disp_mgr_mmap(struct file *file, struct vm_area_struct *vma)
 	unsigned long pa_start = vma->vm_pgoff << PAGE_SHIFT;
 	unsigned long pa_end = pa_start + require_size;
 
-	DISPMSG("mmap size %ld, vmpg0ff 0x%lx, pastart 0x%lx, paend 0x%lx\n",
+	DISPDBG("mmap size %ld, vmpg0ff 0x%lx, pastart 0x%lx, paend 0x%lx\n",
 		require_size, vma->vm_pgoff, pa_start, pa_end);
 
 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
@@ -150,21 +150,6 @@ OVL_CONFIG_STRUCT ovl2mem_in_cached_config[DDP_OVL_LAYER_MUN] = {
 
 int _session_inited(disp_session_config config)
 {
-	/* TODO: */
-#if 0
-	int i, idx = -1;
-
-	for (i = 0; i < MAX_SESSION_COUNT; i++) {
-		if (session_config[i] == 0 && idx == -1)
-			idx = i;
-
-		if (session_config[i] == session) {
-			ret = DCP_STATUS_ALREADY_EXIST;
-			DISPMSG("session(0x%x) already exists\n", session);
-			break;
-		}
-	}
-#endif
 	return 0;
 }
 
@@ -203,7 +188,7 @@ int disp_create_session(disp_session_config *config)
 	if (idx != -1) {
 		config->session_id = session;
 		session_config[idx] = session;
-		DISPMSG("New session(0x%x)\n", session);
+		DISPDBG("New session(0x%x)\n", session);
 	} else {
 		DISPERR("Invalid session creation request\n");
 		ret = -1;
@@ -262,7 +247,7 @@ int disp_destroy_session(disp_session_config *config)
 
 	/* 2. Destroy this session */
 	if (ret == 0)
-		DISPMSG("Destroy session(0x%x)\n", session);
+		DISPDBG("Destroy session(0x%x)\n", session);
 	else
 		DISPMSG("session(0x%x) does not exists\n", session);
 
@@ -361,41 +346,6 @@ int _ioctl_destroy_session(unsigned long arg)
 
 	return ret;
 }
-
-#if 0
-int _mem_out_release_fence_callback(unsigned int userdata)
-{
-	int i = 0;
-	unsigned int session_id = MAKE_DISP_SESSION(DISP_SESSION_PRIMARY, 0);
-	int fence_idx = userdata;
-
-	MMP_MetaDataBitmap_t Bitmap;
-
-	Bitmap.data1 = fence_idx;
-	Bitmap.pData = mtkfb_query_buf_va(session_id, 4, fence_idx);
-	Bitmap.start_pos = 0;
-	Bitmap.width = _ovl2mem_out_cached_config.w;
-	Bitmap.height = _ovl2mem_out_cached_config.h;
-	Bitmap.format = MMProfileBitmapBGRA8888;
-	Bitmap.bpp = 32;
-	Bitmap.pitch = _ovl2mem_out_cached_config.pitch;
-	Bitmap.data_size = Bitmap.pitch * _ovl2mem_out_cached_config.h;
-	Bitmap.down_sample_x = 4;
-	Bitmap.down_sample_y = 4;
-	MMProfileLogMetaBitmap(HDMI_MMP_Events.DDPKBitblt, MMProfileFlagPulse,
-			       &Bitmap);
-	if (fence_idx > 0)
-		mtkfb_release_fence(session_id, DDP_OUTPUT_LAYID, fence_idx);
-
-	/* /if(ticket == _ovl2mem_out_cached_config.ticket) */
-	/* /    primary_dislay_mirror_enable(false); */
-
-	DISPMSG("mem_out release fence idx:0x%x, cfgidx:0x%x\n", fence_idx,
-		_ovl2mem_out_cached_config.buff_idx);
-
-	return 0;
-}
-#endif
 
 char *disp_session_mode_spy(unsigned int session_id)
 {
@@ -1515,7 +1465,7 @@ int _ioctl_get_is_driver_suspend(unsigned long arg)
 	unsigned int is_suspend = 0;
 
 	is_suspend = primary_display_is_sleepd();
-	DISPDBG("ioctl_get_is_driver_suspend, is_suspend=%d\n", is_suspend);
+	DISPMSG("ioctl_get_is_driver_suspend, is_suspend=%d\n", is_suspend);
 	if (copy_to_user(argp, &is_suspend, sizeof(int))) {
 		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 		ret = -EFAULT;

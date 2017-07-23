@@ -260,12 +260,12 @@ int ovl2mem_init(unsigned int session)
 	ret =
 	    cmdqRecCreate(CMDQ_SCENARIO_SUB_MEMOUT, &(pgc->cmdq_handle_config));
 	if (ret) {
-		DISPMSG("cmdqRecCreate FAIL, ret=%d\n", ret);
-		DISPMSG("cmdqRecCreate FAIL, ret=%d\n", ret);
+		DISPDBG("cmdqRecCreate FAIL, ret=%d\n", ret);
+		DISPDBG("cmdqRecCreate FAIL, ret=%d\n", ret);
 		goto Exit;
 	} else {
-		DISPMSG("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
-		DISPMSG("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
+		DISPDBG("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
+		DISPDBG("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
 			  pgc->cmdq_handle_config);
 	}
 
@@ -274,11 +274,11 @@ int ovl2mem_init(unsigned int session)
 			      pgc->cmdq_handle_config);
 
 	if (pgc->dpmgr_handle) {
-		DISPMSG("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
-		DISPMSG("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
+		DISPDBG("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
+		DISPDBG("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
 	} else {
-		DISPMSG("dpmgr create path FAIL\n");
-		DISPMSG("dpmgr create path FAIL\n");
+		DISPDBG("dpmgr create path FAIL\n");
+		DISPDBG("dpmgr create path FAIL\n");
 		goto Exit;
 	}
 
@@ -297,13 +297,13 @@ int ovl2mem_init(unsigned int session)
 	sPort.Direction = 0;
 	ret = m4u_config_port(&sPort);
 	if (ret == 0) {
-		DISPMSG("config M4U Port %s to %s SUCCESS\n",
-		DISPMSG("config M4U Port %s to %s SUCCESS\n",
+		DISPDBG("config M4U Port %s to %s SUCCESS\n",
+		DISPDBG("config M4U Port %s to %s SUCCESS\n",
 			  ddp_get_module_name(DISP_MODULE_OVL1),
 			  ovl2mem_use_m4u ? "virtual" : "physical");
 	} else {
-		DISPMSG("config M4U Port %s to %s FAIL(ret=%d)\n",
-		DISPMSG("config M4U Port %s to %s FAIL(ret=%d)\n",
+		DISPDBG("config M4U Port %s to %s FAIL(ret=%d)\n",
+		DISPDBG("config M4U Port %s to %s FAIL(ret=%d)\n",
 			  ddp_get_module_name(DISP_MODULE_OVL1),
 			  ovl2mem_use_m4u ? "virtual" : "physical", ret);
 		goto Exit;

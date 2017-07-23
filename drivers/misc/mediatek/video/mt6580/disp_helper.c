@@ -278,7 +278,7 @@ int disp_helper_get_option_list(char *stringbuf, int buf_len)
 	int i = 0;
 
 	for (i = 0; i < DISP_HELPER_OPTION_NUM; i++) {
-		DISPMSG("Option: [%s] Value: [%d]\n", disp_helper_option_spy(i),
+		DISPINFO("Option: [%s] Value: [%d]\n", disp_helper_option_spy(i),
 			disp_helper_get_option(i));
 		len +=
 		    scnprintf(stringbuf + len, buf_len - len,

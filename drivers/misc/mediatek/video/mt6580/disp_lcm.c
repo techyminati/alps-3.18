@@ -145,9 +145,7 @@ void _dump_lcm_info(disp_lcm_handle *plcm)
 		if (p->type == LCM_TYPE_DSI) {
 			DISPMSG("[LCM] LANE_NUM: %d,data_format\n",
 				  (int)p->dsi.LANE_NUM);
-#ifdef MT_TODO
-#error
-#endif
+
 			DISPMSG(
 			    "[LCM] vact: %u, vbp: %u, vfp: %u, vact_line: %u, hact: %u, hbp: %u, hfp: %u, hblank: %u\n",
 			     p->dsi.vertical_sync_active,

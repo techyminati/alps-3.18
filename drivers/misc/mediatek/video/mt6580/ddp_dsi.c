@@ -2409,12 +2409,10 @@ void DSI_set_cmdq_V3(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_setting_ta
 void DSI_set_cmdq(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, unsigned int *pdata,
 		  unsigned int queue_size, unsigned char force_update)
 {
-	/* DISPFUNC(); */
-/* _WaitForEngineNotBusy(); */
 	int j = 0;
 	int i = 0;
 
-	/* DISPCHECK("DSI_set_cmdq, module=%s, cmdq=0x%08x\n", ddp_get_module_name(module), cmdq); */
+	/* DISPDBG("DSI_set_cmdq, module=%s, cmdq=0x%08x\n", ddp_get_module_name(module), cmdq); */
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
 		if (0 != DSI_REG[i]->DSI_MODE_CTRL.MODE) {
@@ -2921,7 +2919,7 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			v_c = (timcon3.CLK_HS_POST + timcon2.CLK_TRAIL) * lane_num;
 
 			DISPDBG("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
-/* DISPCHECK("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
+/* DISPDBG("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
 			DISPDBG("===>Will Reconfig in order to fulfill LP clock lane per line\n");
 
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HFP_WC, (v_b + v_c + DIFF_CLK_LANE_LP));
@@ -2947,7 +2945,7 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			v_c = (timcon3.CLK_HS_POST + timcon2.CLK_TRAIL) * lane_num;
 
 			DISPDBG("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
-/* DISPCHECK("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
+/* DISPDBG("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
 			DISPDBG("===>Will Reconfig in order to fulfill LP clock lane per line\n");
 
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HFP_WC, (v_b + v_c + DIFF_CLK_LANE_LP));
@@ -2974,7 +2972,7 @@ static void DSI_PHY_CLK_LP_PerLine_config(DISP_MODULE_ENUM module, cmdqRecHandle
 			v_c = (timcon3.CLK_HS_POST + timcon2.CLK_TRAIL) * lane_num;
 
 			DISPDBG("===>v_a-v_b=0x%x,HSTX_CKLP_WC=0x%x\n", (v_a - v_b), hstx_ckl_wc);
-			/* DISPCHECK("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
+			/* DISPDBG("===>v_b+v_c=0x%x,HFP_WC=0x%x\n",(v_b+v_c),hfp); */
 			DISPDBG("===>Will Reconfig in order to fulfill LP clock lane per line\n");
 
 			DSI_OUTREG32(cmdq, &DSI_REG[i]->DSI_HFP_WC, (v_b + v_c + DIFF_CLK_LANE_LP));
