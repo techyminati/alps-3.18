@@ -39,7 +39,6 @@
 unsigned int g_power_reset;
 #endif
 
-
 MODULE_LICENSE("GPL");
 /*--------------------------------------------------------------------------*/
 /* head file define	                                                     */
@@ -1898,7 +1897,7 @@ static int simp_mmc_get_host(int card_type, bool boot)
 {
 	int index = 0;
 
-	for (; index < HOST_MAX_NUM; ++index) {
+	for (; index < 2; ++index) {
 		if (p_msdc_hw[index]) {
 			if ((card_type == p_msdc_hw[index]->host_function)
 			    && (boot == p_msdc_hw[index]->boot))
@@ -2499,6 +2498,11 @@ int card_dump_func_read(unsigned char *buf, unsigned int len, unsigned long long
 }
 EXPORT_SYMBOL(card_dump_func_read);
 
+int has_mt_dump_support(void)
+{
+	return 1;
+}
+EXPORT_SYMBOL(has_mt_dump_support);
 
 /*--------------------------------------------------------------------------*/
 /* porting for kdump interface                                              */
@@ -2551,7 +2555,8 @@ int get_emmc_dump_status(void)
 	return partition_ready_flag;
 }
 
-static int __init get_emmc_dump_info(void)
+
+static void get_emmc_dump_info(struct delayed_work *work)
 {
 	struct hd_struct *lp_hd_struct = NULL;
 
@@ -2561,6 +2566,7 @@ static int __init get_emmc_dump_info(void)
 		lp_nr_sects = lp_hd_struct->nr_sects;
 		put_part(lp_hd_struct);
 		partition_ready_flag = 1;
+		pr_err("get expdb info\n");
 	} else {
 		lp_start_sect = (sector_t) (-1);
 		lp_nr_sects = (sector_t) (-1);
@@ -2569,9 +2575,16 @@ static int __init get_emmc_dump_info(void)
 	}
 
 	partition_ready_flag = 1;
+}
+
+static struct delayed_work get_dump_info;
+static int __init init_get_dump_work(void)
+{
+	INIT_DELAYED_WORK(&get_dump_info, get_emmc_dump_info);
+	schedule_delayed_work(&get_dump_info, 100);
 	return 0;
 }
 
-late_initcall_sync(get_emmc_dump_info);
+late_initcall_sync(init_get_dump_work);
 #endif
 #endif
