@@ -47,7 +47,7 @@
 
 #include "ddp_manager.h"
 #include "disp_drv_platform.h"
-#include "display_recorder.h"
+#include "disp_recorder.h"
 #include "disp_session.h"
 #include "ddp_mmp.h"
 #include <linux/ftrace_event.h>

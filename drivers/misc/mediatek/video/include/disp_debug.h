@@ -89,10 +89,10 @@ extern struct MTKFB_MMP_Events_t {
 	MMP_Event Debug;
 } MTKFB_MMP_Events;
 
-extern unsigned int g_mobilelog;
-extern unsigned int g_mobilelog;
-extern unsigned int g_loglevel;
-extern unsigned int g_rcdlevel;
+extern unsigned int gEnableUartLog;
+extern unsigned int gMobilelog;
+extern unsigned int gLoglevel;
+extern unsigned int gRcdlevel;
 
 #ifdef MTKFB_DBG
 
@@ -119,10 +119,10 @@ static inline void dbg_print(int level, const char *fmt, ...)
 			if (ind > MAX_DBG_INDENT_LEVEL)
 				ind = MAX_DBG_INDENT_LEVEL;
 
-			pr_info("DISP/DBG " "%*s", ind * DBG_INDENT_SIZE, "");
+			DISPMSG("%*s", ind * DBG_INDENT_SIZE, "");
 			va_start(args, fmt);
 			vsnprintf(dbg_buf, sizeof(dbg_buf), fmt, args);
-			pr_info("DISP/DBG " dbg_buf);
+			DISPMSG(dbg_buf);
 			va_end(args);
 			spin_unlock_irqrestore(&dbg_spinlock, flags);
 		}
@@ -153,7 +153,7 @@ static inline void dbg_print(int level, const char *fmt, ...)
 #define MSG(evt, fmt, args...)					\
 	do {							\
 		if ((MTKFB_DBG_EVT_##evt) & MTKFB_DBG_EVT_MASK)	\
-			pr_info("DISP/DBG " fmt, ##args);	\
+			DISPMSG(fmt, ##args);	\
 	} while (0)
 
 #define MSG_FUNC_ENTER(f)   MSG(FUNC, "<FB_ENTER>: %s\n", __func__)

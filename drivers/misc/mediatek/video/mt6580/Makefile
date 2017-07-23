@@ -13,7 +13,6 @@
 
 obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 			disp_assert_layer.o    \
-			disp_debug.o           \
 			primary_display.o      \
 			disp_lcm.o             \
 			disp_utils.o           \
@@ -36,8 +35,7 @@ obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 			ddp_color_format.o     \
 			ddp_mmp.o              \
 			ddp_met.o              \
-			ddp_misc.o             \
-			display_recorder.o
+			ddp_misc.o
 
 ccflags-y +=	-I$(srctree)/drivers/misc/mediatek/video/include/                     \
 		-I$(srctree)/drivers/misc/mediatek/video/common/                      \

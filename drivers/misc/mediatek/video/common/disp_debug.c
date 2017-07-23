@@ -57,7 +57,7 @@
 #include "ddp_dump.h"
 #include "disp_log.h"
 #include "disp_debug.h"
-#include "display_recorder.h"
+#include "disp_recorder.h"
 #include "disp_drv_ddp.h"
 #include "disp_drv_platform.h"
 #include "disp_assert_layer.h"
@@ -94,9 +94,10 @@ static unsigned int irq_log_level;
 static unsigned int dump_to_buffer;
 
 /* for video mode */
-unsigned int g_mobilelog = 0;
-unsigned int g_loglevel = 0;
-unsigned int g_rcdlevel = 0;
+unsigned int gEnableUartLog = 0;
+unsigned int gMobilelog = 1;
+unsigned int gLoglevel = 3; /*DISPMSG level is DEFAULT_LEVEL==3*/
+unsigned int gRcdlevel = 0;
 
 /* for video mode */
 unsigned int gEnableMutexRisingEdge = 0;
@@ -1322,9 +1323,9 @@ static void mtkfb_process_dbg_opt(const char *opt)
 		}
 	} else if (0 == strncmp(opt, "mobile:", 7)) {
 		if (0 == strncmp(opt + 7, "on", 2))
-			g_mobilelog = 1;
+			gMobilelog = 1;
 		else if (0 == strncmp(opt + 7, "off", 3))
-			g_mobilelog = 0;
+			gMobilelog = 0;
 	} else if (0 == strncmp(opt, "diagnose", 8)) {
 		primary_display_diagnose();
 		return;

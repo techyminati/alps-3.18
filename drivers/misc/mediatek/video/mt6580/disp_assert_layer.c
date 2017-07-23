@@ -21,7 +21,7 @@
 #include "disp_drv_platform.h"
 #include "disp_session.h"
 #include "disp_log.h"
-#include "display_recorder.h"
+#include "disp_recorder.h"
 #include <linux/string.h>
 #include <linux/semaphore.h>
 #include <asm/cacheflush.h>
