@@ -196,7 +196,7 @@
 		};
 
 		GPIO@0x10005000 {
-			compatible = "mediatek,GPIO";
+			compatible = "mediatek,gpio";
 			reg = <0x10005000 0x1000>;
 		};
 
