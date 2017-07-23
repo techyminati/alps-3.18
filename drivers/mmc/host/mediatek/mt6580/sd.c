@@ -1950,7 +1950,6 @@ static void msdc_reset_crc_tune_counter(struct msdc_host *host,	int index)
 
 static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 {
-	int got_polarity = 0;
 	unsigned long flags;
 
 	if (host == NULL) {
@@ -1965,16 +1964,16 @@ static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 	}
 	if (host->mmc->card) {
 		spin_lock_irqsave(&host->remove_bad_card, flags);
-		got_polarity = host->sd_cd_polarity;
 		host->block_bad_card = 1;
 
 		mmc_card_set_removed(host->mmc->card);
 		spin_unlock_irqrestore(&host->remove_bad_card, flags);
 
 		if (!(host->mmc->caps & MMC_CAP_NONREMOVABLE)
-			&& (got_polarity ^ host->hw->cd_level))
-			tasklet_hi_schedule(&host->card_tasklet);
-		else {
+			&& (host->hw->cd_level == __gpio_get_value(cd_gpio))) {
+			/* do nothing*/
+			/*tasklet_hi_schedule(&host->card_tasklet);*/
+		} else {
 			mmc_remove_card(host->mmc->card);
 			host->mmc->card = NULL;
 			mmc_detach_bus(host->mmc);
