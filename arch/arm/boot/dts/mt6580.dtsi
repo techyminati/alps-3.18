@@ -558,10 +558,9 @@
 			interrupts = <0 78 0x8>;
 		};
 
-		AUXADC@0x11003000 {
-			compatible = "mediatek,AUXADC";
+		auxadc: adc_hw@11003000 {
+			compatible = "mediatek,mt6735-auxadc";
 			reg = <0x11003000 0x1000>;
-			interrupts = <0 35 0x2>;
 		};
 
 		FHCTL@0x11004000 {
@@ -1275,3 +1274,4 @@
 };
 
 /*/include/ "cust_i2c.dtsi"*/
+
