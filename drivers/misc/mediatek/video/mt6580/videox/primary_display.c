@@ -104,6 +104,8 @@ int primary_display_cur_dst_mode = 0;
 #endif
 
 int primary_trigger_cnt = 0;
+struct mutex esd_mode_switch_lock;
+
 #define PRIMARY_DISPLAY_TRIGGER_CNT (1)
 typedef struct {
 	DISP_POWER_STATE state;
@@ -174,6 +176,16 @@ static void _primary_path_unlock(const char *caller)
 	pgc->mutex_locker = NULL;
 	disp_sw_mutex_unlock(&(pgc->lock));
 	dprec_logger_done(DPREC_LOGGER_PRIMARY_MUTEX, 0, 0);
+}
+
+static void _primary_path_esd_check_lock(void)
+{
+	mutex_lock(&esd_mode_switch_lock);
+}
+
+static void _primary_path_esd_check_unlock(void)
+{
+	mutex_unlock(&esd_mode_switch_lock);
 }
 
 int primary_display_is_directlink_mode(void)
@@ -2188,7 +2200,11 @@ int _esd_check_config_handle_vdo(void)
 	/* 1.reset */
 	cmdqRecReset(pgc->cmdq_handle_config_esd);
 
+	ret = cmdqRecWait(pgc->cmdq_handle_config_esd, CMDQ_EVENT_DISP_RDMA0_EOF);
+	cmdqRecWait(pgc->cmdq_handle_config_esd, CMDQ_EVENT_MUTEX0_STREAM_EOF);
+
 	/* 2.stop dsi vdo mode */
+	_primary_path_lock(__func__);
 	dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd,
 			      CMDQ_STOP_VDO_MODE, 0);
 
@@ -2205,6 +2221,7 @@ int _esd_check_config_handle_vdo(void)
 	/* 5. trigger path */
 	dpmgr_path_trigger(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd,
 			   CMDQ_ENABLE);
+	_primary_path_unlock(__func__);
 
 	/* 6.flush instruction */
 	dprec_logger_start(DPREC_LOGGER_ESD_CMDQ, 0, 0);
@@ -2225,6 +2242,7 @@ int primary_display_esd_check(void)
 {
 	int ret = 0;
 
+	_primary_path_esd_check_lock();
 	dprec_logger_start(DPREC_LOGGER_ESD_CHECK, 0, 0);
 	MMProfileLogEx(ddp_mmp_get_events()->esd_check_t, MMProfileFlagStart, 0,
 		       0);
@@ -2322,8 +2340,10 @@ int primary_display_esd_check(void)
 	MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm, MMProfileFlagStart, 0,
 		       primary_display_cmdq_enabled());
 	if (primary_display_cmdq_enabled()) {
+		_primary_path_lock(__func__);
 		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
 			       MMProfileFlagPulse, 0, 1);
+
 		/* 0.create esd check cmdq */
 		cmdqRecCreate(CMDQ_SCENARIO_DISP_ESD_CHECK,
 			      &(pgc->cmdq_handle_config_esd));
@@ -2333,6 +2353,7 @@ int primary_display_esd_check(void)
 		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
 			       MMProfileFlagPulse, 0, 2);
 		DISPCHECK("[ESD]ESD config thread=%p\n", pgc->cmdq_handle_config_esd);
+		_primary_path_unlock(__func__);
 
 		/* 1.use cmdq to read from lcm */
 		if (primary_display_is_video_mode())
@@ -2450,6 +2471,7 @@ done:
 	MMProfileLogEx(ddp_mmp_get_events()->esd_check_t, MMProfileFlagEnd, 0,
 		       ret);
 	dprec_logger_done(DPREC_LOGGER_ESD_CHECK, 0, 0);
+	_primary_path_esd_check_unlock();
 	return ret;
 
 }
@@ -3666,6 +3688,7 @@ int primary_display_suspend(void)
 	primary_display_switch_dst_mode(primary_display_def_dst_mode);
 #endif
 	disp_sw_mutex_lock(&(pgc->capture_lock));
+	_primary_path_esd_check_lock();
 	_primary_path_lock(__func__);
 	if (pgc->state == DISP_SLEPT) {
 		DISPCHECK("primary display path is already sleep, skip\n");
@@ -3745,6 +3768,7 @@ int primary_display_suspend(void)
 	pgc->state = DISP_SLEPT;
 done:
 	_primary_path_unlock(__func__);
+	_primary_path_esd_check_unlock();
 	disp_sw_mutex_unlock(&(pgc->capture_lock));
 #ifdef KER318_WORKAROUND
 	/* For AEE_POWERKEY_HANG_DETECT */
@@ -4993,6 +5017,7 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps)
 
 	mutex_init(&(pgc->capture_lock));
 	mutex_init(&(pgc->lock));
+	mutex_init(&esd_mode_switch_lock);
 #ifdef DISP_SWITCH_DST_MODE
 	mutex_init(&(pgc->switch_dst_lock));
 #endif
