@@ -634,6 +634,7 @@
 		auxadc: adc_hw@11003000 {
 			compatible = "mediatek,mt6735-auxadc";
 			reg = <0x11003000 0x1000>;
+			interrupts = <GIC_SPI 35 IRQ_TYPE_EDGE_FALLING>;
 		};
 
 		FHCTL@0x11004000 {

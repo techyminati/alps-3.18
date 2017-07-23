@@ -17,3 +17,5 @@ obj-y += mt-smp.o
 obj-y += hotplug.o
 obj-y += mt-headsmp.o
 obj-y += mt_hotplug.o
+obj-y += mt_cpuidle.o
+obj-y += cpu_dormant-v7.o
