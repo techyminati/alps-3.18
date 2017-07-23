@@ -508,60 +508,69 @@ void msdc_dump_register(struct msdc_host *host)
 	void __iomem *base = host->base;
 	int i = host->id;
 
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_CFG, sdr_read32(MSDC_CFG));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_IOCON, sdr_read32(MSDC_IOCON));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_PS, sdr_read32(MSDC_PS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_INT, sdr_read32(MSDC_INT));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_INTEN, sdr_read32(MSDC_INTEN));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_FIFOCS,
-		sdr_read32(MSDC_FIFOCS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_CFG, sdr_read32(SDC_CFG));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_CMD, sdr_read32(SDC_CMD));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_ARG, sdr_read32(SDC_ARG));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_STS, sdr_read32(SDC_STS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_RESP0, sdr_read32(SDC_RESP0));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_RESP1, sdr_read32(SDC_RESP1));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_RESP2, sdr_read32(SDC_RESP2));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_RESP3, sdr_read32(SDC_RESP3));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_BLK_NUM,
-		sdr_read32(SDC_BLK_NUM));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_VOL_CHG,
-		sdr_read32(SDC_VOL_CHG));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_CSTS, sdr_read32(SDC_CSTS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_CSTS_EN,
-		sdr_read32(SDC_CSTS_EN));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_DCRC_STS,
-		sdr_read32(SDC_DCRC_STS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC_CFG0, sdr_read32(EMMC_CFG0));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC_CFG1, sdr_read32(EMMC_CFG1));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC_STS, sdr_read32(EMMC_STS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC_IOCON, sdr_read32(EMMC_IOCON));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_ACMD_RESP,
-		sdr_read32(SDC_ACMD_RESP));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_ACMD19_TRG,
-		sdr_read32(SDC_ACMD19_TRG));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_SDC_ACMD19_STS,
-		sdr_read32(SDC_ACMD19_STS));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DMA_SA_HIGH4BIT,
-		sdr_read32(MSDC_DMA_SA_HIGH4BIT));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DMA_SA,
-		sdr_read32(MSDC_DMA_SA));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DMA_CA,
-		sdr_read32(MSDC_DMA_CA));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DMA_CTRL,
-		sdr_read32(MSDC_DMA_CTRL));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DMA_CFG,
-		sdr_read32(MSDC_DMA_CFG));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DMA_LEN,
-		sdr_read32(MSDC_DMA_LEN));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DBG_SEL,
-		sdr_read32(MSDC_DBG_SEL));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DBG_OUT,
-		sdr_read32(MSDC_DBG_OUT));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_PATCH_BIT0,
-		sdr_read32(MSDC_PATCH_BIT0));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_PATCH_BIT1,
-		sdr_read32(MSDC_PATCH_BIT1));
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_MSDC_CFG, sdr_read32(MSDC_CFG),
+		OFFSET_MSDC_IOCON, sdr_read32(MSDC_IOCON),
+		OFFSET_MSDC_PS, sdr_read32(MSDC_PS),
+		OFFSET_MSDC_INT, sdr_read32(MSDC_INT)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_MSDC_INTEN, sdr_read32(MSDC_INTEN),
+		OFFSET_MSDC_FIFOCS, sdr_read32(MSDC_FIFOCS),
+		OFFSET_SDC_CFG, sdr_read32(SDC_CFG),
+		OFFSET_SDC_CMD, sdr_read32(SDC_CMD)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_SDC_ARG, sdr_read32(SDC_ARG),
+		OFFSET_SDC_STS, sdr_read32(SDC_STS),
+		OFFSET_SDC_RESP0, sdr_read32(SDC_RESP0),
+		OFFSET_SDC_RESP1, sdr_read32(SDC_RESP1)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_SDC_RESP2, sdr_read32(SDC_RESP2),
+		OFFSET_SDC_RESP3, sdr_read32(SDC_RESP3),
+		OFFSET_SDC_BLK_NUM, sdr_read32(SDC_BLK_NUM),
+		OFFSET_SDC_VOL_CHG, sdr_read32(SDC_VOL_CHG)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_SDC_CSTS, sdr_read32(SDC_CSTS),
+		OFFSET_SDC_CSTS_EN, sdr_read32(SDC_CSTS_EN),
+		OFFSET_SDC_DCRC_STS, sdr_read32(SDC_DCRC_STS),
+		OFFSET_EMMC_CFG0, sdr_read32(EMMC_CFG0)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_EMMC_CFG1, sdr_read32(EMMC_CFG1),
+		OFFSET_EMMC_STS, sdr_read32(EMMC_STS),
+		OFFSET_EMMC_IOCON, sdr_read32(EMMC_IOCON),
+		OFFSET_SDC_ACMD_RESP, sdr_read32(SDC_ACMD_RESP)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_SDC_ACMD19_TRG, sdr_read32(SDC_ACMD19_TRG),
+		OFFSET_SDC_ACMD19_STS, sdr_read32(SDC_ACMD19_STS),
+		OFFSET_MSDC_DMA_SA_HIGH4BIT, sdr_read32(MSDC_DMA_SA_HIGH4BIT),
+		OFFSET_MSDC_DMA_SA, sdr_read32(MSDC_DMA_SA)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_MSDC_DMA_CA, sdr_read32(MSDC_DMA_CA),
+		OFFSET_MSDC_DMA_CTRL, sdr_read32(MSDC_DMA_CTRL),
+		OFFSET_MSDC_DMA_CFG, sdr_read32(MSDC_DMA_CFG),
+		OFFSET_MSDC_DMA_LEN, sdr_read32(MSDC_DMA_LEN)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_MSDC_DBG_SEL, sdr_read32(MSDC_DBG_SEL),
+		OFFSET_MSDC_DBG_OUT, sdr_read32(MSDC_DBG_OUT),
+		OFFSET_MSDC_PATCH_BIT0, sdr_read32(MSDC_PATCH_BIT0),
+		OFFSET_MSDC_PATCH_BIT1, sdr_read32(MSDC_PATCH_BIT1)
+	);
+
 	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_PATCH_BIT2,
 		sdr_read32(MSDC_PATCH_BIT2));
 
@@ -580,49 +589,41 @@ void msdc_dump_register(struct msdc_host *host)
 			sdr_read32(SDIO_TUNE_WIND));
 	}
 
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_PAD_TUNE0,
-		sdr_read32(MSDC_PAD_TUNE0));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_PAD_TUNE1,
-		sdr_read32(MSDC_PAD_TUNE1));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DAT_RDDLY0,
-		sdr_read32(MSDC_DAT_RDDLY0));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DAT_RDDLY1,
-		sdr_read32(MSDC_DAT_RDDLY1));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DAT_RDDLY2,
-		sdr_read32(MSDC_DAT_RDDLY2));
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_DAT_RDDLY3,
-		sdr_read32(MSDC_DAT_RDDLY3));
-/*
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_HW_DBG,
-		sdr_read32(MSDC_HW_DBG));
-*/
-	pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_MSDC_VERSION,
-		sdr_read32(MSDC_VERSION));
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_MSDC_PAD_TUNE0, sdr_read32(MSDC_PAD_TUNE0),
+		OFFSET_MSDC_PAD_TUNE1, sdr_read32(MSDC_PAD_TUNE1),
+		OFFSET_MSDC_DAT_RDDLY0, sdr_read32(MSDC_DAT_RDDLY0),
+		OFFSET_MSDC_DAT_RDDLY1, sdr_read32(MSDC_DAT_RDDLY1)
+	);
+
+	pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+		i, OFFSET_MSDC_DAT_RDDLY2, sdr_read32(MSDC_DAT_RDDLY2),
+		OFFSET_MSDC_DAT_RDDLY3, sdr_read32(MSDC_DAT_RDDLY3),
+		OFFSET_MSDC_VERSION, sdr_read32(MSDC_VERSION)
+	);
 
 #if defined(MSDC0_EMMC50_SUPPORT)
 	if (host->id == 0) {
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_PAD_DS_TUNE,
-			sdr_read32(EMMC50_PAD_DS_TUNE));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_PAD_CMD_TUNE,
-			sdr_read32(EMMC50_PAD_CMD_TUNE));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_PAD_DAT01_TUNE,
-			sdr_read32(EMMC50_PAD_DAT01_TUNE));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_PAD_DAT23_TUNE,
-			sdr_read32(EMMC50_PAD_DAT23_TUNE));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_PAD_DAT45_TUNE,
-			sdr_read32(EMMC50_PAD_DAT45_TUNE));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_PAD_DAT67_TUNE,
-			sdr_read32(EMMC50_PAD_DAT67_TUNE));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_CFG0,
-			sdr_read32(EMMC50_CFG0));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_CFG1,
-			sdr_read32(EMMC50_CFG1));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_CFG2,
-			sdr_read32(EMMC50_CFG2));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_CFG3,
-			sdr_read32(EMMC50_CFG3));
-		pr_err("sd%d R[%x]=0x%.8x\n", i, OFFSET_EMMC50_CFG4,
-			sdr_read32(EMMC50_CFG4));
+		pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+			i, OFFSET_EMMC50_PAD_DS_TUNE, sdr_read32(EMMC50_PAD_DS_TUNE),
+			OFFSET_EMMC50_PAD_CMD_TUNE, sdr_read32(EMMC50_PAD_CMD_TUNE),
+			OFFSET_EMMC50_PAD_DAT01_TUNE, sdr_read32(EMMC50_PAD_DAT01_TUNE),
+			OFFSET_EMMC50_PAD_DAT23_TUNE, sdr_read32(EMMC50_PAD_DAT23_TUNE)
+		);
+
+		pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+			i, OFFSET_EMMC50_PAD_DAT45_TUNE, sdr_read32(EMMC50_PAD_DAT45_TUNE),
+			OFFSET_EMMC50_PAD_DAT67_TUNE, sdr_read32(EMMC50_PAD_DAT67_TUNE),
+			OFFSET_EMMC50_CFG0, sdr_read32(EMMC50_CFG0),
+			OFFSET_EMMC50_CFG1, sdr_read32(EMMC50_CFG1)
+		);
+
+		pr_err("sd%d R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x R[%x]=0x%.8x\n",
+			i, OFFSET_EMMC50_CFG1, sdr_read32(EMMC50_CFG1),
+			OFFSET_EMMC50_CFG2, sdr_read32(EMMC50_CFG2),
+			OFFSET_EMMC50_CFG3, sdr_read32(EMMC50_CFG3),
+			OFFSET_EMMC50_CFG4, sdr_read32(EMMC50_CFG4)
+		);
 	}
 #endif
 }
@@ -632,10 +633,10 @@ static void msdc_dump_dbg_register(struct msdc_host *host)
 	void __iomem *base = host->base;
 	u32 i;
 
-	for (i = 0; i <= 0x27; i++) {
+	for (i = 0; i <= 0xd; i++) {
 		sdr_write32(MSDC_DBG_SEL, i);
-		pr_err("sd%d SEL:r[%x]=0x%x\n", host->id, OFFSET_MSDC_DBG_SEL, i);
-		pr_err("sd%d OUT:r[%x]=0x%x\n", host->id, OFFSET_MSDC_DBG_OUT,
+		pr_err("sd%d SEL:r[%x]=0x%x OUT:r[%x]=0x%x\n",
+			host->id, OFFSET_MSDC_DBG_SEL, i, OFFSET_MSDC_DBG_OUT,
 			sdr_read32(MSDC_DBG_OUT));
 	}
 
@@ -4703,6 +4704,11 @@ static void msdc_restore_info(struct msdc_host *host)
 	sdr_set_field(MSDC_INTEN, MSDC_INT_SDIOIRQ,
 		host->saved_para.inten_sdio_irq);	/* get INTEN status for SDIO */
 	sdr_write32(MSDC_IOCON, host->saved_para.iocon);
+
+	if (host->hw->host_function == MSDC_SDIO) {
+		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
+		host->mmc->rescan_entered = 0;
+	}
 }
 
 static void msdc_update_cahce_status(struct msdc_host *host,
@@ -8321,14 +8327,7 @@ static void msdc_init_hw(struct msdc_host *host)
 
 	/* Power on */
 	msdc_pin_reset(host, MSDC_PIN_PULL_UP);
-#ifndef FPGA_PLATFORM
-#ifdef CONFIG_MTK_CLKMGR
-	enable_clock(msdc_cg_clk_id[host->id], "SD");
-#else
-	clk_enable(host->clock_control);
-#endif
-#endif
-	host->core_clkon = 1;
+
 	msdc_select_clksrc(host, hw->clk_src);
 
 	/* Configure to MMC/SD mode */
@@ -9060,6 +9059,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 #if defined(CFG_DEV_MSDC2)
 	if (strcmp(pdev->dev.of_node->name, "msdc2") == 0) {
 		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
+		host->mmc->pm_caps |= MMC_PM_KEEP_POWER;
 		/* FIXME: host->hw = &msdc2_hw; */
 		host->hw->clk_src = MSDC30_CLKSRC_200MHZ;
 		host->hw->cmd_edge = MSDC_SMPL_FALLING;
@@ -9103,6 +9103,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 #if defined(CFG_DEV_MSDC3)
 	if (strcmp(pdev->dev.of_node->name, "msdc3") == 0) {
 		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
+		host->mmc->pm_caps |= MMC_PM_KEEP_POWER;
 		host->hw->clk_src = MSDC30_CLKSRC_200MHZ;
 		host->hw->cmd_edge = MSDC_SMPL_RISING;
 		host->hw->rdata_edge = MSDC_SMPL_RISING;
@@ -9570,6 +9571,10 @@ static int msdc_drv_resume(struct platform_device *pdev)
 	}
 
 	/* This mean WIFI not controller by PM */
+	if (host->hw->host_function == MSDC_SDIO) {
+		host->mmc->pm_flags |= MMC_PM_KEEP_POWER;
+		host->mmc->rescan_entered = 0;
+	}
 
 	return ret;
 }
