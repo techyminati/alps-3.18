@@ -125,7 +125,7 @@ OK:
 	SPM_CPU_PDN_DIS | SPM_INFRA_PDN_DIS | SPM_DDRPHY_PDN_DIS
 */
 static u32 slp_spm_flags = {
-#if 0				/* normal suspend */
+#if 1				/* normal suspend */
 	0
 #else				/* legacy suspend */
 	SPM_CPU_PDN_DIS | SPM_INFRA_PDN_DIS | SPM_DDRPHY_PDN_DIS
