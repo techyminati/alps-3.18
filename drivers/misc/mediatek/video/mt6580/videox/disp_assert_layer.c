@@ -255,6 +255,7 @@ DAL_STATUS DAL_Clean(void)
 		input->tgt_height = DAL_HEIGHT;
 		input->alpha = 0x80;
 		input->alpha_enable = 1;
+		input->sur_aen = 0;
 		input->next_buff_idx = -1;
 		input->src_pitch = DAL_WIDTH;
 		input->src_fmt = DAL_FORMAT;
@@ -263,7 +264,7 @@ DAL_STATUS DAL_Clean(void)
 		ret = primary_display_config_input_multiple(&session_input);
 
 		/* DAL disable, switch UI layer to default layer 3 */
-		pr_warn("[DDP]* isAEEEnabled from 1 to 0, %d\n",
+		DISPMSG("[DDP]* isAEEEnabled from 1 to 0, %d\n",
 		       dal_clean_cnt++);
 		isAEEEnabled = 0;
 		DAL_Dynamic_Change_FB_Layer(isAEEEnabled);	/* restore UI layer to DEFAULT_UI_LAYER */
@@ -308,9 +309,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 	disp_input_config *input;
 	MFC_STATUS r;
 
-	/* DISPMSG("[MTKFB_DAL] DAL_Printf mfc_handle=0x%08X, fmt=0x%08X\n", mfc_handle, fmt); */
 	DISPFUNC();
-
 	if (NULL == mfc_handle)
 		return DAL_STATUS_NOT_READY;
 
@@ -359,6 +358,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 		input->tgt_height = DAL_HEIGHT;
 		input->alpha = 0x80;
 		input->alpha_enable = 1;
+		input->sur_aen = 0;
 		input->next_buff_idx = -1;
 		input->src_pitch = DAL_WIDTH;
 		input->src_fmt = DAL_FORMAT;
@@ -383,9 +383,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 	if (!dal_shown)
 		dal_shown = true;
 
-	/* mutex_lock(&disp_trigger_lock); */
 	ret = primary_display_trigger(0, NULL, 0);
-	/* mutex_unlock(&disp_trigger_lock); */
 
 	up(&dal_sem);
 

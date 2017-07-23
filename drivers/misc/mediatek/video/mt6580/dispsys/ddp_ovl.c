@@ -468,7 +468,7 @@ int ovl_layer_config(DISP_MODULE_ENUM module,
 		color_matrix = 7;
 		break;		/* BT709 */
 	default:
-		DDPMSG("un-recognized yuv_range=%d!\n", yuv_range);
+		DDPMSG("use default yuv_range=%d!\n", yuv_range);
 		color_matrix = 4;
 	}
 	/* DDPMSG("color matrix=%d.\n", color_matrix); */
