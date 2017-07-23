@@ -37,7 +37,6 @@
 #include "cmdq_reg.h"
 #include "cmdq_core.h"
 
-
 #include "lcm_drv.h"
 #include "ddp_ovl.h"
 #include "ddp_dsi.h"
@@ -68,37 +67,15 @@
 #include "mtkfb_fence.h"
 #include "primary_display.h"
 
-
-
-
-
-
 #pragma GCC optimize("O0")
 
 /* --------------------------------------------------------------------------- */
-/* External variable declarations */
+/* Global variable declarations */
 /* --------------------------------------------------------------------------- */
-/* --------------------------------------------------------------------------- */
-/* Debug Options */
-/* --------------------------------------------------------------------------- */
-
-static struct dentry *debugfs;
-static struct dentry *debugDir;
-static struct dentry *debugfs_dump;
-static const long int DEFAULT_LOG_FPS_WND_SIZE = 30;
-static int debug_init;
-unsigned char pq_debug_flag = 0;
-unsigned char aal_debug_flag = 0;
-static unsigned int dbg_log_level;
-static unsigned int irq_log_level;
-static unsigned int dump_to_buffer;
-
-/* for video mode */
 unsigned int gEnableUartLog = 0;
 unsigned int gMobilelog = 1;
 unsigned int gLoglevel = 3; /*DISPMSG level is DEFAULT_LEVEL==3*/
 unsigned int gRcdlevel = 0;
-
 /* for video mode */
 unsigned int gEnableMutexRisingEdge = 0;
 unsigned int gPrefetchControl = 1;
@@ -107,7 +84,20 @@ unsigned int gUltraEnable = 1;
 unsigned int gEnableDSIStateCheck = 0;
 unsigned int gMutexFreeRun = 1;
 unsigned int disp_low_power_lfr = 0;
+unsigned char pq_debug_flag = 0;
+unsigned char aal_debug_flag = 0;
 
+/* --------------------------------------------------------------------------- */
+/* Local variable declarations */
+/* --------------------------------------------------------------------------- */
+static struct dentry *debugfs;
+static struct dentry *debugDir;
+static struct dentry *debugfs_dump;
+static const long int DEFAULT_LOG_FPS_WND_SIZE = 30;
+static int debug_init;
+static unsigned int dbg_log_level;
+static unsigned int irq_log_level;
+static unsigned int dump_to_buffer;
 static char DDP_STR_HELP[] =
 	"USAGE:\n"
 	"       echo [ACTION]>/d/dispsys\n"
@@ -155,8 +145,6 @@ static void ddp_process_dbg_opt(const char *opt)
 {
 	int ret = 0;
 	char *buf = dbg_buf + strlen(dbg_buf);
-
-	/* static disp_session_config config; */
 
 	if (0 == strncmp(opt, "regr:", 5)) {
 		char *p = (char *)opt + 5;
@@ -1628,7 +1616,7 @@ void debug_info_dump_to_printk(char *buf, int buf_len)
 static ssize_t mtkfb_debug_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
 {
 	const int debug_bufmax = sizeof(debug_buffer) - 1;
-	static int n;
+	int n = 0;
 
 	/* Debugfs read only fetch 4096 byte each time, thus whole ringbuffer need massive
 	 * iteration. We only copy ringbuffer content to debugfs buffer at first time (*ppos = 0)
@@ -1646,8 +1634,6 @@ static ssize_t mtkfb_debug_read(struct file *file, char __user *ubuf, size_t cou
 
 	n += dprec_logger_get_result_string_all(debug_buffer + n, debug_bufmax - n);
 
-	n += primary_display_check_path(debug_buffer + n, debug_bufmax - n);
-
 	n += dprec_logger_get_buf(DPREC_LOGGER_ERROR, debug_buffer + n, debug_bufmax - n);
 
 	n += dprec_logger_get_buf(DPREC_LOGGER_FENCE, debug_buffer + n, debug_bufmax - n);
@@ -1660,9 +1646,7 @@ out:
 	return simple_read_from_buffer(ubuf, count, ppos, debug_buffer, n);
 }
 
-static ssize_t mtkfb_debug_write(struct file *file,
-			   const char __user *ubuf, size_t count,
-			   loff_t *ppos)
+static ssize_t mtkfb_debug_write(struct file *file, const char __user *ubuf, size_t count, loff_t *ppos)
 {
 	const int debug_bufmax = sizeof(debug_buffer) - 1;
 	size_t ret;
