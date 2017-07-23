@@ -109,7 +109,7 @@ struct dfo_item_t {
 #ifndef FEATURE_DFO_EN
 
 /*---------- None-DFO Begin ------------*/
-#if defined(CONFIG_MTK_ENABLE_MD1)
+#if defined(CONFIG_MTK_MD1_SUPPORT) && (CONFIG_MTK_MD1_SUPPORT > 0)
 /*Only modem 1 enable*/
 static struct dfo_item_t ccci_dfo_setting[] = {
 #if defined(MODEM_2G)
@@ -1505,7 +1505,7 @@ struct fos_item_t {	/*Feature Option Setting */
 	int value;
 };
 
-#ifdef CONFIG_MTK_ENABLE_MD1
+#if defined(CONFIG_MTK_MD1_SUPPORT) && (CONFIG_MTK_MD1_SUPPORT > 0)
 #define MTK_MD1_EN	(1)
 #else
 #define MTK_MD1_EN	(0)
