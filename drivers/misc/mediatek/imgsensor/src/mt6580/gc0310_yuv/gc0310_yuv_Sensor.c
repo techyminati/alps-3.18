@@ -1604,7 +1604,7 @@ BOOL GC0310_set_param_wb(UINT16 para)
     {
         case AWB_MODE_OFF:
             GC0310_awb_enable(KAL_FALSE);
-            GC0310_write_cmos_sensor(0x77,0x74);
+            GC0310_write_cmos_sensor(0x77,0x58);
             GC0310_write_cmos_sensor(0x78,0x40);
             GC0310_write_cmos_sensor(0x79,0x5f);
         break;
@@ -1618,36 +1618,36 @@ BOOL GC0310_set_param_wb(UINT16 para)
 
         case AWB_MODE_CLOUDY_DAYLIGHT: //cloudy
             GC0310_awb_enable(KAL_FALSE);
-            GC0310_write_cmos_sensor(0x77, 0x40);
-            GC0310_write_cmos_sensor(0x78, 0x54);
-            GC0310_write_cmos_sensor(0x79, 0x70);
+            GC0310_write_cmos_sensor(0x77, 0x70);
+            GC0310_write_cmos_sensor(0x78, 0x52);
+            GC0310_write_cmos_sensor(0x79, 0x40);
         break;
 
         case AWB_MODE_DAYLIGHT: //sunny
             GC0310_awb_enable(KAL_FALSE);
-            GC0310_write_cmos_sensor(0x77, 0x74);
+            GC0310_write_cmos_sensor(0x77, 0x58);
             GC0310_write_cmos_sensor(0x78, 0x52);
             GC0310_write_cmos_sensor(0x79, 0x40);
         break;
 
         case AWB_MODE_INCANDESCENT: //office
             GC0310_awb_enable(KAL_FALSE);
+            GC0310_write_cmos_sensor(0x77, 0x40);
+            GC0310_write_cmos_sensor(0x78, 0x40);
+            GC0310_write_cmos_sensor(0x79, 0x6c);
+        break;
+
+        case AWB_MODE_TUNGSTEN: //home
+            GC0310_awb_enable(KAL_FALSE);
             GC0310_write_cmos_sensor(0x77, 0x48);
             GC0310_write_cmos_sensor(0x78, 0x40);
             GC0310_write_cmos_sensor(0x79, 0x5c);
         break;
 
-        case AWB_MODE_TUNGSTEN: //home
-            GC0310_awb_enable(KAL_FALSE);
-            GC0310_write_cmos_sensor(0x77, 0x8c); //WB_manual_gain
-            GC0310_write_cmos_sensor(0x78, 0x50);
-            GC0310_write_cmos_sensor(0x79, 0x40);
-        break;
-
         case AWB_MODE_FLUORESCENT:
             GC0310_awb_enable(KAL_FALSE);
-            GC0310_write_cmos_sensor(0x77, 0x40);
-            GC0310_write_cmos_sensor(0x78, 0x42);
+            GC0310_write_cmos_sensor(0x77, 0x60);
+            GC0310_write_cmos_sensor(0x78, 0x40);
             GC0310_write_cmos_sensor(0x79, 0x50);
         break;
 
