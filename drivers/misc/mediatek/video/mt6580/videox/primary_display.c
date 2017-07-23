@@ -1823,6 +1823,7 @@ int disp_fmt_to_hw_fmt(DISP_FORMAT src_fmt, unsigned int *hw_fmt,
 		*Bpp = 4;
 		*bpp = 32;
 		break;
+
 	case DISP_FORMAT_RGBA8888:
 		*hw_fmt = eRGBA8888;
 		*Bpp = 4;
@@ -1835,6 +1836,7 @@ int disp_fmt_to_hw_fmt(DISP_FORMAT src_fmt, unsigned int *hw_fmt,
 		*Bpp = 4;
 		*bpp = 32;
 		break;
+
 	case DISP_FORMAT_XRGB8888:
 		*hw_fmt = eARGB8888;
 		*Bpp = 4;
@@ -3725,6 +3727,7 @@ int primary_display_suspend(void)
 		goto done;
 	}
 	primary_display_idlemgr_kick((char *)__func__, 0);
+
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 1);
 	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
@@ -3942,6 +3945,17 @@ int primary_display_resume(void)
 			if (lcm_param->dpi.format == LCM_DPI_FORMAT_RGB666)
 				data_config->lcm_bpp = 18;
 		}
+
+		/* Clear OVL working status, for resume begin as Direct Link mode */
+		data_config->ovl_config[0].layer = 0;
+		data_config->ovl_config[0].layer_en = 0;
+		data_config->ovl_config[1].layer = 1;
+		data_config->ovl_config[1].layer_en = 0;
+		data_config->ovl_config[2].layer = 2;
+		data_config->ovl_config[2].layer_en = 0;
+		data_config->ovl_config[3].layer = 3;
+		data_config->ovl_config[3].layer_en = 0;
+		data_config->ovl_dirty = 1;
 
 		data_config->fps = pgc->lcm_fps;
 		data_config->dst_dirty = 1;
