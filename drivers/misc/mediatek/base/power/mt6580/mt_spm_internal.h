@@ -7,14 +7,13 @@
 #include <linux/io.h>
 #include <mt-plat/aee.h>
 
-/* #include <mach/mt_spm.h> */
-#include <mt_spm.h>
-/* #include <mach/mt_lpae.h> */
+#include "mt_spm.h"
+/*#include <mt-plat/mt_lpae.h>*/
 #include <mt-plat/mt_gpio.h>
 
-/**************************************
+/*
  * Config and Parameter
- **************************************/
+ */
 #ifdef MTK_FORCE_CLUSTER1
 #define SPM_CTRL_BIG_CPU	1
 #else
@@ -28,9 +27,9 @@
 #define PCM_TIMER_MAX		(0xffffffff - PCM_WDT_TIMEOUT)
 
 
-/**************************************
+/*
  * Define and Declare
- **************************************/
+ */
 #define CON0_PCM_KICK		(1U << 0)
 #define CON0_IM_KICK		(1U << 1)
 #define CON0_IM_SLEEP_DVS	(1U << 3)
@@ -309,7 +308,7 @@ extern void __spm_kick_pcm_to_run(const struct pwr_ctrl *pwrctrl);
 
 extern void __spm_get_wakeup_status(struct wake_status *wakesta);
 extern void __spm_clean_after_wakeup(void);
-extern enum wake_reason_t __spm_output_wake_reason(const struct wake_status *wakesta,
+extern wake_reason_t __spm_output_wake_reason(const struct wake_status *wakesta,
 						   const struct pcm_desc *pcmdesc, bool suspend);
 
 extern void __spm_dbgout_md_ddr_en(bool enable);
@@ -345,7 +344,7 @@ extern struct spm_lp_scen *spm_check_talking_get_lpscen(struct spm_lp_scen *lpsc
 #define spm_warn(fmt, args...)		pr_warn("[SPM] " fmt, ##args)
 #define spm_notice(fmt, args...)	pr_notice("[SPM] " fmt, ##args)
 #define spm_info(fmt, args...)		pr_info("[SPM] " fmt, ##args)
-#define spm_debug(fmt, args...)		pr_info("[SPM] " fmt, ##args)	/* pr_debug show nothing */
+#define spm_debug(fmt, args...)		pr_debug("[SPM] " fmt, ##args)
 
 /* just use in suspend flow for important log due to console suspend */
 #define spm_crit2(fmt, args...)		\

@@ -5,11 +5,11 @@
 #include <linux/string.h>
 
 #include "mt_spm_internal.h"
-/* #include <mach/mt_sleep.h> */
+#include "mt_sleep.h"
 
-/**************************************
+/*
  * Macro and Inline
- **************************************/
+ */
 #define DEFINE_ATTR_RO(_name)			\
 static struct kobj_attribute _name##_attr = {	\
 	.attr	= {				\
@@ -31,18 +31,10 @@ static struct kobj_attribute _name##_attr = {	\
 
 #define __ATTR_OF(_name)	(&_name##_attr.attr)
 
-#include <linux/slab.h>		/* for kmalloc/kfree */
-#include <linux/fs.h>
-#include <linux/file.h>
-#include <linux/types.h>
-#include <linux/unistd.h>
-#include <asm/segment.h>
-#include <linux/uaccess.h>
-#include <linux/buffer_head.h>
 
-/**************************************
+/*
  * xxx_pcm_show Function
- **************************************/
+ */
 static ssize_t show_pcm_desc(const struct pcm_desc *pcmdesc, char *buf)
 {
 	char *p = buf;
@@ -66,10 +58,22 @@ static ssize_t show_pcm_desc(const struct pcm_desc *pcmdesc, char *buf)
 	return p - buf;
 }
 
-#if 0				/* FIXME */
 static ssize_t suspend_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	return show_pcm_desc(__spm_suspend.pcmdesc, buf);
+#endif
+}
+
+static ssize_t dpidle_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
+	return show_pcm_desc(__spm_dpidle.pcmdesc, buf);
+#endif
 }
 
 static ssize_t sodi_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
@@ -77,18 +81,9 @@ static ssize_t sodi_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, 
 	return show_pcm_desc(__spm_sodi.pcmdesc, buf);
 }
 
-static ssize_t mcdi_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
-{
-	return show_pcm_desc(__spm_mcdi.pcmdesc, buf);
-}
-
-static ssize_t dpidle_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
-{
-	return show_pcm_desc(__spm_dpidle.pcmdesc, buf);
-}
-
 static ssize_t talking_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+/* For bring up */
 #if 0
 	return show_pcm_desc(__spm_talking.pcmdesc, buf);
 #else
@@ -98,18 +93,24 @@ static ssize_t talking_pcm_show(struct kobject *kobj, struct kobj_attribute *att
 
 static ssize_t ddrdfs_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+/* For bring up */
 #if 0
 	return show_pcm_desc(__spm_ddrdfs.pcmdesc, buf);
 #else
 	return 0;
 #endif
 }
+
+#if defined(SPM_VCORE_EN)
+static ssize_t vcorefs_pcm_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+	return show_pcm_desc(__spm_vcore_dvfs.pcmdesc, buf);
+}
 #endif
 
-
-/**************************************
+/*
  * xxx_ctrl_show Function
- **************************************/
+ */
 static ssize_t show_pwr_ctrl(const struct pwr_ctrl *pwrctrl, char *buf)
 {
 	char *p = buf;
@@ -178,29 +179,30 @@ static ssize_t show_pwr_ctrl(const struct pwr_ctrl *pwrctrl, char *buf)
 
 static ssize_t suspend_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	return show_pwr_ctrl(__spm_suspend.pwrctrl, buf);
+#endif
 }
 
-#if 1				/* FIXME */
 static ssize_t dpidle_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	return show_pwr_ctrl(__spm_dpidle.pwrctrl, buf);
-}
 #endif
+}
 
 static ssize_t sodi_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
 	return show_pwr_ctrl(__spm_sodi.pwrctrl, buf);
 }
 
-#if 0				/* FIXME */
-static ssize_t mcdi_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
-{
-	return show_pwr_ctrl(__spm_mcdi.pwrctrl, buf);
-}
-#endif
 static ssize_t talking_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+/* for bring up */
 #if 0
 	return show_pwr_ctrl(__spm_talking.pwrctrl, buf);
 #else
@@ -210,6 +212,7 @@ static ssize_t talking_ctrl_show(struct kobject *kobj, struct kobj_attribute *at
 
 static ssize_t ddrdfs_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
+/* for bring up */
 #if 0
 	return show_pwr_ctrl(__spm_ddrdfs.pwrctrl, buf);
 #else
@@ -217,10 +220,16 @@ static ssize_t ddrdfs_ctrl_show(struct kobject *kobj, struct kobj_attribute *att
 #endif
 }
 
+#if defined(SPM_VCORE_EN)
+static ssize_t vcorefs_ctrl_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
+{
+	return show_pwr_ctrl(__spm_vcore_dvfs.pwrctrl, buf);
+}
+#endif
 
-/**************************************
+/*
  * xxx_ctrl_store Function
- **************************************/
+ */
 static ssize_t store_pwr_ctrl(struct pwr_ctrl *pwrctrl, const char *buf, size_t count)
 {
 	u32 val;
@@ -348,16 +357,22 @@ static ssize_t store_pwr_ctrl(struct pwr_ctrl *pwrctrl, const char *buf, size_t 
 static ssize_t suspend_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
 				  const char *buf, size_t count)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	return store_pwr_ctrl(__spm_suspend.pwrctrl, buf, count);
+#endif
 }
 
-#if 1				/* FIXME */
 static ssize_t dpidle_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
 				 const char *buf, size_t count)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	return store_pwr_ctrl(__spm_dpidle.pwrctrl, buf, count);
-}
 #endif
+}
 
 static ssize_t sodi_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
 			       const char *buf, size_t count)
@@ -365,17 +380,10 @@ static ssize_t sodi_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr
 	return store_pwr_ctrl(__spm_sodi.pwrctrl, buf, count);
 }
 
-#if 0				/* FIXME */
-static ssize_t mcdi_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
-			       const char *buf, size_t count)
-{
-	return store_pwr_ctrl(__spm_mcdi.pwrctrl, buf, count);
-}
-#endif
-
 static ssize_t talking_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
 				  const char *buf, size_t count)
 {
+/* for bring up */
 #if 0
 	return store_pwr_ctrl(__spm_talking.pwrctrl, buf, count);
 #else
@@ -386,6 +394,7 @@ static ssize_t talking_ctrl_store(struct kobject *kobj, struct kobj_attribute *a
 static ssize_t ddrdfs_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
 				 const char *buf, size_t count)
 {
+/* for bring up */
 #if 0
 	return store_pwr_ctrl(__spm_ddrdfs.pwrctrl, buf, count);
 #else
@@ -393,10 +402,17 @@ static ssize_t ddrdfs_ctrl_store(struct kobject *kobj, struct kobj_attribute *at
 #endif
 }
 
+#if defined(SPM_VCORE_EN)
+static ssize_t vcorefs_ctrl_store(struct kobject *kobj, struct kobj_attribute *attr,
+				  const char *buf, size_t count)
+{
+	return store_pwr_ctrl(__spm_vcore_dvfs.pwrctrl, buf, count);
+}
+#endif
 
-/**************************************
+/*
  * ddren_debug_xxx Function
- **************************************/
+ */
 static ssize_t ddren_debug_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
 	char *p = buf;
@@ -443,26 +459,30 @@ static ssize_t ddren_debug_store(struct kobject *kobj, struct kobj_attribute *at
 }
 
 
-/**************************************
+/*
  * golden_dump_xxx Function
- **************************************/
+ */
 static ssize_t golden_dump_show(struct kobject *kobj, struct kobj_attribute *attr, char *buf)
 {
 	char *p = buf;
 
-	/* spm_golden_setting_cmp(1); //TODO: wait DRAMC golden setting check enable */
+#if !defined(CONFIG_ARCH_MT6580)
+	spm_golden_setting_cmp(1);
+#endif
 
 	BUG_ON(p - buf >= PAGE_SIZE);
 	return p - buf;
 }
 
-#if 0				/* hh */
-/**************************************
+/*
  * auto_suspend_resume_xxx Function
- **************************************/
+ */
 static ssize_t auto_suspend_resume_show(struct kobject *kobj, struct kobj_attribute *attr,
 					char *buf)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	char *p = buf;
 	u8 i;
 
@@ -478,7 +498,7 @@ static ssize_t auto_suspend_resume_show(struct kobject *kobj, struct kobj_attrib
 			     __spm_suspend.wakestatus[i].debug_flag);
 		if (0x90100000 != __spm_suspend.wakestatus[i].event_reg)
 			p += sprintf(p, "SLEEP_ABORT\n");
-		else if (0xf != (__spm_suspend.wakestatus[i].debug_flag & 0xF))
+		else if (0x1f != (__spm_suspend.wakestatus[i].debug_flag & 0x1F))
 			p += sprintf(p, "NOT_DEEP_SLEEP\n");
 		else
 			p += sprintf(p, "SLEEP_PASS\n");
@@ -488,11 +508,30 @@ static ssize_t auto_suspend_resume_show(struct kobject *kobj, struct kobj_attrib
 
 	BUG_ON(p - buf >= PAGE_SIZE);
 	return p - buf;
+#endif
 }
+
+/* FIXME: early porting */
+#if 1
+void __attribute__ ((weak)) slp_create_auto_suspend_resume_thread(void)
+{
+}
+
+void __attribute__ ((weak)) slp_start_auto_suspend_resume_timer(u32 sec)
+{
+}
+
+void __attribute__ ((weak)) slp_set_auto_suspend_wakelock(bool lock)
+{
+}
+#endif
 
 static ssize_t auto_suspend_resume_store(struct kobject *kobj, struct kobj_attribute *attr,
 					 const char *buf, size_t count)
 {
+#if defined(CONFIG_ARCH_MT6580)
+	return 0; /* TODO */
+#else
 	u32 val, pcm_sec;
 
 	if (sscanf(buf, "%d %d", &val, &pcm_sec) != 2) {
@@ -505,27 +544,29 @@ static ssize_t auto_suspend_resume_store(struct kobject *kobj, struct kobj_attri
 	slp_start_auto_suspend_resume_timer(val);
 
 	return count;
+#endif
 }
 
-#endif				/* 0 */
-
-/**************************************
+/*
  * Init Function
- **************************************/
-/* FIXME */
-/* DEFINE_ATTR_RO(suspend_pcm); */
-/* DEFINE_ATTR_RO(dpidle_pcm); */
-/* DEFINE_ATTR_RO(sodi_pcm); */
-/* DEFINE_ATTR_RO(mcdi_pcm); */
-/* DEFINE_ATTR_RO(talking_pcm); */
-/* DEFINE_ATTR_RO(ddrdfs_pcm); */
+ */
+DEFINE_ATTR_RO(suspend_pcm);
+DEFINE_ATTR_RO(dpidle_pcm);
+DEFINE_ATTR_RO(sodi_pcm);
+DEFINE_ATTR_RO(talking_pcm);
+DEFINE_ATTR_RO(ddrdfs_pcm);
+#if defined(SPM_VCORE_EN)
+DEFINE_ATTR_RO(vcorefs_pcm);
+#endif
 
 DEFINE_ATTR_RW(suspend_ctrl);
 DEFINE_ATTR_RW(dpidle_ctrl);
 DEFINE_ATTR_RW(sodi_ctrl);
-/* DEFINE_ATTR_RW(mcdi_ctrl); */
 DEFINE_ATTR_RW(talking_ctrl);
 DEFINE_ATTR_RW(ddrdfs_ctrl);
+#if defined(SPM_VCORE_EN)
+DEFINE_ATTR_RW(vcorefs_ctrl);
+#endif
 
 DEFINE_ATTR_RW(ddren_debug);
 DEFINE_ATTR_RO(golden_dump);
@@ -534,25 +575,28 @@ DEFINE_ATTR_RW(auto_suspend_resume);
 
 static struct attribute *spm_attrs[] = {
 	/* for spm_lp_scen.pcmdesc */
-	/* FIXME */
-	/* __ATTR_OF(suspend_pcm), */
-	/* __ATTR_OF(dpidle_pcm), */
-	/* __ATTR_OF(sodi_pcm), */
-	/* __ATTR_OF(mcdi_pcm), */
-	/* __ATTR_OF(talking_pcm), */
-	/* __ATTR_OF(ddrdfs_pcm), */
+	__ATTR_OF(suspend_pcm),
+	__ATTR_OF(dpidle_pcm),
+	__ATTR_OF(sodi_pcm),
+	__ATTR_OF(talking_pcm),
+	__ATTR_OF(ddrdfs_pcm),
+#if defined(SPM_VCORE_EN)
+	__ATTR_OF(vcorefs_pcm),
+#endif
 
 	/* for spm_lp_scen.pwrctrl */
-	/* FIXME */
 	__ATTR_OF(suspend_ctrl),
 	__ATTR_OF(dpidle_ctrl),
 	__ATTR_OF(sodi_ctrl),
-	/* __ATTR_OF(mcdi_ctrl), */
 	__ATTR_OF(talking_ctrl),
 	__ATTR_OF(ddrdfs_ctrl),
+#if defined(SPM_VCORE_EN)
+	__ATTR_OF(vcorefs_ctrl),
+#endif
 
 	/* other debug interface */
 	__ATTR_OF(ddren_debug),
+	__ATTR_OF(golden_dump),
 
 	__ATTR_OF(auto_suspend_resume),
 

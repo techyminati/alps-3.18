@@ -21,11 +21,12 @@ extern u32 spm_irq_7;
 #undef SPM_BASE
 #define SPM_BASE spm_base
 #else
-#include <mach/mt_reg_base.h>
+/* #include <mach/mt_reg_base.h> */
 #endif
 
 /* #include <mach/mt_irq.h> */
 #include <mt-plat/sync_write.h>
+#include <mt-plat/mt_io.h>
 
 /**************************************
  * Config and Parameter
@@ -364,14 +365,14 @@ enum SPM_WAKE_SRC {
 
 /* enum SPM_WAKE_SRC_LIST; */
 
-enum wake_reason_t {
+typedef enum {
 	WR_NONE = 0,
 	WR_UART_BUSY = 1,
 	WR_PCM_ASSERT = 2,
 	WR_PCM_TIMER = 3,
 	WR_WAKE_SRC = 4,
 	WR_UNKNOWN = 5,
-};
+} wake_reason_t;
 
 struct twam_sig {
 	u32 sig0;		/* signal 0: config or status */
@@ -402,6 +403,7 @@ extern void spm_twam_disable_monitor(void);
 void spm_ap_bsi_gen(unsigned int *clk_buf_cfg);
 
 
+unsigned int spm_get_cpu_pwr_status(void);
 
 /**************************************
  * Macro and Inline
