@@ -90,6 +90,9 @@
 #define ENABLE_SW_MEM_REMAP
 #define ENABLE_DUMP_MD_REGISTER
 #define ENABLE_DUMP_MD_REG
+#ifdef CONFIG_FW_LOADER_USER_HELPER
+#define ENABLE_LOAD_IMG_BY_REQUEST_FIRMWARE
+#endif
 /*******************AP CCIF register define**********************/
 #define CCIF_BASE			(AP_CCIF_BASE)
 #define CCIF_CON(addr)			((addr) + 0x0100)
