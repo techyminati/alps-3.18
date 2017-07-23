@@ -471,7 +471,7 @@ static volatile MBOOL g_bDmaERR_p1 = MFALSE;
 static volatile MBOOL g_bDmaERR_p1_d = MFALSE;
 static volatile MBOOL g_bDmaERR_p2 = MFALSE;
 static volatile MBOOL g_bDmaERR_deepDump = MFALSE;
-static volatile UINT32 g_ISPIntErr[_IRQ_MAX] = { 0 };
+static volatile MUINT32 g_ISPIntErr[_IRQ_MAX] = { 0 };
 
 #define nDMA_ERR_P1     (6)
 #define nDMA_ERR_P1_D   (0)
@@ -2096,14 +2096,20 @@ static long ISP_Buf_CTRL_FUNC_FRMB(unsigned long Param)
 											       [rt_dma].
 											       Bits.
 											       FBC_CNT);
-										ISP_WR32
-										    (p1_dma_addr_reg
-										     [rt_dma],
-										     pstRTBuf_FrmB->
-										     ring_buf
-										     [rt_dma].
-										     data[i].
-										     base_pAddr);
+					/**/					if (MTRUE == pstRTBuf_FrmB->
+										ring_buf[ch_imgo].active)
+											ISP_WR32(
+											p1_dma_addr_reg[ch_imgo],
+											pstRTBuf_FrmB->
+											ring_buf[ch_imgo].data[i].
+											base_pAddr);
+					/**/					if (MTRUE == pstRTBuf_FrmB->
+										ring_buf[ch_img2o].active)
+											ISP_WR32(
+											p1_dma_addr_reg[ch_img2o],
+											pstRTBuf_FrmB->
+											ring_buf[ch_img2o].data[i].
+											base_pAddr);
 									}
 					/**/				if (_openedDma == 1) {
 										p1_fbc[rt_dma].Bits.
@@ -2758,7 +2764,7 @@ static long ISP_Buf_CTRL_FUNC_FRMB(unsigned long Param)
 				/* if(copy_from_user(array, (void*)rt_buf_ctrl.data_ptr, sizeof(UINT8)*_rt_dma_max_) == 0) { */
 				if (copy_from_user
 				    (array, (void __user *)rt_buf_ctrl.pExtend,
-				     sizeof(UINT8) * _rt_dma_max_) == 0) {
+				     sizeof(MUINT8) * _rt_dma_max_) == 0) {
 					MUINT32 z;
 
 					for (z = 0; z < _rt_dma_max_; z++) {

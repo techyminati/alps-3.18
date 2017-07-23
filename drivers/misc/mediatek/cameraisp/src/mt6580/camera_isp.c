@@ -30,7 +30,6 @@
 #include <linux/sched.h>
 #include <linux/mm.h>
 #include <mt-plat/aee.h>
-#include "inc/mt_typedefs.h"
 
 /*#include <mach/hardware.h>*/
 /* #include <mach/mt6589_pll.h> */
@@ -6757,7 +6756,7 @@ static MVOID __exit ISP_Exit(MVOID)
 	platform_driver_unregister(&IspDriver);
 	/*  */
 	LOG_INF("unregister isp callback for MDP,is_v3(%d)", CAM_HAL_VER_IS3);
-	ISP_ControlMdpClock(FALSE);
+	ISP_ControlMdpClock(MFALSE);
 
 	/* unreserve the pages */
 	for (i = 0; i < RT_BUF_TBL_NPAGES * PAGE_SIZE; i += PAGE_SIZE) {
