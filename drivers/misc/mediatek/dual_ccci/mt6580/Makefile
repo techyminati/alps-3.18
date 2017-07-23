@@ -13,8 +13,6 @@
 
 ifeq ($(CONFIG_MTK_CCCI_EXT), y)
 
-# include $(srctree)/drivers/misc/mediatek/Makefile.custom
-
 CCCI_CORE_DRIVER_DIR := $(srctree)/drivers/misc/mediatek/dual_ccci/$(MTK_PLATFORM)
 
 ifeq ($(CCCI_CORE_DRIVER_DIR),)
