@@ -95,6 +95,19 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 
 	pr_crit("Boot slave CPU\n");
 
+	infracfg_ao_base = ioremap(MT6580_INFRACFG_AO, 0x1000);
+
+#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT)
+	if (cpu >= 1 && cpu <= 3)
+		mt_secure_call(MC_FC_SET_RESET_VECTOR, virt_to_phys(mt_secondary_startup), cpu, 0);
+#elif defined(CONFIG_TRUSTY)
+	if (cpu >= 1 && cpu <= 3)
+		mt_trusty_call(SMC_FC_CPU_ON, virt_to_phys(mt_secondary_startup), cpu, 0);
+#else
+	writel_relaxed(virt_to_phys(mt_secondary_startup), infracfg_ao_base + 0x800);
+#endif
+	iounmap(infracfg_ao_base);
+
 	atomic_inc(&hotplug_cpu_count);
 
 	/*
@@ -119,19 +132,6 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 	 * be there.
 	 */
 	write_pen_release(cpu);
-
-	infracfg_ao_base = ioremap(MT6580_INFRACFG_AO, 0x1000);
-
-#if defined(CONFIG_TRUSTONIC_TEE_SUPPORT)
-	if (cpu >= 1 && cpu <= 3)
-		mt_secure_call(MC_FC_SET_RESET_VECTOR, virt_to_phys(mt_secondary_startup), cpu, 0);
-#elif defined(CONFIG_TRUSTY)
-	if (cpu >= 1 && cpu <= 3)
-		mt_trusty_call(SMC_FC_CPU_ON, virt_to_phys(mt_secondary_startup), cpu, 0);
-#else
-	writel_relaxed(virt_to_phys(mt_secondary_startup), infracfg_ao_base + 0x800);
-#endif
-	iounmap(infracfg_ao_base);
 
 	switch (cpu) {
 	case 1:
