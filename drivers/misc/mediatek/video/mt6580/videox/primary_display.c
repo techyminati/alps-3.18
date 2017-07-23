@@ -1514,7 +1514,7 @@ static int _DC_switch_to_DL_sw_only(void)
 {
 	int ret = 0;
 	int layer = 0;
-	/* disp_ddp_path_config *data_config_dl = NULL; */
+	disp_ddp_path_config *data_config_dl = NULL;
 	disp_ddp_path_config *data_config_dc = NULL;
 	OVL_CONFIG_STRUCT ovl_config[4];
 	DDP_SCENARIO_ENUM old_scenario, new_scenario;
@@ -1549,6 +1549,16 @@ static int _DC_switch_to_DL_sw_only(void)
 			  pgc->cmdq_handle_config,
 			  primary_display_is_video_mode() ? DDP_VIDEO_MODE :
 			  DDP_CMD_MODE, 1);
+
+	/* config rdma from memory mode to directlink mode */
+	data_config_dl = dpmgr_path_get_last_config(pgc->dpmgr_handle);
+	data_config_dl->rdma_config = decouple_rdma_config;
+	data_config_dl->rdma_config.address = 0;
+	data_config_dl->rdma_config.pitch = 0;
+	data_config_dl->rdma_dirty = 1;
+	memcpy(data_config_dl->ovl_config, ovl_config, sizeof(ovl_config));
+	ret = dpmgr_path_config(pgc->dpmgr_handle, data_config_dl, pgc->cmdq_handle_config);
+
 	dpmgr_modify_path_power_off_old_modules(old_scenario, new_scenario, 1);
 
 	/* release output buffer */
@@ -3953,8 +3963,11 @@ int primary_display_resume(void)
 		data_config->ovl_config[1].layer_en = 0;
 		data_config->ovl_config[2].layer = 2;
 		data_config->ovl_config[2].layer_en = 0;
-		data_config->ovl_config[3].layer = 3;
-		data_config->ovl_config[3].layer_en = 0;
+
+		if (!isAEEEnabled) {
+			data_config->ovl_config[3].layer = 3;
+			data_config->ovl_config[3].layer_en = 0;
+		}
 		data_config->ovl_dirty = 1;
 
 		data_config->fps = pgc->lcm_fps;
@@ -4774,6 +4787,7 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE
 		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
 		/*dc mirror  to dl */
+		DISPMSG("primary display will DC_switch_to_DL_fast\n");
 		DC_switch_to_DL_fast(sw_only);
 		pgc->session_mode = sess_mode;
 		DISPMSG("primary display is %s mode now\n",
@@ -4892,7 +4906,6 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 
 void primary_display_idlemgr_leave_idle(int need_lock)
 {
-
 	/* DISPFUNC(); */
 	if (primary_display_is_video_mode())
 		spm_enable_sodi(0);

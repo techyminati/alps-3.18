@@ -314,7 +314,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 	if (isAEEEnabled == 0) {
 		MFC_STATUS r;
 
-		pr_warn("[DDP] isAEEEnabled from 0 to 1, ASSERT_LAYER=%d, dal_fb_pa %lx\n",
+		pr_debug("[DDP] isAEEEnabled from 0 to 1, ASSERT_LAYER=%d, dal_fb_pa %lx\n",
 			primary_display_get_option("ASSERT_LAYER"), dal_fb_pa);
 
 		isAEEEnabled = 1;
