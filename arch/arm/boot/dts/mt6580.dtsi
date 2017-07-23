@@ -206,15 +206,15 @@
 			reg = <0x10001000 0x1000>;
 		};
 
-				BAT_METTER {
-						compatible = "mediatek,bat_meter";
-				};
+		bat_meter: bat_meter {
+			compatible = "mediatek,bat_meter";
+		};
 
-				BAT_NOTIFY {
-						compatible = "mediatek,bat_notify";
-				};
+		BAT_NOTIFY {
+			compatible = "mediatek,bat_notify";
+		};
 
-		BATTERY {
+		bat_comm: bat_comm {
 			compatible = "mediatek,battery";
 		};
 
