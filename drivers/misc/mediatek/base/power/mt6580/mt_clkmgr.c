@@ -2361,6 +2361,7 @@ static int glitch_free_wo_drain_cg_clkmux_sel_op(struct clkmux *mux, enum cg_clk
 	for (i = 0; i < mux->nr_map; i++) {
 		if ((mux->map[i].val & mux->map[i].mask) == (reg_val & mux->map[i].mask))
 			break;
+	}
 	BUG_ON(i >= mux->nr_map);
 
 	src_clk = id_to_clk(mux->map[i].id);
@@ -2369,7 +2370,6 @@ static int glitch_free_wo_drain_cg_clkmux_sel_op(struct clkmux *mux, enum cg_clk
 	if (clksrc == mux->map[i].id) {
 		EXIT_FUNC(FUNC_LV_OP);
 		return 0;
-	}
 	}
 
 	/* look up the clk map */
