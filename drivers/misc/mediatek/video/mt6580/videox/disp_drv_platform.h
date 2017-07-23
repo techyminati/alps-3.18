@@ -25,6 +25,7 @@
 #define MAX_INPUT_CONFIG		4
 #endif
 
+#define M4U_PROFILE
 /* #define MTKFB_NO_M4U */
 /* #define MTK_LCD_HW_3D_SUPPORT */
 #define ALIGN_TO(x, n)  \
