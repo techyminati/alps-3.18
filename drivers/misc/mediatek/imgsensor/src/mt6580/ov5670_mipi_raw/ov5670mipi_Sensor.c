@@ -381,7 +381,7 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	imgsensor.gain = reg_gain;
 	spin_unlock(&imgsensor_drv_lock);
 	LOG_INF("gain = %d ,reg[0x366a]= %d, reg_gain = 0x%x\n ", gain, ChangeFlag, reg_gain);
-
+/*
 	write_cmos_sensor(0x301d, 0xf0);
 	write_cmos_sensor(0x3209, 0x00);
 	write_cmos_sensor(0x320a, 0x01);
@@ -402,7 +402,13 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	//group lanch
 	write_cmos_sensor(0x320B, 0x15);
 	write_cmos_sensor(0x3208, 0xA1);
-
+	*/
+	write_cmos_sensor(0x3208, 0x00);
+	write_cmos_sensor(0x366a, ChangeFlag);
+	write_cmos_sensor(0x3508, reg_gain >> 8);
+	write_cmos_sensor(0x3509, reg_gain & 0xFF);    
+	write_cmos_sensor(0x3208, 0x10);
+	write_cmos_sensor(0x3208, 0xA0);
 	return gain;
 }	/*	set_gain  */
 
