@@ -23,6 +23,7 @@
 
 #define NFI_CNFG_REG16	((volatile unsigned short *)(NFI_BASE+0x0000))
 #define NFI_PAGEFMT_REG16   ((volatile unsigned int *)(NFI_BASE+0x0004))
+#define NFI_PAGEFMT_REG32   ((volatile unsigned int *)(NFI_BASE+0x0004))
 #define NFI_CON_REG16	((volatile unsigned int *)(NFI_BASE+0x0008))
 #define NFI_ACCCON_REG32	((volatile unsigned int *)(NFI_BASE+0x000C))
 #define NFI_INTR_EN_REG16   ((volatile unsigned short *)(NFI_BASE+0x0010))
@@ -112,6 +113,9 @@
 #define NFI_PULL1   ((volatile unsigned int *)(0x10015040))
 #define NFI_PULL2    ((volatile unsigned int *)(0x10015050))
 
+#define NFI_TLC_RD_WHR2_REG16    ((volatile unsigned short *)(NFI_BASE+0x0300))
+#define NFI_FLUSH_REG32    ((volatile unsigned int *)(NFI_BASE+0x0490))
+
 #define NFI_RANDOM_ENSEED01_TS_REG32 ((volatile unsigned int *)(NFI_BASE+0x024C))
 #define NFI_RANDOM_DESEED01_TS_REG32 ((volatile unsigned int *)(NFI_BASE+0x0264))
 
@@ -180,8 +184,11 @@
 #define PAGEFMT_SPARE_51     (0x000B)
 #define PAGEFMT_SPARE_52     (0x000C)
 #define PAGEFMT_SPARE_62     (0x000D)
-#define PAGEFMT_SPARE_63     (0x000E)
-#define PAGEFMT_SPARE_64     (0x000F)
+#define PAGEFMT_SPARE_61     (0x000E)
+#define PAGEFMT_SPARE_63     (0x000F)
+#define PAGEFMT_SPARE_64     (0x0010)
+#define PAGEFMT_SPARE_67     (0x0011)
+#define PAGEFMT_SPARE_74     (0x0012)
 
 #define PAGEFMT_SPARE_32_1KS (0x0000)
 #define PAGEFMT_SPARE_52_1KS (0x0001)
@@ -197,8 +204,11 @@
 #define PAGEFMT_SPARE_102_1KS (0x000B)
 #define PAGEFMT_SPARE_104_1KS (0x000C)
 #define PAGEFMT_SPARE_124_1KS (0x000D)
-#define PAGEFMT_SPARE_126_1KS (0x000E)
-#define PAGEFMT_SPARE_128_1KS (0x000F)
+#define PAGEFMT_SPARE_122_1KS (0x000E)
+#define PAGEFMT_SPARE_126_1KS (0x000F)
+#define PAGEFMT_SPARE_128_1KS (0x0010)
+#define PAGEFMT_SPARE_134_1KS (0x0011)
+#define PAGEFMT_SPARE_148_1KS (0x0012)
 
 #define PAGEFMT_SPARE_MASK   (0x1F0000)
 #define PAGEFMT_SPARE_SHIFT  (16)
@@ -229,6 +239,10 @@
 #define DE_SEED_SHIFT		  (0x11)
 #define CNFG_RAN_SEC		 (0x0010)
 #define CNFG_RAN_SEL		 (0x0020)
+#define RAN_CNFG_ENCODE_EN (1 << 0)
+#define RAN_CNFG_DECODE_EN (1 << 16)
+#define RAN_CNFG_ENCODE_SEED(x) (((U32)(x) & SEED_MASK) << 1)
+#define RAN_CNFG_DECODE_SEED(x) (((U32)(x) & SEED_MASK) << 17)
 
 
 /* NFI_ACCCON */
@@ -314,6 +328,9 @@
 /* SPI-NAND dummy command for NFI */
 #define NAND_CMD_DUMMYREAD          0x00
 #define NAND_CMD_DUMMYPROG          0x80
+/*NFI_TLC_RD_WHR2_REG16 */
+#define TLC_RD_WHR2_LAT_MASK (0xFFF)
+#define TLC_RD_WHR2_EN (0x1000)
 
 /*******************************************************************************
  * ECC Register Definition
@@ -390,6 +407,10 @@
 #define ECC_CNFG_ECC52         (0x0011)
 #define ECC_CNFG_ECC56         (0x0012)
 #define ECC_CNFG_ECC60         (0x0013)
+#define ECC_CNFG_ECC68         (0x0014)
+#define ECC_CNFG_ECC72         (0x0015)
+#define ECC_CNFG_ECC80         (0x0016)
+
 #define ECC_CNFG_ECC_MASK	(0x0000001F)
 
 #define ENC_CNFG_NFI		(0x0020)
