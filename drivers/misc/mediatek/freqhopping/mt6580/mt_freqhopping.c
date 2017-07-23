@@ -351,7 +351,7 @@ static int __freqhopping_ctrl(struct freqhopping_ioctl *fh_ctl, bool enable)
 	int retVal = 1;
 	fh_pll_t *pfh_pll = NULL;
 
-	FH_MSG("%s for pll %d", __func__, fh_ctl->pll_id);
+	FH_MSG_DEBUG("%s for pll %d", __func__, fh_ctl->pll_id);
 
 	/* Check the out of range of frequency hopping PLL ID */
 	VALIDATE_PLLID(fh_ctl->pll_id);
@@ -434,7 +434,7 @@ static void wait_dds_stable(unsigned int target_dds, unsigned long reg_mon, unsi
 		fh_dds = (fh_read32(reg_mon)) & MASK21b;
 		++i;
 	}
-	FH_MSG("target_dds = %d, fh_dds = %d, i = %d", target_dds, fh_dds, i);
+	FH_MSG_DEBUG("target_dds = %d, fh_dds = %d, i = %d", target_dds, fh_dds, i);
 }
 
 static int mt_fh_hal_dvfs(enum FH_PLL_ID pll_id, unsigned int dds_value)
@@ -536,7 +536,7 @@ static int mt_fh_hal_dfs_armpll(unsigned int pll, unsigned int dds)
 		return -1;
 	}
 
-	FH_MSG("%s for pll %d dds %d", __func__, pll, dds);
+	FH_MSG_DEBUG("%s for pll %d dds %d", __func__, pll, dds);
 
 	switch (pll) {
 	case FH_ARMCA7_PLLID:
