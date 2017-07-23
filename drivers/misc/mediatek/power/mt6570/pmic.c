@@ -2791,6 +2791,7 @@ TBD */
 			PMICLOG("EINT IRQ LINENNOT AVAILABLE\n");
 
 		enable_irq(g_pmic_irq);
+		enable_irq_wake(g_pmic_irq);
 	} else
 		PMICLOG("%s can't find compatible node\n", __func__);
 #endif
