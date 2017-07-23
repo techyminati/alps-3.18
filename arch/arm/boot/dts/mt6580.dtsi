@@ -1175,15 +1175,20 @@
 		ISP_PIPEM@0x15000000 {
 			compatible = "mediatek,ISP_PIPEM";
 		};
-		KD_CAMERA_HW1@0x15008000 {
+		kd_camera_hw1:kd_camera_hw1@15008000 {
 			compatible = "mediatek,CAMERA_HW";
-			reg = <0x15008000 0x1000>;	/* SENINF_ADDR */
+			reg = <0x15008000 0x1000>;  /* SENINF_ADDR */
+			vcama-supply = <&mt_pmic_vcama_ldo_reg>;
+			vcamd-supply = <&mt_pmic_vcamd_ldo_reg>;
+			vcamaf-supply = <&mt_pmic_vcamaf_ldo_reg>;
+			vcamio-supply = <&mt_pmic_vcamio_ldo_reg>;
+
 		};
-		KD_CAMERA_HW2@0x15008000 {
+		kd_camera_hw2:kd_camera_hw2@15008000 {
 			compatible = "mediatek,CAMERA_HW2";
-			reg = <0x15008000 0x1000>;	/* SENINF_ADDR */
+			reg = <0x15008000 0x1000>;  /* SENINF_ADDR */
 		};
-		SENINF_TOP@0x15008000 {
+		seninf_top@15008000 {
 			compatible = "mediatek,SENINF_TOP";
 			reg = <0x15008000 0x1000>;
 			interrupts = <0 142 0x8>;

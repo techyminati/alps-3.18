@@ -37,8 +37,9 @@
 #include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <asm/atomic.h>
-#include <linux/xlog.h>
+#include <linux/types.h>
 
+#include "kd_camera_typedef.h"
 #include "kd_camera_hw.h"
 #include "kd_imgsensor.h"
 #include "kd_imgsensor_define.h"
@@ -85,7 +86,7 @@ kal_uint16 GC0310_write_cmos_sensor(kal_uint8 addr, kal_uint8 para)
 {
     char puSendCmd[2] = {(char)(addr & 0xFF) , (char)(para & 0xFF)};
 	kdSetI2CSpeed(I2C_SPEED);
-    iWriteRegI2C(puSendCmd , 2, GC0310_WRITE_ID);
+    return iWriteRegI2C(puSendCmd , 2, GC0310_WRITE_ID);
 
 }
 /*kal_uint16 GC0310_read_cmos_sensor(kal_uint8 addr)
@@ -101,7 +102,7 @@ kal_uint16 CamWriteCmosSensor(kal_uint8 addr, kal_uint8 para)
 {
     char puSendCmd[2] = {(char)(addr & 0xFF) , (char)(para & 0xFF)};
 	kdSetI2CSpeed(I2C_SPEED);
-    iWriteRegI2C(puSendCmd , 2, GC0310_WRITE_ID);
+    return iWriteRegI2C(puSendCmd , 2, GC0310_WRITE_ID);
 }
 
 static void write_cmos_sensor2(kal_uint32 addr, kal_uint32 para)
@@ -206,7 +207,7 @@ kal_uint16 GC0310_Read_Shutter(void)
 
     return shutter;
 } /* GC0310_read_shutter */
-
+#if 0
 static void GC0310_Set_Mirrorflip(kal_uint8 image_mirror)
 {
     LOG_INF("image_mirror = %d\n", image_mirror);
@@ -237,7 +238,7 @@ static void GC0310_Set_Mirrorflip(kal_uint8 image_mirror)
 
 
 }
-
+#endif
 static void GC0310_set_AE_mode(kal_bool AE_enable)
 {
 
@@ -286,6 +287,7 @@ UINT32 GC0310_MIPI_SetMaxFramerateByScenario(
   MSDK_SCENARIO_ID_ENUM scenarioId, MUINT32 frameRate)
 {
     LOG_INF("scenarioId = %d\n", scenarioId);
+	return 0;
 }
 
 
@@ -544,12 +546,16 @@ void GC0310_3ACtrl(ACDK_SENSOR_3A_LOCK_ENUM action)
 
 void GC0310_MIPI_GetExifInfo(uintptr_t exifAddr)
 {
-    SENSOR_EXIF_INFO_STRUCT* pExifInfo = (SENSOR_EXIF_INFO_STRUCT*)exifAddr;
+	int preGain = 0;
+	int postGain = 0;
+    SENSOR_EXIF_INFO_STRUCT* pExifInfo = NULL;
+	pExifInfo = (SENSOR_EXIF_INFO_STRUCT*)exifAddr;
     pExifInfo->FNumber = 28;
 	GC0310_write_cmos_sensor(0xfe, 0x00);
 
-	int preGain =GC0310_read_cmos_sensor(0x71);
-	int postGain =GC0310_read_cmos_sensor(0x72);
+	preGain = GC0310_read_cmos_sensor(0x71);
+	postGain = GC0310_read_cmos_sensor(0x72);
+
 
 
 	if(!(postGain>0x40)){
@@ -1397,8 +1403,8 @@ UINT32 GC0310Preview(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
         MSDK_SENSOR_CONFIG_STRUCT *sensor_config_data)
 
 {
-    kal_uint32 iTemp;
-    kal_uint16 iStartX = 0, iStartY = 1;
+
+
 
     LOG_INF("Enter GC0310Preview function!!!\r\n");
 
@@ -2167,15 +2173,15 @@ UINT32 GC0310FeatureControl(MSDK_SENSOR_FEATURE_ENUM FeatureId,
         UINT8 *pFeaturePara,UINT32 *pFeatureParaLen)
 {
     UINT16 *pFeatureReturnPara16=(UINT16 *) pFeaturePara;
-    UINT16 *pFeatureData16=(UINT16 *) pFeaturePara;
+
     UINT32 *pFeatureReturnPara32=(UINT32 *) pFeaturePara;
     UINT32 *pFeatureData32=(UINT32 *) pFeaturePara;
-    UINT32 **ppFeatureData=(UINT32 **) pFeaturePara;
-    unsigned long long *feature_data=(unsigned long long *) pFeaturePara;
-    unsigned long long *feature_return_para=(unsigned long long *) pFeaturePara;
 
-    UINT32 GC0310SensorRegNumber;
-    UINT32 i;
+    unsigned long long *feature_data=(unsigned long long *) pFeaturePara;
+
+
+
+
     MSDK_SENSOR_CONFIG_STRUCT *pSensorConfigData=(MSDK_SENSOR_CONFIG_STRUCT *) pFeaturePara;
     MSDK_SENSOR_REG_INFO_STRUCT *pSensorRegData=(MSDK_SENSOR_REG_INFO_STRUCT *) pFeaturePara;
     LOG_INF("FeatureId = %d", FeatureId);

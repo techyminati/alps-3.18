@@ -26,9 +26,9 @@
 #include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <asm/atomic.h>
-//#include <asm/system.h>
-#include <linux/xlog.h>
+#include <linux/types.h>
 
+#include "kd_camera_typedef.h"
 #include "kd_camera_hw.h"
 #include "kd_imgsensor.h"
 #include "kd_imgsensor_define.h"
@@ -200,7 +200,7 @@ static void set_dummy(void)
 
 static void set_max_framerate(UINT16 framerate,kal_bool min_framelength_en)
 {
-	kal_int16 dummy_line;
+
 	kal_uint32 frame_length = imgsensor.frame_length;
 	//unsigned long flags;
 
@@ -232,7 +232,7 @@ static void write_shutter(kal_uint16 shutter)
 {
     unsigned long flags;
 	kal_uint16 realtime_fps = 0;
-	kal_uint32 frame_length = 0;
+//	kal_uint32 frame_length = 0;
     spin_lock_irqsave(&imgsensor_drv_lock, flags);
     imgsensor.shutter = shutter;
     spin_unlock_irqrestore(&imgsensor_drv_lock, flags);
@@ -441,7 +441,7 @@ static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gai
 }
 
 
-
+#if 0
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);
@@ -480,7 +480,7 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 	}
 
 }
-
+#endif
 /*************************************************************************
 * FUNCTION
 *	night_mode

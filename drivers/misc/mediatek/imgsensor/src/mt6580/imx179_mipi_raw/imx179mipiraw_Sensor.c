@@ -26,8 +26,9 @@
 #include <linux/uaccess.h>
 #include <linux/fs.h>
 #include <asm/atomic.h>
-#include <linux/xlog.h>
+#include <linux/types.h>
 
+#include "kd_camera_typedef.h"
 #include "kd_camera_hw.h"
 #include "kd_imgsensor.h"
 #include "kd_imgsensor_define.h"
@@ -44,7 +45,7 @@
 #define LOG_INF(format, args...)	pr_debug(PFX "[%s] " format, __FUNCTION__, ##args)
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
-static kal_uint8  test_pattern_flag=0;
+//static kal_uint8  test_pattern_flag=0;
 
 #define MIPI_SETTLEDELAY_AUTO     0
 #define MIPI_SETTLEDELAY_MANNUAL  1
@@ -357,21 +358,21 @@ static kal_uint16 sensorGainMapping[MaxGainIndex][2] ={
 
 static kal_uint16 read_cmos_sensor(kal_uint32 addr)
 {
-    kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
 	kal_uint16 get_byte=0;
-
 	char pu_send_cmd[2] = {(char)(addr >> 8), (char)(addr & 0xFF) };
+    kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
+
 	iReadRegI2C(pu_send_cmd, 2, (u8*)&get_byte, 1, imgsensor.i2c_write_id);
 	return get_byte;
 }
 
 static void write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
 {
-    kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
 	char pu_send_cmd[3] = {(char)(addr >> 8), (char)(addr & 0xFF), (char)(para & 0xFF)};
+    kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
 	iWriteRegI2C(pu_send_cmd, 3, imgsensor.i2c_write_id);
 }
-
+#if 0
 static kal_uint16 read_cmos_sensor_8(kal_uint16 addr)
 {
     kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
@@ -380,14 +381,15 @@ static kal_uint16 read_cmos_sensor_8(kal_uint16 addr)
     iReadRegI2C(pu_send_cmd , 2, (u8*)&get_byte,1,imgsensor.i2c_write_id);
     return get_byte;
 }
-
+#endif
 
 static void write_cmos_sensor_8(kal_uint16 addr, kal_uint8 para)
 {
-    kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
 	char pu_send_cmd[4] = {(char)(addr >> 8), (char)(addr & 0xFF), (char)(para & 0xFF)};
+    kdSetI2CSpeed(imgsensor_info.i2c_speed); // Add this func to set i2c speed by each sensor
 	iWriteRegI2C(pu_send_cmd, 3, imgsensor.i2c_write_id);
 }
+#if 0
 static void set_dummy(void)
 {
 	LOG_INF("dummyline = %d, dummypixels = %d \n", imgsensor.dummy_line, imgsensor.dummy_pixel);
@@ -398,7 +400,7 @@ static void set_dummy(void)
     write_cmos_sensor(0x0343, imgsensor.line_length & 0xFF);
     write_cmos_sensor_8(0x0104, 0x00);
 }	/*	set_dummy  */
-
+#endif
 
 static kal_uint32 return_sensor_id(void)
 {
@@ -453,7 +455,7 @@ static void set_shutter(kal_uint16 shutter)
 {
     unsigned long flags;
     kal_uint16 realtime_fps = 0;
-    kal_uint32 frame_length = 0;
+
     spin_lock_irqsave(&imgsensor_drv_lock, flags);
     imgsensor.shutter = shutter;
     spin_unlock_irqrestore(&imgsensor_drv_lock, flags);
@@ -537,7 +539,7 @@ static void set_shutter(kal_uint16 shutter)
 static kal_uint16 gain2reg(const kal_uint16 gain)
 {
     kal_uint8 iI;
-    for (iI = 0; iI < (sensorGainMapping-1); iI++)
+    for (iI = 0; iI < (MaxGainIndex-1); iI++)
 	{
         if(gain <= sensorGainMapping[iI][0])
 		{
@@ -599,6 +601,7 @@ static kal_uint16 set_gain(kal_uint16 gain)
 	write_cmos_sensor_8(0x0104, 0x00);
 	return gain;
 }	/*	set_gain  */
+#if 0
 static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gain)
 {
     LOG_INF("le:0x%x, se:0x%x, gain:0x%x\n",le,se,gain);
@@ -632,6 +635,8 @@ static void ihdr_write_shutter_gain(kal_uint16 le, kal_uint16 se, kal_uint16 gai
     }
 
 }
+#endif
+#if 0
 static void set_mirror_flip(kal_uint8 image_mirror)
 {
 	LOG_INF("image_mirror = %d\n", image_mirror);
@@ -666,7 +671,7 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 	}
 
 }
-
+#endif
 /*************************************************************************
 * FUNCTION
 *	night_mode
@@ -1372,7 +1377,7 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
 static kal_uint32 open(void)
 {
 	//const kal_uint8 i2c_addr[] = {IMGSENSOR_WRITE_ID_1, IMGSENSOR_WRITE_ID_2};
-	kal_uint8 iTemp,i = 0;
+	kal_uint8 i = 0;
 	kal_uint8 retry = 2;
 	kal_uint32 sensor_id = 0;
 	LOG_1;
