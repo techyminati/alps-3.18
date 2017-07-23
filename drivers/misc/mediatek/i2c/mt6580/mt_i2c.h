@@ -1,7 +1,7 @@
 #ifndef __MT_I2C_H__
 #define __MT_I2C_H__
 #include <linux/types.h>
-#if !defined(CONFIG_MTK_LEGACY)
+#if !defined(CONFIG_MTK_CLKMGR)
 #include <linux/clk.h>
 #endif
 
@@ -243,10 +243,10 @@ struct mt_i2c_t {
 	u32 default_speed;
 	struct mt_trans_data trans_data;
 	struct i2c_dma_buf dma_buf;
-#if !defined(CONFIG_MTK_LEGACY)
+#if !defined(CONFIG_MTK_CLKMGR)
 	struct clk *clk_main;	/* main clock for i2c bus */
 	struct clk *clk_dma;	/* DMA clock for i2c via DMA */
-#endif				/* !defined(CONFIG_MTK_LEGACY) */
+#endif
 };
 
 struct mt_i2c_msg {

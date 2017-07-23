@@ -20,7 +20,7 @@
 #include <linux/of_address.h>
 #endif
 #include <asm/scatterlist.h>
-#if defined(CONFIG_MTK_LEGACY)
+#if defined(CONFIG_MTK_CLKMGR)
 #include <mach/mt_clkmgr.h>
 /* #include "cust_gpio_usage.h" */
 #endif
@@ -1009,6 +1009,7 @@ static s32 mt_i2c_do_transfer(struct mt_i2c_t *i2c, struct mt_i2c_msg *msgs, s32
 	return num;
 }
 
+#ifndef CONFIG_MTK_I2C_EXTENSION
 static s32 standard_i2c_start_xfer(struct mt_i2c_t *i2c, struct i2c_msg *msg)
 {
 	s32 return_value = 0;
@@ -1154,6 +1155,7 @@ static s32 standard_i2c_transfer(struct i2c_adapter *adap, struct i2c_msg msgs[]
 	else
 		return -EREMOTEIO;
 }
+#endif
 
 int mtk_i2c_transfer(struct i2c_adapter *adap, struct mt_i2c_msg msgs[], s32 num)
 {
@@ -1249,7 +1251,7 @@ static s32 _i2c_deal_result_3dcamera(struct mt_i2c_t *i2c, struct mt_i2c_msg *ms
 static void mt_i2c_clock_enable(struct mt_i2c_t *i2c)
 {
 #if (!defined(CONFIG_MT_I2C_FPGA_ENABLE))
-#if defined(CONFIG_MTK_LEGACY)
+#if defined(CONFIG_MTK_CLKMGR)
 	if (i2c->dma_en) {
 		I2CINFO(I2C_T_TRANSFERFLOW, "Before dma clock enable .....\n");
 		enable_clock(MT_CG_APDMA_SW_CG, "i2c");
@@ -1272,7 +1274,7 @@ static void mt_i2c_clock_enable(struct mt_i2c_t *i2c)
 static void mt_i2c_clock_disable(struct mt_i2c_t *i2c)
 {
 #if (!defined(CONFIG_MT_I2C_FPGA_ENABLE))
-#if defined(CONFIG_MTK_LEGACY)
+#if defined(CONFIG_MTK_CLKMGR)
 	if (i2c->dma_en) {
 		I2CINFO(I2C_T_TRANSFERFLOW, "Before dma clock disable .....\n");
 		disable_clock(MT_CG_APDMA_SW_CG, "i2c");
@@ -1377,7 +1379,11 @@ static u32 mt_i2c_functionality(struct i2c_adapter *adap)
 }
 
 static struct i2c_algorithm mt_i2c_algorithm = {
+#ifdef CONFIG_MTK_I2C_EXTENSION
+	.master_xfer = (pmaster_xfer)mtk_i2c_transfer,
+#else
 	.master_xfer = standard_i2c_transfer,
+#endif
 	.functionality = mt_i2c_functionality,
 };
 
@@ -1453,7 +1459,7 @@ static s32 mt_i2c_probe(struct platform_device *pdev)
 #endif
 	i2c->irqnr = irq;
 
-#if defined(CONFIG_MTK_LEGACY)
+#if defined(CONFIG_MTK_CLKMGR)
 
 #if (defined(CONFIG_MT_I2C_FPGA_ENABLE))
 	i2c->clk = I2C_CLK_RATE;
