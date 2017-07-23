@@ -64,12 +64,12 @@
 #include "ddp_drv.h"
 #include "ddp_reg.h"
 #include "ddp_hal.h"
-#include "ddp_log.h"
 #include "ddp_irq.h"
 #include "ddp_info.h"
 /* #include "ddp_dpi_reg.h" */
 #include "ddp_path.h"
-#include "ddp_debug.h"
+#include "disp_debug.h"
+#include "disp_log.h"
 
 #define DISP_DEVNAME "DISPSYS"
 /* device and driver */
@@ -141,12 +141,12 @@ static int disp_open(struct inode *inode, struct file *file)
 {
 	disp_node_struct *pNode = NULL;
 
-	DDPDBG("enter disp_open() process:%s\n", current->comm);
+	DISPMSG("enter disp_open() process:%s\n", current->comm);
 
 	/* Allocate and initialize private data */
 	file->private_data = kmalloc(sizeof(disp_node_struct), GFP_ATOMIC);
 	if (NULL == file->private_data) {
-		DDPMSG("Not enough entry for DDP open operation\n");
+		DISPMSG("Not enough entry for DISP open operation\n");
 		return -ENOMEM;
 	}
 
@@ -170,7 +170,7 @@ static int disp_release(struct inode *inode, struct file *file)
 	disp_node_struct *pNode = NULL;
 	/* unsigned int index = 0; */
 
-	DDPDBG("enter disp_release() process:%s\n", current->comm);
+	DISPMSG("enter disp_release() process:%s\n", current->comm);
 
 	pNode = (disp_node_struct *) file->private_data;
 
@@ -260,7 +260,7 @@ m4u_callback_ret_t disp_m4u_callback(int port, unsigned int mva, void *data)
 {
 	DISP_MODULE_ENUM module = DISP_MODULE_OVL0;
 
-	DDPERR("fault call port=%d, mva=0x%x, data=0x%p\n", port, mva, data);
+	DISPERR("fault call port=%d, mva=0x%x, data=0x%p\n", port, mva, data);
 	switch (port) {
 	case M4U_PORT_DISP_OVL0:
 		module = DISP_MODULE_OVL0;
@@ -272,7 +272,7 @@ m4u_callback_ret_t disp_m4u_callback(int port, unsigned int mva, void *data)
 		module = DISP_MODULE_WDMA0;
 		break;
 	default:
-		DDPERR("unknown port=%d\n", port);
+		DISPERR("unknown port=%d\n", port);
 	}
 	ddp_dump_analysis(module);
 	ddp_dump_reg(module);
@@ -295,7 +295,7 @@ static int disp_probe(struct platform_device *pdev)
 	/* dispsys_dev = krealloc(dispsys_dev, sizeof(struct dispsys_device) * new_count, GFP_KERNEL); */
 	dispsys_dev = kcalloc(new_count, sizeof(*dispsys_dev), GFP_KERNEL);
 	if (!dispsys_dev) {
-		DDPERR("Unable to allocate dispsys_dev\n");
+		DISPERR("Unable to allocate dispsys_dev\n");
 		return -ENOMEM;
 	}
 
@@ -306,7 +306,7 @@ static int disp_probe(struct platform_device *pdev)
 	for (i = 0; i < DISP_REG_NUM; i++) {
 		dispsys_dev->regs[i] = of_iomap(pdev->dev.of_node, i);
 		if (!dispsys_dev->regs[i]) {
-			DDPERR("Unable to ioremap registers, of_iomap fail, i=%d\n", i);
+			DISPERR("Unable to ioremap registers, of_iomap fail, i=%d\n", i);
 			return -ENOMEM;
 		}
 		dispsys_reg[i] = (unsigned long)dispsys_dev->regs[i];
@@ -328,12 +328,12 @@ static int disp_probe(struct platform_device *pdev)
 					  IRQF_TRIGGER_NONE, DISP_DEVNAME, NULL);
 
 			if (ret) {
-				DDPERR("Unable to request IRQ, request_irq fail, i=%d, irq=%d\n", i,
+				DISPERR("Unable to request IRQ, request_irq fail, i=%d, irq=%d\n", i,
 				       dispsys_dev->irq[i]);
 				return ret;
 			}
 		}
-		DDPMSG("DT, i=%d, module=%s, map_addr=%p, map_irq=%d, reg_pa=0x%lx, irq=%d\n",
+		DISPMSG("DT, i=%d, module=%s, map_addr=%p, map_irq=%d, reg_pa=0x%lx, irq=%d\n",
 		       i, ddp_get_reg_module_name(i), dispsys_dev->regs[i], dispsys_dev->irq[i],
 		       ddp_reg_pa_base[i], ddp_irq_num[i]);
 	}
@@ -355,7 +355,7 @@ static int disp_probe(struct platform_device *pdev)
 	ddp_path_init();
 
 	/* init M4U callback */
-	DDPMSG("register m4u callback\n");
+	DISPMSG("register m4u callback\n");
 	m4u_register_fault_callback(M4U_PORT_DISP_OVL0, disp_m4u_callback, 0);
 	m4u_register_fault_callback(M4U_PORT_DISP_RDMA0, disp_m4u_callback, 0);
 	m4u_register_fault_callback(M4U_PORT_DISP_WDMA0, disp_m4u_callback, 0);
@@ -364,14 +364,14 @@ static int disp_probe(struct platform_device *pdev)
 	/* m4u_register_fault_callback(M4U_PORT_DISP_WDMA1, disp_m4u_callback, 0); */
 
 	/* sysfs */
-	DDPMSG("sysfs disp +");
+	DISPMSG("sysfs disp +");
 	/* add kobject */
 	if (kobject_init_and_add(&kdispobj, &disp_kobj_ktype, NULL, "disp") < 0) {
-		DDPERR("fail to add disp\n");
+		DISPERR("fail to add disp\n");
 		return -ENOMEM;
 	}
 
-	DDPMSG("dispsys probe done.\n");
+	DISPMSG("dispsys probe done.\n");
 	/* NOT_REFERENCED(class_dev); */
 	return 0;
 }
@@ -436,9 +436,9 @@ static int __init disp_init(void)
 {
 	int ret = 0;
 
-	DDPMSG("Register the disp driver\n");
+	DISPMSG("Register the disp driver\n");
 	if (platform_driver_register(&dispsys_of_driver)) {
-		DDPERR("failed to register disp driver\n");
+		DISPERR("failed to register disp driver\n");
 		/* platform_device_unregister(&disp_device); */
 		ret = -ENODEV;
 		return ret;

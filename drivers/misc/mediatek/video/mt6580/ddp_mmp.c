@@ -18,7 +18,7 @@
 #include "DpDataType.h"
 #include "ddp_mmp.h"
 #include "ddp_reg.h"
-#include "ddp_log.h"
+#include "disp_log.h"
 
 static DDP_MMP_Events_t DDP_MMP_Events;
 
@@ -351,7 +351,7 @@ void ddp_mmp_ovl_layer(OVL_CONFIG_STRUCT *pLayer, unsigned int down_sample_x,
 			Bitmap.bpp = 32;
 			break;
 		default:
-			DDPERR("ddp_mmp_ovl_layer(), unknown fmt=0x%x,dump raw\n", pLayer->fmt);
+			DISPERR("ddp_mmp_ovl_layer(), unknown fmt=0x%x,dump raw\n", pLayer->fmt);
 			raw = 1;
 		}
 		if (!raw) {
@@ -374,7 +374,7 @@ void ddp_mmp_ovl_layer(OVL_CONFIG_STRUCT *pLayer, unsigned int down_sample_x,
 				m4u_mva_unmap_kernel(pLayer->addr, Bitmap.data_size,
 						     (unsigned long)Bitmap.pData);
 			} else {
-				DDPERR("ddp_mmp_ovl_layer(),fail to dump rgb(0x%x)\n", pLayer->fmt);
+				DISPERR("ddp_mmp_ovl_layer(),fail to dump rgb(0x%x)\n", pLayer->fmt);
 			}
 		} else {
 			meta.data_type = MMProfileMetaRaw;
@@ -392,7 +392,7 @@ void ddp_mmp_ovl_layer(OVL_CONFIG_STRUCT *pLayer, unsigned int down_sample_x,
 				m4u_mva_unmap_kernel(pLayer->addr, meta.size,
 						     (unsigned long)meta.pData);
 			} else {
-				DDPERR("ddp_mmp_ovl_layer(),fail to dump raw(0x%x)\n", pLayer->fmt);
+				DISPERR("ddp_mmp_ovl_layer(),fail to dump raw(0x%x)\n", pLayer->fmt);
 			}
 		}
 	}
@@ -413,7 +413,7 @@ void ddp_mmp_wdma_layer(WDMA_CONFIG_STRUCT *wdma_layer, unsigned int wdma_num,
 	int raw = 0;
 
 	if (wdma_num > 1) {
-		DDPERR("dprec_mmp_dump_wdma_layer is error %d\n", wdma_num);
+		DISPERR("dprec_mmp_dump_wdma_layer is error %d\n", wdma_num);
 		return;
 	}
 
@@ -443,7 +443,7 @@ void ddp_mmp_wdma_layer(WDMA_CONFIG_STRUCT *wdma_layer, unsigned int wdma_num,
 		Bitmap.bpp = 32;
 		break;
 	default:
-		DDPERR("dprec_mmp_dump_wdma_layer(), unknown fmt=%d, dump raw\n",
+		DISPERR("dprec_mmp_dump_wdma_layer(), unknown fmt=%d, dump raw\n",
 		       wdma_layer->outputFormat);
 		raw = 1;
 	}
@@ -461,7 +461,7 @@ void ddp_mmp_wdma_layer(WDMA_CONFIG_STRUCT *wdma_layer, unsigned int wdma_num,
 			m4u_mva_unmap_kernel(wdma_layer->dstAddress, Bitmap.data_size,
 					     (unsigned long)Bitmap.pData);
 		} else {
-			DDPERR("dprec_mmp_dump_wdma_layer(),fail to dump rgb(0x%x)\n",
+			DISPERR("dprec_mmp_dump_wdma_layer(),fail to dump rgb(0x%x)\n",
 			       wdma_layer->outputFormat);
 		}
 	} else {
@@ -473,7 +473,7 @@ void ddp_mmp_wdma_layer(WDMA_CONFIG_STRUCT *wdma_layer, unsigned int wdma_num,
 			MMProfileLogMeta(DDP_MMP_Events.wdma_dump[wdma_num], MMProfileFlagPulse,
 					 &meta);
 		} else {
-			DDPERR("dprec_mmp_dump_wdma_layer(),fail to dump raw(0x%x)\n",
+			DISPERR("dprec_mmp_dump_wdma_layer(),fail to dump raw(0x%x)\n",
 			       wdma_layer->outputFormat);
 		}
 	}
@@ -488,7 +488,7 @@ void ddp_mmp_rdma_layer(RDMA_CONFIG_STRUCT *rdma_layer, unsigned int rdma_num,
 	int raw = 0;
 
 	if (rdma_num > 1) {
-		DDPERR("dump_rdma_layer is error %d\n", rdma_num);
+		DISPERR("dump_rdma_layer is error %d\n", rdma_num);
 		return;
 	}
 
@@ -518,7 +518,7 @@ void ddp_mmp_rdma_layer(RDMA_CONFIG_STRUCT *rdma_layer, unsigned int rdma_num,
 		Bitmap.bpp = 32;
 		break;
 	default:
-		DDPERR("dump_rdma_layer(), unknown fmt=%d, dump raw\n", rdma_layer->inputFormat);
+		DISPERR("dump_rdma_layer(), unknown fmt=%d, dump raw\n", rdma_layer->inputFormat);
 		raw = 1;
 	}
 	if (!raw) {
@@ -535,7 +535,7 @@ void ddp_mmp_rdma_layer(RDMA_CONFIG_STRUCT *rdma_layer, unsigned int rdma_num,
 			m4u_mva_unmap_kernel(rdma_layer->address, Bitmap.data_size,
 					     (unsigned long)Bitmap.pData);
 		} else {
-			DDPERR("dump_rdma_layer(),fail to dump rgb(0x%x)\n",
+			DISPERR("dump_rdma_layer(),fail to dump rgb(0x%x)\n",
 			       rdma_layer->inputFormat);
 		}
 	} else {
@@ -549,7 +549,7 @@ void ddp_mmp_rdma_layer(RDMA_CONFIG_STRUCT *rdma_layer, unsigned int rdma_num,
 			m4u_mva_unmap_kernel(rdma_layer->address, meta.size,
 					     (unsigned long)meta.pData);
 		} else {
-			DDPERR("dprec_mmp_dump_rdma_layer(),fail to dump raw(0x%x)\n",
+			DISPERR("dprec_mmp_dump_rdma_layer(),fail to dump raw(0x%x)\n",
 			       rdma_layer->inputFormat);
 		}
 	}
@@ -564,7 +564,7 @@ DDP_MMP_Events_t *ddp_mmp_get_events(void)
 void ddp_mmp_init(void)
 {
 #ifdef DEFAULT_MMP_ENABLE
-	DDPMSG("ddp_mmp_init\n");
+	DISPMSG("ddp_mmp_init\n");
 	MMProfileEnable(1);
 	init_ddp_mmp_events();
 	MMProfileStart(1);

@@ -17,12 +17,12 @@
 #include <mt-plat/sync_write.h>
 #include <linux/types.h>
 #include <mach/mt_clkmgr.h>
-#include "ddp_log.h"
+#include "disp_log.h"
 #include "ddp_reg.h"
 #include "ddp_hal.h"
 #include "disp_drv_platform.h"
 #include "primary_display.h"
-#include "ddp_debug.h"
+#include "disp_debug.h"
 #include "ddp_path.h"
 #include "m4u.h"
 #include "ddp_drv.h"
@@ -235,7 +235,7 @@ char *ddp_get_scenario_name(DDP_SCENARIO_ENUM scenario)
 	case DDP_SCENARIO_SUB_ALL:
 		return "sub_all";
 	default:
-		DDPMSG("invalid scenario id=%d\n", scenario);
+		DISPMSG("invalid scenario id=%d\n", scenario);
 		return "unknown";
 	}
 }
@@ -260,7 +260,7 @@ int ddp_is_scenario_on_primary(DDP_SCENARIO_ENUM scenario)
 		on_primary = 0;
 		break;
 	default:
-		DDPMSG("invalid scenario id=%d\n", scenario);
+		DISPMSG("invalid scenario id=%d\n", scenario);
 	}
 
 	return on_primary;
@@ -280,7 +280,7 @@ char *ddp_get_mutex_sof_name(MUTEX_SOF mode)
 	case SOF_DPI0:
 		return "dpi0";
 	default:
-		DDPMSG("invalid sof =%d\n", mode);
+		DISPMSG("invalid sof =%d\n", mode);
 		return "unknown";
 	}
 }
@@ -293,7 +293,7 @@ char *ddp_get_mode_name(DDP_MODE ddp_mode)
 	case DDP_CMD_MODE:
 		return "cmd_mode";
 	default:
-		DDPMSG("invalid ddp mode =%d\n", ddp_mode);
+		DISPMSG("invalid ddp mode =%d\n", ddp_mode);
 		return "unknown";
 	}
 }
@@ -321,7 +321,7 @@ static void ddp_connect_path_l(int *module_list, void *handle)
 	unsigned int mout_idx = 0;
 	unsigned int module_num = ddp_get_module_num_l(module_list);
 
-	DDPDBG("connect_path: %s to %s\n", ddp_get_module_name(module_list[0]),
+	DISPMSG("connect_path: %s to %s\n", ddp_get_module_name(module_list[0]),
 	       ddp_get_module_name(module_list[module_num - 1]));
 	/* connect mout */
 	for (i = 0; i < module_num - 1; i++) {
@@ -342,7 +342,7 @@ static void ddp_connect_path_l(int *module_list, void *handle)
 						mout |= mout_map[j].out_id_bit_map[k].v;
 						reg_mout |= mout;
 						mout_idx = j;
-						DDPDBG("connect mout %s to %s  value 0x%x\n",
+						DISPMSG("connect mout %s to %s  value 0x%x\n",
 						       ddp_get_module_name(module_list[i]),
 						       ddp_get_module_name(module_list[step]),
 						       reg_mout);
@@ -375,7 +375,7 @@ static void ddp_connect_path_l(int *module_list, void *handle)
 					if (sel_out_map[j].id_bit_map[k] == -1)
 						break;
 					if (sel_out_map[j].id_bit_map[k] == module_list[step]) {
-						DDPDBG("connect out_s %s to %s, bits=0x%x\n",
+						DISPMSG("connect out_s %s to %s, bits=0x%x\n",
 						       ddp_get_module_name(module_list[i]),
 						       ddp_get_module_name(module_list[step]), k);
 						DISP_REG_SET(handle, sel_out_map[j].reg, (uint16_t)k);
@@ -399,7 +399,7 @@ static void ddp_connect_path_l(int *module_list, void *handle)
 					if (sel_in_map[j].id_bit_map[k] == -1)
 						break;
 					if (sel_in_map[j].id_bit_map[k] == module_list[step]) {
-						DDPDBG("connect in_s %s to %s, bits=0x%x\n",
+						DISPMSG("connect in_s %s to %s, bits=0x%x\n",
 							ddp_get_module_name(module_list[step]),
 							ddp_get_module_name(module_list[i]),
 							k);
@@ -421,7 +421,7 @@ static void ddp_check_path_l(int *module_list)
 	unsigned int path_error = 0;
 	unsigned int module_num = ddp_get_module_num_l(module_list);
 
-	DDPDUMP("check_path: %s to %s\n", ddp_get_module_name(module_list[0])
+	DISPDMP("check_path: %s to %s\n", ddp_get_module_name(module_list[0])
 		, ddp_get_module_name(module_list[module_num - 1]));
 	/* check mout */
 	for (i = 0; i < module_num - 1; i++) {
@@ -448,11 +448,11 @@ static void ddp_check_path_l(int *module_list)
 					valid = 0;
 					if ((DISP_REG_GET(mout_map[j].reg) & mout) == 0) {
 						path_error += 1;
-						DDPDUMP("error:%s mout, expect=0x%x, real=0x%x\n",
+						DISPDMP("error:%s mout, expect=0x%x, real=0x%x\n",
 							ddp_get_module_name(module_list[i]),
 							mout, DISP_REG_GET(mout_map[j].reg));
 					} else if (DISP_REG_GET(mout_map[j].reg) != mout) {
-						DDPDUMP
+						DISPDMP
 						    ("warning: %s mout expect=0x%x, real=0x%x\n",
 						     ddp_get_module_name(module_list[i]), mout,
 						     DISP_REG_GET(mout_map[j].reg));
@@ -480,7 +480,7 @@ static void ddp_check_path_l(int *module_list)
 				if (sel_out_map[j].id_bit_map[k] == module_list[step]) {
 					if (DISP_REG_GET(sel_out_map[j].reg) != k) {
 						path_error += 1;
-						DDPDUMP(
+						DISPDMP(
 						"error:out_s %s not connect to %s, expect=0x%x, real=0x%x\n",
 						ddp_get_module_name(module_list[i]),
 						ddp_get_module_name(module_list[step]),
@@ -509,7 +509,7 @@ static void ddp_check_path_l(int *module_list)
 				if (sel_in_map[j].id_bit_map[k] == module_list[step]) {
 					if (DISP_REG_GET(sel_in_map[j].reg) != k) {
 						path_error += 1;
-						DDPDUMP(
+						DISPDMP(
 						"error:in_s %s not connect to %s, expect=0x%x, real=0x%x\n",
 						ddp_get_module_name(module_list[step]),
 						ddp_get_module_name(module_list[i]),
@@ -522,10 +522,10 @@ static void ddp_check_path_l(int *module_list)
 		}
 	}
 	if (path_error == 0) {
-		DDPDUMP("path: %s to %s is connected\n", ddp_get_module_name(module_list[0]),
+		DISPDMP("path: %s to %s is connected\n", ddp_get_module_name(module_list[0]),
 			ddp_get_module_name(module_list[module_num - 1]));
 	} else {
-		DDPDUMP("path: %s to %s not connected!!!\n", ddp_get_module_name(module_list[0]),
+		DISPDMP("path: %s to %s not connected!!!\n", ddp_get_module_name(module_list[0]),
 			ddp_get_module_name(module_list[module_num - 1]));
 	}
 }
@@ -539,7 +539,7 @@ static void ddp_disconnect_path_l(int *module_list, void *handle)
 	unsigned int mout_idx = 0;
 	unsigned int module_num = ddp_get_module_num_l(module_list);
 
-	DDPDBG("disconnect_path: %s to %s\n", ddp_get_module_name(module_list[0]),
+	DISPMSG("disconnect_path: %s to %s\n", ddp_get_module_name(module_list[0]),
 	       ddp_get_module_name(module_list[module_num - 1]));
 	for (i = 0; i < module_num - 1; i++) {
 		for (j = 0; j < DDP_MOUT_NUM; j++) {
@@ -558,7 +558,7 @@ static void ddp_disconnect_path_l(int *module_list, void *handle)
 						mout |= mout_map[j].out_id_bit_map[k].v;
 						reg_mout |= mout;
 						mout_idx = j;
-						DDPDBG("disconnect mout %s to %s\n",
+						DISPMSG("disconnect mout %s to %s\n",
 						       ddp_get_module_name(module_list[i]),
 						       ddp_get_module_name(module_list[step]));
 						break;
@@ -607,10 +607,10 @@ static MUTEX_SOF ddp_get_mutex_sof(DISP_MODULE_ENUM dest_module, DDP_MODE ddp_mo
 		mode = SOF_SINGLE;
 		break;
 	default:
-		DDPERR("get mutex sof, invalid param dst module = %s(%d), dis mode %s\n",
+		DISPERR("get mutex sof, invalid param dst module = %s(%d), dis mode %s\n",
 		       ddp_get_module_name(dest_module), dest_module, ddp_get_mode_name(ddp_mode));
 	}
-	DDPDBG("mutex sof: %s dst module %s:%s\n",
+	DISPMSG("mutex sof: %s dst module %s:%s\n",
 	       ddp_get_mutex_sof_name(mode), ddp_get_module_name(dest_module),
 	       ddp_get_mode_name(ddp_mode));
 	return mode;
@@ -626,16 +626,16 @@ static int ddp_mutex_set_l(int mutex_id, int *module_list, DDP_MODE ddp_mode, vo
 	MUTEX_SOF mode = ddp_get_mutex_sof(module_list[module_num - 1], ddp_mode);
 
 	if (mutex_id < DISP_MUTEX_DDP_FIRST || mutex_id > DISP_MUTEX_DDP_LAST) {
-		DDPERR("exceed mutex max (0 ~ %d)\n", DISP_MUTEX_DDP_LAST);
+		DISPERR("exceed mutex max (0 ~ %d)\n", DISP_MUTEX_DDP_LAST);
 		return -1;
 	}
 	for (i = 0; i < module_num; i++) {
 		if (module_mutex_map[module_list[i]].bit != -1) {
-			DDPDBG("module %s added to mutex %d\n", ddp_get_module_name(module_list[i]),
+			DISPMSG("module %s added to mutex %d\n", ddp_get_module_name(module_list[i]),
 			       mutex_id);
 			value |= (1 << module_mutex_map[module_list[i]].bit);
 		} else {
-			DDPDBG("module %s not added to mutex %d\n",
+			DISPMSG("module %s not added to mutex %d\n",
 			       ddp_get_module_name(module_list[i]), mutex_id);
 		}
 	}
@@ -648,7 +648,7 @@ static int ddp_mutex_set_l(int mutex_id, int *module_list, DDP_MODE ddp_mode, vo
 				   1);
 	}
 
-	DDPDBG("mutex %d value=0x%x, sof=%s\n", mutex_id, value, ddp_get_mutex_sof_name(mode));
+	DISPMSG("mutex %d value=0x%x, sof=%s\n", mutex_id, value, ddp_get_mutex_sof_name(mode));
 	return 0;
 }
 
@@ -662,7 +662,7 @@ static void ddp_check_mutex_l(int mutex_id, int *module_list, DDP_MODE ddp_mode)
 	int module_num = ddp_get_module_num_l(module_list);
 
 	if (mutex_id < DISP_MUTEX_DDP_FIRST || mutex_id > DISP_MUTEX_DDP_LAST) {
-		DDPDUMP("error:check mutex fail:exceed mutex max (0 ~ %d)\n", DISP_MUTEX_DDP_LAST);
+		DISPDMP("error:check mutex fail:exceed mutex max (0 ~ %d)\n", DISP_MUTEX_DDP_LAST);
 		return;
 	}
 	real_value = DISP_REG_GET(DISP_REG_CONFIG_MUTEX_MOD(mutex_id));
@@ -671,13 +671,13 @@ static void ddp_check_mutex_l(int mutex_id, int *module_list, DDP_MODE ddp_mode)
 			expect_value |= (1 << module_mutex_map[module_list[i]].bit);
 	}
 	if (expect_value != real_value) {
-		DDPDUMP("error:mutex %d error: expect 0x%x, real 0x%x\n", mutex_id, expect_value,
+		DISPDMP("error:mutex %d error: expect 0x%x, real 0x%x\n", mutex_id, expect_value,
 			real_value);
 	}
 	real_sof = DISP_REG_GET(DISP_REG_CONFIG_MUTEX_SOF(mutex_id));
 	expect_sof = ddp_get_mutex_sof(module_list[module_num - 1], ddp_mode);
 	if ((uint32_t) expect_sof != real_sof) {
-		DDPDUMP("error:mutex %d sof error: expect %s, real %s\n", mutex_id,
+		DISPDMP("error:mutex %d sof error: expect %s, real %s\n", mutex_id,
 			ddp_get_mutex_sof_name(expect_sof),
 			ddp_get_mutex_sof_name((MUTEX_SOF) real_sof));
 	}
@@ -685,7 +685,7 @@ static void ddp_check_mutex_l(int mutex_id, int *module_list, DDP_MODE ddp_mode)
 
 static int ddp_mutex_enable_l(int mutex_idx, void *handle)
 {
-	DDPDBG("mutex %d enable\n", mutex_idx);
+	DISPMSG("mutex %d enable\n", mutex_idx);
 	DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_EN(mutex_idx), 1);
 	return 0;
 }
@@ -695,7 +695,7 @@ int ddp_mutex_hw_dcm_on(int mutex_idx, void *handle)
 	if (gMutexFreeRun == 1 && primary_display_is_video_mode() == 0 && mutex_idx == 0)
 		DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_HW_DCM, 1);
 
-	DDPDBG("mutex %d hw_dcm 0x%x\n", mutex_idx, DISP_REG_GET(DISP_REG_CONFIG_MUTEX_HW_DCM));
+	DISPMSG("mutex %d hw_dcm 0x%x\n", mutex_idx, DISP_REG_GET(DISP_REG_CONFIG_MUTEX_HW_DCM));
 	return 0;
 }
 
@@ -704,7 +704,7 @@ int ddp_mutex_hw_dcm_off(int mutex_idx, void *handle)
 	if (gMutexFreeRun == 1 && primary_display_is_video_mode() == 0 && mutex_idx == 0)
 		DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_HW_DCM, 0);
 
-	DDPDBG("mutex %d hw_dcm 0x%x\n", mutex_idx, DISP_REG_GET(DISP_REG_CONFIG_MUTEX_HW_DCM));
+	DISPMSG("mutex %d hw_dcm 0x%x\n", mutex_idx, DISP_REG_GET(DISP_REG_CONFIG_MUTEX_HW_DCM));
 	return 0;
 }
 
@@ -722,7 +722,7 @@ static void ddp_print_scenario(DDP_SCENARIO_ENUM scenario)
 	for (i = 0; i < num; i++)
 		strcat(path, ddp_get_module_name(module_list_scenario[scenario][i]));
 
-	DDPMSG("scenario %s have modules: %s\n", ddp_get_scenario_name(scenario), path);
+	DISPMSG("scenario %s have modules: %s\n", ddp_get_scenario_name(scenario), path);
 }
 
 static int ddp_find_module_index(DDP_SCENARIO_ENUM ddp_scenario, DISP_MODULE_ENUM module)
@@ -733,7 +733,7 @@ static int ddp_find_module_index(DDP_SCENARIO_ENUM ddp_scenario, DISP_MODULE_ENU
 		if (module_list_scenario[ddp_scenario][i] == module)
 			return i;
 	}
-	DDPDBG("find module: can not find module %s on scenario %s\n", ddp_get_module_name(module),
+	DISPMSG("find module: can not find module %s on scenario %s\n", ddp_get_module_name(module),
 	       ddp_get_scenario_name(ddp_scenario));
 	return -1;
 }
@@ -743,10 +743,10 @@ int ddp_set_dst_module(DDP_SCENARIO_ENUM scenario, DISP_MODULE_ENUM dst_module)
 {
 	int i = 0;
 
-	DDPMSG("ddp_set_dst_module, scenario=%s, dst_module=%s\n",
+	DISPMSG("ddp_set_dst_module, scenario=%s, dst_module=%s\n",
 	       ddp_get_scenario_name(scenario), ddp_get_module_name(dst_module));
 	if (ddp_find_module_index(scenario, dst_module) > 0) {
-		DDPDBG("%s is already on path\n", ddp_get_module_name(dst_module));
+		DISPMSG("%s is already on path\n", ddp_get_module_name(dst_module));
 		return 0;
 	}
 	i = ddp_get_module_num_l(module_list_scenario[scenario]) - 1;
@@ -755,7 +755,7 @@ int ddp_set_dst_module(DDP_SCENARIO_ENUM scenario, DISP_MODULE_ENUM dst_module)
 		if (i < (DDP_ENING_NUM - 1)) {
 			module_list_scenario[scenario][i++] = DISP_MODULE_SPLIT1;
 		} else {
-			DDPERR("set dst module over up bound\n");
+			DISPERR("set dst module over up bound\n");
 			return -1;
 		}
 	} else {
@@ -763,7 +763,7 @@ int ddp_set_dst_module(DDP_SCENARIO_ENUM scenario, DISP_MODULE_ENUM dst_module)
 			if (i >= 1) {
 				module_list_scenario[scenario][i--] = -1;
 			} else {
-				DDPERR("set dst module over low bound\n");
+				DISPERR("set dst module over low bound\n");
 				return -1;
 			}
 		}
@@ -786,7 +786,7 @@ DISP_MODULE_ENUM ddp_get_dst_module(DDP_SCENARIO_ENUM ddp_scenario)
 	if (module_num >= 0)
 		module_name = module_list_scenario[ddp_scenario][module_num];
 
-	DDPMSG("ddp_get_dst_module, scneario=%s, dst_module=%s\n",
+	DISPMSG("ddp_get_dst_module, scneario=%s, dst_module=%s\n",
 	       ddp_get_scenario_name(ddp_scenario), ddp_get_module_name(module_name));
 
 	return module_name;
@@ -815,14 +815,14 @@ int ddp_insert_module(DDP_SCENARIO_ENUM ddp_scenario, DISP_MODULE_ENUM place,
 	int idx = ddp_find_module_index(ddp_scenario, place);
 
 	if (idx < 0) {
-		DDPERR("error: ddp_insert_module , place=%s is not in scenario %s!\n",
+		DISPERR("error: ddp_insert_module , place=%s is not in scenario %s!\n",
 		       ddp_get_module_name(place), ddp_get_scenario_name(ddp_scenario));
 		return -1;
 	}
 
 	for (i = 0; i < DDP_ENING_NUM; i++) {
 		if (module_list_scenario[ddp_scenario][i] == module) {
-			DDPERR("error: ddp_insert_module , module=%s is already in scenario %s!\n",
+			DISPERR("error: ddp_insert_module , module=%s is already in scenario %s!\n",
 			       ddp_get_module_name(module), ddp_get_scenario_name(ddp_scenario));
 			return -1;
 		}
@@ -840,9 +840,9 @@ int ddp_insert_module(DDP_SCENARIO_ENUM ddp_scenario, DISP_MODULE_ENUM place,
 		int *modules = ddp_get_scenario_list(ddp_scenario);
 		int module_num = ddp_get_module_num(ddp_scenario);
 
-		DDPMSG("after insert module, module list is:\n");
+		DISPMSG("after insert module, module list is:\n");
 		for (i = 0; i < module_num; i++)
-			DDPMSG("%s-", ddp_get_module_name(modules[i]));
+			DISPMSG("%s-", ddp_get_module_name(modules[i]));
 	}
 
 	return 0;
@@ -854,7 +854,7 @@ int ddp_remove_module(DDP_SCENARIO_ENUM ddp_scenario, DISP_MODULE_ENUM module)
 	int idx = ddp_find_module_index(ddp_scenario, module);
 
 	if (idx < 0) {
-		DDPERR("ddp_remove_module, can not find module %s in scenario %s\n",
+		DISPERR("ddp_remove_module, can not find module %s in scenario %s\n",
 		       ddp_get_module_name(module), ddp_get_scenario_name(ddp_scenario));
 		return -1;
 	}
@@ -868,16 +868,16 @@ int ddp_remove_module(DDP_SCENARIO_ENUM ddp_scenario, DISP_MODULE_ENUM module)
 		int *modules = ddp_get_scenario_list(ddp_scenario);
 		int module_num = ddp_get_module_num(ddp_scenario);
 
-		DDPMSG("after remove module, module list is:\n");
+		DISPMSG("after remove module, module list is:\n");
 		for (i = 0; i < module_num; i++)
-			DDPMSG("%s-", ddp_get_module_name(modules[i]));
+			DISPMSG("%s-", ddp_get_module_name(modules[i]));
 	}
 	return 0;
 }
 
 void ddp_connect_path(DDP_SCENARIO_ENUM scenario, void *handle)
 {
-	DDPDBG("path connect on scenario %s\n", ddp_get_scenario_name(scenario));
+	DISPMSG("path connect on scenario %s\n", ddp_get_scenario_name(scenario));
 	if (scenario == DDP_SCENARIO_PRIMARY_ALL) {
 		ddp_connect_path_l(module_list_scenario[DDP_SCENARIO_PRIMARY_DISP], handle);
 		ddp_connect_path_l(module_list_scenario[DDP_SCENARIO_PRIMARY_OVL_MEMOUT], handle);
@@ -890,7 +890,7 @@ void ddp_connect_path(DDP_SCENARIO_ENUM scenario, void *handle)
 
 void ddp_disconnect_path(DDP_SCENARIO_ENUM scenario, void *handle)
 {
-	DDPDBG("path disconnect on scenario %s\n", ddp_get_scenario_name(scenario));
+	DISPMSG("path disconnect on scenario %s\n", ddp_get_scenario_name(scenario));
 
 	if (scenario == DDP_SCENARIO_PRIMARY_ALL) {
 		ddp_disconnect_path_l(module_list_scenario[DDP_SCENARIO_PRIMARY_DISP], handle);
@@ -905,7 +905,7 @@ void ddp_disconnect_path(DDP_SCENARIO_ENUM scenario, void *handle)
 
 void ddp_check_path(DDP_SCENARIO_ENUM scenario)
 {
-	DDPDBG("path check path on scenario %s\n", ddp_get_scenario_name(scenario));
+	DISPMSG("path check path on scenario %s\n", ddp_get_scenario_name(scenario));
 
 	if (scenario == DDP_SCENARIO_PRIMARY_ALL) {
 		ddp_check_path_l(module_list_scenario[DDP_SCENARIO_PRIMARY_DISP]);
@@ -919,7 +919,7 @@ void ddp_check_path(DDP_SCENARIO_ENUM scenario)
 
 void ddp_check_mutex(int mutex_id, DDP_SCENARIO_ENUM scenario, DDP_MODE mode)
 {
-	DDPDBG("check mutex %d on scenario %s\n", mutex_id, ddp_get_scenario_name(scenario));
+	DISPMSG("check mutex %d on scenario %s\n", mutex_id, ddp_get_scenario_name(scenario));
 	ddp_check_mutex_l(mutex_id, module_list_scenario[scenario], mode);
 }
 
@@ -928,14 +928,14 @@ int ddp_mutex_set(int mutex_id, DDP_SCENARIO_ENUM scenario, DDP_MODE mode, void 
 	if (scenario < DDP_SCENARIO_MAX)
 		return ddp_mutex_set_l(mutex_id, module_list_scenario[scenario], mode, handle);
 
-	DDPERR("Invalid scenario %d when setting mutex\n", scenario);
+	DISPERR("Invalid scenario %d when setting mutex\n", scenario);
 	return -1;
 }
 
 int ddp_mutex_Interrupt_enable(int mutex_id, void *handle)
 {
 
-	DDPDBG("mutex %d interrupt enable\n", mutex_id);
+	DISPMSG("mutex %d interrupt enable\n", mutex_id);
 	DISP_REG_MASK(handle, DISP_REG_CONFIG_MUTEX_INTEN, 0x1 << mutex_id, 0x1 << mutex_id);
 	DISP_REG_MASK(handle, DISP_REG_CONFIG_MUTEX_INTEN, 1 << (mutex_id + DISP_MUTEX_TOTAL),
 		      0x1 << (mutex_id + DISP_MUTEX_TOTAL));
@@ -944,7 +944,7 @@ int ddp_mutex_Interrupt_enable(int mutex_id, void *handle)
 
 int ddp_mutex_Interrupt_disable(int mutex_id, void *handle)
 {
-	DDPDBG("mutex %d interrupt disenable\n", mutex_id);
+	DISPMSG("mutex %d interrupt disenable\n", mutex_id);
 	DISP_REG_MASK(handle, DISP_REG_CONFIG_MUTEX_INTEN, 0, 0x1 << mutex_id);
 	DISP_REG_MASK(handle, DISP_REG_CONFIG_MUTEX_INTEN, 0, 0x1 << (mutex_id + DISP_MUTEX_TOTAL));
 	return 0;
@@ -952,7 +952,7 @@ int ddp_mutex_Interrupt_disable(int mutex_id, void *handle)
 
 int ddp_mutex_reset(int mutex_id, void *handle)
 {
-	DDPDBG("mutex %d reset\n", mutex_id);
+	DISPMSG("mutex %d reset\n", mutex_id);
 	DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_RST(mutex_id), 1);
 	DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_RST(mutex_id), 0);
 
@@ -965,7 +965,7 @@ int ddp_mutex_add_module(int mutex_id, DISP_MODULE_ENUM module, void *handle)
 
 	if (module < DISP_MODULE_UNKNOWN) {
 		if (module_mutex_map[module].bit != -1) {
-			DDPDBG("module %s added to mutex %d\n", ddp_get_module_name(module),
+			DISPMSG("module %s added to mutex %d\n", ddp_get_module_name(module),
 			       mutex_id);
 			value |= (1 << module_mutex_map[module].bit);
 			DISP_REG_MASK(handle, DISP_REG_CONFIG_MUTEX_MOD(mutex_id), value, value);
@@ -980,7 +980,7 @@ int ddp_mutex_remove_module(int mutex_id, DISP_MODULE_ENUM module, void *handle)
 
 	if (module < DISP_MODULE_UNKNOWN) {
 		if (module_mutex_map[module].bit != -1) {
-			DDPDBG("module %s added to mutex %d\n", ddp_get_module_name(module),
+			DISPMSG("module %s added to mutex %d\n", ddp_get_module_name(module),
 			       mutex_id);
 			value |= (1 << module_mutex_map[module].bit);
 			DISP_REG_MASK(handle, DISP_REG_CONFIG_MUTEX_MOD(mutex_id), 0, value);
@@ -992,7 +992,7 @@ int ddp_mutex_remove_module(int mutex_id, DISP_MODULE_ENUM module, void *handle)
 
 int ddp_mutex_clear(int mutex_id, void *handle)
 {
-	DDPDBG("mutex %d clear\n", mutex_id);
+	DISPMSG("mutex %d clear\n", mutex_id);
 	DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_MOD(mutex_id), 0);
 	DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_SOF(mutex_id), 0);
 
@@ -1008,7 +1008,7 @@ int ddp_mutex_enable(int mutex_id, DDP_SCENARIO_ENUM scenario, void *handle)
 
 int ddp_mutex_disenable(int mutex_id, DDP_SCENARIO_ENUM scenario, void *handle)
 {
-	DDPDBG("mutex %d disable\n", mutex_id);
+	DISPMSG("mutex %d disable\n", mutex_id);
 	DISP_REG_SET(handle, DISP_REG_CONFIG_MUTEX_EN(mutex_id), 0);
 	return 0;
 }
@@ -1034,7 +1034,7 @@ int ddp_path_top_clock_on(void)
 	ddp_clk_enable(DISP0_SMI_LARB0);
 	/*ddp_clk_enable(DISP0_MUTEX_32K); */
 #endif
-	DDPMSG("ddp path top clock on CG:%08x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
+	DISPMSG("ddp path top clock on CG:%08x\n", DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0));
 #endif
 	return 0;
 }
@@ -1042,10 +1042,10 @@ int ddp_path_top_clock_on(void)
 int ddp_path_top_clock_off(void)
 {
 #ifdef ENABLE_CLK_MGR
-	DDPMSG("ddp path top clock off\n");
+	DISPMSG("ddp path top clock off\n");
 #ifdef CONFIG_MTK_CLKMGR
 	if (clk_is_force_on(MT_CG_DISP0_SMI_LARB0) || clk_is_force_on(MT_CG_DISP0_SMI_COMMON)) {
-		DDPMSG("clear SMI_LARB0 & SMI_COMMON forced on\n");
+		DISPMSG("clear SMI_LARB0 & SMI_COMMON forced on\n");
 		clk_clr_force_on(MT_CG_DISP0_SMI_LARB0);
 		clk_clr_force_on(MT_CG_DISP0_SMI_COMMON);
 	}

@@ -13,7 +13,7 @@
 
 obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 			disp_assert_layer.o    \
-			debug.o                \
+			disp_debug.o           \
 			primary_display.o      \
 			disp_lcm.o             \
 			disp_utils.o           \
@@ -28,7 +28,6 @@ obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 			ddp_dsi.o              \
 			ddp_drv.o              \
 			ddp_path.o             \
-			ddp_debug.o            \
 			ddp_dump.o             \
 			ddp_manager.o          \
 			ddp_irq.o              \

@@ -43,8 +43,8 @@
 #include "mach/mt_boot.h"
 #include "mtkfb.h"
 #include "mtkfb_info.h"
+#include "disp_log.h"
 
-#define DISPCHECK pr_warn
 #define ALIGN_TO(x, n)  \
 	(((x) + ((n) - 1)) & ~((n) - 1))
 
@@ -233,7 +233,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var,
 				  struct fb_info *info)
 {
 
-	DISPCHECK("xoffset=%u, yoffset=%u, xres=%u, yres=%u, xresv=%u, yresv=%u\n",
+	DISPMSG("xoffset=%u, yoffset=%u, xres=%u, yres=%u, xresv=%u, yresv=%u\n",
 	       var->xoffset, var->yoffset, info->var.xres, info->var.yres,
 	       info->var.xres_virtual, info->var.yres_virtual);
 	info->var.yoffset = var->yoffset;
@@ -253,7 +253,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 
 	/* DISPFUNC(); */
 
-	DISPCHECK(
+	DISPMSG(
 	"mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u, xoffset=%u, yoffset=%u, bits_per_pixel=%u)\n",
 	     var->xres,
 	     var->yres, var->xres_virtual, var->yres_virtual, var->xoffset,
@@ -262,7 +262,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 	bpp = var->bits_per_pixel;
 
 	if (bpp != 16 && bpp != 24 && bpp != 32) {
-		DISPCHECK("[%s]unsupported bpp: %d", __func__, bpp);
+		DISPMSG("[%s]unsupported bpp: %d", __func__, bpp);
 		return -1;
 	}
 
@@ -287,7 +287,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 		var->yres_virtual = var->yres;
 
 	max_frame_size = fbdev->fb_size_in_byte;
-	DISPCHECK("fbdev->fb_size_in_byte=0x%08lx\n", fbdev->fb_size_in_byte);
+	DISPMSG("fbdev->fb_size_in_byte=0x%08lx\n", fbdev->fb_size_in_byte);
 	line_size = var->xres_virtual * bpp / 8;
 
 	if (line_size * var->yres_virtual > max_frame_size) {
@@ -301,7 +301,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 			var->yres_virtual = max_frame_size / line_size;
 		}
 	}
-	DISPCHECK(
+	DISPMSG(
 	"mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u, xoffset=%u, yoffset=%u, bits_per_pixel=%u)\n",
 	     var->xres,
 	     var->yres, var->xres_virtual, var->yres_virtual, var->xoffset,
@@ -311,7 +311,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 	if (var->yres + var->yoffset > var->yres_virtual)
 		var->yoffset = var->yres_virtual - var->yres;
 
-	DISPCHECK(
+	DISPMSG(
 	"mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u, xoffset=%u, yoffset=%u, bits_per_pixel=%u)\n",
 	     var->xres,
 	     var->yres, var->xres_virtual, var->yres_virtual, var->xoffset,
@@ -434,7 +434,7 @@ static int mtkfb_dma_buf_mmap(struct dma_buf *buf, struct vm_area_struct *vma)
 {
 	struct fb_info *info = (struct fb_info *)buf->priv;
 
-	DISPCHECK(KERN_INFO
+	DISPMSG(KERN_INFO
 	       "mtkfb: mmap dma-buf: %p, start: %lu, offset: %lu, size: %lu\n",
 	       buf, vma->vm_start, vma->vm_pgoff, vma->vm_end - vma->vm_start);
 
@@ -459,7 +459,7 @@ static struct dma_buf *mtkfb_dmabuf_export(struct fb_info *info)
 {
 	struct dma_buf *buf;
 
-	DISPCHECK(KERN_INFO "mtkfb: Exporting dma-buf\n");
+	DISPMSG(KERN_INFO "mtkfb: Exporting dma-buf\n");
 
 	buf =
 	    dma_buf_export(info, &mtkfb_dma_buf_ops, info->fix.smem_len,
@@ -514,7 +514,7 @@ static int mtkfb_fbinfo_init(struct fb_info *info)
 
 	r = fb_alloc_cmap(&info->cmap, 32, 0);
 	if (r != 0)
-		DISPCHECK("unable to allocate color map memory\n");
+		DISPMSG("unable to allocate color map memory\n");
 
 	/* setup the initial video mode (RGB565) */
 
@@ -552,13 +552,13 @@ static int mtkfb_fbinfo_init(struct fb_info *info)
 
 	r = mtkfb_check_var(&var, info);
 	if (r != 0)
-		DISPCHECK("failed to mtkfb_check_var\n");
+		DISPMSG("failed to mtkfb_check_var\n");
 
 	info->var = var;
 
 	r = mtkfb_set_par(info);
 	if (r != 0)
-		DISPCHECK("failed to mtkfb_set_par\n");
+		DISPMSG("failed to mtkfb_set_par\n");
 	return r;
 }
 
@@ -633,13 +633,13 @@ static int mtkfb_fbinfo_modify(struct fb_info *info)
 
 	r = mtkfb_check_var(&var, info);
 	if (r != 0)
-		DISPCHECK("failed to mtkfb_check_var\n");
+		DISPMSG("failed to mtkfb_check_var\n");
 
 	info->var = var;
 
 	r = mtkfb_set_par(info);
 	if (r != 0)
-		DISPCHECK("failed to mtkfb_set_par\n");
+		DISPMSG("failed to mtkfb_set_par\n");
 
 	return r;
 }
@@ -675,7 +675,7 @@ int _parse_tag_videolfb(void)
 	void *prop = NULL;
 	struct tag_videolfb *videolfb_tag = NULL;
 
-	DISPCHECK("[DT][videolfb]isvideofb_parse_done = %d\n",
+	DISPMSG("[DT][videolfb]isvideofb_parse_done = %d\n",
 	       is_videofb_parse_done);
 
 	if (is_videofb_parse_done)
@@ -686,7 +686,7 @@ int _parse_tag_videolfb(void)
 							       "atag,videolfb",
 							       NULL);
 		if (videolfb_tag) {
-			DISPCHECK("[DT][videolfb] find video info from lk\n");
+			DISPMSG("[DT][videolfb] find video info from lk\n");
 			memset((void *)mtkfb_lcm_name, 0,
 			       sizeof(mtkfb_lcm_name));
 			strcpy((char *)mtkfb_lcm_name, videolfb_tag->lcmname);
@@ -700,22 +700,22 @@ int _parse_tag_videolfb(void)
 			vramsize = videolfb_tag->vram;
 			fb_base = videolfb_tag->fb_base;
 			is_videofb_parse_done = 1;
-			DISPCHECK("[DT][videolfb] islcmfound = %d\n",
+			DISPMSG("[DT][videolfb] islcmfound = %d\n",
 			       islcmconnected);
-			DISPCHECK("[DT][videolfb] fps        = %d\n", lcd_fps);
-			DISPCHECK("[DT][videolfb] fb_base    = 0x%x\n", fb_base);
-			DISPCHECK("[DT][videolfb] vram       = %d\n", vramsize);
-			DISPCHECK("[DT][videolfb] lcmname    = %s\n",
+			DISPMSG("[DT][videolfb] fps        = %d\n", lcd_fps);
+			DISPMSG("[DT][videolfb] fb_base    = 0x%x\n", fb_base);
+			DISPMSG("[DT][videolfb] vram       = %d\n", vramsize);
+			DISPMSG("[DT][videolfb] lcmname    = %s\n",
 			       mtkfb_lcm_name);
 			return 0;
 		}
 
-		DISPCHECK("[DT][videolfb] find video info from dts\n");
+		DISPMSG("[DT][videolfb] find video info from dts\n");
 		prop =
 		    of_get_flat_dt_prop(video_node,
 					"atag,videolfb-fb_base", NULL);
 		if (!prop) {
-			DISPCHECK
+			DISPMSG
 			    ("[DT][videolfb] fail to parse fb_base\n");
 			return -1;
 		}
@@ -726,7 +726,7 @@ int _parse_tag_videolfb(void)
 					"atag,videolfb-islcmfound",
 					NULL);
 		if (!prop) {
-			DISPCHECK
+			DISPMSG
 			    ("[DT][videolfb] fail to parse islcmfound\n");
 			return -1;
 		}
@@ -736,7 +736,7 @@ int _parse_tag_videolfb(void)
 		    of_get_flat_dt_prop(video_node, "atag,videolfb-fps",
 					NULL);
 		if (!prop) {
-			DISPCHECK("[DT][videolfb] fail to parse fps\n");
+			DISPMSG("[DT][videolfb] fail to parse fps\n");
 			return -1;
 		}
 		lcd_fps = of_read_number(prop, 1);
@@ -747,7 +747,7 @@ int _parse_tag_videolfb(void)
 		    of_get_flat_dt_prop(video_node,
 					"atag,videolfb-vramSize", NULL);
 		if (!prop) {
-			DISPCHECK
+			DISPMSG
 			    ("[DT][videolfb] fail to parse vramSize\n");
 			return -1;
 		}
@@ -757,13 +757,13 @@ int _parse_tag_videolfb(void)
 		    of_get_flat_dt_prop(video_node,
 					"atag,videolfb-lcmname", &size);
 		if (!prop) {
-			DISPCHECK
+			DISPMSG
 			    ("[DT][videolfb] fail to parse lcmname\n");
 			return -1;
 		}
 
 		if (size >= sizeof(mtkfb_lcm_name)) {
-			DISPCHECK("%s: error to get lcmname size=%ld\n",
+			DISPMSG("%s: error to get lcmname size=%ld\n",
 				  __func__, size);
 			return -1;
 		}
@@ -775,18 +775,18 @@ int _parse_tag_videolfb(void)
 
 		is_videofb_parse_done = 1;
 
-		DISPCHECK("[DT][videolfb] fb_base    = %p\n",
+		DISPMSG("[DT][videolfb] fb_base    = %p\n",
 		       (void *)fb_base);
-		DISPCHECK("[DT][videolfb] islcmfound = %d\n",
+		DISPMSG("[DT][videolfb] islcmfound = %d\n",
 		       islcmconnected);
-		DISPCHECK("[DT][videolfb] fps        = %d\n", lcd_fps);
-		DISPCHECK("[DT][videolfb] vram       = %d\n", vramsize);
-		DISPCHECK("[DT][videolfb] lcmname    = %s\n",
+		DISPMSG("[DT][videolfb] fps        = %d\n", lcd_fps);
+		DISPMSG("[DT][videolfb] vram       = %d\n", vramsize);
+		DISPMSG("[DT][videolfb] lcmname    = %s\n",
 		       mtkfb_lcm_name);
 		return 0;
 
 	} else {
-		DISPCHECK("[DT][videolfb] of_chosen not found\n");
+		DISPMSG("[DT][videolfb] of_chosen not found\n");
 		return 1;
 	}
 }
@@ -803,7 +803,7 @@ int mtkfb_allocate_framebuffer(phys_addr_t pa_start, phys_addr_t pa_end,
 {
 	int ret = 0;
 	*va = (unsigned int)ioremap_nocache(pa_start, pa_end - pa_start + 1);
-	DISPCHECK("disphal_allocate_fb, pa=%pa, va=0x%08x\n", &pa_start, *va);
+	DISPMSG("disphal_allocate_fb, pa=%pa, va=0x%08x\n", &pa_start, *va);
 	{
 		*mva = pa_start & 0xffffffffULL;
 	}
@@ -818,15 +818,15 @@ static int mtkfb_probe(struct device *dev)
 	int init_state;
 	int r = 0;
 
-	DISPCHECK("mtkfb_probe begin\n");
+	DISPMSG("mtkfb_probe begin\n");
 #ifdef CONFIG_OF
 	_parse_tag_videolfb();
 #else
-	DISPCHECK("%s, %s\n", __func__, saved_command_line);
+	DISPMSG("%s, %s\n", __func__, saved_command_line);
 	p = strstr(saved_command_line, "fps=");
 	if (p == NULL) {
 		lcd_fps = 6000;
-		DISPCHECK("[FB driver]can not get fps from uboot\n");
+		DISPMSG("[FB driver]can not get fps from uboot\n");
 	} else {
 		p += 4;
 		lcd_fps = kstrtol(p, NULL, 10);
@@ -840,7 +840,7 @@ static int mtkfb_probe(struct device *dev)
 
 	fbi = framebuffer_alloc(sizeof(struct mtkfb_device), dev);
 	if (!fbi) {
-		DISPCHECK("unable to allocate memory for device info\n");
+		DISPERR("unable to allocate memory for device info\n");
 		r = -ENOMEM;
 		goto cleanup;
 	}
@@ -853,9 +853,9 @@ static int mtkfb_probe(struct device *dev)
 	{
 
 #ifdef CONFIG_OF
-		DISPCHECK("mtkfb_probe:get FB MEM REG\n");
+		DISPMSG("mtkfb_probe:get FB MEM REG\n");
 		_parse_tag_videolfb();
-		DISPCHECK("mtkfb_probe: fb_pa = 0x%p\n", (void *)fb_base);
+		DISPMSG("mtkfb_probe: fb_pa = 0x%p\n", (void *)fb_base);
 
 		mtkfb_allocate_framebuffer(fb_base, (fb_base + vramsize - 1),
 					   (unsigned int *)&fbdev->fb_va_base,
@@ -879,17 +879,17 @@ static int mtkfb_probe(struct device *dev)
 
 	MTK_FB_BPP = 32;
 	MTK_FB_PAGES = 3;
-	DISPCHECK
+	DISPMSG
 	    ("MTK_FB_XRES=%d, MTKFB_YRES=%d, MTKFB_BPP=%d, MTK_FB_PAGES=%d, MTKFB_LINE=%d, MTKFB_SIZEV=%d\n",
 	     MTK_FB_XRES, MTK_FB_YRES, MTK_FB_BPP, MTK_FB_PAGES, MTK_FB_LINE, MTK_FB_SIZEV);
 	fbdev->fb_size_in_byte = MTK_FB_SIZEV;
 
 	/* Allocate and initialize video frame buffer */
-	DISPCHECK("[FB Driver] fbdev->fb_pa_base = %p, fbdev->fb_va_base = %lx\n",
+	DISPMSG("[FB Driver] fbdev->fb_pa_base = %p, fbdev->fb_va_base = %lx\n",
 	       (void *)fbdev->fb_pa_base, (unsigned long)(fbdev->fb_va_base));
 
 	if (!fbdev->fb_va_base) {
-		DISPCHECK("unable to allocate memory for frame buffer\n");
+		DISPMSG("unable to allocate memory for frame buffer\n");
 		r = -ENOMEM;
 		goto cleanup;
 	}
@@ -899,7 +899,7 @@ static int mtkfb_probe(struct device *dev)
 
 	r = mtkfb_fbinfo_init(fbi);
 	if (r) {
-		DISPCHECK("mtkfb_fbinfo_init fail, r = %d\n", r);
+		DISPMSG("mtkfb_fbinfo_init fail, r = %d\n", r);
 		goto cleanup;
 	}
 	init_state++;		/* 4 */
@@ -908,17 +908,17 @@ static int mtkfb_probe(struct device *dev)
 
 	r = register_framebuffer(fbi);
 	if (r != 0) {
-		DISPCHECK("register_framebuffer failed\n");
+		DISPMSG("register_framebuffer failed\n");
 		goto cleanup;
 	}
 	fbdev->state = MTKFB_ACTIVE;
-	DISPCHECK("mtkfb_probe end\n");
+	DISPMSG("mtkfb_probe end\n");
 	return 0;
 
 cleanup:
 	mtkfb_free_resources(fbdev, init_state);
 
-	DISPCHECK("mtkfb_probe end\n");
+	DISPMSG("mtkfb_probe end\n");
 	return r;
 }
 
@@ -972,10 +972,10 @@ int __init mtkfb_init(void)
 {
 	int r = 0;
 
-	DISPCHECK("mtkfb_init init");
+	DISPMSG("mtkfb_init init");
 
 	if (platform_driver_register(&mtkfb_driver)) {
-		DISPCHECK("failed to register mtkfb driver\n");
+		DISPERR("failed to register mtkfb driver\n");
 		r = -ENODEV;
 	}
 	return r;

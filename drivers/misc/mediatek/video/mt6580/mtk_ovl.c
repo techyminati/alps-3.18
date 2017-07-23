@@ -19,9 +19,8 @@
 #include <linux/wait.h>
 #include <linux/kthread.h>
 #include <linux/mutex.h>
-#include "debug.h"
-
-#include "disp_drv_log.h"
+#include "disp_debug.h"
+#include "disp_log.h"
 #include "disp_utils.h"
 
 #include "ddp_dump.h"
@@ -261,10 +260,12 @@ int ovl2mem_init(unsigned int session)
 	ret =
 	    cmdqRecCreate(CMDQ_SCENARIO_SUB_MEMOUT, &(pgc->cmdq_handle_config));
 	if (ret) {
-		DISPCHECK("cmdqRecCreate FAIL, ret=%d\n", ret);
+		DISPMSG("cmdqRecCreate FAIL, ret=%d\n", ret);
+		DISPMSG("cmdqRecCreate FAIL, ret=%d\n", ret);
 		goto Exit;
 	} else {
-		DISPCHECK("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
+		DISPMSG("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
+		DISPMSG("cmdqRecCreate SUCCESS, cmdq_handle=%p\n",
 			  pgc->cmdq_handle_config);
 	}
 
@@ -273,9 +274,11 @@ int ovl2mem_init(unsigned int session)
 			      pgc->cmdq_handle_config);
 
 	if (pgc->dpmgr_handle) {
-		DISPCHECK("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
+		DISPMSG("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
+		DISPMSG("dpmgr create path SUCCESS(%p)\n", pgc->dpmgr_handle);
 	} else {
-		DISPCHECK("dpmgr create path FAIL\n");
+		DISPMSG("dpmgr create path FAIL\n");
+		DISPMSG("dpmgr create path FAIL\n");
 		goto Exit;
 	}
 
@@ -294,11 +297,13 @@ int ovl2mem_init(unsigned int session)
 	sPort.Direction = 0;
 	ret = m4u_config_port(&sPort);
 	if (ret == 0) {
-		DISPCHECK("config M4U Port %s to %s SUCCESS\n",
+		DISPMSG("config M4U Port %s to %s SUCCESS\n",
+		DISPMSG("config M4U Port %s to %s SUCCESS\n",
 			  ddp_get_module_name(DISP_MODULE_OVL1),
 			  ovl2mem_use_m4u ? "virtual" : "physical");
 	} else {
-		DISPCHECK("config M4U Port %s to %s FAIL(ret=%d)\n",
+		DISPMSG("config M4U Port %s to %s FAIL(ret=%d)\n",
+		DISPMSG("config M4U Port %s to %s FAIL(ret=%d)\n",
 			  ddp_get_module_name(DISP_MODULE_OVL1),
 			  ovl2mem_use_m4u ? "virtual" : "physical", ret);
 		goto Exit;

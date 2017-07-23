@@ -23,7 +23,7 @@
 #include <linux/of.h>
 #include <linux/of_irq.h>
 
-#include "disp_drv_log.h"
+#include "disp_log.h"
 
 /* #include "mt_boot.h" */
 #include "disp_helper.h"
@@ -117,11 +117,11 @@ const char *disp_helper_option_spy(DISP_HELPER_OPTION option)
 void disp_helper_set_option(DISP_HELPER_OPTION option, int value)
 {
 	if (option < DISP_HELPER_OPTION_NUM) {
-		DISPCHECK("Set Option %d(%s) from (%d) to (%d)\n", option,
+		DISPMSG("Set Option %d(%s) from (%d) to (%d)\n", option,
 			  disp_helper_option_spy(option),
 			  disp_helper_get_option(option), value);
 		_disp_helper_option_value[option] = value;
-		DISPCHECK("After set (%s) is (%d)\n",
+		DISPMSG("After set (%s) is (%d)\n",
 			  disp_helper_option_spy(option),
 			  disp_helper_get_option(option));
 	} else {

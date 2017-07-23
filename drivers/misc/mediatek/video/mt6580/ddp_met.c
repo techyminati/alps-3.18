@@ -12,10 +12,8 @@
  */
 
 #define LOG_TAG "MET"
-
-#include "ddp_log.h"
-
 #include <mt-plat/met_drv.h>
+#include "disp_log.h"
 #include "ddp_irq.h"
 #include "ddp_reg.h"
 #include "ddp_met.h"
@@ -23,16 +21,16 @@
 #include "ddp_rdma.h"
 #include "ddp_rdma_ex.h"
 
-#define DDP_IRQ_EER_ID				(0xFFFF0000)
-#define DDP_IRQ_FPS_ID				(DDP_IRQ_EER_ID + 1)
-#define DDP_IRQ_LAYER_FPS_ID		(DDP_IRQ_EER_ID + 2)
-#define DDP_IRQ_LAYER_SIZE_ID		(DDP_IRQ_EER_ID + 3)
-#define DDP_IRQ_LAYER_FORMAT_ID	(DDP_IRQ_EER_ID + 4)
+#define DDP_IRQ_EER_ID          (0xFFFF0000)
+#define DDP_IRQ_FPS_ID          (DDP_IRQ_EER_ID + 1)
+#define DDP_IRQ_LAYER_FPS_ID    (DDP_IRQ_EER_ID + 2)
+#define DDP_IRQ_LAYER_SIZE_ID   (DDP_IRQ_EER_ID + 3)
+#define DDP_IRQ_LAYER_FORMAT_ID (DDP_IRQ_EER_ID + 4)
 
-#define MAX_PATH_NUM (3)
-#define OVL_NUM (1)
-#define RDMA_NUM (1)
-#define MAX_OVL_LAYERS (4)
+#define MAX_PATH_NUM            (3)
+#define OVL_NUM                 (1)
+#define RDMA_NUM                (1)
+#define MAX_OVL_LAYERS          (4)
 
 unsigned int met_tag_on = 0;
 

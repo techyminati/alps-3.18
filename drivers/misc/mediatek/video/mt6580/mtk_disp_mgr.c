@@ -45,8 +45,8 @@
 #include <linux/kthread.h>
 #include <linux/mutex.h>
 #include "mtk_sync.h"
-#include "debug.h"
-#include "disp_drv_log.h"
+#include "disp_debug.h"
+#include "disp_log.h"
 #include "disp_lcm.h"
 #include "disp_utils.h"
 #include "ddp_hal.h"
@@ -115,7 +115,7 @@ static int mtk_disp_mgr_mmap(struct file *file, struct vm_area_struct *vma)
 	unsigned long pa_start = vma->vm_pgoff << PAGE_SHIFT;
 	unsigned long pa_end = pa_start + require_size;
 
-	DISPDBG("mmap size %ld, vmpg0ff 0x%lx, pastart 0x%lx, paend 0x%lx\n",
+	DISPMSG("mmap size %ld, vmpg0ff 0x%lx, pastart 0x%lx, paend 0x%lx\n",
 		require_size, vma->vm_pgoff, pa_start, pa_end);
 
 	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
@@ -202,7 +202,7 @@ int disp_create_session(disp_session_config *config)
 	if (idx != -1) {
 		config->session_id = session;
 		session_config[idx] = session;
-		DISPDBG("New session(0x%x)\n", session);
+		DISPMSG("New session(0x%x)\n", session);
 	} else {
 		DISPERR("Invalid session creation request\n");
 		ret = -1;
@@ -261,7 +261,7 @@ int disp_destroy_session(disp_session_config *config)
 
 	/* 2. Destroy this session */
 	if (ret == 0)
-		DISPDBG("Destroy session(0x%x)\n", session);
+		DISPMSG("Destroy session(0x%x)\n", session);
 	else
 		DISPMSG("session(0x%x) does not exists\n", session);
 

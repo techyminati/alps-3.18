@@ -13,7 +13,7 @@
 
 #include <linux/slab.h>
 #include <linux/types.h>
-#include "disp_drv_log.h"
+#include "disp_log.h"
 #include "lcm_drv.h"
 #include "disp_drv_platform.h"
 #include "ddp_manager.h"
@@ -75,80 +75,80 @@ void _dump_lcm_info(disp_lcm_handle *plcm)
 	p = plcm->params;
 
 	if (l && p) {
-		DISPCHECK("[LCM], name: %s\n", l->name);
+		DISPMSG("[LCM], name: %s\n", l->name);
 
-		DISPCHECK("[LCM] resolution: %d x %d\n", p->width, p->height);
-		DISPCHECK("[LCM] physical size: %d x %d\n", p->physical_width,
+		DISPMSG("[LCM] resolution: %d x %d\n", p->width, p->height);
+		DISPMSG("[LCM] physical size: %d x %d\n", p->physical_width,
 			  p->physical_height);
-		DISPCHECK("[LCM] physical size: %d x %d\n", p->physical_width,
+		DISPMSG("[LCM] physical size: %d x %d\n", p->physical_width,
 			  p->physical_height);
 
 		switch (p->lcm_if) {
 		case LCM_INTERFACE_DSI0:
-			DISPCHECK("[LCM] interface: DSI0\n");
+			DISPMSG("[LCM] interface: DSI0\n");
 			break;
 		case LCM_INTERFACE_DSI1:
-			DISPCHECK("[LCM] interface: DSI1\n");
+			DISPMSG("[LCM] interface: DSI1\n");
 			break;
 		case LCM_INTERFACE_DPI0:
-			DISPCHECK("[LCM] interface: DPI0\n");
+			DISPMSG("[LCM] interface: DPI0\n");
 			break;
 		case LCM_INTERFACE_DPI1:
-			DISPCHECK("[LCM] interface: DPI1\n");
+			DISPMSG("[LCM] interface: DPI1\n");
 			break;
 		case LCM_INTERFACE_DBI0:
-			DISPCHECK("[LCM] interface: DBI0\n");
+			DISPMSG("[LCM] interface: DBI0\n");
 			break;
 		default:
-			DISPCHECK("[LCM] interface: unknown\n");
+			DISPMSG("[LCM] interface: unknown\n");
 			break;
 		}
 
 		switch (p->type) {
 		case LCM_TYPE_DBI:
-			DISPCHECK("[LCM] Type: DBI\n");
+			DISPMSG("[LCM] Type: DBI\n");
 			break;
 		case LCM_TYPE_DSI:
-			DISPCHECK("[LCM] Type: DSI\n");
+			DISPMSG("[LCM] Type: DSI\n");
 
 			break;
 		case LCM_TYPE_DPI:
-			DISPCHECK("[LCM] Type: DPI\n");
+			DISPMSG("[LCM] Type: DPI\n");
 			break;
 		default:
-			DISPCHECK("[LCM] TYPE: unknown\n");
+			DISPMSG("[LCM] TYPE: unknown\n");
 			break;
 		}
 
 		if (p->type == LCM_TYPE_DSI) {
 			switch (p->dsi.mode) {
 			case CMD_MODE:
-				DISPCHECK("[LCM] DSI Mode: CMD_MODE\n");
+				DISPMSG("[LCM] DSI Mode: CMD_MODE\n");
 				break;
 			case SYNC_PULSE_VDO_MODE:
-				DISPCHECK
+				DISPMSG
 				    ("[LCM] DSI Mode: SYNC_PULSE_VDO_MODE\n");
 				break;
 			case SYNC_EVENT_VDO_MODE:
-				DISPCHECK
+				DISPMSG
 				    ("[LCM] DSI Mode: SYNC_EVENT_VDO_MODE\n");
 				break;
 			case BURST_VDO_MODE:
-				DISPCHECK("[LCM] DSI Mode: BURST_VDO_MODE\n");
+				DISPMSG("[LCM] DSI Mode: BURST_VDO_MODE\n");
 				break;
 			default:
-				DISPCHECK("[LCM] DSI Mode: Unknown\n");
+				DISPMSG("[LCM] DSI Mode: Unknown\n");
 				break;
 			}
 		}
 
 		if (p->type == LCM_TYPE_DSI) {
-			DISPCHECK("[LCM] LANE_NUM: %d,data_format\n",
+			DISPMSG("[LCM] LANE_NUM: %d,data_format\n",
 				  (int)p->dsi.LANE_NUM);
 #ifdef MT_TODO
 #error
 #endif
-			DISPCHECK(
+			DISPMSG(
 			    "[LCM] vact: %u, vbp: %u, vfp: %u, vact_line: %u, hact: %u, hbp: %u, hfp: %u, hblank: %u\n",
 			     p->dsi.vertical_sync_active,
 			     p->dsi.vertical_backporch,
@@ -158,18 +158,18 @@ void _dump_lcm_info(disp_lcm_handle *plcm)
 			     p->dsi.horizontal_backporch,
 			     p->dsi.horizontal_frontporch,
 			     p->dsi.horizontal_blanking_pixel);
-			DISPCHECK
+			DISPMSG
 			    ("[LCM] pll_select: %d, pll_div1: %d, pll_div2: %d, fbk_div: %d,fbk_sel: %d, rg_bir: %d\n",
 			     p->dsi.pll_select, p->dsi.pll_div1,
 			     p->dsi.pll_div2, p->dsi.fbk_div, p->dsi.fbk_sel,
 			     p->dsi.rg_bir);
-			DISPCHECK(
+			DISPMSG(
 			    "[LCM] rg_bic: %d, rg_bp: %d, PLL_CLOCK: %d, dsi_clock: %d, ssc_range: %d,	ssc_disable: %d, compatibility_for_nvk: %d, cont_clock: %d\n",
 			     p->dsi.rg_bic, p->dsi.rg_bp, p->dsi.PLL_CLOCK,
 			     p->dsi.dsi_clock, p->dsi.ssc_range,
 			     p->dsi.ssc_disable,
 			     p->dsi.compatibility_for_nvk, p->dsi.cont_clock);
-			DISPCHECK
+			DISPMSG
 			    ("[LCM] lcm_ext_te_enable: %d, noncont_clock: %d, noncont_clock_period: %d\n",
 			     p->dsi.lcm_ext_te_enable, p->dsi.noncont_clock,
 			     p->dsi.noncont_clock_period);
@@ -187,7 +187,7 @@ disp_lcm_handle *disp_lcm_probe(char *plcm_name, LCM_INTERFACE_ID lcm_id)
 	LCM_PARAMS *lcm_param = NULL;
 	disp_lcm_handle *plcm = NULL;
 
-	DISPCHECK("plcm_name=%s\n", plcm_name);
+	DISPMSG("plcm_name=%s\n", plcm_name);
 	if (_lcm_count() == 0) {
 		DISPERR("no lcm driver defined in linux kernel driver\n");
 		return NULL;
@@ -344,7 +344,7 @@ int disp_lcm_update(disp_lcm_handle *plcm, int x, int y, int w, int h,
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPDBGFUNC();
+	DISPFUNC();
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 		if (lcm_drv->update) {

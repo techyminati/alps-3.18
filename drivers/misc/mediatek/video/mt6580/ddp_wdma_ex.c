@@ -15,7 +15,7 @@
 #include <mach/mt_clkmgr.h>
 #include <linux/delay.h>
 
-#include "ddp_log.h"
+#include "disp_log.h"
 #include "ddp_reg.h"
 #include "ddp_matrix_para.h"
 #include "ddp_info.h"
@@ -208,12 +208,12 @@ void wdma_calc_ultra(unsigned int idx, unsigned int width, unsigned int height, 
 	DISP_REG_SET(handle, idx * DISP_WDMA_INDEX_OFFSET + DISP_REG_WDMA_BUF_CON2, 0x1B010E22);
 	DISP_REG_SET(handle, idx * DISP_WDMA_INDEX_OFFSET + DISP_REG_WDMA_BUF_CON1, 0xD0100080);
 
-	/* DDPDBG("pre_ultra_low_level  = 0x%03x = %d\n", pre_ultra_low_level  , pre_ultra_low_level  ); */
-	/* DDPDBG("ultra_low_level      = 0x%03x = %d\n", ultra_low_level      , ultra_low_level      ); */
-	/* DDPDBG("ultra_high_level     = 0x%03x = %d\n", ultra_high_level     , ultra_high_level     ); */
-	/* DDPDBG("ultra_low_ofs        = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs        ); */
-	/* DDPDBG("pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs   ); */
-	/* DDPDBG("ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs       ); */
+	/* DISPMSG("ultra_low_ofs        = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs        ); */
+	/* DISPMSG("ultra_low_ofs        = 0x%03x = %d\n", ultra_low_ofs        , ultra_low_ofs        ); */
+	/* DISPMSG("pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs   ); */
+	/* DISPMSG("pre_ultra_high_ofs   = 0x%03x = %d\n", pre_ultra_high_ofs   , pre_ultra_high_ofs   ); */
+	/* DISPMSG("ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs       ); */
+	/* DISPMSG("ultra_high_ofs       = 0x%03x = %d\n", ultra_high_ofs       , ultra_high_ofs       ); */
 }
 
 static int wdma_config(DISP_MODULE_ENUM module,
@@ -237,7 +237,7 @@ static int wdma_config(DISP_MODULE_ENUM module,
 	int color_matrix = 0x2;	/* 0010 RGB_TO_BT601 */
 	unsigned int idx_offst = idx * DISP_WDMA_INDEX_OFFSET;
 
-	DDPDBG(
+	DISPMSG(
 		"module %s, src(w=%d,h=%d), clip(x=%d,y=%d,w=%d,h=%d),out_fmt=%s,dst_address=0x%lx,dst_p=%d,spific_alfa= %d,alpa=%d,handle=%p\n",
 		ddp_get_module_name(module),
 		srcWidth,
@@ -292,7 +292,7 @@ static int wdma_config(DISP_MODULE_ENUM module,
 static int wdma_clock_on(DISP_MODULE_ENUM module, void *handle)
 {
 	unsigned int idx = wdma_index(module);
-	/* DDPMSG("wmda%d_clock_on\n",idx); */
+	/* DISPMSG("wmda%d_clock_on\n",idx); */
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		enable_clock(MT_CG_DISP0_DISP_WDMA0, "WDMA0");
@@ -303,7 +303,7 @@ static int wdma_clock_on(DISP_MODULE_ENUM module, void *handle)
 static int wdma_clock_off(DISP_MODULE_ENUM module, void *handle)
 {
 	unsigned int idx = wdma_index(module);
-	/* DDPMSG("wdma%d_clock_off\n",idx); */
+	/* DISPMSG("wdma%d_clock_off\n",idx); */
 #ifdef ENABLE_CLK_MGR
 	if (idx == 0)
 		disable_clock(MT_CG_DISP0_DISP_WDMA0, "WDMA0");
@@ -316,8 +316,8 @@ void wdma_dump_analysis(DISP_MODULE_ENUM module)
 	unsigned int index = wdma_index(module);
 	unsigned int idx_offst = index * DISP_WDMA_INDEX_OFFSET;
 
-	DDPDUMP("==DISP WDMA%d ANALYSIS==\n", index);
-	DDPDUMP
+	DISPDMP("==DISP WDMA%d ANALYSIS==\n", index);
+	DISPDMP
 	    ("wdma%d:en=%d,w=%d,h=%d,clip=(%d,%d,%d,%d),pitch=(W=%d,UV=%d),addr=(0x%x,0x%x,0x%x),fmt=%s\n",
 	     index, DISP_REG_GET(DISP_REG_WDMA_EN + idx_offst),
 	     DISP_REG_GET(DISP_REG_WDMA_SRC_SIZE + idx_offst) & 0x3fff,
@@ -335,7 +335,8 @@ void wdma_dump_analysis(DISP_MODULE_ENUM module)
 			((DISP_REG_GET(DISP_REG_WDMA_CFG + idx_offst) >> 4) & 0xf,
 			 (DISP_REG_GET(DISP_REG_WDMA_CFG + idx_offst) >> 11) & 0x1))
 	    );
-	DDPDUMP("wdma%d:status=%s,in_req=%d,in_ack=%d, exec=%d, input_pixel=(L:%d,P:%d)\n",
+
+	DISPDMP("wdma%d:status=%s,in_req=%d,in_ack=%d, exec=%d, input_pixel=(L:%d,P:%d)\n",
 		index,
 		wdma_get_status(DISP_REG_GET_FIELD
 				(FLOW_CTRL_DBG_FLD_WDMA_STA_FLOW_CTRL,
@@ -354,45 +355,44 @@ void wdma_dump_reg(DISP_MODULE_ENUM module)
 	unsigned int idx = wdma_index(module);
 	unsigned int off_sft = idx * DISP_WDMA_INDEX_OFFSET;
 
-	DDPDUMP("==DISP WDMA%d REGS==\n", idx);
-
-	DDPDUMP("WDMA:0x000=0x%08x,0x004=0x%08x,0x008=0x%08x,0x00c=0x%08x\n",
+	DISPDMP("==DISP WDMA%d REGS==\n", idx);
+	DISPDMP("WDMA:0x000=0x%08x,0x004=0x%08x,0x008=0x%08x,0x00c=0x%08x\n",
 		DISP_REG_GET(DISP_REG_WDMA_INTEN + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_INTSTA + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_EN + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_RST + off_sft));
 
-	DDPDUMP("WDMA:0x010=0x%08x,0x014=0x%08x,0x018=0x%08x,0x01c=0x%08x\n",
+	DISPDMP("WDMA:0x010=0x%08x,0x014=0x%08x,0x018=0x%08x,0x01c=0x%08x\n",
 		DISP_REG_GET(DISP_REG_WDMA_SMI_CON + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_CFG + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_SRC_SIZE + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_CLIP_SIZE + off_sft));
 
-	DDPDUMP("WDMA:0x020=0x%08x,0x028=0x%08x,0x02c=0x%08x,0x038=0x%08x\n",
+	DISPDMP("WDMA:0x020=0x%08x,0x028=0x%08x,0x02c=0x%08x,0x038=0x%08x\n",
 		DISP_REG_GET(DISP_REG_WDMA_CLIP_COORD + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_DST_W_IN_BYTE + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_ALPHA + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_BUF_CON1 + off_sft));
 
-	DDPDUMP("WDMA:0x03c=0x%08x,0x058=0x%08x,0x05c=0x%08x,0x060=0x%08x\n",
+	DISPDMP("WDMA:0x03c=0x%08x,0x058=0x%08x,0x05c=0x%08x,0x060=0x%08x\n",
 		DISP_REG_GET(DISP_REG_WDMA_BUF_CON2 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_PRE_ADD0 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_PRE_ADD2 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_POST_ADD0 + off_sft));
 
-	DDPDUMP("WDMA:0x064=0x%08x,0x078=0x%08x,0x080=0x%08x,0x084=0x%08x\n",
+	DISPDMP("WDMA:0x064=0x%08x,0x078=0x%08x,0x080=0x%08x,0x084=0x%08x\n",
 		DISP_REG_GET(DISP_REG_WDMA_POST_ADD2 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_DST_UV_PITCH + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_DST_ADDR_OFFSET0 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_DST_ADDR_OFFSET1 + off_sft));
 
-	DDPDUMP("WDMA:0x088=0x%08x,0x0a0=0x%08x,0x0a4=0x%08x,0x0a8=0x%08x\n",
+	DISPDMP("WDMA:0x088=0x%08x,0x0a0=0x%08x,0x0a4=0x%08x,0x0a8=0x%08x\n",
 		DISP_REG_GET(DISP_REG_WDMA_DST_ADDR_OFFSET2 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_FLOW_CTRL_DBG + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_EXEC_DBG + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_CT_DBG + off_sft));
 
-	DDPDUMP("WDMA:0x0ac=0x%08x,0xf00=0x%08x,0xf04=0x%08x,0xf08=0x%08x,\n",
+	DISPDMP("WDMA:0x0ac=0x%08x,0xf00=0x%08x,0xf04=0x%08x,0xf08=0x%08x,\n",
 		DISP_REG_GET(DISP_REG_WDMA_DEBUG + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_DST_ADDR0 + off_sft),
 		DISP_REG_GET(DISP_REG_WDMA_DST_ADDR1 + off_sft),
@@ -412,12 +412,12 @@ static int wdma_check_input_param(WDMA_CONFIG_STRUCT *config)
 	int unique = fmt_hw_value(config->outputFormat);
 
 	if (unique > WDMA_OUTPUT_FORMAT_YV12 && unique != WDMA_OUTPUT_FORMAT_NV21) {
-		DDPERR("wdma parameter invalidate outfmt 0x%x\n", config->outputFormat);
+		DISPERR("wdma parameter invalidate outfmt 0x%x\n", config->outputFormat);
 		return -1;
 	}
 
 	if (config->dstAddress == 0 || config->srcWidth == 0 || config->srcHeight == 0) {
-		DDPERR("wdma parameter invalidate, addr=0x%lx, w=%d, h=%d\n",
+		DISPERR("wdma parameter invalidate, addr=0x%lx, w=%d, h=%d\n",
 		       config->dstAddress, config->srcWidth, config->srcHeight);
 		return -1;
 	}

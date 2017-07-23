@@ -14,14 +14,14 @@
 #include <linux/types.h>
 #include "primary_display.h"
 #include "ddp_hal.h"
-#include "disp_drv_log.h"
 #include "disp_assert_layer.h"
 #include <linux/semaphore.h>
 #include <linux/mutex.h>
 #include "ddp_mmp.h"
 #include "disp_drv_platform.h"
 #include "disp_session.h"
-
+#include "disp_log.h"
+#include "display_recorder.h"
 #include <linux/string.h>
 #include <linux/semaphore.h>
 #include <asm/cacheflush.h>

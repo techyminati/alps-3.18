@@ -11,8 +11,38 @@
  * GNU General Public License for more details.
  */
 
-#ifndef __MTKFB_DEBUG_H
-#define __MTKFB_DEBUG_H
+#ifndef __DISP_DEBUG_H__
+#define __DISP_DEBUG_H__
+
+#include <linux/kernel.h>
+#include "ddp_mmp.h"
+#include "ddp_dump.h"
+#include "mmprofile.h"
+#include "disp_log.h"
+
+extern unsigned int gEnableMutexRisingEdge;
+extern unsigned int gPrefetchControl;
+extern unsigned int gOVLBackground;
+extern unsigned int gUltraEnable;
+extern unsigned int gEnableDSIStateCheck;
+extern unsigned int gMutexFreeRun;
+extern unsigned int disp_low_power_lfr;
+
+void ddp_debug_init(void);
+void ddp_debug_exit(void);
+
+unsigned int ddp_debug_analysis_to_buffer(void);
+unsigned int ddp_debug_dbg_log_level(void);
+unsigned int ddp_debug_irq_log_level(void);
+unsigned int ddp_dump_reg_to_buf(unsigned int start_module, unsigned long *addr);
+
+int ddp_mem_test(void);
+int ddp_lcd_test(void);
+
+/*****************************
+above is ddp_debug.h
+below is debug.h
+********************************/
 
 void DBG_Init(void);
 void DBG_Deinit(void);
@@ -21,8 +51,6 @@ void DBG_OnTriggerLcd(void);
 void DBG_OnTeDelayDone(void);
 void DBG_OnLcdDone(void);
 
-#include "mmprofile.h"
-#include "disp_drv_log.h"
 
 extern struct MTKFB_MMP_Events_t {
 	MMP_Event MTKFB;
@@ -62,6 +90,9 @@ extern struct MTKFB_MMP_Events_t {
 } MTKFB_MMP_Events;
 
 extern unsigned int g_mobilelog;
+extern unsigned int g_mobilelog;
+extern unsigned int g_loglevel;
+extern unsigned int g_rcdlevel;
 
 #ifdef MTKFB_DBG
 
