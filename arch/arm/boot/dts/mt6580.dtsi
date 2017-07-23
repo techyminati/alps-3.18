@@ -1001,6 +1001,10 @@
 			compatible = "mediatek,mt_soc_dai_stub";
 		};
 
+		mt_soc_dl2_pcm@11140000 {
+			compatible = "mediatek,mt_soc_pcm_dl2";
+		};
+
 		AHB_MOM@0x11150000 {
 			compatible = "mediatek,AHB_MOM";
 			reg = <0x11150000 0x10000>;
