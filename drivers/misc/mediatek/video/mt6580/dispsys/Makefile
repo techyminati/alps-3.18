@@ -13,7 +13,6 @@ ccflags-$(CONFIG_MTK_LCM) += -I$(srctree)/drivers/misc/mediatek/lcm/inc/
 
 #driver
 obj-y += ddp_ovl.o
-obj-y += ddp_color.o
 obj-y += ddp_rdma.o
 obj-y += ddp_wdma.o
 obj-y += ddp_aal.o

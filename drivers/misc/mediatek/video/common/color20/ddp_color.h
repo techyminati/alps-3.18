@@ -2,7 +2,6 @@
 #define __DDP_COLOR_H__
 
 #include "ddp_reg.h"
-#include "ddp_info.h"
 #include "ddp_aal.h"
 #include "ddp_drv.h"
 enum {
@@ -26,7 +25,7 @@ enum {
 #define C0_OFFSET (0)
 #define C1_OFFSET (DISPSYS_COLOR1_BASE - DISPSYS_COLOR0_BASE)
 
-/*---------------------------------------------------------------------------*/
+/* --------------------------------------------------------------------------- */
 #define GAMMA_SIZE 1024
 #define NR_SIZE 50
 #define MAX_SCE_TABLE_SIZE (7*28)
@@ -60,8 +59,26 @@ enum {
 #define MIRAVISION_SW_VERSION_SHIFT (16)
 #define MIRAVISION_SW_FEATURE_SHIFT (0)
 
-/* 1:6595 2:6752 3:6795 4:6735 5:6735M 6:6753 7:6580 */
+#if defined(CONFIG_ARCH_MT6595)
+#define MIRAVISION_HW_VERSION       (1)
+#elif defined(CONFIG_ARCH_MT6752)
+#define MIRAVISION_HW_VERSION       (2)
+#elif defined(CONFIG_ARCH_MT6795)
+#define MIRAVISION_HW_VERSION       (3)
+#elif defined(CONFIG_ARCH_MT6735)
+#define MIRAVISION_HW_VERSION       (4)
+#elif defined(CONFIG_ARCH_MT6735M)
+#define MIRAVISION_HW_VERSION       (5)
+#elif defined(CONFIG_ARCH_MT6753)
+#define MIRAVISION_HW_VERSION       (6)
+#elif defined(CONFIG_ARCH_MT6580)
 #define MIRAVISION_HW_VERSION       (7)
+#elif defined(CONFIG_ARCH_MT6755)
+#define MIRAVISION_HW_VERSION       (8)
+#else
+#define MIRAVISION_HW_VERSION       (9)
+#endif
+
 #define MIRAVISION_SW_VERSION       (1)	/* 1:Android Lollipop */
 #define MIRAVISION_SW_FEATURE_VIDEO_DC  (0x1)
 #define MIRAVISION_SW_FEATURE_AAL       (0x2)
@@ -72,6 +89,18 @@ enum {
 
 #define SW_VERSION_VIDEO_DC         (1)
 #define SW_VERSION_AAL              (1)
+
+
+#if defined(DISP_COLOR_ON)
+#define COLOR_MODE			(1)
+#elif defined(MDP_COLOR_ON)
+#define COLOR_MODE			(2)
+#elif defined(DISP_MDP_COLOR_ON)
+#define COLOR_MODE			(3)
+#else
+#define COLOR_MODE			(0)	/*color feature off */
+#endif
+
 
 #define DISP_COLOR_SWREG_START      (0xFFFF0000)
 #define DISP_COLOR_SWREG_COLOR_BASE (DISP_COLOR_SWREG_START)	/* 0xFFFF0000 */
@@ -86,6 +115,10 @@ enum {
 #define SWREG_MIRAVISION_VERSION            (DISP_COLOR_SWREG_COLOR_BASE + 0x0004)
 #define SWREG_SW_VERSION_VIDEO_DC           (DISP_COLOR_SWREG_COLOR_BASE + 0x0005)
 #define SWREG_SW_VERSION_AAL                (DISP_COLOR_SWREG_COLOR_BASE + 0x0006)
+#define SWREG_CCORR_BASE_ADDRESS            (DISP_COLOR_SWREG_COLOR_BASE + 0x0007)
+#define SWREG_MDP_COLOR_BASE_ADDRESS        (DISP_COLOR_SWREG_COLOR_BASE + 0x0008)
+#define SWREG_COLOR_MODE                    (DISP_COLOR_SWREG_COLOR_BASE + 0x0009)
+
 
 #define SWREG_TDSHP_TUNING_MODE             (DISP_COLOR_SWREG_TDSHP_BASE + 0x0000)
 
@@ -130,12 +163,7 @@ enum {
 #define SWREG_PQDC_PROTECT_REGION_WEIGHT    (DISP_COLOR_SWREG_PQDC_BASE + ProtectRegionWeight)
 #define SWREG_PQDC_DC_ENABLE                (DISP_COLOR_SWREG_PQDC_BASE + DCEnable)
 
-
-
-/*---------------------------------------------------------------------------*/
-#ifdef CONFIG_FOR_SOURCE_PQ
-void set_color_bypass(DISP_MODULE_ENUM module, int bypass, void *cmdq_handle);
-#endif
+/* --------------------------------------------------------------------------- */
 void DpEngine_COLORonInit(DISP_MODULE_ENUM module, void *__cmdq);
 void DpEngine_COLORonConfig(DISP_MODULE_ENUM module, unsigned int srcWidth, unsigned int srcHeight,
 			    void *__cmdq);
@@ -148,5 +176,5 @@ extern DISPLAY_TDSHP_T *get_TDSHP_index(void);
 
 void disp_color_set_window(unsigned int sat_upper, unsigned int sat_lower,
 			   unsigned int hue_upper, unsigned int hue_lower);
-extern DDP_MODULE_DRIVER ddp_driver_color;
+
 #endif
