@@ -20,9 +20,8 @@
 #include <linux/mm_types.h>
 /* end for fpga early porting */
 #include "dbg.h"
-#include "board.h"
 #ifndef FPGA_PLATFORM
-#ifdef CONFIG_MTK_LEGACY
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
 #endif
 #endif
@@ -1747,12 +1746,10 @@ static int msdc_help_proc_show(struct seq_file *m, void *v)
 	seq_printf(m,
 		   "            [error]            0: disable error tune debug, 1: cmd timeout, 2: cmd crc, 4: dat timeout, 8: dat crc, 16: acmd timeout, 32: acmd crc\n");
 	seq_puts(m, "            [count]            error count\n");
-#if MTK_MSDC_USE_EDC_EMMC_CACHE
 	seq_printf(m, "\n   eMMC Cache Control: echo %x [host_id] [action_id] > /proc/msdc_debug\n",
 		   MMC_EDC_EMMC_CACHE);
 	seq_printf(m,
 		   "            [action_id]        0:Disable cache 1:Enable cache 2:check cache status\n");
-#endif
 	seq_printf(m, "\n   eMMC Dump GPD/BD:      echo %x [host_id] > /proc/msdc_debug\n",
 		   MMC_DUMP_GPD);
 	seq_printf(m,
@@ -1806,17 +1803,23 @@ void msdc_hw_parameter_debug(struct msdc_hw *hw, struct seq_file *m, void *v)
 	seq_printf(m, "hw->datwrddly = %x\n", hw->datwrddly);
 	seq_printf(m, "hw->cmdrrddly = %x\n", hw->cmdrrddly);
 	seq_printf(m, "hw->cmdrddly = %x\n", hw->cmdrddly);
-	seq_printf(m, "hw->ett_count = %x\n", hw->ett_count);
-	/*seq_printf(m,"hw->ett_settings  = %x\n", hw->ett_settings);*/
+	seq_printf(m, "hw->ett_hs200_count = %x\n", hw->ett_hs200_count);
+	seq_printf(m, "hw->ett_hs400_count = %x\n", hw->ett_hs400_count);
 	seq_printf(m, "hw->host_function = %x\n", (unsigned int)hw->host_function);
 	seq_printf(m, "hw->boot = %x\n", hw->boot);
 
-	for (i = 0; i < hw->ett_count; i++) {
-		seq_printf(m, "msdc0_ett_settings[%d]: %x, %x, %x, %x\n", i,
-			   hw->ett_settings[i].speed_mode, hw->ett_settings[i].reg_addr,
-			   hw->ett_settings[i].reg_offset, hw->ett_settings[i].value);
+	for (i = 0; i < hw->ett_hs200_count; i++) {
+		seq_printf(m, "msdc0_ett_hs200_settings[%d]: %x, %x, %x\n", i,
+		hw->ett_hs200_settings[i].reg_addr,
+		hw->ett_hs200_settings[i].reg_offset, hw->ett_hs200_settings[i].value);
 	}
-
+#if defined(MSDC0_EMMC50_SUPPORT)
+	for (i = 0; i < hw->ett_hs400_count; i++) {
+		seq_printf(m, "msdc0_ett_hs400_settings[%d]: %x, %x, %x\n", i,
+		hw->ett_hs400_settings[i].reg_addr,
+		hw->ett_hs400_settings[i].reg_offset, hw->ett_hs400_settings[i].value);
+	}
+#endif
 }
 
 /* ========== driver proc interface =========== */
@@ -1852,14 +1855,17 @@ static int msdc_debug_proc_show(struct seq_file *m, void *v)
 	seq_printf(m, "-> Clokc SRC selection Host[2]<%d>\n", msdc_clock_src[2]);
 	seq_printf(m, "-> Clokc SRC selection Host[3]<%d>\n", msdc_clock_src[3]);
 	seq_puts(m, "=========================================\n\n");
-#ifdef CFG_DEV_MSDC0
-	seq_puts(m, "Index<4> msdc0 hw parameter and ett settings:\n");
-	msdc_hw_parameter_debug(&msdc0_hw, m, v);
-#endif
-#ifdef CFG_DEV_MSDC1
-	seq_puts(m, "Index<5> msdc1 hw parameter:\n");
-	msdc_hw_parameter_debug(&msdc1_hw, m, v);
-#endif
+
+	if (mtk_msdc_host[0]) {
+		seq_puts(m, "Index<4> msdc0 hw parameter and ett settings:\n");
+		msdc_hw_parameter_debug(mtk_msdc_host[0]->hw, m, v);
+	}
+
+	if (mtk_msdc_host[1]) {
+		seq_puts(m, "Index<5> msdc1 hw parameter:\n");
+		msdc_hw_parameter_debug(mtk_msdc_host[1]->hw, m, v);
+	}
+
 	return 0;
 }
 
@@ -1914,89 +1920,56 @@ static int rwThread(void *data)
 	return 0;
 }
 
-#if MTK_MSDC_USE_EDC_EMMC_CACHE
 static int msdc_check_emmc_cache_status(struct msdc_host *host)
 {
-	struct mmc_card *card = host->mmc->card;
+	BUG_ON(!host);
+	BUG_ON(!host->mmc);
+	BUG_ON(!host->mmc->card);
 
-	msdc_get_cache_region_func(host);
-	mmc_claim_host(host->mmc);
-	if (card && !mmc_card_mmc(card)) {
-		pr_err("host:%d is not a eMMC card...\n", host->id);
-		goto exit;
-	} else {
-		if (0 == host->mmc->card->ext_csd.cache_size) {
-			pr_err("card don't support cache feature...\n");
-			goto unsupport;
-		} else {
-			pr_err("card cache size:%dKB...\n",
-			       host->mmc->card->ext_csd.cache_size / 8);
-		}
+	if (!mmc_card_mmc(host->mmc->card)) {
+		pr_err("msdc%d: is not a eMMC card\n", host->id);
+		return -1;
 	}
-	if (host->mmc->card->ext_csd.cache_ctrl)
-		pr_err("Current Cache status: Enable...\n");
-	else
-		pr_err("Current Cache status: Disable...\n");
-	mmc_release_host(host->mmc);
+	if (0 == host->mmc->card->ext_csd.cache_size) {
+		pr_err("msdc%d:card don't support cache feature\n", host->id);
+		return -1;
+	}
+	pr_err("msdc%d: Current eMMC Cache status: %s, Cache size:%dKB\n", host->id,
+		host->mmc->card->ext_csd.cache_ctrl ? "Enable" : "Disable",
+		host->mmc->card->ext_csd.cache_size/8);
 
 	return host->mmc->card->ext_csd.cache_ctrl;
-
-exit:
-	return -2;
-unsupport:
-	return -1;
 }
-
 static int msdc_enable_emmc_cache(struct msdc_host *host, int enable)
 {
-	u32 err;
+	int err;
 	u8 c_ctrl;
-	struct mmc_card *card = host->mmc->card;
-
-	mmc_claim_host(host->mmc);
-	if (card && !mmc_card_mmc(card)) {
-		pr_err("host:%d is not a eMMC card...\n", host->id);
-		goto exit;
-	}
-	msdc_get_cache_region_func(host);
 
 	err = msdc_check_emmc_cache_status(host);
-
 	if (err < 0)
-		goto exit;
+		goto out;
+
+	mmc_get_card(host->mmc->card);
+
 	c_ctrl = host->mmc->card->ext_csd.cache_ctrl;
 
-	if (c_ctrl && enable) {
-		pr_err("cache has already been in enable status, don't need enable it...\n");
-	} else if (c_ctrl && !enable) {
-		err = mmc_cache_ctrl(host->mmc, enable);
-		if (err) {
-			pr_warn("%s: Cache is supported, but failed to turn off (%d)\n",
-				mmc_hostname(host->mmc), err);
-		} else {
-			pr_err("disable cache successfully...\n");
-			host->mmc->caps2 &= ~MMC_CAP2_CACHE_CTRL;
-		}
-	} else if (!c_ctrl && enable) {
-		host->mmc->caps2 |= MMC_CAP2_CACHE_CTRL;
-		err = mmc_cache_ctrl(host->mmc, enable);
-		if (err) {
-			pr_warn("%s: Cache is supported, but failed to turn on (%d)\n",
-				mmc_hostname(host->mmc), err);
-		} else {
-			pr_err("enable cache successfully...\n");
-		}
-	} else if (!c_ctrl && !enable) {
-		pr_err("cache has already been in disable status, don't need disable it...\n");
+	if (c_ctrl == enable)
+		pr_err("msdc%d:cache has already been %s state,\n", host->id,
+			enable ? "enable" : "disable");
+	else {
+		err = msdc_cache_ctrl(host, enable, NULL);
+		if (err)
+			pr_err("msdc%d: Cache is supported, but %s failed\n", host->id,
+				enable ? "enable" : "disable");
+		else
+			pr_err("msdc%d: %s cache successfully\n", host->id,
+				enable ? "enable" : "disable");
 	}
 
-	mmc_release_host(host->mmc);
-
-	return 0;
-exit:
-	return -1;
+out:
+	mmc_put_card(host->mmc->card);
+	return err;
 }
-#endif
 
 static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t count,
 				     loff_t *data)
@@ -2126,22 +2099,15 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 		if (id >= HOST_MAX_NUM || id < 0)
 			pr_err("[****SD_Debug****]msdc host_id error when modify msdc reg\n");
 		else {
-#if defined(CFG_DEV_MSDC0)
-			if (id == 0)
+			if (id == 0 && mtk_msdc_host[0])
 				base = mtk_msdc_host[0]->base;
-#endif
-#if defined(CFG_DEV_MSDC1)
-			if (id == 1)
+			if (id == 1 && mtk_msdc_host[1])
 				base = mtk_msdc_host[1]->base;
-#endif
-#if defined(CFG_DEV_MSDC2)
-			if (id == 2)
+			if (id == 2 && mtk_msdc_host[2])
 				base = mtk_msdc_host[2]->base;
-#endif
-#if defined(CFG_DEV_MSDC3)
-			if (id == 3)
+			if (id == 3 && mtk_msdc_host[3])
 				base = mtk_msdc_host[3]->base;
-#endif
+
 			host = mtk_msdc_host[id];
 			if ((offset == 0x18 || offset == 0x1C) && p1 != 4) {
 				pr_err
@@ -2149,7 +2115,7 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 				return count;
 			}
 #ifndef FPGA_PLATFORM
-#ifdef CONFIG_MTK_LEGACY
+#ifdef CONFIG_MTK_CLKMGR
 			enable_clock(msdc_cg_clk_id[id], "SD");
 #else
 			clk_enable(host->clock_control);
@@ -2191,7 +2157,7 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 				msdc_dump_info(host->id);
 			}
 #ifndef FPGA_PLATFORM
-#ifdef CONFIG_MTK_LEGACY
+#ifdef CONFIG_MTK_CLKMGR
 			disable_clock(msdc_cg_clk_id[id], "SD");
 #else
 			clk_disable_unprepare(host->clock_control);
@@ -2768,8 +2734,6 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 		}
 	}
 #endif
-
-#if MTK_MSDC_USE_EDC_EMMC_CACHE
 	else if (cmd == MMC_EDC_EMMC_CACHE) {
 		pr_err
 		    ("==========================MSDC Cache Feature Test ==============================\n");
@@ -2793,9 +2757,7 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 				break;
 			}
 		}
-	}
-#endif
-	else if (cmd == MMC_DUMP_GPD) {
+	} else if (cmd == MMC_DUMP_GPD) {
 		pr_err
 		    ("==========================MSDC DUMP GPD/BD ==============================\n");
 		id = p1;
@@ -2846,29 +2808,21 @@ static int msdc_debug_proc_read_FT_show(struct seq_file *m, void *data)
 	u8 u8_wdat, u8_cmddat;
 	u8 u8_DDLSEL;
 
-	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 0) {
-#if defined(CFG_DEV_MSDC0)
+	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 0 && mtk_msdc_host[0]) {
 		base = mtk_msdc_host[0]->base;
 		msdc_id = 0;
-#endif
-	} else if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 1) {
-#if defined(CFG_DEV_MSDC1)
+	} else if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 1 && mtk_msdc_host[1]) {
 		base = mtk_msdc_host[1]->base;
 		msdc_id = 1;
-#endif
-	} else if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 2) {
-#if defined(CFG_DEV_MSDC2)
+	} else if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 2 && mtk_msdc_host[2]) {
 		base = mtk_msdc_host[2]->base;
 		msdc_id = 2;
-#endif
-	} else if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 3) {
-#if defined(CFG_DEV_MSDC3)
+	} else if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 3 && mtk_msdc_host[3]) {
 		base = mtk_msdc_host[3]->base;
 		msdc_id = 3;
-#endif
 	}
 #ifndef FPGA_PLATFORM
-#ifdef CONFIG_MTK_LEGACY
+#ifdef CONFIG_MTK_CLKMGR
 	enable_clock(msdc_cg_clk_id[msdc_id], "SD");
 #else
 	clk_enable(host->clock_control);
@@ -2987,22 +2941,14 @@ static ssize_t msdc_debug_proc_write_FT(struct file *file, const char __user *bu
 	pr_err("i_case=%d i_par1=%d i_par2=%d\n", i_case, i_par1, i_par2);
 
 #if defined(CONFIG_MTK_WCN_CMB_SDIO_SLOT)
-#if defined(CFG_DEV_MSDC0)
-	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 0)
+	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 0 && mtk_msdc_host[0])
 		base = mtk_msdc_host[0]->base;
-#endif
-#if defined(CFG_DEV_MSDC1)
-	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 1)
+	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 1 && mtk_msdc_host[1])
 		base = mtk_msdc_host[1]->base;
-#endif
-#if defined(CFG_DEV_MSDC2)
-	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 2)
+	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 2 && mtk_msdc_host[2])
 		base = mtk_msdc_host[2]->base;
-#endif
-#if defined(CFG_DEV_MSDC3)
-	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 3)
+	if (CONFIG_MTK_WCN_CMB_SDIO_SLOT == 3 && mtk_msdc_host[3])
 		base = mtk_msdc_host[3]->base;
-#endif
 #else
 	return -1;
 #endif

@@ -4,9 +4,13 @@
 #include <linux/bitops.h>
 #include <linux/mmc/host.h>
 #include <mt-plat/sync_write.h>
+
+#include <generated/autoconf.h>
+#include <linux/pm.h>
+#include <linux/mmc/sdio_func.h>
+
 /* weiping fix */
-#include "board.h"
-#if !defined(CONFIG_MTK_LEGACY)
+#if !defined(CONFIG_MTK_CLKMGR)
 #include <linux/clk.h>
 #endif
 #ifndef FPGA_PLATFORM
@@ -17,13 +21,9 @@
 /* ccyeh #define MSDC_HQA */
 
 #define MTK_MSDC_USE_CMD23
-/* weiping fix */
-/* #if defined(CONFIG_MTK_EMMC_CACHE) && defined(MTK_MSDC_USE_CMD23) */
-#if 0
+#if defined(CONFIG_MTK_EMMC_CACHE) && defined(MTK_MSDC_USE_CMD23)
 #define MTK_MSDC_USE_CACHE
-#define MTK_MSDC_USE_EDC_EMMC_CACHE (1)
-#else
-#define MTK_MSDC_USE_EDC_EMMC_CACHE (0)
+extern unsigned int g_emmc_cache_size;
 #endif
 
 #ifdef MTK_MSDC_USE_CMD23
@@ -67,6 +67,7 @@
 #else
 #define MTK_MSDC_BRINGUP_DEBUG
 #endif
+
 /* #define MTK_MSDC_DUMP_FIFO */
 
 #define CMD_SET_FOR_MMC_TUNE_CASE1			(0x00000000FB260140ULL)
@@ -1313,14 +1314,15 @@ struct msdc_host {
 	/* driver will get a EINT(Level sensitive) when boot up with card insert */
 	struct wakeup_source trans_lock;
 	bool block_bad_card;
+	struct delayed_work write_timeout;
 #ifdef SDIO_ERROR_BYPASS
 	int sdio_error;		/* sdio error can't recovery */
 #endif
 	void (*power_control)(struct msdc_host *host, u32 on);
 	void (*power_switch)(struct msdc_host *host, u32 on);
-#if !defined(CONFIG_MTK_LEGACY)
+#if !defined(CONFIG_MTK_CLKMGR)
 	struct clk *clock_control;
-#endif				/* !defined(CONFIG_MTK_LEGACY) */
+#endif
 	struct work_struct			work_tune; /* new thread tune */
 	struct mmc_request			*mrq_tune; /* backup host->mrq */
 };
@@ -1609,6 +1611,16 @@ do { \
 extern int drv_mode[HOST_MAX_NUM];
 extern int msdc_latest_transfer_mode[HOST_MAX_NUM];
 extern int msdc_latest_operation_type[HOST_MAX_NUM];
+extern struct msdc_host *mtk_msdc_host[HOST_MAX_NUM];
+extern u32 msdc_host_mode[HOST_MAX_NUM];
+extern u32 msdc_host_mode2[HOST_MAX_NUM];
+extern u32 g_emmc_mode_switch;
+
+extern struct msdc_host *msdc_get_host(int host_function, bool boot,
+	bool secondary);
+extern int msdc_reinit(struct msdc_host *host);
+extern void msdc_set_driving(struct msdc_host *host, struct msdc_hw *hw,
+	bool sd_18);
 
 extern void mmc_remove_card(struct mmc_card *card);
 extern void mmc_detach_bus(struct mmc_host *host);
@@ -1632,13 +1644,8 @@ extern int mmc_flush_cache(struct mmc_card *card);
 #ifdef CONFIG_MTK_HIBERNATION
 extern unsigned int mt_eint_get_polarity_external(unsigned int eint_num);
 #endif
-/* weiping fix */
-#if defined(CFG_DEV_MSDC0)
-extern struct msdc_hw msdc0_hw;
-#endif
-#if defined(CFG_DEV_MSDC1)
-extern struct msdc_hw msdc1_hw;
-#endif
+extern int msdc_cache_ctrl(struct msdc_host *host, unsigned int enable,
+	u32 *status);
 #if defined(CFG_DEV_MSDC2)
 extern struct msdc_hw msdc2_hw;
 #endif
@@ -1659,5 +1666,164 @@ extern void __iomem *msdc_io_cfg_right_base;
 extern void __iomem *msdc_apmixed_base;
 extern void __iomem *msdc_topckgen_base;
 extern void __iomem *msdc_infracfg_base;
+
+/* move from board.h */
+typedef void (*pm_callback_t)(pm_message_t state, void *data);
+
+#define MSDC_CD_PIN_EN      (1 << 0)	/* card detection pin is wired   */
+#define MSDC_WP_PIN_EN      (1 << 1)	/* write protection pin is wired */
+#define MSDC_RST_PIN_EN     (1 << 2)	/* emmc reset pin is wired       */
+#define MSDC_SDIO_IRQ       (1 << 3)	/* use internal sdio irq (bus)   */
+#define MSDC_EXT_SDIO_IRQ   (1 << 4)	/* use external sdio irq         */
+#define MSDC_REMOVABLE      (1 << 5)	/* removable slot                */
+#define MSDC_SYS_SUSPEND    (1 << 6)	/* suspended by system           */
+#define MSDC_HIGHSPEED      (1 << 7)	/* high-speed mode support       */
+#define MSDC_UHS1           (1 << 8)	/* uhs-1 mode support            */
+#define MSDC_DDR            (1 << 9)	/* ddr mode support              */
+#define MSDC_INTERNAL_CLK   (1 << 11)	/* Force Internal clock          */
+#ifdef CONFIG_MTK_EMMC_CACHE
+#define MSDC_CACHE          (1 << 12)	/* eMMC cache feature            */
+#endif
+#define MSDC_HS400          (1 << 13)	/* HS400 speed mode support      */
+
+#define MSDC_SD_NEED_POWER  (1 << 31)	/* for Yecon board, need SD power always on!! or cannot recognize the sd card */
+
+#define MSDC_SMPL_RISING    (0)
+#define MSDC_SMPL_FALLING   (1)
+
+#define MSDC_CMD_PIN        (0)
+#define MSDC_DAT_PIN        (1)
+#define MSDC_CD_PIN         (2)
+#define MSDC_WP_PIN         (3)
+#define MSDC_RST_PIN        (4)
+
+#define MSDC_DATA1_INT      (1)
+
+/* each PLL have different gears for select
+ * software can used mux interface from clock management module to select */
+enum {
+	MSDC0_CLKSRC_125MHZ  = 0,
+	MSDC0_CLKSRC_150MHZ,
+	MSDC0_CLKSRC_187MHZ,
+	MSDC0_CLKSRC_178MHZ,
+	MSDC0_CLKSRC_214MHZ,
+	MSDC0_CLKSRC_NONE,
+	MSDC0_CLKSRC_26MHZ,
+	MSDC0_CLKSRC_208MHZ,
+	MSDC0_CLKSRC_MAX
+};
+
+enum {
+	MSDC1_CLKSRC_125MHZ  = 0,
+	MSDC1_CLKSRC_150MHZ,
+	MSDC1_CLKSRC_187MHZ,
+	MSDC1_CLKSRC_178MHZ,
+	MSDC1_CLKSRC_214MHZ,
+	MSDC1_CLKSRC_NONE,
+	MSDC1_CLKSRC_26MHZ,
+	MSDC1_CLKSRC_208MHZ,
+	MSDC1_CLKSRC_MAX
+};
+
+#define MSDC_BOOT_EN        (1)
+#define MSDC_CD_HIGH        (1)
+#define MSDC_CD_LOW         (0)
+enum {
+	MSDC_EMMC = 0,
+	MSDC_SD = 1,
+	MSDC_SDIO = 2
+};
+
+struct msdc_ett_settings {
+#define MSDC_DEFAULT_MODE (0)
+#define MSDC_SDR50_MODE   (1)
+#define MSDC_DDR50_MODE   (2)
+#define MSDC_HS200_MODE   (3)
+#define MSDC_HS400_MODE   (4)
+	unsigned int reg_addr;
+	unsigned int reg_offset;
+	unsigned int value;
+};
+
+struct msdc_hw {
+	unsigned char clk_src;	/* host clock source */
+	unsigned char cmd_edge;	/* command latch edge */
+	unsigned char rdata_edge;	/* read data latch edge */
+	unsigned char wdata_edge;	/* write data latch edge */
+	unsigned char clk_drv;	/* clock pad driving */
+	unsigned char cmd_drv;	/* command pad driving */
+	unsigned char dat_drv;	/* data pad driving */
+	unsigned char rst_drv;	/* RST-N pad driving */
+	unsigned char ds_drv;	/* eMMC5.0 DS pad driving */
+	unsigned char clk_drv_sd_18;	/* clock pad driving for SD card at 1.8v sdr104 mode */
+	unsigned char cmd_drv_sd_18;	/* command pad driving for SD card at 1.8v sdr104 mode */
+	unsigned char dat_drv_sd_18;	/* data pad driving for SD card at 1.8v sdr104 mode */
+	unsigned char clk_drv_sd_18_sdr50;	/* clock pad driving for SD card at 1.8v sdr50 mode */
+	unsigned char cmd_drv_sd_18_sdr50;	/* command pad driving for SD card at 1.8v sdr50 mode */
+	unsigned char dat_drv_sd_18_sdr50;	/* data pad driving for SD card at 1.8v sdr50 mode */
+	unsigned char clk_drv_sd_18_ddr50;	/* clock pad driving for SD card at 1.8v ddr50 mode */
+	unsigned char cmd_drv_sd_18_ddr50;	/* command pad driving for SD card at 1.8v ddr50 mode */
+	unsigned char dat_drv_sd_18_ddr50;	/* data pad driving for SD card at 1.8v ddr50 mode */
+	unsigned long flags;	/* hardware capability flags */
+	unsigned long data_pins;	/* data pins */
+	unsigned long data_offset;	/* data address offset */
+
+	unsigned char ddlsel;	/* data line delay line fine tune selecion*/
+	unsigned char rdsplsel;	/* read: data line rising or falling latch fine tune selection */
+	unsigned char wdsplsel;	/* write: data line rising or falling latch fine tune selection*/
+
+	unsigned char dat0rddly;	/*read; range: 0~31*/
+	unsigned char dat1rddly;	/*read; range: 0~31*/
+	unsigned char dat2rddly;	/*read; range: 0~31*/
+	unsigned char dat3rddly;	/*read; range: 0~31*/
+	unsigned char dat4rddly;	/*read; range: 0~31*/
+	unsigned char dat5rddly;	/*read; range: 0~31*/
+	unsigned char dat6rddly;	/*read; range: 0~31*/
+	unsigned char dat7rddly;	/*read; range: 0~31*/
+	unsigned char datwrddly;	/*write; range: 0~31*/
+	unsigned char cmdrrddly;	/*cmd; range: 0~31*/
+	unsigned char cmdrddly;	/*cmd; range: 0~31*/
+
+	unsigned char cmdrtactr_sdr50;	/* command response turn around counter, sdr 50 mode*/
+	unsigned char wdatcrctactr_sdr50;	/* write data crc turn around counter, sdr 50 mode*/
+	unsigned char intdatlatcksel_sdr50;	/* internal data latch CK select, sdr 50 mode*/
+	unsigned char cmdrtactr_sdr200;	/* command response turn around counter, sdr 200 mode*/
+	unsigned char wdatcrctactr_sdr200;	/* write data crc turn around counter, sdr 200 mode*/
+	unsigned char intdatlatcksel_sdr200;	/* internal data latch CK select, sdr 200 mode*/
+
+	struct msdc_ett_settings *ett_hs200_settings;
+	unsigned int ett_hs200_count;
+	struct msdc_ett_settings *ett_hs400_settings;
+	unsigned int ett_hs400_count;
+
+	unsigned char host_function;          /* define host function*/
+
+	bool boot;		/* define boot host */
+	bool cd_level;		/* card detection level */
+
+	/* config gpio pull mode */
+	void (*config_gpio_pin)(int type, int pull);
+
+	/* external power control for card */
+	void (*ext_power_on)(void);
+	void (*ext_power_off)(void);
+
+	/* external sdio irq operations */
+	void (*request_sdio_eirq)(sdio_irq_handler_t sdio_irq_handler, void *data);
+	void (*enable_sdio_eirq)(void);
+	void (*disable_sdio_eirq)(void);
+
+	/* external cd irq operations */
+	void (*request_cd_eirq)(sdio_irq_handler_t cd_irq_handler, void *data);
+	void (*enable_cd_eirq)(void);
+	void (*disable_cd_eirq)(void);
+	int (*get_cd_status)(void);
+
+	/* power management callback for external module */
+	void (*register_pm)(pm_callback_t pm_cb, void *data);
+};
+
+extern struct msdc_hw msdc2_hw;
+extern struct msdc_hw msdc3_hw;
 
 #endif				/* end of  MT_SD_H */

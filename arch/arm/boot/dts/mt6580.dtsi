@@ -9,6 +9,8 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include "mt6580-pinfunc.h"
+#include <dt-bindings/mmc/mt6580-msdc.h>
+
 / {
 	model = "MT6580";
 	compatible = "mediatek,MT6580";
@@ -28,23 +30,39 @@
 			#size-cells = <1>;
 			ranges = <0 0 0 0xffffffff>;
 
-			MSDC0@0x11120000 {
-			compatible = "mediatek,MSDC0";
-			reg = <0x11120000 0x10000/*MSDC0_BASE*/
-			0x10001E84 0x2>;/*FPGA PWR_GPIO,PWR_GPIO_EO*/
-			interrupts = <0 38 0x8>;
+			mmc0: msdc0@11120000 {
+				compatible = "mediatek,mt6580-mmc";
+				reg = <0x11120000 0x10000/*MSDC0_BASE*/
+					0x10001e84 0x2>;/*FPGA PWR_GPIO,PWR_GPIO_EO*/
+				interrupts = <GIC_SPI 38 IRQ_TYPE_LEVEL_LOW>;
+				status = "disabled";
+				/* peter check when rainier ccf ready
+				clocks = <&perisys PERI_MSDC30_0>,
+					 <&topckgen TOP_MUX_MSDC30_0>,
+					 <&topckgen TOP_MSDCPLL_CK>,
+					 <&topckgen TOP_MSDCPLL_D2>,
+					 <&topckgen TOP_MSDCPLL_D4>;
+				clock-names="MSDC0-CLOCK",
+					"MSDC0_PLL_SEL",
+					"MSDC0_PLL_800M",
+					"MSDC0_PLL_400M",
+					"MSDC0_PLL_200M"; */
 			};
 
-			MSDC1@0x11130000 {
-			compatible = "mediatek,MSDC1";
-			reg = <0x11130000 0x10000/*MSDC1_BASE*/
-			0x10001E84 0x2>;/*FPGA PWR_GPIO,PWR_GPIO_EO*/
-			interrupts = <0 39 0x8>;
-			cd-gpios = <&pio 3 0>;
+			mmc1: msdc1@11130000 {
+				compatible = "mediatek,mt6580-mmc";
+				reg = <0x11130000 0x10000/*MSDC1_BASE*/
+					0x10001e84 0x2>;/*FPGA PWR_GPIO,PWR_GPIO_EO*/
+				interrupts = <GIC_SPI 39 IRQ_TYPE_LEVEL_LOW>;
+				cd-gpios = <&pio 3 0>;
+				status = "disabled";
+				/* peter check when rainier ccf ready
+				clocks = <&perisys PERI_MSDC30_1>;
+				clock-names="MSDC1-CLOCK"; */
 			};
 
 			msdc1_ins: default {
-			compatible = "mediatek,msdc1_ins-eint";
+				compatible = "mediatek,msdc1_ins-eint";
 			};
 		};
 
