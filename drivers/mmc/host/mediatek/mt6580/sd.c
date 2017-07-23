@@ -1270,7 +1270,7 @@ static u32 msdc_ldo_power(u32 on, unsigned int powerId, int voltage_uv,
 {
 	if (on) {		/* want to power on */
 		if (*status == 0) {	/* can power on */
-			pr_warn("msdc LDO<%d> power on<%d>\n", powerId, voltage_uv);
+			/* pr_warn("msdc LDO<%d> power on<%d>\n", powerId, voltage_uv); */
 			msdc_hwPowerOn(powerId, voltage_uv, "msdc");
 			*status = voltage_uv;
 		} else if (*status == voltage_uv) {
@@ -1285,7 +1285,7 @@ static u32 msdc_ldo_power(u32 on, unsigned int powerId, int voltage_uv,
 		}
 	} else {		/* want to power off */
 		if (*status != 0) {	/* has been powerred on */
-			pr_warn("msdc LDO<%d> power off\n", powerId);
+			/* pr_warn("msdc LDO<%d> power off\n", powerId); */
 			msdc_hwPowerDown(powerId, "msdc");
 			*status = 0;
 		} else
@@ -2249,9 +2249,9 @@ static void msdc_select_clksrc(struct msdc_host *host, int clksrc)
 		hclks = hclks_msdc1;
 #endif
 
-	pr_err("[%s]: msdc%d change clk_src from %dKHz to %d:%dKHz\n",
+	/* pr_err("[%s]: msdc%d change clk_src from %dKHz to %d:%dKHz\n",
 		__func__, host->id, (host->hclk / 1000), clksrc,
-		(hclks[clksrc] / 1000));
+		(hclks[clksrc] / 1000)); */
 
 #ifndef FPGA_PLATFORM
 	sprintf(name, "MSDC%d", host->id);
