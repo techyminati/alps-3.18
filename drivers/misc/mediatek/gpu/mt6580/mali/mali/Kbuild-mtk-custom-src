@@ -11,6 +11,7 @@ ccflags-y += -I$(DRIVER_DIR)/../ump_include/ump
 ccflags-y += \
     -I$(srctree)/arch/arm/mach-mt6580/include/mach \
     -I$(srctree)/drivers/misc/mediatek/mach/mt6580/include/mach \
+    -I$(srctree)/drivers/misc/mediatek/base/power/mt6580 \
     -I$(srctree)/include/linux \
     -I$(srctree)/arch/arm/mach-mt6580/gpu/mali/mali/linux/license/gpl
 

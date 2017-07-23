@@ -52,7 +52,7 @@
 #include "mali_pp_scheduler.h"
 
 #include "mach/mt_clkmgr.h"
-#include "mach/mt_gpufreq.h"
+#include "mt_gpufreq.h"
 
 #define PRIVATE_DATA_COUNTER_MAKE_GP(src) (src)
 #define PRIVATE_DATA_COUNTER_MAKE_PP(src) ((1 << 24) | src)

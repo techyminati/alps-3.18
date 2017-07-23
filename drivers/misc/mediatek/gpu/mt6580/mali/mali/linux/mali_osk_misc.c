@@ -18,7 +18,7 @@
 #include <linux/sched.h>
 #include <linux/module.h>
 #include "mali_osk.h"
-#include "mt_reg_base.h"
+/*#include "mt_reg_base.h"*/
 #include "mali_kernel_common.h"
 
 extern void smi_dumpDebugMsg(void);

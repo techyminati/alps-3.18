@@ -17,9 +17,9 @@
 #include "mali_kernel_common.h"
 #include "mali_osk.h"
 #include "platform_pmm.h"
-#include "mach/mt_gpufreq.h"
-#include "mach/mt_spm.h"
-#include "mach/mt_wdt.h"
+#include "mt_gpufreq.h"
+/*#include "mach/mt_spm.h"*/
+/*#include "mach/mt_wdt.h"*/
 #include "mach/mt_clkmgr.h"
 
 #include <asm/atomic.h>
@@ -139,7 +139,7 @@ void mtk_set_dvfs_threshold_min(int min)
     {
         min = 1;
     }
-    atomic_set(&g_dvfs_threshold_min, &min);
+    atomic_set(&g_dvfs_threshold_min, min);
 }
 
 int mtk_get_dvfs_threshold_max(void)
@@ -169,7 +169,7 @@ void mtk_set_dvfs_deferred_count(int count)
 
 static void mali_dvfs_handler(struct work_struct *work)
 {
-    unsigned long flags;
+    /*unsigned long flags;*/
     int           enabled;
     int           duration;
     int           boostID;
