@@ -5072,7 +5072,7 @@ static int primary_display_idlemgr_init(void)
 }
 
 
-int primary_display_init(char *lcm_name, unsigned int lcm_fps)
+int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 	DISP_MODULE_ENUM dst_module = 0;
@@ -6045,7 +6045,7 @@ LCM_DRIVER *DISP_GetLcmDrv(void)
 }
 
 int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
-					    unsigned int format)
+					    unsigned int fb_format)
 {
 	int ret = 0;
 	cmdqRecHandle cmdq_handle = NULL;
@@ -6057,6 +6057,7 @@ int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
 	unsigned int h_yres = primary_display_get_height();
 	unsigned int pixel_byte = primary_display_get_bpp() / 8; /* bpp is either 32 or 16, can not be other value */
 	int buffer_size = h_yres * w_xres * pixel_byte;
+	int format;
 
 	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL) {
 		DISPMSG("%s skip due to stage %s\n", __func__,
@@ -6065,6 +6066,31 @@ int primary_display_capture_framebuffer_ovl(unsigned long pbuf,
 	}
 
 	DISPMSG("primary capture: begin\n");
+
+	switch (fb_format) {
+	case MTK_FB_FORMAT_RGB888:
+		format = eRGB888;
+		break;
+	case MTK_FB_FORMAT_BGR888:
+		format = eBGR888;
+		break;
+	case MTK_FB_FORMAT_ARGB8888:
+		format = eARGB8888;
+		break;
+	case MTK_FB_FORMAT_RGB565:
+		format = eRGB565;
+		break;
+	case MTK_FB_FORMAT_UYVY:
+		format = eYUV_420_2P_UYVY;
+		break;
+	case MTK_FB_FORMAT_BGRA8888:
+		format = eBGRA8888;
+		break;
+	case MTK_FB_FORMAT_ABGR8888:
+	default:
+		format = eABGR8888;
+		break;
+	}
 
 	disp_sw_mutex_lock(&(pgc->capture_lock));
 

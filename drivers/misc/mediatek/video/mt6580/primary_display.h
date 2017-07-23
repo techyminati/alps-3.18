@@ -188,7 +188,7 @@ typedef struct {
 
 typedef int (*PRIMARY_DISPLAY_CALLBACK) (unsigned int user_data);
 
-int primary_display_init(char *lcm_name, unsigned int lcm_fps);
+int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited);
 int primary_display_config(unsigned long pa, unsigned long mva);
 
 int primary_display_set_frame_buffer_address(unsigned long va,
