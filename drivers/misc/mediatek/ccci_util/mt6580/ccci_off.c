@@ -4,6 +4,7 @@
 #include <mt-plat/mt_boot_common.h>
 #include <mach/mt_clkmgr.h>
 #include "ccci_off.h"
+#if !defined(CONFIG_MTK_CCCI_EXT) || defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING)
 
 static void internal_md_power_down(void)
 {
@@ -181,6 +182,8 @@ static void modem_power_down(void)
 		pr_debug("[ccci-off] create kthread for power off md ok\n");
 	}
 }
+#endif
+
 static int __init modem_off_init(void)
 {
 #ifndef CONFIG_MTK_CCCI_EXT
