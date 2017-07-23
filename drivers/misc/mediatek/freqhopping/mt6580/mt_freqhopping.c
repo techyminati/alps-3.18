@@ -893,7 +893,7 @@ static int __reg_base_addr_init(void)
 
 	/* Init APMIXED base address */
 	apmixed_node = of_find_compatible_node(NULL, NULL, "mediatek,APMIXED");
-	if (!fhctl_node) {
+	if (!apmixed_node) {
 		FH_MSG_DEBUG(" Error, Cannot find APMIXED device tree node");
 		/* g_apmixed_base = (void *)APMIXED_BASE; */
 	} else {
@@ -908,7 +908,7 @@ static int __reg_base_addr_init(void)
 
 	/* Init DDRPHY base address */
 	ddrphy_node = of_find_compatible_node(NULL, NULL, "mediatek,DDRPHY");
-	if (!fhctl_node) {
+	if (!ddrphy_node) {
 		FH_MSG_DEBUG(" Error, Cannot find FHCTL device tree node");
 		/* g_ddrphy_base = (void *)DDRPHY_BASE; */
 	} else {
