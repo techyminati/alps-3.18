@@ -11,6 +11,7 @@
 #include <linux/types.h>
 #include <mach/irqs.h>
 #include <mach/mt_clkmgr.h>
+#include <mach/mt_clkbuf_ctl.h>
 #include <mt_cpufreq.h>
 #include <mt_gpufreq.h>
 #include <mt-plat/sync_write.h>
@@ -393,6 +394,14 @@ static int __init mt_power_management_init(void)
 	return 0;
 }
 arch_initcall(mt_power_management_init);
+
+static int __init mt_pm_late_init(void)
+{
+	clk_buf_init();
+	return 0;
+}
+
+late_initcall(mt_pm_late_init);
 
 MODULE_DESCRIPTION("MTK Power Management Init Driver");
 MODULE_LICENSE("GPL");
