@@ -49,16 +49,12 @@
 #include "ddp_mmp.h"
 #include "mtk_sync.h"
 #include "ddp_irq.h"
-/* #include "mt_idle.h" */
-#ifdef KER318_WORKAROUND
 #include "mt_idle.h"
-#endif
-/* #include "mt_spm_idle.h" */
-#ifdef KER318_WORKAROUND
+#include "mt_spm_idle.h"
 #include "mt_spm.h" /* for sodi reg addr define */
-#endif
 #define mt_eint_set_hw_debounce(eint_num, ms) (void)0
 #define spm_enable_sodi(bool) (void)0
+
 /* #include "mach/eint.h" */
 #ifndef MT_CG_DISP0_DISP_WDMA0
 #define MT_CG_DISP0_DISP_WDMA0	(13+64)
@@ -2921,16 +2917,12 @@ void primary_display_sodi_rule_init(void)
 #ifndef CONFIG_MTK_FPGA
 	if (primary_display_is_video_mode()) {
 		spm_enable_sodi(0);
-#ifdef KER318_WORKAROUND
 		spm_sodi_mempll_pwr_mode(1);
-#endif
 	} else {
 		/* CMD mode */
 		spm_enable_sodi(1);
-#ifdef KER318_WORKAROUND
 		/* Cmd mode should set spm_sodi_mempll_pwr_mode to be 0 by default */
 		spm_sodi_mempll_pwr_mode(0);
-#endif
 	}
 	return;
 #endif /* CONFIG_MTK_FPGA */
@@ -3792,11 +3784,11 @@ done:
 	_primary_path_unlock(__func__);
 	_primary_path_esd_check_unlock();
 	disp_sw_mutex_unlock(&(pgc->capture_lock));
-#ifdef KER318_WORKAROUND
+
 	/* For AEE_POWERKEY_HANG_DETECT */
 	aee_kernel_wdt_kick_Powkey_api("mtkfb_early_suspend",
 				       WDT_SETBY_Display);
-#endif
+
 	primary_trigger_cnt = 0;
 	/* clear dim layer buffer */
 	dim_layer_mva = 0;
@@ -4022,10 +4014,10 @@ done:
 	_primary_path_unlock(__func__);
 
 	wake_up(&resume_wait_queue);
-#ifdef KER318_WORKAROUND
+
 	/* For AEE_POWERKEY_HANG_DETECT */
 	aee_kernel_wdt_kick_Powkey_api("mtkfb_late_resume", WDT_SETBY_Display);
-#endif
+
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagEnd,
 		       0, 0);
 	return 0;
@@ -4189,7 +4181,6 @@ int primary_display_trigger(int blocking, void *callback, int need_merge)
 done:
 	_primary_path_unlock(__func__);
 
-#ifdef KER318_WORKAROUND
 	/* For AEE_POWERKEY_HANG_DETECT */
 	if ((primary_trigger_cnt > PRIMARY_DISPLAY_TRIGGER_CNT)
 	    && aee_kernel_Powerkey_is_press()) {
@@ -4197,7 +4188,6 @@ done:
 					       WDT_SETBY_Display);
 		primary_trigger_cnt = 0;
 	}
-#endif
 
 	if (pgc->session_id > 0)
 		update_frm_seq_info(0, 0, 0, FRM_TRIGGER);
@@ -5373,10 +5363,8 @@ done:
 
 	dst_module = _get_dst_module_by_lcm(pgc->plcm);
 
-#ifdef KER318_WORKAROUND
 	/* for sodi + decouple mode */
 	enable_soidle_by_bit(MT_CG_DISP0_DISP_WDMA0);
-#endif
 
 	_primary_path_unlock(__func__);
 	return ret;

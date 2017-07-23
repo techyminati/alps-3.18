@@ -2754,7 +2754,7 @@ int ddp_dsi_set_lcm_utils(DISP_MODULE_ENUM module, LCM_DRIVER *lcm_drv)
 		}
 	}
 
-#ifdef KER318_WORKAROUND
+#ifdef DEVICE_TREE
 	utils->set_gpio_out = (int (*)(unsigned int, unsigned int))mt_set_gpio_out;
 	utils->set_gpio_mode = (int (*)(unsigned int, unsigned int))mt_set_gpio_mode;
 	utils->set_gpio_dir = (int (*)(unsigned int, unsigned int))mt_set_gpio_dir;

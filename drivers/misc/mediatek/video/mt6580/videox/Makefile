@@ -30,7 +30,9 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/include/     \
              -I$(srctree)/drivers/misc/mediatek/externaldisplay/$(MTK_PLATFORM) \
              -I$(srctree)/drivers/misc/mediatek/mach/$(MTK_PLATFORM)/include/mach/ \
              -I$(srctree)/drivers/staging/android/ion/ \
-             -I$(srctree)/drivers/misc/mediatek/base/power/ \
+             -I$(srctree)/drivers/misc/mediatek/base/power/$(MTK_PLATFORM) \
+             -I$(srctree)/drivers/misc/mediatek/base/power/include/spm_v1/ \
+             -I$(srctree)/drivers/misc/mediatek/base/power/include/ \
              -I$(srctree)/drivers/misc/mediatek/m4u/$(MTK_PLATFORM)/ \
              -I$(srctree)/drivers/misc/mediatek/mmp/
 ccflags-y += -I$(srctree)/drivers/staging/android/ion/

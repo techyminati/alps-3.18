@@ -1,5 +1,15 @@
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/thermal/fakeHeader/
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/base/power/include/
+ccflags-y  += -I$(srctree)/drivers/misc/mediatek/base/power/spm_v1
+
+ifeq ($(CONFIG_ARCH_MT6580),y)
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/videox/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/dispsys/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/include/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/cmdq/v2/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/cmdq/v2/$(MTK_PLATFORM)/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/lcm/inc/
+endif
 
 obj-y += mt_spm_mtcmos.o
 obj-y += mt_clkmgr_common.o
