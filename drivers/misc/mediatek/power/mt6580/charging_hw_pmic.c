@@ -707,10 +707,15 @@ signed int chr_control_interface(CHARGING_CTRL_CMD cmd, void *data)
 {
 	signed int status;
 
-	if (cmd < CHARGING_CMD_NUMBER)
-		status = charging_func[cmd] (data);
-	else
-		return STATUS_UNSUPPORTED;
+	if (cmd < CHARGING_CMD_NUMBER) {
+		if (charging_func[cmd] != NULL)
+			status = charging_func[cmd](data);
+		else {
+			battery_log(BAT_LOG_CRTI, "[chr_control_interface]cmd:%d not supported\n", cmd);
+			status = STATUS_UNSUPPORTED;
+		}
+	} else
+		status = STATUS_UNSUPPORTED;
 
 	return status;
 }
