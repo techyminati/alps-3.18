@@ -597,7 +597,9 @@ int _ioctl_prepare_buffer(unsigned long arg, ePREPARE_FENCE_TYPE type)
 		return -EFAULT;
 	}
 
-	if (type == PREPARE_PRESENT_FENCE)
+	if (type == PREPARE_INPUT_FENCE)
+		;
+	else if (type == PREPARE_PRESENT_FENCE)
 		info.layer_id = disp_sync_get_present_timeline_id();
 	else if (type == PREPARE_OUTPUT_FENCE)
 		info.layer_id = disp_sync_get_output_timeline_id();
