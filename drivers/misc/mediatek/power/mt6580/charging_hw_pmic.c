@@ -354,11 +354,11 @@ static unsigned int charging_get_hv_status(void *data)
 static unsigned int charging_get_battery_status(void *data)
 {
 	unsigned int status = STATUS_OK;
-	unsigned int val = 0;
 #if defined(CONFIG_POWER_EXT) || defined(CONFIG_MTK_FPGA)
 	*(kal_bool *)(data) = 0;/* battery exist*/
 	battery_log(BAT_LOG_CRTI, "bat exist for evb\n");
 #else
+	unsigned int val = 0;
 	val = pmic_get_register_value(PMIC_BATON_TDET_EN);
 	battery_log(BAT_LOG_FULL, "[charging_get_battery_status] BATON_TDET_EN = %d\n", val);
 	if (val) {
@@ -413,7 +413,7 @@ static unsigned int charging_get_is_pcm_timer_trigger(void *data)
 	 unsigned int status = STATUS_OK;
 
 #if defined(CONFIG_POWER_EXT) || defined(CONFIG_MTK_FPGA)
-	*(kal_boo l*)(data) = KAL_FALSE;
+	*(kal_bool *)(data) = KAL_FALSE;
 #else
 
 /*     if (slp_get_wake_reason() == WR_PCM_TIMER)*/

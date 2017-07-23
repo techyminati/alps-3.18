@@ -294,10 +294,10 @@ static signed int read_adc_v_bat_temp(void *data)
 
 static signed int read_adc_v_charger(void *data)
 {
-	signed int val;
 #if defined(CONFIG_POWER_EXT)
 	*(signed int *)(data) = 5001;
 #else
+	signed int val;
 	val = PMIC_IMM_GetOneChannelValue(MT6350_AUX_VCDT, *(signed int *)(data), 1);
 	val = (((R_CHARGER_1+R_CHARGER_2) * 100 * val) / R_CHARGER_2) / 100;
 
