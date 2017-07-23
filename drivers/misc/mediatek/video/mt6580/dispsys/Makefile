@@ -31,6 +31,7 @@ obj-y += ddp_dump.o
 obj-y += ddp_manager.o
 obj-y += ddp_irq.o
 obj-y += ddp_info.o
+obj-y += ddp_pwm_mux.o
 obj-y += ddp_color_format.o
 
 
