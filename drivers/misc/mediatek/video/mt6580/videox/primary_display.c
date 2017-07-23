@@ -3784,11 +3784,11 @@ done:
 	_primary_path_unlock(__func__);
 	_primary_path_esd_check_unlock();
 	disp_sw_mutex_unlock(&(pgc->capture_lock));
-
+#ifdef AEE_ENABLE
 	/* For AEE_POWERKEY_HANG_DETECT */
 	aee_kernel_wdt_kick_Powkey_api("mtkfb_early_suspend",
 				       WDT_SETBY_Display);
-
+#endif
 	primary_trigger_cnt = 0;
 	/* clear dim layer buffer */
 	dim_layer_mva = 0;
@@ -4014,10 +4014,10 @@ done:
 	_primary_path_unlock(__func__);
 
 	wake_up(&resume_wait_queue);
-
+#ifdef AEE_ENABLE
 	/* For AEE_POWERKEY_HANG_DETECT */
 	aee_kernel_wdt_kick_Powkey_api("mtkfb_late_resume", WDT_SETBY_Display);
-
+#endif
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagEnd,
 		       0, 0);
 	return 0;
@@ -4180,7 +4180,7 @@ int primary_display_trigger(int blocking, void *callback, int need_merge)
 
 done:
 	_primary_path_unlock(__func__);
-
+#ifdef AEE_ENABLE
 	/* For AEE_POWERKEY_HANG_DETECT */
 	if ((primary_trigger_cnt > PRIMARY_DISPLAY_TRIGGER_CNT)
 	    && aee_kernel_Powerkey_is_press()) {
@@ -4188,7 +4188,7 @@ done:
 					       WDT_SETBY_Display);
 		primary_trigger_cnt = 0;
 	}
-
+#endif
 	if (pgc->session_id > 0)
 		update_frm_seq_info(0, 0, 0, FRM_TRIGGER);
 

@@ -477,7 +477,7 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 					fifo_valid_size = 32;
 					DISP_REG_SET(handle,
 						     idx * DISP_RDMA_INDEX_OFFSET +
-						     DISP_REG_RDMA_MEM_GMC_SETTING_1, 192);
+						     DISP_REG_RDMA_MEM_GMC_SETTING_1, 238);
 					DISP_REG_SET(handle,
 						     idx * DISP_RDMA_INDEX_OFFSET +
 						     DISP_REG_RDMA_MEM_GMC_SETTING_0, 0x07010E1C);
