@@ -1821,7 +1821,9 @@ static void msdc_sdio_power(struct msdc_host *host, u32 on)
 static void msdc_reset_pwr_cycle_counter(struct msdc_host *host)
 {
 	host->power_cycle = 0;
+	spin_lock(&host->lock);
 	host->power_cycle_enable = 1;
+	spin_unlock(&host->lock);
 }
 
 #define CMD_TUNE_CNT	(0)
@@ -9332,7 +9334,6 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	host->block_bad_card = 0;
 	host->sd_30_busy = 0;
 	msdc_reset_tmo_tune_counter(host, ALL_TUNE_CNT);
-	msdc_reset_pwr_cycle_counter(host);
 
 	if (is_card_sdio(host) || (host->hw->flags & MSDC_SDIO_IRQ)) {
 		host->saved_para.suspend_flag = 0;
@@ -9374,6 +9375,8 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	/* host->timer.expires = jiffies + HZ; */
 	host->timer.function = msdc_timer_pm;
 	host->timer.data = (unsigned long)host;
+
+	msdc_reset_pwr_cycle_counter(host);
 
 	if ((pdev->id == 1) && (host->hw->host_function == MSDC_SD))
 		msdc_select_clksrc(host, host->hw->clk_src);
