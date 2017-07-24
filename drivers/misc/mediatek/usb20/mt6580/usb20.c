@@ -62,6 +62,8 @@ u32 port_mode = PORT_MODE_USB;
 u32 sw_tx;
 u32 sw_rx;
 u32 sw_uart_path;
+#define AP_UART0_COMPATIBLE_NAME "mediatek,gpio"
+void __iomem *ap_uart0_base;
 #endif
 
 #ifndef FPGA_PLATFORM
@@ -951,6 +953,9 @@ static int mt_usb_probe(struct platform_device *pdev)
 #ifdef CONFIG_OF
 	struct musb_hdrc_config *config;
 	struct device_node *np = pdev->dev.of_node;
+#ifdef CONFIG_MTK_UART_USB_SWITCH
+	struct device_node *ap_uart0_node = NULL;
+#endif
 #endif
 	int				ret = -ENOMEM;
 
@@ -984,6 +989,19 @@ static int mt_usb_probe(struct platform_device *pdev)
 	pdata->mode = MUSB_OTG;
 #else
 	of_property_read_u32(np, "mode", (u32 *)&pdata->mode);
+#endif
+
+#ifdef CONFIG_MTK_UART_USB_SWITCH
+	ap_uart0_node = of_find_compatible_node(NULL, NULL, AP_UART0_COMPATIBLE_NAME);
+
+	if (ap_uart0_node == NULL) {
+		dev_err(&pdev->dev, "USB get ap_uart0_node failed\n");
+		if (ap_uart0_base)
+			iounmap(ap_uart0_base);
+		ap_uart0_base = 0;
+	} else {
+		ap_uart0_base = of_iomap(ap_uart0_node, 0);
+	}
 #endif
 
 	of_property_read_u32(np, "num_eps", (u32 *)&config->num_eps);

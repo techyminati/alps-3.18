@@ -320,13 +320,13 @@ void usb_phy_switch_to_uart(void)
 	/* mtk_uart_usb_rx_sel(1, 1); */
 
 	/* GPIO Selection set UART#1 */
-	/* DRV_WriteReg32(GPIO_BASE + 0x118, 0x02); */
+	DRV_WriteReg32(ap_uart0_base + 0x118, 0x2);
 }
 
 
 void usb_phy_switch_to_usb(void)
 {
-	/* DRV_WriteReg32(GPIO_BASE + 0x11C, 0x02); */	/* clear */
+	DRV_WriteReg32(ap_uart0_base + 0x11C, 0x2);	/* clear */
 	usb_enable_clock(true);
 	udelay(50);
 	/* clear force_uart_en */

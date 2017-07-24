@@ -68,6 +68,7 @@ extern kal_uint32 upmu_get_rgs_chrdet(void);
 extern void BATTERY_SetUSBState(int usb_state);
 extern void upmu_interrupt_chrdet_int_en(kal_uint32 val);
 extern CHARGER_TYPE mt_get_charger_type(void);
+extern void __iomem *ap_uart0_base;
 
 /* specific USB fuctnion */
 typedef enum {
