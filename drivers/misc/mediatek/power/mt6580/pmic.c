@@ -2579,8 +2579,7 @@ void chrdet_int_handler(void)
 	}
 #endif
 	pmic_set_register_value(PMIC_RG_USBDL_RST, 1);
-#ifdef CONFIG_POWER_EXT
-#else
+#ifdef CONFIG_MTK_SMART_BATTERY
 	do_chrdet_int_task();
 #endif
 }
