@@ -522,7 +522,9 @@ static void wdt_fiq(void *arg, void *regs, void *svc_sp)
 	unsigned int wdt_mode_val;
 	struct wd_api *wd_api = NULL;
 
-	get_wd_api(&wd_api);
+	if (get_wd_api(&wd_api) != 0)
+		aee_wdt_printf("\n get_wd_api failed!");
+
 	wdt_mode_val = __raw_readl(MTK_WDT_STATUS);
 	mt_reg_sync_writel(wdt_mode_val, MTK_WDT_NONRST_REG);
 #ifdef	CONFIG_MTK_WD_KICKER
