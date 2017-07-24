@@ -1817,7 +1817,7 @@ static inline MVOID ISP_Reset(MVOID)
 
 	do {
 		Reg = ISP_RD32((void *)ISP_REG_ADDR_SW_CTL);
-	} while ((!Reg) & ISP_REG_SW_CTL_SW_RST_STATUS);
+	} while (0/*logically = 0, coverity*//*(!Reg) & ISP_REG_SW_CTL_SW_RST_STATUS*/);
 
 	ISP_WR32((void *)ISP_REG_ADDR_SW_CTL, ISP_REG_SW_CTL_SW_RST_TRIG | ISP_REG_SW_CTL_HW_RST);	/* 0x5 */
 	ISP_WR32((void *)ISP_REG_ADDR_SW_CTL, ISP_REG_SW_CTL_HW_RST);	/* 0x4 */
@@ -2364,6 +2364,7 @@ static MINT32 ISP_WriteReg(ISP_REG_IO_STRUCT *pRegIo)
 			LOG_DBG("ERROR: kmalloc failed, (process, pid, tgid)=(%s, %d, %d)",
 				current->comm, current->pid, current->tgid);
 			Ret = -ENOMEM;
+			goto EXIT;
 		}
 		if (copy_from_user
 		    (pData, (void __user *)(pRegIo->pData),
@@ -5862,10 +5863,6 @@ static MINT32 ISP_probe(struct platform_device *pDev)
 
 	}
 	nr_camisp_devs = new_count;
-	if (pDev == NULL) {
-		dev_err(&pDev->dev, "pDev is NULL");
-		return -ENXIO;
-	}
 #endif
 
 
@@ -6588,6 +6585,7 @@ m4u_callback_ret_t ISP_M4U_TranslationFault_callback(int port, unsigned int mva,
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0310));
 		LOG_DBG("[TF_IMGO]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x031C),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x031C));
+		break;
 	case M4U_PORT_IMG2O:
 		LOG_DBG("[TF_IMG2O]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x0320),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0320));
@@ -6601,6 +6599,7 @@ m4u_callback_ret_t ISP_M4U_TranslationFault_callback(int port, unsigned int mva,
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0330));
 		LOG_DBG("[TF_IMG2O]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x033C),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x033C));
+		break;
 	case M4U_PORT_LSCI:
 		LOG_DBG("[TF_LSCI]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x00A8),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x00A8));
@@ -6624,6 +6623,7 @@ m4u_callback_ret_t ISP_M4U_TranslationFault_callback(int port, unsigned int mva,
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0278));
 		LOG_DBG("[TF_LSCI]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x027c),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x027c));
+		break;
 	case M4U_PORT_IMGI:
 		LOG_DBG("[TF_IMGI]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x0050),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0050));
@@ -6643,6 +6643,7 @@ m4u_callback_ret_t ISP_M4U_TranslationFault_callback(int port, unsigned int mva,
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x023C));
 		LOG_DBG("[TF_IMGI]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x0240),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0240));
+		break;
 	case M4U_PORT_ESFKO:
 		LOG_DBG("[TF_ESFKO]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x035C),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x035C));
@@ -6662,6 +6663,7 @@ m4u_callback_ret_t ISP_M4U_TranslationFault_callback(int port, unsigned int mva,
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0378));
 		LOG_DBG("[TF_ESFKO]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x037C),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x037C));
+		break;
 	case M4U_PORT_AAO:
 		LOG_DBG("[TF_AAO]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x0388),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0388));
@@ -6673,6 +6675,7 @@ m4u_callback_ret_t ISP_M4U_TranslationFault_callback(int port, unsigned int mva,
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0394));
 		LOG_DBG("[TF_AAO]0x%08X %08X", (unsigned int)(ISP_TPIPE_ADDR + 0x0398),
 			(unsigned int)ISP_RD32(ISP_ADDR + 0x0398));
+		break;
 	default:
 		break;
 	}
