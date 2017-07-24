@@ -1500,44 +1500,36 @@ int dpmgr_wait_event_timeout(disp_path_handle dp_handle, DISP_PATH_EVENT event, 
 	return ret;
 }
 
-int _dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event, unsigned long long *event_ts)
+int dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
 {
 	int ret = -1;
 	ddp_path_handle handle;
 	DPMGR_WQ_HANDLE *wq_handle;
-	unsigned long long cur_time;
 
 	ASSERT(dp_handle != NULL);
-	handle = (ddp_path_handle)dp_handle;
+	handle = (ddp_path_handle) dp_handle;
 	wq_handle = &handle->wq_list[event];
-	if (!wq_handle->init) {
-		DISPERR("wait event %s not initialized on scenario %s\n", path_event_name(event),
-		ddp_get_scenario_name(handle->scenario));
-		return -2;
+	if (wq_handle->init) {
+		unsigned long long cur_time = sched_clock();
+
+		DISPRCD("wait event %s on scenario %s\n", path_event_name(event),
+			   ddp_get_scenario_name(handle->scenario));
+
+		ret = wait_event_interruptible(wq_handle->wq, cur_time < wq_handle->data);
+		if (ret < 0) {
+			DISPERR("wait %s interrupt by other ret %d on scenario %s\n",
+				   path_event_name(event), ret,
+				   ddp_get_scenario_name(handle->scenario));
+		} else {
+			DISPRCD("received event %s ret %d on scenario %s\n",
+				   path_event_name(event), ret,
+				   ddp_get_scenario_name(handle->scenario));
+		}
+		return ret;
 	}
-
-	cur_time = ktime_to_ns(ktime_get());
-
-	ret = wait_event_interruptible(wq_handle->wq, cur_time < wq_handle->data);
-	if (ret < 0) {
-		DISPERR("wait %s interrupt by other ret %d on scenario %s\n",
-		path_event_name(event), ret,
-		ddp_get_scenario_name(handle->scenario));
-	}
-	if (event_ts)
-		*event_ts = wq_handle->data;
-
+	DISPERR("wait event %s not initialized on scenario %s\n", path_event_name(event),
+		   ddp_get_scenario_name(handle->scenario));
 	return ret;
-}
-
-int dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
-{
-	return _dpmgr_wait_event(dp_handle, event, NULL);
-}
-
-int dpmgr_wait_event_ts(disp_path_handle dp_handle, DISP_PATH_EVENT event, unsigned long long *event_ts)
-{
-	return _dpmgr_wait_event(dp_handle, event, event_ts);
 }
 
 int dpmgr_signal_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
