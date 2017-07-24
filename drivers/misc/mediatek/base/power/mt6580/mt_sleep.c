@@ -25,15 +25,13 @@
 #include <linux/wakelock.h>
 #include <linux/time.h>
 #include <linux/kthread.h>
-
+#include <mach/mt_spm_mtcmos.h>
+#include <mach/mt_clkmgr.h>
 #include <mt-plat/sync_write.h>
 #include "mt_sleep.h"
 #include "mt_spm.h"
 #include "mt_spm_sleep.h"
 #include "mt_spm_idle.h"
-/* #include "mt_spm_mtcmos.h" */
-/* #include "mt_clkmgr.h" */
-
 #include <mt-plat/mt_gpio.h>
 /*
 #include <mach/battery_common.h>
@@ -198,10 +196,8 @@ static int slp_suspend_ops_valid(suspend_state_t state)
 static int slp_suspend_ops_begin(suspend_state_t state)
 {
 	/* legacy log */
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-	slp_notice("Chip_pm_begin(%u)(%u)\n", is_cpu_pdn(slp_spm_flags),
-		   is_infra_pdn(slp_spm_flags));
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+	slp_notice("@@@@@@@@@@@@@@@@@@@@\tChip_pm_begin(%u)(%u)\t@@@@@@@@@@@@@@@@@@@@\n",
+			is_cpu_pdn(slp_spm_flags), is_infra_pdn(slp_spm_flags));
 
 	slp_wake_reason = WR_NONE;
 
@@ -211,9 +207,7 @@ static int slp_suspend_ops_begin(suspend_state_t state)
 static int slp_suspend_ops_prepare(void)
 {
 	/* legacy log */
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-	slp_crit2("Chip_pm_prepare\n");
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+	slp_crit2("@@@@@@@@@@@@@@@@@@@@\tChip_pm_prepare\t@@@@@@@@@@@@@@@@@@@@\n");
 
 #if 0
 	if (slp_chk_golden)
@@ -240,9 +234,7 @@ static int slp_suspend_ops_enter(suspend_state_t state)
 		fm_radio_is_playing = 1;
 
 	/* legacy log */
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-	slp_crit2("Chip_pm_enter\n");
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+	slp_crit2("@@@@@@@@@@@@@@@@@@@@\tChip_pm_enter\t@@@@@@@@@@@@@@@@@@@@\n");
 
 
 #if !defined(CONFIG_MTK_FPGA)
@@ -255,21 +247,15 @@ static int slp_suspend_ops_enter(suspend_state_t state)
 		slp_dump_pm_regs();
 #endif
 
-/* todo: need mt_clkmgr.h */
-#if 0
 	if (slp_check_mtcmos_pll)
 		slp_check_pm_mtcmos_pll();
-#endif
 
-/* todo: need mt_spm_mtcmos.h */
-#if 0
 	if (!spm_cpusys0_can_power_down()) {
 		slp_error("CANNOT SLEEP DUE TO CPU1~x PON\n");
 		/* return -EPERM; */
 		ret = -EPERM;
 		goto LEAVE_SLEEP;
 	}
-#endif
 
 	if (is_infra_pdn(slp_spm_flags) && !is_cpu_pdn(slp_spm_flags)) {
 		slp_error("CANNOT SLEEP DUE TO INFRA PDN BUT CPU PON\n");
@@ -304,17 +290,13 @@ LEAVE_SLEEP:
 static void slp_suspend_ops_finish(void)
 {
 	/* legacy log */
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-	slp_crit2("Chip_pm_finish\n");
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+	slp_crit2("@@@@@@@@@@@@@@@@@@@@\tChip_pm_finish\t@@@@@@@@@@@@@@@@@@@@\n");
 }
 
 static void slp_suspend_ops_end(void)
 {
 	/* legacy log */
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
-	slp_notice("Chip_pm_end\n");
-	slp_notice("@@@@@@@@@@@@@@@@@@@@\n");
+	slp_notice("@@@@@@@@@@@@@@@@@@@@\tChip_pm_end\t@@@@@@@@@@@@@@@@@@@@\n");
 #ifdef ENABLE_AUTO_SUSPEND_TEST
 	if (1 == slp_auto_suspend_resume) {
 		slp_crit2("slp_auto_suspend_resume_cnt = %d\n", slp_auto_suspend_resume_cnt);
