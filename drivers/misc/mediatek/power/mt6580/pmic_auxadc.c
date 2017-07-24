@@ -133,7 +133,7 @@ void PMIC_IMM_PollingAuxadcChannel(void)
 
 			spin_lock_irqsave(&pmic_adc_lock, flags);
 			if (pmic_is_auxadc_busy() == 0)
-				pmic_set_register_value(PMIC_RG_ADC_DECI_GDLY, 0);
+				pmic_set_register_value_nolock(PMIC_RG_ADC_DECI_GDLY, 0);
 			spin_unlock_irqrestore(&pmic_adc_lock, flags);
 		}
 	}

@@ -2923,17 +2923,19 @@ unsigned short mt6350_get_register_value(PMU_FLAGS_LIST_ENUM flagname)
 	return val;
 }
 
-unsigned short mt6350_get_register_value_nolock(PMU_FLAGS_LIST_ENUM flagname)
+unsigned short pmic_set_register_value_nolock(PMU_FLAGS_LIST_ENUM flagname, unsigned int val)
 {
 	const PMU_FLAG_TABLE_ENTRY *pFlag = &pmu_flags_table[flagname];
-	unsigned int val;
-	unsigned int ret;
+	unsigned int ret = 0;
 
-	ret =
-	    pmic_read_interface_nolock((unsigned int) pFlag->offset, &val, (unsigned int) (pFlag->mask),
-				(unsigned int) (pFlag->shift));
+	if (pFlag->flagname != flagname) {
+		pr_info("[pmu_set_register_value]pmic flag idx error\n");
+		return 1;
+	}
+	ret = pmic_config_interface_nolock((pFlag->offset), (unsigned int) (val),
+		(unsigned int) (pFlag->mask), (unsigned int) (pFlag->shift));
 
-	return val;
+	return 0;
 }
 
 unsigned short pmic_set_register_value(PMU_FLAGS_LIST_ENUM flagname, unsigned int val)
@@ -2944,11 +2946,6 @@ unsigned short pmic_set_register_value(PMU_FLAGS_LIST_ENUM flagname, unsigned in
 unsigned short pmic_get_register_value(PMU_FLAGS_LIST_ENUM flagname)
 {
 	return mt6350_get_register_value(flagname);
-}
-
-unsigned short pmic_get_register_value_nolock(PMU_FLAGS_LIST_ENUM flagname)
-{
-	return mt6350_get_register_value_nolock(flagname);
 }
 
 unsigned short bc11_set_register_value(PMU_FLAGS_LIST_ENUM flagname, unsigned int val)
