@@ -103,6 +103,7 @@ typedef bool MBOOL;
 #undef MyTag
 #endif
 #define MyTag "ISP"
+#define MyTag "ISP"
 #ifndef LOG_DBG
 #define LOG_DBG(format, args...)    pr_debug(MyTag format, ##args)
 #define LOG_INF(format, args...)    pr_debug(MyTag format,  ##args)
@@ -111,6 +112,7 @@ typedef bool MBOOL;
 #define LOG_ERR(format, args...)    pr_err(MyTag format,  ##args)
 #define LOG_AST(format, args...)    pr_alert(MyTag format, ##args)
 #endif
+
 
 /*******************************************************************************
 * defined marco
@@ -155,7 +157,7 @@ typedef bool MBOOL;
 
 #define ISP_DEV_NAME                "camera-isp"
 #define ISP_IRQ_POLLING             (0)
-#define ENABLE_INIT                 (0)   /*for early if load dont need to use camera*/
+#define ENABLE_INIT                 (1)   /*for early if load dont need to use camera*/
 
 #define ISP_DBG_INT                 (0x00000001)
 #define ISP_DBG_HOLD_REG            (0x00000002)
@@ -1858,11 +1860,13 @@ static MINT32 ISP_ReadReg(ISP_REG_IO_STRUCT *pRegIo)
 			goto EXIT;
 		}
 		/* pData++; */
-		if ((ISP_ADDR_CAMINF + reg.Addr >= ISP_ADDR)
+		if ((reg.Addr >= 0x4000)
 		    && (ISP_ADDR_CAMINF + reg.Addr < (ISP_ADDR_CAMINF + ISP_RANGE))) {
 			reg.Val = ISP_RD32((ISP_ADDR_CAMINF + reg.Addr));
 		} else {
-			LOG_ERR("Wrong address(0x%x)", (unsigned int)(ISP_ADDR_CAMINF + reg.Addr));
+			LOG_ERR("RD Wrong reg.Addr(0x%x) ISP_ADDR_CAMINF(0x%x) ISP_ADDR(0x%x)\n",
+				reg.Addr, (unsigned int)ISP_ADDR_CAMINF, (unsigned int)ISP_ADDR);
+			LOG_ERR("Wrong address(0x%x)\n", (unsigned int)(ISP_ADDR_CAMINF + reg.Addr));
 			reg.Val = 0;
 		}
 		if (0 != put_user(reg.Val, &(pData->Val))) {
@@ -1896,10 +1900,12 @@ static MINT32 ISP_WriteRegToHw(ISP_REG_STRUCT *pReg, MUINT32 Count)
 				(MUINT32) (ISP_ADDR_CAMINF + pReg[i].Addr),
 				(MUINT32) (pReg[i].Val));
 		}
-		if (((ISP_ADDR_CAMINF + pReg[i].Addr) >= ISP_ADDR)
+		if ((pReg[i].Addr >= 0x4000)
 		    && ((ISP_ADDR_CAMINF + pReg[i].Addr) < (ISP_ADDR_CAMINF + ISP_RANGE))) {
 			ISP_WR32((ISP_ADDR_CAMINF + pReg[i].Addr), pReg[i].Val);
 		} else {
+			LOG_ERR("WR Wrong reg.Addr(0x%x) ISP_ADDR_CAMINF(0x%x) ISP_ADDR(0x%x)\n",
+				pReg[i].Addr, (unsigned int)ISP_ADDR_CAMINF, (unsigned int)ISP_ADDR);
 			LOG_ERR("wrong address(0x%x)",
 				(unsigned int)(ISP_ADDR_CAMINF + pReg[i].Addr));
 		}
@@ -6695,6 +6701,7 @@ MINT32 __init ISP_Init(MVOID)
 #if 0
 	struct proc_dir_entry *pEntry;
 #endif
+
 	LOG_DBG("+");
 
 	Ret = platform_driver_register(&IspDriver);

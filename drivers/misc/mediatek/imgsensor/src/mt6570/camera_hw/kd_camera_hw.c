@@ -249,7 +249,15 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 		pinSetIdx = 1;
 	else if (DUAL_CAMERA_MAIN_2_SENSOR == SensorIdx)
 		pinSetIdx = 2;
-
+/*
+	if (currSensorName && (0 == strcmp(currSensorName, "ov5693mipiraw")))
+	{
+		if(pinSetIdx == 1)
+		{
+			goto _kdCISModulePowerOn_exit_;
+		}
+	}
+*/
 	/* power ON */
 	if (On) {
 
@@ -542,8 +550,8 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 				}
 			} else if (currSensorName
 				   && (0 == strcmp(SENSOR_DRVNAME_IMX179_MIPI_RAW, currSensorName)
-				       || 0 == strcmp(SENSOR_DRVNAME_OV5670_MIPI_RAW,
-						      currSensorName))) {
+				       || 0 == strcmp(SENSOR_DRVNAME_OV5670_MIPI_RAW, currSensorName)
+				       || 0 == strcmp(SENSOR_DRVNAME_OV5693_MIPI_RAW, currSensorName))) {
 				if (pinSetIdx == 0 && TRUE != _hwPowerOn(VCAMD, VOL_1200)) {
 					PK_DBG("[CAMERA SENSOR] Fail to enable digital power\n");
 					goto _kdCISModulePowerOn_exit_;
@@ -1579,8 +1587,8 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 				}
 			} else if (currSensorName
 				   && (0 == strcmp(SENSOR_DRVNAME_IMX179_MIPI_RAW, currSensorName)
-				       || 0 == strcmp(SENSOR_DRVNAME_OV5670_MIPI_RAW,
-						      currSensorName))) {
+				       || 0 == strcmp(SENSOR_DRVNAME_OV5670_MIPI_RAW, currSensorName)
+				       || 0 == strcmp(SENSOR_DRVNAME_OV5693_MIPI_RAW, currSensorName))) {
 				if (pinSetIdx == 0
 				    && TRUE != _hwPowerOn(CAMERA_POWER_VCAM_D, VOL_1200,
 							  &regVCAMD)) {

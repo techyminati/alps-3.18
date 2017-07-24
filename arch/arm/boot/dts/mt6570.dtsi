@@ -1045,8 +1045,8 @@ mtk-msdc.0 {
 		reg = <0 0x14038000 0 0x1000>;
 	};
 
-	imgsys_config@15000000 {
-		compatible = "mediatek,imgsys_config";
+	IMGSYS_CONFIG@15000000 {
+		compatible = "mediatek,IMGSYS_CONFIG";
 		reg = <0 0x15000000 0 0x1000>;
 	};
 
@@ -1056,9 +1056,10 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 136 IRQ_TYPE_LEVEL_LOW>;
 	};
 
-	cam@15000000 {
-		compatible = "mediatek,cam";
-		reg = <0 0x15000000 0 0x1000>;
+	CAM_0@0x15004000 {
+		compatible = "mediatek,CAM_0";
+		reg = <0 0x15004000 0 0x1000>;
+		interrupts = <0 139 0x8>;
 	};
 
 	csi2@15008000 {
@@ -1076,19 +1077,30 @@ mtk-msdc.0 {
 		reg = <0 0x15008000 0 0x1000>;
 	};
 
+	ISPSYS@0x15000000 {
+		compatible = "mediatek,ISPSYS";
+		reg = <0 0x15004000 0 0x9000>,	/*ISP_ADDR*/
+		<0 0x15000000 0 0x10000>,	/*IMGSYS_CONFIG_ADDR*/
+		<0 0x10011000 0 0x4000>,	/*MIPI_ANA_ADDR*/
+		<0 0x10017000 0 0x1000>;
+		interrupts = <0 142 0x8>, /* SENINF */
+		<0 139 0x8>; /* CAM0 */
+	};
+
 	kd_camera_hw1:kd_camera_hw1@15008000 {
 		compatible = "mediatek,camera_hw";
-		reg = <0x15008000 0x1000>;  /* SENINF_ADDR */
+		reg = <0 0x15008000 0 0x1000>;  /* SENINF_ADDR */
 		vcama-supply = <&mt_pmic_vcama_ldo_reg>;
 		vcamd-supply = <&mt_pmic_vcamd_ldo_reg>;
 		vcamaf-supply = <&mt_pmic_vcamaf_ldo_reg>;
 		vcamio-supply = <&mt_pmic_vcamio_ldo_reg>;
-
 	};
+
 	kd_camera_hw2:kd_camera_hw2@15008000 {
 		compatible = "mediatek,camera_hw2";
-		reg = <0x15008000 0x1000>;  /* SENINF_ADDR */
+		reg = <0 0x15008000 0 0x1000>;  /* SENINF_ADDR */
 	};
+
 	seninf_top@15008000 {
 		compatible = "mediatek,seninf_top";
 		reg = <0 0x15008000 0 0x1000>;
