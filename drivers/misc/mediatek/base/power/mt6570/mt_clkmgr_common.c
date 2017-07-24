@@ -19,6 +19,7 @@
 #include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/proc_fs.h>
+#include <linux/debugfs.h>
 
 #include <mach/mt_clkmgr.h>
 
@@ -36,6 +37,9 @@ EXPORT_SYMBOL(enable_clock);
 int disable_clock(enum cg_clk_id id, char *name)
 {
 	int err = 0;
+	pr_debug("%s[%d]: disable by %s\n", __func__, id, name);
+
+	return 0;
 
 	err = mt_disable_clock(id, name);
 
