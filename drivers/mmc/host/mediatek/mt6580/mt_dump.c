@@ -1517,7 +1517,9 @@ static unsigned int simp_init_emmc(void)
 	}
 	if (0 == ret)
 		emmc_init = 1;
+#ifdef CONFIG_MTK_EMMC_SUPPORT
 out:
+#endif
 	return ret;
 }
 
