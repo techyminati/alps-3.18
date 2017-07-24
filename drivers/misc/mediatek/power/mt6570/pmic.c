@@ -76,6 +76,8 @@
 #include <linux/time.h>
 #include <linux/wakelock.h>
 #include <linux/writeback.h>
+#include <linux/notifier.h>
+#include <linux/fb.h>
 /* #include <linux/xlog.h> TBD */
 
 /* mach */
@@ -157,8 +159,6 @@ unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigne
 	unsigned int pmic_reg = 0;
 	unsigned int rdata = 0xFFFF;
 
-	mutex_lock(&pmic_access_mutex);
-
 	/* mt_read_byte(RegNum, &pmic_reg); */
 #if defined(CONFIG_MTK_PMIC_WRAP)
 	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
@@ -166,7 +166,6 @@ unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigne
 	pmic_reg = rdata;
 	if (return_value != 0) {
 		PMICLOG("[pmic_read_interface] Reg[%x]= pmic_wrap read data fail\n", RegNum);
-		mutex_unlock(&pmic_access_mutex);
 		return return_value;
 	}
 	/* PMICLOG"[pmic_read_interface] Reg[%x]=0x%x\n", RegNum, pmic_reg); */
@@ -175,7 +174,6 @@ unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigne
 	*val = (pmic_reg >> SHIFT);
 	/* PMICLOG"[pmic_read_interface] val=0x%x\n", *val); */
 
-	mutex_unlock(&pmic_access_mutex);
 #else
 	/* PMICLOG("[pmic_read_interface] Can not access HW PMIC\n"); */
 #endif
@@ -244,32 +242,7 @@ unsigned int pmic_config_interface(unsigned int RegNum, unsigned int val, unsign
 unsigned int pmic_read_interface_nolock(unsigned int RegNum, unsigned int *val, unsigned int MASK,
 					unsigned int SHIFT)
 {
-	unsigned int return_value = 0;
-
-#if defined(CONFIG_PMIC_HW_ACCESS_EN)
-	unsigned int pmic_reg = 0;
-	unsigned int rdata = 0xFFFF;
-
-	/*mt_read_byte(RegNum, &pmic_reg); */
-#if defined(CONFIG_MTK_PMIC_WRAP)
-	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
-#endif
-	pmic_reg = rdata;
-	if (return_value != 0) {
-		PMICLOG("[pmic_read_interface] Reg[%x]= pmic_wrap read data fail\n", RegNum);
-		return return_value;
-	}
-	/*PMICLOG"[pmic_read_interface] Reg[%x]=0x%x\n", RegNum, pmic_reg); */
-
-	pmic_reg &= (MASK << SHIFT);
-	*val = (pmic_reg >> SHIFT);
-	/*PMICLOG"[pmic_read_interface] val=0x%x\n", *val); */
-
-#else
-	/*PMICLOG("[pmic_read_interface] Can not access HW PMIC\n"); */
-#endif
-
-	return return_value;
+	return pmic_read_interface(RegNum, val, MASK, SHIFT);
 }
 
 unsigned int pmic_config_interface_nolock(unsigned int RegNum, unsigned int val, unsigned int MASK,
@@ -3993,6 +3966,66 @@ int get_battery_plug_out_status(void)
 	return g_plug_out_status;
 }
 
+static void pmic_early_suspend(void)
+{
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 0);
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 1);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 1);
+}
+
+static void pmic_late_resume(void)
+{
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 0);
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 0);
+}
+
+static int pmic_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int blank;
+
+	/* skip if it's not a blank event */
+	if (event != FB_EVENT_BLANK)
+		return 0;
+
+	if (evdata == NULL)
+		return 0;
+	if (evdata->data == NULL)
+		return 0;
+
+	blank = *(int *)evdata->data;
+
+	switch (blank) {
+	/* LCM ON */
+	case FB_BLANK_UNBLANK:
+		pmic_late_resume();
+		break;
+	/* LCM OFF */
+	case FB_BLANK_POWERDOWN:
+		pmic_early_suspend();
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+static struct notifier_block pmic_fb_notifier = {
+	.notifier_call = pmic_fb_notifier_callback,
+};
+
 static int pmic_mt_probe(struct platform_device *dev)
 {
 	int ret_device_file = 0, i;
@@ -4124,6 +4157,10 @@ static int pmic_mt_probe(struct platform_device *dev)
 	PMICLOG("[PMIC] device_create_file for EM : done.\n");
 
 	/* pwrkey_sw_workaround_init(); */
+	if (fb_register_client(&pmic_fb_notifier)) {
+		PMICLOG("register FB client failed!\n");
+		return 0;
+	}
 	return 0;
 }
 
@@ -4164,7 +4201,30 @@ static int pmic_mt_suspend(struct platform_device *dev, pm_message_t state)
 		MT6350_INT_CON2, upmu_get_reg_value(MT6350_INT_CON2)
 	    );
 #endif
-
+#if 1
+	/*upmu_set_rg_vref18_enb(1);*/
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 1);
+	/*upmu_set_rg_adc_deci_gdly(1);*/
+	pmic_set_register_value(PMIC_RG_ADC_DECI_GDLY, 1);
+	/*upmu_set_rg_clksq_en_aux(1);*/
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	/*upmu_set_rg_aud26m_div4_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_sel_hw_mode(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 1);
+	/*upmu_set_rg_auxadc_sdm_ck_hw_mode(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 1);
+	/*upmu_set_rg_auxadc_sdm_ck_sel(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_wake_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 0);
+	PMICLOG("MT pmic driver suspend henry %x %x %x!!\n",
+		pmic_get_register_value(PMIC_RG_VREF18_ENB),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN));
+#endif
 	return 0;
 }
 
@@ -4212,7 +4272,28 @@ static int pmic_mt_resume(struct platform_device *dev)
 		MT6350_INT_CON2, upmu_get_reg_value(MT6350_INT_CON2)
 	    );
 #endif
-
+#if 1
+	/*upmu_set_rg_vref18_enb(0);*/
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 0);
+	/*upmu_set_rg_clksq_en_aux(1);*/
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	/*upmu_set_rg_aud26m_div4_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_sel_hw_mode(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_hw_mode(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 1);
+	/*upmu_set_rg_auxadc_sdm_ck_sel(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_wake_pdn(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 1);
+#endif
+	PMICLOG("MT pmic driver resume henry %x %x %x!!\n",
+		pmic_get_register_value(PMIC_RG_VREF18_ENB),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN));
 	return 0;
 }
 
