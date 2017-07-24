@@ -205,27 +205,114 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 110 IRQ_TYPE_NONE>;
 	};
 
-	eintc: eintc@1000b000 {
-		compatible = "mediatek,mt-eic";
-		reg = <0 0x1000b000 0 0x1000>;
-		interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
+		eintc: eintc@1000b000 {
+			compatible = "mediatek,mt-eic";
+			reg = <0 0x1000b000 0 0x1000>;
+			interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
 
-		#interrupt-cells = <2>;
-		interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupt-controller;
 
-		mediatek,max_eint_num = <26>;
-		mediatek,max_hw_deb_cnt = <25>;
-		mediatek,debtime_setting_entry = <10>;
-		mediatek,debtime_setting_array	= <0 128>,
-						<1 256>,
-						<2 512>,
-						<3 1024>,
-						<4 16384>,
-						<5 32768>,
-						<6 65536>,
-						<7 131072>,
-						<8 262144>,
-						<9 524288>;
+			mediatek,max_eint_num = <26>;
+			mediatek,mapping_table_entry = <83>;
+			mediatek,mapping_table = <0 0>, /* <gpio_pin, eint_pin> */
+					<1 1>,
+					<2 2>,
+					<3 3>,
+					<4 4>,
+					<5 5>,
+					<6 6>,
+					<7 7>,
+					<8 8>,
+					<9 9>,
+					<10 10>,
+					<11 11>,
+					<12 12>,
+					<13 13>,
+					<14 14>,
+					<15 15>,
+					<16 0>,
+					<17 1>,
+					<18 2>,
+					<19 3>,
+					<20 4>,
+					<21 5>,
+					<22 6>,
+					<23 7>,
+					<24 8>,
+					<25 9>,
+					<26 10>,
+					<27 11>,
+					<28 12>,
+					<29 13>,
+					<30 14>,
+					<31 15>,
+					<32 0>,
+					<33 1>,
+					<34 2>,
+					<35 3>,
+					<36 4>,
+					<37 5>,
+					<38 6>,
+					<39 7>,
+					<40 8>,
+					<41 9>,
+					<42 10>,
+					<43 11>,
+					<44 12>,
+					<45 13>,
+					<46 14>,
+					<47 15>,
+					<48 0>,
+					<49 1>,
+					<50 2>,
+					<51 3>,
+					<52 3>,
+					<53 4>,
+					<54 5>,
+					<55 6>,
+					<56 7>,
+					<57 8>,
+					<58 10>,
+					<59 11>,
+					<60 12>,
+					<61 13>,
+					<62 14>,
+					<63 15>,
+					<64 0>,
+					<65 1>,
+					<66 2>,
+					<67 3>,
+					<68 16>,
+					<69 4>,
+					<70 5>,
+					<71 6>,
+					<72 7>,
+					<73 8>,
+					<74 9>,
+					<75 10>,
+					<76 11>,
+					<77 12>,
+					<78 13>,
+					<81 0>,
+					<82 1>,
+					<83 2>,
+					<84 3>;
+
+			/* the number of gpio/eint mapping might be affected by built-in eint */
+			mediatek,builtin_entry = <11>;
+			/* gpio, built-in func mode, built-in eint */
+			mediatek,builtin_mapping = <0 3 20>, /* USB IDDIG & USB VBUS */
+						 <1 3 18>,
+						 <7 4 20>,
+						 <8 4 18>,
+						 <9 3 20>,
+						 <10 3 18>,
+						 <24 5 20>,
+						 <25 5 18>,
+						 <77 2 20>,
+						 <78 2 18>,
+						 <13 1 17>; /* PMIC */
 	};
 
 	ap_ccif0@1000c000 {
