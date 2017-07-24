@@ -214,8 +214,16 @@ static struct cg_clk clks[] = {
 		.mask = BIT(0),
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MIXED],
+		.src = NFI2X_SW_CG_BIT,
+	}, /* NFI2X fake clk*/
+	[MT_CG_SYS_33M] = {
+		.name = __stringify(MT_CG_SYS_33M),
+		.cnt = 1,
+		.mask = BIT(0),
+		.ops = &ao_cg_clk_ops,
+		.grp = &grps[CG_MIXED],
 		.src = MT_CG_INVALID,
-	}, /* sysyem fake */
+	},	/*Audio 33M Hopping*/
 	[MT_CG_MEMPLL] = {
 		.name = __stringify(MT_CG_MEMPLL),
 		.cnt = 1,
@@ -928,7 +936,47 @@ static struct cg_clk clks[] = {
 		.grp = &grps[CG_CTRL2],
 		.src = MT_CG_INVALID,
 	},
-
+	/* CG_CTRL3 */
+	[MT_CG_UFOZIP_HCLK_SW_CG] = {
+		.name = __stringify(MT_CG_UFOZIP_HCLK_SW_CG),
+		.cnt = 1,
+		.mask = UFOZIP_HCLK_SW_CG_BIT,
+		.ops = &rw_cg_clk_ops,
+		.grp = &grps[CG_CTRL3],
+		.src = MT_CG_INVALID,
+	},
+	[MT_CG_UFOZIP_DEC_CLK_SW_CG] = {
+		.name = __stringify(MT_CG_UFOZIP_DEC_CLK_SW_CG),
+		.cnt = 1,
+		.mask = UFOZIP_DEC_CLK_SW_CG_BIT,
+		.ops = &rw_cg_clk_ops,
+		.grp = &grps[CG_CTRL3],
+		.src = MT_CG_UFODEC_MM_SW_CG,
+	},
+	[MT_CG_UFOZIP_ENC_CLK_SW_CG] = {
+		.name = __stringify(MT_CG_UFOZIP_ENC_CLK_SW_CG),
+		.cnt = 1,
+		.mask = UFOZIP_ENC_CLK_SW_CG_BIT,
+		.ops = &rw_cg_clk_ops,
+		.grp = &grps[CG_CTRL3],
+		.src = MT_CG_UFOENC_MM_SW_CG,
+	},
+	[MT_CG_UFOENC_MM_SW_CG] = {
+		.name = __stringify(MT_CG_UFOENC_MM_SW_CG),
+		.cnt = 1,
+		.mask = UFOENC_MM_SW_CG_BIT,
+		.ops = &rw_cg_clk_ops,
+		.grp = &grps[CG_CTRL3],
+		.src = MT_CG_INVALID,
+	},
+	[MT_CG_UFODEC_MM_SW_CG] = {
+		.name = __stringify(MT_CG_UFODEC_MM_SW_CG),
+		.cnt = 1,
+		.mask = UFODEC_MM_SW_CG_BIT,
+		.ops = &rw_cg_clk_ops,
+		.grp = &grps[CG_CTRL3],
+		.src = MT_CG_INVALID,
+	},
 	/* CG_MMSYS0 */
 	[MT_CG_DISP0_SMI_COMMON] = {
 		.name = __stringify(MT_CG_DISP0_SMI_COMMON),
@@ -1441,6 +1489,12 @@ static struct cg_grp grps[] = {
 		.ops        = &general_gate_cg_grp_ops,
 		.sys        = NULL,
 	},
+	[CG_CTRL3] = {
+		.name       = __stringify(CG_CTRL3),
+		.mask       = 0,
+		.ops        = &general_gate_cg_grp_ops,
+		.sys        = NULL,
+	},
 };
 
 static struct cg_grp *id_to_grp(enum cg_grp_id id)
@@ -1898,7 +1952,7 @@ static const struct clkmux_map _mt_clkmux_pmicspi_mux_sel_map[] = {
 };
 static const struct clkmux_map _mt_clkmux_aud_hf_26m_sel_map[] = {
 	{ .val = 0x0 << 26,	.id = MT_CG_SYS_26M,	.mask = 0x1 << 26, },
-	{ .val = 0x1 << 26,	.id = MT_CG_SYS_TEMP,	.mask = 0x1 << 26, },
+	{ .val = 0x1 << 26,	.id = MT_CG_SYS_33M,	.mask = 0x1 << 26, },
 };
 static const struct clkmux_map _mt_clkmux_aud_intbus_sel_map[] = {
 	{ .val = 0x1 << 27,	.id = MT_CG_SYS_26M,	.mask = 0x7 << 27, },
@@ -1954,6 +2008,13 @@ static const struct clkmux_map _mt_clkmux_scam_mux_sel_map[] = {
 	{ .val = 0x1 << 23,	.id = MT_CG_SYS_26M,	.mask = 0x7 << 23, },
 	{ .val = 0x2 << 23,	.id = MT_CG_MPLL_D14,	.mask = 0x7 << 23, },
 	{ .val = 0x4 << 23,	.id = MT_CG_MPLL_D12,	.mask = 0x7 << 23, },
+};
+static const struct clkmux_map _mt_clkmux_nfiecc_fgmux_sel_map[] = {
+	{ .val = 0x08 << 22, .id = MT_CG_SYS_TEMP,	.mask = 0x38 << 22, },
+	{ .val = 0x10 << 22, .id = MT_CG_MPLL_D4,	.mask = 0x38 << 22, },
+	{ .val = 0x21 << 22, .id = MT_CG_MPLL_D7,	.mask = 0x3F << 22, },
+	{ .val = 0x22 << 22, .id = MT_CG_MPLL_D6,	.mask = 0x3F << 22, },
+	{ .val = 0x24 << 22, .id = MT_CG_MPLL_D5,	.mask = 0x3F << 22, },
 };
 
 static struct clkmux muxs[] = {
@@ -2056,7 +2117,7 @@ static struct clkmux muxs[] = {
 	[MT_CLKMUX_NFI2X_GFMUX_SEL] = {
 		.name       = __stringify(MT_CLKMUX_NFI2X_GFMUX_SEL),
 		.offset     = 0,
-		.ops        = &non_gf_clkmux_ops,
+		.ops        = &glitch_free_clkmux_ops,
 		.map        = _mt_clkmux_nfi2x_gfmux_sel_map,
 		.nr_map     = ARRAY_SIZE(_mt_clkmux_nfi2x_gfmux_sel_map),
 		.drain      = MT_CG_NFI2X_SW_CG,
@@ -2116,6 +2177,14 @@ static struct clkmux muxs[] = {
 		.map        = _mt_clkmux_scam_mux_sel_map,
 		.nr_map     = ARRAY_SIZE(_mt_clkmux_scam_mux_sel_map),
 		.drain      = MT_CG_SCAM_MM_SW_CG,
+	},
+	[MT_CLKMUX_NFIECC_FGMUX_SEL] = {
+		.name		= __stringify(MT_CLKMUX_NFIECC_FGMUX_SEL),
+		.offset		= 22,
+		.ops		= &glitch_free_clkmux_ops,
+		.map		= _mt_clkmux_nfiecc_fgmux_sel_map,
+		.nr_map		= ARRAY_SIZE(_mt_clkmux_nfiecc_fgmux_sel_map),
+		.drain		= MT_CG_NFIECC_SW_CG,
 	},
 };
 
@@ -3249,14 +3318,14 @@ static struct subsys syss[] = {
 	[SYS_MD1] = {
 	.name               = __stringify(SYS_MD1),
 	.type               = SYS_TYPE_MODEM,
-	.default_sta        = PWR_DOWN,
+	.default_sta        = PWR_ON,
 	.sta_mask           = MD1_PWR_STA_MASK,
 	.ops                = &md1_sys_ops, /* &md1_sys_ops */
 	},
 	[SYS_CON] = {
 	.name               = __stringify(SYS_CON),
 	.type               = SYS_TYPE_MODEM,
-	.default_sta        = PWR_DOWN,
+	.default_sta        = PWR_ON,
 	.sta_mask           = CONN_PWR_STA_MASK,
 	.ops                = &con_sys_ops, /* &con_sys_ops */
 	},
@@ -3272,7 +3341,7 @@ static struct subsys syss[] = {
 	[SYS_MFG] = {
 	.name               = __stringify(SYS_MFG),
 	.type               = SYS_TYPE_MEDIA,
-	.default_sta        = PWR_DOWN,
+	.default_sta        = PWR_ON,
 	.sta_mask           = MFG_PWR_STA_MASK,
 	.ops                = &mfg_sys_ops,
 	.start              = &grps[CG_MFGSYS],
@@ -3281,7 +3350,7 @@ static struct subsys syss[] = {
 	[SYS_IMG] = {
 	.name               = __stringify(SYS_IMG),
 	.type               = SYS_TYPE_MEDIA,
-	.default_sta        = PWR_DOWN,
+	.default_sta        = PWR_ON,
 	.sta_mask           = ISP_PWR_STA_MASK,
 	.ops                = &img_sys_ops,
 	.start              = &grps[CG_IMGSYS],
@@ -3996,7 +4065,7 @@ void slp_check_pm_mtcmos_pll(void)
 }
 EXPORT_SYMBOL(slp_check_pm_mtcmos_pll);
 
-#if 0
+#if 1
 /* for bring up */
 static void cg_all_force_on(void)
 {
@@ -4285,6 +4354,9 @@ void iomap(void)
 	grps[CG_INFRA_AO].set_addr = INFRA_RSVD1;
 	grps[CG_INFRA_AO].clr_addr = INFRA_RSVD1;
 	grps[CG_INFRA_AO].sta_addr = INFRA_RSVD1;
+	grps[CG_CTRL3].set_addr = CLK_GATING_CTRL3;
+	grps[CG_CTRL3].clr_addr = CLK_GATING_CTRL3;
+	grps[CG_CTRL3].sta_addr = CLK_GATING_CTRL3;
 
 	muxs[MT_CLKMUX_UART0_GFMUX_SEL].base_addr = CLK_MUX_SEL0;
 	muxs[MT_CLKMUX_EMI1X_GFMUX_SEL].base_addr = CLK_MUX_SEL0;
@@ -4327,7 +4399,7 @@ int mt_clkmgr_init(void)
 	/* initial spm_mtcmos memory map */
 	spm_mtcmos_cpu_init();
 	mt_subsys_init();
-	/* cg_all_force_on(); */
+	cg_all_force_on();
 	mt_clks_init();
 	mt_plls_init();
 	dump_clk_info();

@@ -149,6 +149,7 @@ extern void __iomem		*clk_imgsys_base;
 #define TOPBUS_DCMCTL	(CLK_TOPCKSYS_BASE + 0x008)
 #define TOPEMI_DCMCTL	(CLK_TOPCKSYS_BASE + 0x00C)
 #define FREQ_MTR_CTRL	(CLK_TOPCKSYS_BASE + 0x010)
+#define CLK_MUX_SEL7	(CLK_TOPCKSYS_BASE + 0x01C)
 #define CLK_GATING_CTRL0	(CLK_TOPCKSYS_BASE + 0x020)
 #define CLK_GATING_CTRL1	(CLK_TOPCKSYS_BASE + 0x024)
 #define INFRABUS_DCMCTL0	(CLK_TOPCKSYS_BASE + 0x028)
@@ -157,6 +158,7 @@ extern void __iomem		*clk_imgsys_base;
 #define UPLL_FREDIV_EN	(CLK_TOPCKSYS_BASE + 0x034)
 #define TEST_DBG_CTRL		(CLK_TOPCKSYS_BASE + 0x038)
 #define CLK_GATING_CTRL2	(CLK_TOPCKSYS_BASE + 0x03C)
+#define CLK_GATING_CTRL3	(CLK_TOPCKSYS_BASE + 0x040)
 #define SET_CLK_GATING_CTRL0	(CLK_TOPCKSYS_BASE + 0x050)
 #define SET_CLK_GATING_CTRL1	(CLK_TOPCKSYS_BASE + 0x054)
 #define SET_INFRABUS_DCMCTL0	(CLK_TOPCKSYS_BASE + 0x058)
@@ -422,6 +424,21 @@ extern void __iomem		*clk_imgsys_base;
 				| PWM5_FBCLK_SW_CG_BIT)
 
 /***********************/
+/* CG_CTRL3            */
+/***********************/
+#define UFOZIP_HCLK_SW_CG_BIT		BIT(0)
+#define UFOZIP_DEC_CLK_SW_CG_BIT	BIT(1)
+#define UFOZIP_ENC_CLK_SW_CG_BIT	BIT(2)
+#define UFOENC_MM_SW_CG_BIT			BIT(8)
+#define UFODEC_MM_SW_CG_BIT			BIT(9)
+#define CG_CTRL3_MASK	(UFOZIP_HCLK_SW_CG_BIT	\
+				| UFOZIP_DEC_CLK_SW_CG_BIT	\
+				| UFOZIP_ENC_CLK_SW_CG_BIT	\
+				| UFOENC_MM_SW_CG_BIT		\
+				| UFODEC_MM_SW_CG_BIT)
+
+
+/***********************/
 /* CG_MMSYS_CON0       */
 /***********************/
 #define SMI_COMMON_BIT	BIT(0)
@@ -531,6 +548,7 @@ enum cg_grp_id {
 	CG_MFGSYS	= 9,
 	CG_AUDIO	= 10,
 	CG_INFRA_AO	= 11,
+	CG_CTRL3	= 12,
 	NR_GRPS,
 };
 
@@ -539,6 +557,7 @@ enum cg_clk_id {
 /* CG_MIXED */
 	MT_CG_SYS_26M,
 	MT_CG_SYS_TEMP,
+	MT_CG_SYS_33M,
 	MT_CG_MEMPLL,
 	MT_CG_UNIV_48M,
 	MT_CG_USB_48M,
@@ -636,6 +655,13 @@ enum cg_clk_id {
 	MT_CG_PWM3_FBCLK_SW_CG,
 	MT_CG_PWM4_FBCLK_SW_CG,
 	MT_CG_PWM5_FBCLK_SW_CG,
+
+/* CG_CTRL3 */
+	MT_CG_UFOZIP_HCLK_SW_CG,
+	MT_CG_UFOZIP_DEC_CLK_SW_CG,
+	MT_CG_UFOZIP_ENC_CLK_SW_CG,
+	MT_CG_UFOENC_MM_SW_CG,
+	MT_CG_UFODEC_MM_SW_CG,
 
 /* CG_MMSYS0 */
 	MT_CG_DISP0_SMI_COMMON,
@@ -735,6 +761,7 @@ enum clkmux_id {
 	MT_CLKMUX_SMI_GFMUX_SEL,
 	MT_CLKMUX_USB_GFMUX_SEL,
 	MT_CLKMUX_SCAM_MUX_SEL,
+	MT_CLKMUX_NFIECC_FGMUX_SEL,
 	NR_CLKMUXS,
 	MT_CLKMUX_INVALID,
 };

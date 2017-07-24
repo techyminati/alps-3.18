@@ -78,8 +78,8 @@
 
 #endif
 
-#define FREQ_MTR_CTRL_REG               (0x10000000 + 0x10)
-#define FREQ_MTR_CTRL_RDATA		(0x10000000 + 0x14)
+#define FREQ_MTR_CTRL_REG               (FREQ_MTR_CTRL)
+#define FREQ_MTR_CTRL_RDATA             (FREQ_MTR_CTRL + 0x4)
 #define RG_FQMTR_CKDIV_GET(x)           (((x) >> 28) & 0x3)
 #define RG_FQMTR_CKDIV_SET(x)           (((x) & 0x3) << 28)
 #define RG_FQMTR_FIXCLK_SEL_GET(x)      (((x) >> 24) & 0x3)
@@ -140,6 +140,9 @@ enum rg_fqmtr_monclk {
 	RG_FQMTR_MONCLK_SPI,
 	RG_FQMTR_MONCLK_104MHZ,
 	RG_FQMTR_MONCLK_USB_78MHZ,
+	RG_FQMTR_MONCLK_UFOENC,
+	RG_FQMTR_MONCLK_UFODEC,
+	RG_FQMTR_MONCLK_NFIECC,
 	RG_FQMTR_MONCLK_MAX,
 };
 
@@ -184,6 +187,9 @@ const char *rg_fqmtr_monclk_name[] = {
 	[RG_FQMTR_MONCLK_SPI]                   = "SPI",
 	[RG_FQMTR_MONCLK_104MHZ]                = "104MHz",
 	[RG_FQMTR_MONCLK_USB_78MHZ]             = "USB 78MHz",
+	[RG_FQMTR_MONCLK_UFOENC]                = "UFOENC",
+	[RG_FQMTR_MONCLK_UFODEC]                = "UFODEC",
+	[RG_FQMTR_MONCLK_NFIECC]                = "NFIECC",
 	[RG_FQMTR_MONCLK_MAX]                   = "MAX",
 };
 
