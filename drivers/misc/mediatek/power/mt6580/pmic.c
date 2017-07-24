@@ -150,6 +150,41 @@ static DEFINE_MUTEX(pmic_lock_mutex);
 
 static DEFINE_MUTEX(pmic_access_mutex);
 
+unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigned int MASK,
+				 unsigned int SHIFT)
+{
+	unsigned int return_value = 0;
+
+#if defined(CONFIG_PMIC_HW_ACCESS_EN)
+	unsigned int pmic_reg = 0;
+	unsigned int rdata = 0xFFFF;
+
+	mutex_lock(&pmic_access_mutex);
+
+	/* mt_read_byte(RegNum, &pmic_reg); */
+#if defined(CONFIG_MTK_PMIC_WRAP)
+	return_value = pwrap_wacs2(0, (RegNum), 0, &rdata);
+#endif
+	pmic_reg = rdata;
+	if (return_value != 0) {
+		PMICLOG("[pmic_read_interface] Reg[%x]= pmic_wrap read data fail\n", RegNum);
+		mutex_unlock(&pmic_access_mutex);
+		return return_value;
+	}
+	/* PMICLOG"[pmic_read_interface] Reg[%x]=0x%x\n", RegNum, pmic_reg); */
+
+	pmic_reg &= (MASK << SHIFT);
+	*val = (pmic_reg >> SHIFT);
+	/* PMICLOG"[pmic_read_interface] val=0x%x\n", *val); */
+
+	mutex_unlock(&pmic_access_mutex);
+#else
+	/* PMICLOG("[pmic_read_interface] Can not access HW PMIC\n"); */
+#endif
+
+	return return_value;
+}
+
 unsigned int pmic_config_interface(unsigned int RegNum, unsigned int val, unsigned int MASK,
 				   unsigned int SHIFT)
 {
@@ -208,7 +243,7 @@ unsigned int pmic_config_interface(unsigned int RegNum, unsigned int val, unsign
 	return return_value;
 }
 
-unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigned int MASK,
+unsigned int pmic_read_interface_nolock(unsigned int RegNum, unsigned int *val, unsigned int MASK,
 					unsigned int SHIFT)
 {
 	unsigned int return_value = 0;
