@@ -336,7 +336,7 @@ static int disp_probe(struct platform_device *pdev)
 	/* mipi_tx_reg = dispsys_reg[DISP_REG_MIPI]; */
 
 	/* power on MMSYS for early porting */
-#ifdef CONFIG_MTK_FPGA
+#ifdef CONFIG_FPGA_EARLY_PORTING
 	DISPDBG("[DISP Probe] power MMSYS:0x%lx,0x%lx\n", DISP_REG_CONFIG_MMSYS_CG_CLR0,
 	       DISP_REG_CONFIG_MMSYS_CG_CLR1);
 	DISP_REG_SET(NULL, DISP_REG_CONFIG_MMSYS_CG_CLR0, 0xFFFFFFFF);

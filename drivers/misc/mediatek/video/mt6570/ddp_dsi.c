@@ -103,7 +103,7 @@ void ddp_set_mipi26m(int en)
 	} while (0)
 
 
-#ifdef CONFIG_MTK_FPGA
+#ifdef CONFIG_FPGA_EARLY_PORTING
 #define MIPITX_Write60384(slave_addr, write_addr, write_data)			\
 {	\
 	DISPDBG("MIPITX_Write60384:0x%x,0x%x,0x%x\n", slave_addr, write_addr, write_data);		\
@@ -635,7 +635,7 @@ DSI_STATUS DSI_DumpRegisters(DISP_MODULE_ENUM module, int level)
 					INREG32((DDP_REG_BASE_DSI0 + 0x200 + i + 0xc)));
 			}
 #if 0
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 			for (i = 0; i < sizeof(struct DSI_PHY_REGS); i += 16) {
 				DISPDMP("DSI_PHY+%04x : 0x%08x    0x%08x  0x%08x  0x%08x\n", i,
 					INREG32((MIPITX_BASE + i)),
@@ -1178,7 +1178,7 @@ unsigned int dsi_phy_get_clk(DISP_MODULE_ENUM module)
 
 void DSI_PHY_clk_setting(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_DSI_PARAMS *dsi_params)
 {
-#ifdef CONFIG_MTK_FPGA
+#ifdef CONFIG_FPGA_EARLY_PORTING
 #if 0
 	MIPITX_Write60384(0x18, 0x00, 0x10);
 	MIPITX_Write60384(0x20, 0x42, 0x01);
@@ -1499,7 +1499,7 @@ void DSI_PHY_clk_setting(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_DSI_PA
 void DSI_PHY_TIMCONFIG(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_DSI_PARAMS *dsi_params)
 {
 	int i = 0;
-#ifdef CONFIG_MTK_FPGA
+#ifdef CONFIG_FPGA_EARLY_PORTING
 	return 0;
 #endif
 
@@ -2789,7 +2789,7 @@ int ddp_dsi_init(DISP_MODULE_ENUM module, void *cmdq)
 
 	disp_register_module_irq_callback(DISP_MODULE_DSI0, _DSI_INTERNAL_IRQ_Handler);
 
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	if (MIPITX_IsEnabled(module, cmdq)) {
 		s_isDsiPowerOn = true;
 #ifdef ENABLE_CLK_MGR
@@ -3017,7 +3017,7 @@ int ddp_dsi_config(DISP_MODULE_ENUM module, disp_ddp_path_config *config, void *
 	if (dsi_config->mode != CMD_MODE)
 		dsi_currect_mode = 1;
 
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	if ((MIPITX_IsEnabled(module, cmdq)) && (atomic_read(&PMaster_enable) == 0)) {
 		DISPDBG("mipitx is already init\n");
 		if (dsi_force_config)

@@ -21,7 +21,7 @@
 #include "ddp_ovl.h"
 
 #if 0
-#ifdef CONFIG_MTK_FPGA
+#ifdef CONFIG_FPGA_EARLY_PORTING
 
 #define enable_clock(...)
 #define disable_clock(...)

@@ -2774,7 +2774,7 @@ unsigned int cmdqDdpResetEng(uint64_t engineFlag)
 
 void primary_display_sodi_rule_init(void)
 {
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	if (primary_display_is_video_mode()) {
 		spm_enable_sodi(0);
 		spm_sodi_mempll_pwr_mode(1);
@@ -2785,7 +2785,7 @@ void primary_display_sodi_rule_init(void)
 		spm_sodi_mempll_pwr_mode(0);
 	}
 	return;
-#endif /* CONFIG_MTK_FPGA */
+#endif /* CONFIG_FPGA_EARLY_PORTING */
 }
 
 

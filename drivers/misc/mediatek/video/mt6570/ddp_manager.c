@@ -941,7 +941,7 @@ int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, 
 	for (i = 0; i < module_num; i++) {
 		module_name = modules[i];
 		if (ddp_modules_driver[module_name] != 0) {
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 #ifdef CONFIG_FOR_SOURCE_PQ
 			if (module_name == DISP_MODULE_COLOR0) {
 				set_color_bypass(DISP_MODULE_ENUM module, int bypass, void *cmdq_handle);
@@ -957,7 +957,7 @@ int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, 
 					ddp_modules_driver[module_name]->bypass(module_name, 1);
 					/* DDPMSG("-- bypass %s\n", ddp_get_module_name(module_name)); */
 				}
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 			} else if (ddp_modules_driver[module_name]->config != 0) {
 #else
 			}
