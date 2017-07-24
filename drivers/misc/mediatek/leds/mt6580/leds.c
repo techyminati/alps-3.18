@@ -496,13 +496,8 @@ int mt_led_blink_pmic(enum mt65xx_led_pmic pmic_type, struct nled_setting *led)
 
 	LEDS_DEBUG("led_blink_pmic: pmic_type=%d\n", pmic_type);
 
-	if ((pmic_type != MT65XX_LED_PMIC_NLED_ISINK0
-	     && pmic_type != MT65XX_LED_PMIC_NLED_ISINK1
-	     && pmic_type != MT65XX_LED_PMIC_NLED_ISINK2
-	     && pmic_type != MT65XX_LED_PMIC_NLED_ISINK3)
-	    || led->nled_mode != NLED_BLINK) {
+	if (led->nled_mode != NLED_BLINK)
 		return -1;
-	}
 
 	LEDS_DEBUG("LED blink on time = %d offtime = %d\n",
 		   led->blink_on_time, led->blink_off_time);
@@ -551,6 +546,7 @@ int mt_led_blink_pmic(enum mt65xx_led_pmic pmic_type, struct nled_setting *led)
 		pmic_set_register_value(PMIC_ISINK_CH3_EN, NLED_ON);
 		break;
 	default:
+		LEDS_DEBUG("[LEDS] pmic_type %d is not handled\n", pmic_type);
 		break;
 	}
 	return 0;
