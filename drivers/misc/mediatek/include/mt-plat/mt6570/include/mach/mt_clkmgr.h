@@ -979,5 +979,6 @@ extern void clkmgr_faudintbus_pll2sq(void);
 #ifdef CONFIG_MMC_MTK
 extern void msdc_clk_status(int *status);
 #endif
+extern bool is_already_snap_shot;
 
 #endif /* __MT_CLKMGR_H__ */
