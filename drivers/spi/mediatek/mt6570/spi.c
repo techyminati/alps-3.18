@@ -900,15 +900,6 @@ static irqreturn_t mt_spi_interrupt(int irq, void *dev_id)
 	SPI_DBG("xfer:0x%p interrupt status:%x\n", xfer, reg_val & 0x3);
 	/* pr_alert(K"xfer:0x%p interrupt status:%x\n", xfer, reg_val & 0x3); */
 
-	if (unlikely(!msg)) {
-		pr_err("msg in interrupt %d is NULL pointer.\n", reg_val & 0x3);
-		goto out;
-	}
-	if (unlikely(!xfer)) {
-		pr_err("xfer in interrupt %d is NULL pointer.\n", reg_val & 0x3);
-		goto out;
-	}
-
 	chip_config = (struct mt_chip_conf *)msg->state;
 	mode = chip_config->com_mod;
 	/* clear the interrupt status bits by reading the register */
