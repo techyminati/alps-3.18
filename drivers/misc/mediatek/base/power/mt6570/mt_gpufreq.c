@@ -97,7 +97,7 @@
 /**************************
  * GPU DVFS OPP table setting
  ***************************/
-#define GPU_DVFS_FREQ0     (525000)	/* KHz */
+#define GPU_DVFS_FREQ0     (520000)	/* KHz */
 #define GPU_DVFS_FREQ1     (416000)	/* KHz */
 #define GPU_DVFS_FREQ2     (315000)	/* KHz */
 #define GPU_DVFS_FREQ3     (225000)	/* KHz */
@@ -484,7 +484,7 @@ static void _mt_gpufreq_set_cur_freq(unsigned int freq_new)
 	int clksrc = 0;
 
 	switch (freq_new) {
-	case GPU_DVFS_FREQ0:	/* 525 MHz */
+	case GPU_DVFS_FREQ0:	/* 520 MHz */
 		clksrc = MT_CG_MPLL_D3;
 		break;
 	case GPU_DVFS_FREQ1:	/* 416 MHz */
@@ -526,7 +526,7 @@ static unsigned int _mt_gpufreq_get_cur_freq(void)
 
 	switch (mfg_gfmux_sel) {
 	case MT_CG_MPLL_D3:
-		freq = GPU_DVFS_FREQ0;	/* 525 MHz */
+		freq = GPU_DVFS_FREQ0;	/* 520 MHz */
 		break;
 	case MT_CG_UPLL_D3:
 		freq = GPU_DVFS_FREQ1;	/* 416 MHz */
