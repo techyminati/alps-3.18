@@ -390,7 +390,7 @@ void usb_phy_poweron(void)
 }
 
 #ifdef CONFIG_MTK_UART_USB_SWITCH
-static bool skipDisableUartMode;
+static bool skipDisableUartMode = true;
 #endif
 
 static void usb_phy_savecurrent_internal(void)
@@ -416,11 +416,8 @@ static void usb_phy_savecurrent_internal(void)
 		USBPHY_SET8(0x6a, 0x04);
 		USBPHY_SET8(0x68, 0x08);
 		usb_enable_clock(false);
-	} else {
-		if (skipDisableUartMode)
-			skipDisableUartMode = false;
-		else
-			return;
+	} else if (usb_phy_check_in_uart_mode()) {
+		return;
 	}
 	#else
 	USBPHY_CLR8(0x6b, 0x04);
@@ -505,7 +502,7 @@ void usb_phy_recover(void)
 
 	skipDisableUartMode = false;
 	} else {
-		/* if (!skipDisableUartMode) */
+		if (!skipDisableUartMode)
 			return;
 	}
 	#else
