@@ -2895,14 +2895,9 @@ static inline int kdSetSensorMclk(int *pBuf)
 	PK_DBG("[CAMERA SENSOR] kdSetSensorMclk on=%d, freq= %d\n", pSensorCtrl->on,
 	       pSensorCtrl->freq);
 	if (1 == pSensorCtrl->on) {
-		enable_mux(MT_CLKMUX_CAM_MUX_SEL, "CAMERA_SENSOR");
-		enable_mux(MT_CLKMUX_SCAM_MUX_SEL, "CAMERA_SENSOR");
 		clkmux_sel(MT_CLKMUX_CAM_MUX_SEL,
 			   pSensorCtrl->freq == MCLK_48MHZ_GROUP ? CAM_PLL_48MHZ : CAM_PLL_52MHZ,
 			   "CAMERA_SENSOR");
-	} else {
-		disable_mux(MT_CLKMUX_SCAM_MUX_SEL, "CAMERA_SENSOR");
-		disable_mux(MT_CLKMUX_CAM_MUX_SEL, "CAMERA_SENSOR");
 	}
 	return ret;
 /* #endif */
@@ -3678,6 +3673,9 @@ static int CAMERA_HW_Open(struct inode *a_pstInode, struct file *a_pstFile)
 
 	/*  */
 	atomic_inc(&g_CamDrvOpenCnt);
+	enable_mux(MT_CLKMUX_CAM_MUX_SEL, "CAMERA_SENSOR");
+	enable_mux(MT_CLKMUX_SCAM_MUX_SEL, "CAMERA_SENSOR");
+
 	return 0;
 }
 
@@ -3694,6 +3692,8 @@ static int CAMERA_HW_Release(struct inode *a_pstInode, struct file *a_pstFile)
 	atomic_dec(&g_CamDrvOpenCnt);
 	/* if (atomic_read(&g_CamDrvOpenCnt) == 0) */
 	checkPowerBeforeClose(CAMERA_HW_DRVNAME1);
+	disable_mux(MT_CLKMUX_SCAM_MUX_SEL, "CAMERA_SENSOR");
+	disable_mux(MT_CLKMUX_CAM_MUX_SEL, "CAMERA_SENSOR");
 
 	return 0;
 }
