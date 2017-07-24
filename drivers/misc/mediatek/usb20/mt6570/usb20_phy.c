@@ -211,7 +211,8 @@ bool usb_enable_clock(bool enable)
 
 	spin_unlock_irqrestore(&musb_reg_clock_lock, flags);
 
-	DBG(0, "enable(%d), count(%d) res=%d\n", enable, count, res);
+	/* Mark for printk too much for USB connect/disconnect stress test*/
+	/*DBG(0, "enable(%d), count(%d) res=%d\n", enable, count, res);*/
 	return 1;
 }
 
