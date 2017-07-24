@@ -81,7 +81,7 @@ bank_t tscpu_g_bank[THERMAL_BANK_NUM] = {
 
 #ifdef CONFIG_OF
 const struct of_device_id mt_thermal_of_match[2] = {
-	{.compatible = "mediatek,THERM_CTRL",},
+	{.compatible = "mediatek,therm_ctrl",},
 	{},
 };
 #endif
@@ -1051,7 +1051,7 @@ int get_io_reg_base(void)
 {
 	struct device_node *node = NULL;
 
-	node = of_find_compatible_node(NULL, NULL, "mediatek,THERM_CTRL");
+	node = of_find_compatible_node(NULL, NULL, "mediatek,therm_ctrl");
 	BUG_ON(node == 0);
 	if (node) {
 		/* Setup IO addresses */
@@ -1067,20 +1067,20 @@ int get_io_reg_base(void)
 		return 0;
 	}
 
-	of_property_read_u32(node, "reg", &thermal_phy_base);
+	of_property_read_u32_index(node, "reg", 1, &thermal_phy_base);
 	/* pr_debug("[THERM_CTRL] thermal_base thermal_phy_base=0x%x\n",thermal_phy_base); */
 
-	node = of_find_compatible_node(NULL, NULL, "mediatek,mt6735-auxadc");
+	node = of_find_compatible_node(NULL, NULL, "mediatek,ap-auxadc");
 	BUG_ON(node == 0);
 	if (node) {
 		/* Setup IO addresses */
 		auxadc_ts_base = of_iomap(node, 0);
 		/* pr_debug("[THERM_CTRL] auxadc_ts_base=0x%p\n",auxadc_ts_base); */
 	}
-	of_property_read_u32(node, "reg", &auxadc_ts_phy_base);
+	of_property_read_u32_index(node, "reg", 1, &auxadc_ts_phy_base);
 	/* pr_debug("[THERM_CTRL] auxadc_ts_phy_base=0x%x\n",auxadc_ts_phy_base); */
 
-	node = of_find_compatible_node(NULL, NULL, "mediatek,INFRACFG_AO");
+	node = of_find_compatible_node(NULL, NULL, "mediatek,infracfg_ao");
 	BUG_ON(node == 0);
 	if (node) {
 		/* Setup IO addresses */
@@ -1089,14 +1089,14 @@ int get_io_reg_base(void)
 	}
 
 
-	node = of_find_compatible_node(NULL, NULL, "mediatek,APMIXED");
+	node = of_find_compatible_node(NULL, NULL, "mediatek,apmixed");
 	BUG_ON(node == 0);
 	if (node) {
 		/* Setup IO addresses */
 		apmixed_base = of_iomap(node, 0);
 		/* pr_debug("[THERM_CTRL] apmixed_base=0x%p\n",apmixed_base); */
 	}
-	of_property_read_u32(node, "reg", &apmixed_phy_base);
+	of_property_read_u32_index(node, "reg", 1, &apmixed_phy_base);
 	/* pr_debug("[THERM_CTRL] apmixed_phy_base=0x%x\n",apmixed_phy_base); */
 
 	return 1;

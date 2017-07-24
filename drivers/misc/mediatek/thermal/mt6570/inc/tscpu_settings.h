@@ -24,6 +24,7 @@
  * CONFIG (SW related)
  *=============================================================*/
 #define ENALBE_SW_FILTER		(1)
+/*#define ATM_USES_PPM	        (0)*/
 #define THERMAL_GET_AHB_BUS_CLOCK		    (0)
 #define THERMAL_PERFORMANCE_PROFILE         (0)
 
@@ -62,6 +63,11 @@ they means one reading is a avg of X samples */
 
 /* 1: thermal driver update temp to MET directly, use hrtimer; 0: turn off */
 #define THERMAL_DRV_UPDATE_TEMP_DIRECT_TO_MET  (1)
+
+/*	Define this in tscpu_settings.h enables this feature. It polls CPU TS in hrtimer and
+	run ATM in RT 98 kthread. This is for Everest only.
+ */
+/*#define FAST_RESPONSE_ATM					(0)*/
 #define THERMAL_INIT_VALUE (0xDA1)
 /*=============================================================
  * Chip related
