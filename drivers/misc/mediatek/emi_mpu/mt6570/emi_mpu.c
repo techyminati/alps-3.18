@@ -1595,6 +1595,9 @@ static int __init emi_mpu_mod_init(void)
 	pr_err("[EMI MPU] EMI_CHKER_ADR = 0x%x\n",
 	       mt_emi_reg_read(EMI_CHKER_ADR));
 
+	/* disable emi mpu */
+	return 0;
+
 	/* Set Device APC initialization for EMI-MPU. */
 	mt_devapc_emi_initial();
 
