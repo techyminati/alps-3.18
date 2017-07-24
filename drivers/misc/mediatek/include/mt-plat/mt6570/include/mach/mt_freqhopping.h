@@ -17,7 +17,7 @@
 /* #include <linux/xlog.h> */
 
 #define PLATFORM_DEP_DEBUG_PROC_READ
-#undef  DISABLE_FREQ_HOPPING	/* Disable all FHCTL function for K2 Bringup */
+#define  DISABLE_FREQ_HOPPING	/* Disable all FHCTL function for rushmore Bringup */
 
 #define FHTAG "[FH]"
 #define VERBOSE_DEBUG 0
