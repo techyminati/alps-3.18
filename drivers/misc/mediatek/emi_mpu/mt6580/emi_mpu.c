@@ -396,7 +396,7 @@ struct timer_list emi_axi_vio_timer;
 #endif
 
 char *smi_larb0_port[] = {
-	"disp_ovl_0",
+	"disp_ovl0",
 	"disp_rdma0",
 	"disp_wdma0",
 	"mdp_rdma",
