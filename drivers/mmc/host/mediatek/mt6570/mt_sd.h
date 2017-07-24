@@ -78,7 +78,7 @@ extern unsigned int g_emmc_cache_size;
 #ifdef CONFIG_FPGA_EARLY_PORTING
 #define FPGA_PLATFORM
 #else
-#define MTK_MSDC_BRINGUP_DEBUG
+/* #define MTK_MSDC_BRINGUP_DEBUG */
 #endif
 
 /* #define MTK_MSDC_DUMP_FIFO */
