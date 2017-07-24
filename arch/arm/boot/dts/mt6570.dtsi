@@ -626,11 +626,25 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 37 IRQ_TYPE_LEVEL_LOW>;
 	};
 
-	btif@1100e000 {
+	btif_tx:btif_tx@11000380 {
+		compatible = "mediatek,btif_tx";
+		reg = <0 0x11000380 0 0x80>;
+		interrupts = <GIC_SPI 54 IRQ_TYPE_LEVEL_LOW>;
+	};
+
+	btif_rx:btif_rx@11000400 {
+		compatible = "mediatek,btif_rx";
+		reg = <0 0x11000400 0 0x80>;
+		interrupts = <GIC_SPI 55 IRQ_TYPE_LEVEL_LOW>;
+	};
+
+	btif:btif@1100e000 {
 		compatible = "mediatek,btif";
 		reg = <0 0x1100e000 0 0x1000>;
 		interrupts = <GIC_SPI 67 IRQ_TYPE_LEVEL_LOW>;
-	};
+		/*clocks = <&perisys PERI_BTIF>,<&perisys PERI_APDMA>;*/
+		/*clock-names = "btifc","apdmac";*/
+	};/* End of btif */
 
 	disp_pwm@1100f000 {
 		compatible = "mediatek,disp_pwm";
