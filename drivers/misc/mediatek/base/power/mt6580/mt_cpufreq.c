@@ -1274,7 +1274,8 @@ static int _cpufreq_set_locked(struct mt_cpu_dvfs *p, unsigned int cur_khz, unsi
 #ifdef CONFIG_CPU_FREQ
 	freqs.old = cur_khz;
 	freqs.new = target_khz;
-	freqs.cpu = policy->cpu;
+	if (policy)
+		freqs.cpu = policy->cpu;
 
 	if (policy)
 		cpufreq_freq_transition_begin(policy, &freqs);
