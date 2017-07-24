@@ -552,12 +552,8 @@ static unsigned int _mt_gpufreq_get_cur_freq(void)
 
 static unsigned int _mt_gpufreq_get_cur_volt(void)
 {
-#if 1 /* TODO: remove this! */
-	return 115000;
-#else
 	/* get Vcore from CPU DVFS driver */
 	return mt_cpufreq_get_cur_volt(MT_CPU_DVFS_LITTLE);
-#endif
 }
 
 
@@ -1140,9 +1136,6 @@ unsigned int mt_gpufreq_target(unsigned int idx)
 #ifdef MT_GPUFREQ_PERFORMANCE_TEST
 	return 0;
 #endif
-
-	/* TODO: remove this bringup workaround */
-	return 0;
 
 	mutex_lock(&mt_gpufreq_lock);
 
@@ -2323,9 +2316,6 @@ static int mt_gpufreq_create_procfs(void)
 static int __init _mt_gpufreq_init(void)
 {
 	int ret = 0;
-
-	/* TODO: remove this bringup workaround */
-	return 0;
 
 	gpufreq_info("@%s\n", __func__);
 
