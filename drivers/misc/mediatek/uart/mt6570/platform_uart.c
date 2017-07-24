@@ -189,25 +189,11 @@ void set_uart_default_settings(int idx)
 void *get_apdma_uart0_base(void)
 {
 	struct device_node *node = NULL;
-	struct device_node *apdma_uart0_node = NULL;
 	void *base;
-	unsigned int apdma_reg;
-	unsigned int apdma_uart0_reg;
-	unsigned int apdma_uart0_offset;
 
-	node = of_find_compatible_node(NULL, NULL, "mediatek,AP_DMA");
-	apdma_uart0_node = of_find_compatible_node(NULL, NULL, "mediatek,AP_DMA_UART0_TX");
-
+	node = of_find_node_by_name(NULL, "ap_dma_uart0_tx");
 	base = of_iomap(node, 0);
 
-	if (of_property_read_u32_index(node, "reg", 0, &apdma_reg))
-		pr_debug("[UART] get AP_DMA reg from DTS fail!!\n");
-
-	if (of_property_read_u32_index(apdma_uart0_node, "reg", 0, &apdma_uart0_reg))
-		pr_debug("[UART] get AP_DMA_UART0_TX reg from DTS fail!!\n");
-
-	apdma_uart0_offset = apdma_uart0_reg - apdma_reg;
-	base += apdma_uart0_offset;
 	pr_debug("[UART] apdma uart0 base=0x%p\n", base);
 
 	return base;
