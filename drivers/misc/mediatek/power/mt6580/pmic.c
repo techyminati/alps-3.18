@@ -478,6 +478,8 @@ static DEVICE_ATTR(pmic_dvt, 0664, show_pmic_dvt, store_pmic_dvt);
  */
 /*extern PMU_FLAG_TABLE_ENTRY pmu_flags_table[];*/
 
+#define regulator_log 0
+
 static int mtk_regulator_enable(struct regulator_dev *rdev)
 {
 	const struct regulator_desc *rdesc = rdev->desc;
@@ -489,11 +491,14 @@ static int mtk_regulator_enable(struct regulator_dev *rdev)
 		pmic_set_register_value(mreg->en_reg, 1);
 		add = pmu_flags_table[mreg->en_reg].offset;
 		val = upmu_get_reg_value(pmu_flags_table[mreg->en_reg].offset);
+	} else {
+		pr_err(PMICTAG "regulator_enable fail, no en_reg(name=%s)\n", rdesc->name);
+		return -1;
 	}
-
+#if regulator_log
 	PMICLOG("regulator_enable(name=%s id=%d en_reg=%x vol_reg=%x) [%x]=0x%x\n", rdesc->name,
 		rdesc->id, mreg->en_reg, mreg->vol_reg, add, val);
-
+#endif
 	return 0;
 }
 
@@ -506,7 +511,7 @@ static int mtk_regulator_disable(struct regulator_dev *rdev)
 	mreg = container_of(rdesc, struct mtk_regulator, desc);
 
 	if (rdev->use_count == 0) {
-		PMICLOG("regulator_disable fail (name=%s use_count=%d)\n", rdesc->name,
+		pr_err(PMICTAG "regulator_disable fail (name=%s use_count=%d)\n", rdesc->name,
 			rdev->use_count);
 		return -1;
 	}
@@ -515,11 +520,15 @@ static int mtk_regulator_disable(struct regulator_dev *rdev)
 		pmic_set_register_value(mreg->en_reg, 0);
 		add = pmu_flags_table[mreg->en_reg].offset;
 		val = upmu_get_reg_value(pmu_flags_table[mreg->en_reg].offset);
+	} else {
+		pr_err(PMICTAG "regulator_disable fail, no en_reg(name=%s)\n", rdesc->name);
+		return -1;
 	}
 
+#if regulator_log
 	PMICLOG("regulator_disable(name=%s id=%d en_reg=%x vol_reg=%x use_count=%d) [%x]=0x%x\n",
 		rdesc->name, rdesc->id, mreg->en_reg, mreg->vol_reg, rdev->use_count, add, val);
-
+#endif
 	return 0;
 }
 
@@ -533,9 +542,10 @@ static int mtk_regulator_is_enabled(struct regulator_dev *rdev)
 
 	en = pmic_get_register_value(mreg->en_reg);
 
+#if regulator_log
 	PMICLOG("[PMIC]regulator_is_enabled(name=%s id=%d en_reg=%x vol_reg=%x en=%d)\n",
 		rdesc->name, rdesc->id, mreg->en_reg, mreg->vol_reg, en);
-
+#endif
 	return en;
 }
 
@@ -578,10 +588,11 @@ static int mtk_regulator_get_voltage_sel(struct regulator_dev *rdev)
 		}
 	}
 
+#if regulator_log
 	PMICLOG
 	    ("regulator_get_voltage_sel(name=%s id=%d en_reg=%x vol_reg=%x reg/sel:%d voltage:%d [0x%x]=0x%x)\n",
 	     rdesc->name, rdesc->id, mreg->en_reg, mreg->vol_reg, regVal, voltage, add, val);
-
+#endif
 	return regVal;
 }
 
@@ -592,9 +603,10 @@ static int mtk_regulator_set_voltage_sel(struct regulator_dev *rdev, unsigned se
 
 	mreg = container_of(rdesc, struct mtk_regulator, desc);
 
+#if regulator_log
 	PMICLOG("regulator_set_voltage_sel(name=%s id=%d en_reg=%x vol_reg=%x selector=%d)\n",
 		rdesc->name, rdesc->id, mreg->en_reg, mreg->vol_reg, selector);
-
+#endif
 /* VGP2
     0:1200000,->0
     1:1300000,->1
@@ -649,9 +661,10 @@ static int mtk_regulator_list_voltage(struct regulator_dev *rdev, unsigned selec
 		voltage = pVoltage[0];
 	}
 
-/* PMICLOG("regulator_list_voltage(name=%s id=%d en_reg=%x vol_reg=%x selector=%d voltage=%d)\n", rdesc->name,
- desc->id, mreg->en_reg, mreg->vol_reg, selector,voltage); */
-
+#if regulator_log
+	PMICLOG("regulator_list_voltage(name=%s id=%d en_reg=%x vol_reg=%x selector=%d voltage=%d)\n", rdesc->name,
+		desc->id, mreg->en_reg, mreg->vol_reg, selector, voltage);
+#endif
 	return voltage;
 }
 
