@@ -4134,16 +4134,14 @@ static void mt_clks_init(void)
 	struct clkmux *clkmux;
 
 	ENTER_FUNC(FUNC_LV_API);
-	clk_writel(CLK_GATING_CTRL1,
-		(clk_readl(CLK_GATING_CTRL1) | USB_SW_CG_BIT));
-	clk_writel(CLK_GATING_CTRL2,
-		(clk_readl(CLK_GATING_CTRL2) | RBIST_SW_CG_BIT));
+	clk_writel(SET_CLK_GATING_CTRL2, RBIST_SW_CG_BIT | NFI_BUS_SW_CG_BIT);
+	clk_writel(SET_CLK_GATING_CTRL1, NFI_SW_CG_BIT | NFIECC_SW_CG_BIT |
+		NFI2X_SW_CG_BIT | USB_SW_CG_BIT);
+	clk_writel(CLK_GATING_CTRL3,
+		(clk_readl(CLK_GATING_CTRL3) | MT_CG_UFOZIP_DEC_CLK_SW_CG |
+		MT_CG_UFOZIP_ENC_CLK_SW_CG | MT_CG_UFOENC_MM_SW_CG | MT_CG_UFODEC_MM_SW_CG));
 	clk_writel(INFRA_RSVD1,
 		(clk_readl(INFRA_RSVD1) | PLL1_CK_BIT | PLL2_CK_BIT));
-	clk_writel(CLK_GATING_CTRL2,
-		(clk_readl(CLK_GATING_CTRL2) | NFI_BUS_SW_CG_BIT));
-	clk_writel(CLK_GATING_CTRL1,
-		(clk_readl(CLK_GATING_CTRL1) | NFI_SW_CG_BIT | NFIECC_SW_CG_BIT | NFI2X_SW_CG_BIT));
 	clk_writel(CLR_CLK_GATING_CTRL1, I2C0_SW_CG_BIT | I2C1_SW_CG_BIT | I2C2_SW_CG_BIT);
 
 	/* init CG_CLK */
