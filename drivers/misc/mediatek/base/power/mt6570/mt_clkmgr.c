@@ -967,7 +967,7 @@ static struct cg_clk clks[] = {
 		.mask = UFOENC_MM_SW_CG_BIT,
 		.ops = &rw_cg_clk_ops,
 		.grp = &grps[CG_CTRL3],
-		.src = MT_CG_INVALID,
+		.src = MT_CG_UPLL_D3,
 	},
 	[MT_CG_UFODEC_MM_SW_CG] = {
 		.name = __stringify(MT_CG_UFODEC_MM_SW_CG),
@@ -975,7 +975,7 @@ static struct cg_clk clks[] = {
 		.mask = UFODEC_MM_SW_CG_BIT,
 		.ops = &rw_cg_clk_ops,
 		.grp = &grps[CG_CTRL3],
-		.src = MT_CG_INVALID,
+		.src = MT_CG_UPLL_D3,
 	},
 	/* CG_MMSYS0 */
 	[MT_CG_DISP0_SMI_COMMON] = {
