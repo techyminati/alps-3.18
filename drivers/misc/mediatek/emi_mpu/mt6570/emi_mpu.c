@@ -286,7 +286,7 @@ static const struct mst_tbl_entry mst_tbl[] = {
 		.master = MST_ID_PERI_3,
 		.port = MONITOR_PORT_PERI,
 		.id_mask = 0x3FF,
-		.id_val = 0x022,
+		.id_val = 0x042,
 		.note = "PERI: SPI0",
 		.name = "SPI0"
 
@@ -295,7 +295,7 @@ static const struct mst_tbl_entry mst_tbl[] = {
 		.master = MST_ID_PERI_4,
 		.port = MONITOR_PORT_PERI,
 		.id_mask = 0x3FF,
-		.id_val = 0x032,
+		.id_val = 0x062,
 		.note = "PERI: MSDC1",
 		.name = "MSDC1"
 	},
@@ -303,7 +303,7 @@ static const struct mst_tbl_entry mst_tbl[] = {
 		.master = MST_ID_PERI_5,
 		.port = MONITOR_PORT_PERI,
 		.id_mask = 0x3FF,
-		.id_val = 0x042,
+		.id_val = 0x082,
 		.note = "PERI: SPM",
 		.name = "SPM"
 	},
@@ -319,7 +319,7 @@ static const struct mst_tbl_entry mst_tbl[] = {
 		.master = MST_ID_PERI_7,
 		.port = MONITOR_PORT_PERI,
 		.id_mask = 0x3FF,
-		.id_val = 0x016,
+		.id_val = 0x026,
 		.note = "PERI: MSDC0",
 		.name = "MSDC0"
 	},
@@ -327,7 +327,7 @@ static const struct mst_tbl_entry mst_tbl[] = {
 		.master = MST_ID_PERI_8,
 		.port = MONITOR_PORT_PERI,
 		.id_mask = 0x3FF,
-		.id_val = 0x026,
+		.id_val = 0x046,
 		.note = "PERI: NFI",
 		.name = "NFI"
 	},
@@ -342,6 +342,22 @@ static const struct mst_tbl_entry mst_tbl[] = {
 	{
 		.master = MST_ID_PERI_10,
 		.port = MONITOR_PORT_PERI,
+		.id_mask = 0x31F,
+		.id_val = 0x00E,
+		.note = "PERI: UFOZIP_dec",
+		.name = "DEBUGTOP"
+	},
+	{
+		.master = MST_ID_PERI_11,
+		.port = MONITOR_PORT_PERI,
+		.id_mask = 0x31F,
+		.id_val = 0x012,
+		.note = "PERI: UFOZIP_enc",
+		.name = "DEBUGTOP"
+	},
+	{
+		.master = MST_ID_PERI_12,
+		.port = MONITOR_PORT_PERI,
 		.id_mask = 0x3E3,
 		.id_val = 0x003,
 		.note = "PERI: DEBUGTOP",
@@ -352,7 +368,7 @@ static const struct mst_tbl_entry mst_tbl[] = {
 	{
 		.master = MST_ID_MDMCU_0,
 		.port = MONITOR_PORT_MDMCU,
-		.id_mask = 0x3E0,
+		.id_mask = 0x3C0,
 		.id_val = 0x000,
 		.note = "MD MCU",
 		.name = "MD MCU"
