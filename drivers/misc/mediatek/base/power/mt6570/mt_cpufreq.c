@@ -1715,10 +1715,9 @@ void mt_cpufreq_thermal_protect(unsigned int limited_power)
 			     p->limited_max_freq, p->limited_max_ncpu);
 
 		cpufreq_unlock(flag);	/* <- unlock */
-/* #ifndef CPUDVFS_WORKAROUND_FOR_GIT FIX ME*/
-#if 0
+
 		hps_set_cpu_num_limit(LIMIT_THERMAL, p->limited_max_ncpu, 0);
-#endif
+
 		/* correct opp idx will be calcualted in _thermal_limited_verify() */
 		_mt_cpufreq_set(MT_CPU_DVFS_LITTLE, -1);
 		cpufreq_cpu_put(policy);	/* <- policy put */
