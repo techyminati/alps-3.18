@@ -30,8 +30,8 @@
 #include <common.h>
 #endif
 
-#define _DCM_ACLK_STRESS_
-/*#define DCM_DEFAULT_ALL_OFF */
+/* #define _DCM_ACLK_STRESS_*/
+/* #define DCM_DEFAULT_ALL_OFF */
 
 #if defined(__KERNEL__)
 #if defined(CONFIG_OF)
@@ -50,7 +50,7 @@ static unsigned long biu_base;
 #define TOPCKGEN_NODE "mediatek,TOPCKGEN"
 #define DRAMC_AO_NODE "mediatek,DRAMC0"
 #define EMI_REG_NODE "mediatek,EMI"
-#define BIU_NODE "mediatek,MCUCFG_BIU"
+#define BIU_NODE "mediatek,MCU_BIU_CFG"
 
 #undef INFRACFG_AO_BASE
 #undef MCUCFG_BASE
@@ -275,11 +275,12 @@ typedef enum {
 
 int dcm_armcore_pll_gating(ENUM_ARMCORE_PLL_GATING mode)
 {
+#if 0
 	if (mode == ARMCORE_PLL_GATING_OFF)
 		reg_write(INFRA_RSVD1, aor(reg_read(INFRA_RSVD1), ~(1 << 2), (0 << 2)));/*disable armpll ck gating */
 	else if (mode == ARMCORE_PLL_GATING_ON)
 		reg_write(INFRA_RSVD1, aor(reg_read(INFRA_RSVD1), ~(1 << 2), (1 << 2)));/*enable armpll ck gating */
-
+#endif
 	return 0;
 }
 
@@ -1528,7 +1529,6 @@ static int mt_dcm_dts_map(void)
 
 int mt_dcm_init(void)
 {
-	return 0;
 	if (dcm_initiated)
 		return 0;
 
