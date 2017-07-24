@@ -609,7 +609,7 @@ mtk-msdc.0 {
 
 	touch: touch@0 {
 		compatible = "mediatek,mt6570-touch";
-	/*	vtouch-supply = <&mt_pmic_vgp1_ldo_reg>;*/
+		vtouch-supply = <&mt_pmic_vgp1_ldo_reg>;
 	};
 
 	spi@1100c000 {
