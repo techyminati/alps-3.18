@@ -4015,7 +4015,7 @@ void clk_stat_bug(void)
 	int i;
 	int skip;
 
-	for (i = CG_MPLL_FROM; i < CG_AUDIO_TO; i++) {
+	for (i = CG_UPLL_FROM; i < CG_AUDIO_TO; i++) {
 		clk = id_to_clk(i);
 		if (!clk || !clk->grp || !clk->ops->check_validity(clk))
 			continue;
@@ -4041,16 +4041,17 @@ EXPORT_SYMBOL(clk_stat_bug);
 
 void slp_check_pm_mtcmos_pll(void)
 {
-	int i;
+	struct cg_clk *clk;
+	int i, j;
+	int skip;
+
 
 	slp_chk_mtcmos_pll_stat = 1;
 	pr_warn("[%s]\n", __func__);
 
 	if (pll_is_on(UNIVPLL)) {
 		slp_chk_mtcmos_pll_stat = -1;
-		pr_warn("%s: on\n", plls[UNIVPLL].name);
 		pr_warn("suspend warning: %s is on!!!\n", plls[UNIVPLL].name);
-		pr_warn("warning! warning! warning! it may cause resume fail\n");
 		clk_stat_bug();
 	}
 
@@ -4061,8 +4062,15 @@ void slp_check_pm_mtcmos_pll(void)
 				/* aee_kernel_warning("Suspend Warning","%s is on", subsyss[i].name); */
 				slp_chk_mtcmos_pll_stat = -1;
 				pr_warn("suspend warning: %s is on!!!\n", syss[i].name);
-				pr_warn("warning! warning! warning! it may cause resume fail\n");
-				clk_stat_bug();
+				for (j = CG_UPLL_FROM; j < CG_AUDIO_TO; j++) {
+					clk = id_to_clk(j);
+					if (!clk || !clk->grp || !clk->ops->check_validity(clk))
+						continue;
+					skip = (clk->cnt == 0) && (clk->state == 0);
+					if (skip)
+						continue;
+					pr_warn(" [%s]state=%u, cnt=%u\n", clk->name, clk->state, clk->cnt);
+				}
 			}
 		}
 	}
