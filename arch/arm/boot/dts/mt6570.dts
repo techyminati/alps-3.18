@@ -215,6 +215,17 @@ mtk-msdc.0 {
 
 		mediatek,max_eint_num = <26>;
 		mediatek,max_hw_deb_cnt = <25>;
+		mediatek,debtime_setting_entry = <10>;
+		mediatek,debtime_setting_array	= <0 128>,
+						<1 256>,
+						<2 512>,
+						<3 1024>,
+						<4 16384>,
+						<5 32768>,
+						<6 65536>,
+						<7 131072>,
+						<8 262144>,
+						<9 524288>;
 	};
 
 	ap_ccif0@1000c000 {
