@@ -152,6 +152,10 @@ void usb_phy_switch_to_uart(void)
 
 	/* Set RG_USB20_DM_100K_EN to 1 */
 	USBPHY_SET8(0x22, 0x02);
+
+	/* clear the GPIO mode */
+	USBPHY_CLR8(0x21, 0x03);
+
 	usb_enable_clock(false);
 }
 
@@ -161,6 +165,10 @@ void usb_phy_switch_to_usb(void)
 	udelay(50);
 	/* clear force_uart_en */
 	USBPHY_WRITE8(0x6B, 0x00);
+
+	/* clear the GPIO mode */
+	USBPHY_CLR8(0x21, 0x03);
+
 	usb_enable_clock(false);
 	usb_phy_poweron();
 	/* disable the USB clock turned on in usb_phy_poweron() */
@@ -316,6 +324,10 @@ void usb_phy_switch_to_uart(void)
 
 	/* Set RG_USB20_DM_100K_EN to 1 */
 	USBPHY_SET8(0x22, 0x02);
+
+	/* clear the GPIO mode */
+	USBPHY_CLR8(0x21, 0x03);
+
 	usb_enable_clock(false);
 
 	/*set uart rx path for K2 use*/
@@ -333,6 +345,10 @@ void usb_phy_switch_to_usb(void)
 	udelay(50);
 	/* clear force_uart_en */
 	USBPHY_WRITE8(0x6B, 0x00);
+
+	/* clear the GPIO mode */
+	USBPHY_CLR8(0x21, 0x03);
+
 	usb_enable_clock(false);
 	usb_phy_poweron();
 	/* disable the USB clock turned on in usb_phy_poweron() */
@@ -468,6 +484,8 @@ static void usb_phy_savecurrent_internal(void)
 	/* USBPHY_CLR8(0x6c, 0x10); */
 	/* USBPHY_SET8(0x6c, 0x2E); */
 	/* USBPHY_SET8(0x6d, 0x3E); */
+	USBPHY_SET8(0x21, 0x01);
+
 }
 
 void usb_phy_savecurrent(void)
@@ -500,7 +518,8 @@ void usb_phy_recover(void)
 	/* 4 5. release force suspendm. */
 	USBPHY_CLR8(0x6a, 0x04);
 	USBPHY_CLR8(0x22, 0x02);
-
+	/* clear the GPIO mode */
+	USBPHY_CLR8(0x21, 0x03);
 	skipDisableUartMode = false;
 	} else {
 		if (!skipDisableUartMode)
@@ -518,7 +537,7 @@ void usb_phy_recover(void)
 	USBPHY_CLR8(0x6e, 0x1);
 	/* 4 5. force_uart_en = 1'b0 */
 	USBPHY_CLR8(0x6a, 0x04);
-
+	/* clear the GPIO mode */
 	USBPHY_CLR8(0x21, 0x03);
 	#endif
 
