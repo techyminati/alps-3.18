@@ -931,6 +931,12 @@ mtk-msdc.0 {
 		vcn33_wifi-supply = <&mt_pmic_vcn33_wifi_ldo_reg>;
 	};
 
+	wifi@180f0000 {
+		compatible = "mediatek,wifi";
+		reg = <0x180f0000 0x005c>;
+		interrupts = <GIC_SPI 155 IRQ_TYPE_LEVEL_LOW>;
+	};
+
 	gps {
 	    compatible = "mediatek,gps";
 	};
