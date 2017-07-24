@@ -149,6 +149,15 @@ static int simple_sd_ioctl_multi_rw(struct msdc_ioctl *msdc_ctl)
 	struct mmc_request msdc_mrq;
 	struct msdc_host *host_ctl;
 
+	memset(&msdc_data, 0, sizeof(struct mmc_data));
+	memset(&msdc_mrq, 0, sizeof(struct mmc_request));
+	memset(&msdc_cmd, 0, sizeof(struct mmc_command));
+	memset(&msdc_stop, 0, sizeof(struct mmc_command));
+
+#ifdef MTK_MSDC_USE_CMD23
+	memset(&msdc_sbc, 0, sizeof(struct mmc_command));
+#endif
+
 	if (!msdc_ctl)
 		return -EINVAL;
 	if (msdc_ctl->total_size <= 0)
@@ -231,15 +240,6 @@ static int simple_sd_ioctl_multi_rw(struct msdc_ioctl *msdc_ctl)
 		}
 		break;
 	}
-#endif
-
-	memset(&msdc_data, 0, sizeof(struct mmc_data));
-	memset(&msdc_mrq, 0, sizeof(struct mmc_request));
-	memset(&msdc_cmd, 0, sizeof(struct mmc_command));
-	memset(&msdc_stop, 0, sizeof(struct mmc_command));
-
-#ifdef MTK_MSDC_USE_CMD23
-	memset(&msdc_sbc, 0, sizeof(struct mmc_command));
 #endif
 
 	msdc_mrq.cmd = &msdc_cmd;
