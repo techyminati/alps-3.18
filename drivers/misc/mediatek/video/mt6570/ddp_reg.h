@@ -1051,6 +1051,8 @@ extern volatile unsigned long dsi_reg_va;
 
 #define MIPITX_BASE					MIPI_TX_REG_BASE
 
+#define DISP_REG_SMI_LARB_MMU_EN                        (DISPSYS_SMI_LARB0_BASE+0xfc0)
+
 /* Type Casting */
 /* --------------------------------------------------------------------------- */
 #if 0

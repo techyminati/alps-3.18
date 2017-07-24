@@ -77,7 +77,7 @@
 /* --------------------------------------------------------------------------- */
 unsigned int gEnableMutexRisingEdge = 0;
 unsigned int gPrefetchControl = 1;
-unsigned int gOVLBackground = 0xFF000000;
+unsigned int gOVLBackground = 0xFFFFFF00;
 unsigned int gEnableDSIStateCheck = 0;
 unsigned int gMutexFreeRun = 1;
 unsigned int disp_low_power_lfr = 0;
@@ -418,7 +418,7 @@ void ddp_process_dbg_opt(const char *opt)
 			char *buf_temp = buf;
 
 			for (i = 0; i < DISP_REG_NUM; i++) {
-				DISPDMP("i=%d, module=%s, va=0x%lx, pa=0x%lx, irq(%d,%d)\n",
+				DISPMSG("i=%d, module=%s, va=0x%lx, pa=0x%lx, irq(%d,%d)\n",
 					i, ddp_get_reg_module_name(i), dispsys_reg[i],
 					ddp_reg_pa_base[i], dispsys_irq[i], ddp_irq_num[i]);
 				snprintf(buf_temp, 100,

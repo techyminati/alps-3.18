@@ -332,7 +332,7 @@ static int disp_probe(struct platform_device *pdev)
 				return ret;
 			}
 		}
-		DISPDBG("DT, i=%d, module=%s, map_addr=%p, map_irq=%d, reg_pa=0x%lx, irq=%d\n",
+		DISPMSG("DT, i=%d, module=%s, map_addr=%p, map_irq=%d, reg_pa=0x%lx, irq=%d\n",
 		       i, ddp_get_reg_module_name(i), dispsys_dev->regs[i], dispsys_dev->irq[i],
 		       ddp_reg_pa_base[i], ddp_irq_num[i]);
 	}
@@ -467,11 +467,14 @@ static int __init disp_init_debug_buffer(void)
 	return 0;
 }
 
-#ifndef MTK_FB_DO_NOTHING
 arch_initcall(disp_init_debug_buffer);
+/* #ifdef CONFIG_FPGA_EARLY_PORTING */
+#if 0
+arch_initcall(disp_init);
+#else
 module_init(disp_init);
-module_exit(disp_exit);
 #endif
+module_exit(disp_exit);
 MODULE_AUTHOR("Tzu-Meng, Chung <Tzu-Meng.Chung@mediatek.com>");
 MODULE_DESCRIPTION("Display subsystem Driver");
 MODULE_LICENSE("GPL");

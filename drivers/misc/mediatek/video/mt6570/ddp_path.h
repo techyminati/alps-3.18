@@ -81,6 +81,7 @@ char *ddp_get_scenario_name(DDP_SCENARIO_ENUM scenario);
 int ddp_path_top_clock_off(void);
 int ddp_path_top_clock_on(void);
 int ddp_path_init(void);
+int ddp_path_m4u_off(void);
 
 /* should remove */
 int ddp_insert_config_allow_rec(void *handle);

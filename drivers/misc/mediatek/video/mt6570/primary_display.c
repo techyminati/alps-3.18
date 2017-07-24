@@ -3871,7 +3871,7 @@ int primary_display_start(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPMSG("%s\n", __func__);
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_lock(__func__);
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
@@ -3891,7 +3891,7 @@ int primary_display_stop(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPMSG("%s\n", __func__);
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_lock(__func__);
 
 	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
@@ -3968,13 +3968,13 @@ int primary_display_trigger(int blocking, void *callback, int need_merge)
 	}
 
 	if (blocking)
-		DISPMSG("%s, change blocking to non blocking trigger\n",
+		DISPDBG("%s, change blocking to non blocking trigger\n",
 			__func__);
 
 	dprec_logger_start(DPREC_LOGGER_PRIMARY_TRIGGER, 0, 0);
 
 	if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE) {
-		DISPMSG("primary_display_trigger DIRECT_LINK_MODE\n");
+		DISPDBG("primary_display_trigger DIRECT_LINK_MODE\n");
 		_trigger_display_interface(blocking,
 					   _ovl_fence_release_callback,
 					   DISP_SESSION_DIRECT_LINK_MODE);
@@ -3984,7 +3984,7 @@ int primary_display_trigger(int blocking, void *callback, int need_merge)
 		primary_display_remove_output(_wdma_fence_release_callback,
 					      DISP_SESSION_DIRECT_LINK_MIRROR_MODE);
 	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MODE) {
-		DISPMSG("primary_display_trigger DECOUPLE_MODE\n");
+		DISPDBG("primary_display_trigger DECOUPLE_MODE\n");
 		_trigger_ovl_to_memory(pgc->ovl2mem_path_handle,
 				       pgc->cmdq_handle_ovl1to2_config,
 				       (fence_release_callback)_ovl_fence_release_callback,
@@ -4291,6 +4291,7 @@ static int _config_ovl_input(disp_session_input_config *session_input,
 					 DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
 	}
 #if 0
+	DISPMSG("Display Disable OVL all layer\n");
 	/* Disable OVL layer to show OVL background */
 	data_config->ovl_config[0].layer = 0;
 	data_config->ovl_config[0].layer_en = 0;
@@ -4493,7 +4494,7 @@ int primary_display_user_cmd(unsigned int cmd, unsigned long arg)
 
 	return ret;
 #else
-	DISPMSG("Display is CONFIG_FPGA_EARLY_PORTING, return PQ setting\n");
+	DISPDBG("Display is CONFIG_FPGA_EARLY_PORTING, return PQ setting\n");
 	return 0;
 #endif
 }
@@ -4964,7 +4965,7 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited
 	}
 
 	if (disp_helper_get_option(DISP_HELPER_OPTION_USE_CMDQ)) {
-		DISPMSG("primary display USE_CMDQ\n");
+		DISPDBG("primary display USE_CMDQ\n");
 		_cmdq_reset_config_handle();
 		_cmdq_insert_wait_frame_done_token();
 	}
@@ -5044,7 +5045,13 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited
 
 	if (disp_helper_get_stage() == DISP_HELPER_STAGE_NORMAL) {
 		ret = disp_lcm_init(pgc->plcm, 0);
-	} else {
+	} else if (disp_helper_get_stage() == DISP_HELPER_STAGE_BRING_UP) {
+		DISPMSG("give up force init lcm due to stage %s\n",
+			disp_helper_stage_spy());
+		ret = disp_lcm_init(pgc->plcm, 0);
+	}
+
+	if (is_lcm_inited == 0) {
 		DISPMSG("force init lcm due to stage %s\n",
 			disp_helper_stage_spy());
 		ret = disp_lcm_init(pgc->plcm, 1);

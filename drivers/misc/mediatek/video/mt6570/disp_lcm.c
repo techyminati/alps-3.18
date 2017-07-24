@@ -78,7 +78,7 @@ void _dump_lcm_info(disp_lcm_handle *plcm)
 	p = plcm->params;
 
 	if (l && p) {
-		DISPMSG("[LCM], name: %s\n", l->name);
+		DISPMSG("[LCM] name: %s\n", l->name);
 
 		DISPMSG("[LCM] resolution: %d x %d\n", p->width, p->height);
 		DISPMSG("[LCM] physical size: %d x %d\n", p->physical_width,
@@ -225,13 +225,15 @@ disp_lcm_handle *disp_lcm_probe(char *plcm_name, LCM_INTERFACE_ID lcm_id)
 					isLCMFound = true;
 					isLCMInited = true;
 					lcmindex = i;
+					DISPMSG("LCM found and inited, index=%d\n", i);
 					break;
 				}
 			}
-
-			DISPERR
-			    ("FATAL ERROR: can't found lcm driver:%s in linux kernel driver\n",
-			     plcm_name);
+			if (!isLCMFound) {
+				DISPERR
+				    ("FATAL ERROR: can't found lcm driver:%s in linux kernel driver\n",
+				     plcm_name);
+			}
 		}
 		/* TODO: */
 	}
@@ -294,6 +296,7 @@ int disp_lcm_init(disp_lcm_handle *plcm, int force)
 
 	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
+		DISPMSG("will %s\n", __func__);
 		lcm_drv = plcm->drv;
 
 		if (lcm_drv->init_power) {

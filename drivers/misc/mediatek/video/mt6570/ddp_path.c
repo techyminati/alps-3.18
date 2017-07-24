@@ -424,7 +424,7 @@ static void ddp_check_path_l(int *module_list)
 	unsigned int path_error = 0;
 	unsigned int module_num = ddp_get_module_num_l(module_list);
 
-	DISPDMP("check_path: %s to %s\n", ddp_get_module_name(module_list[0])
+	DISPMSG("check_path: %s to %s\n", ddp_get_module_name(module_list[0])
 		, ddp_get_module_name(module_list[module_num - 1]));
 	/* check mout */
 	for (i = 0; i < module_num - 1; i++) {
@@ -451,11 +451,11 @@ static void ddp_check_path_l(int *module_list)
 					valid = 0;
 					if ((DISP_REG_GET(mout_map[j].reg) & mout) == 0) {
 						path_error += 1;
-						DISPDMP("error:%s mout, expect=0x%x, real=0x%x\n",
+						DISPMSG("error:%s mout, expect=0x%x, real=0x%x\n",
 							ddp_get_module_name(module_list[i]),
 							mout, DISP_REG_GET(mout_map[j].reg));
 					} else if (DISP_REG_GET(mout_map[j].reg) != mout) {
-						DISPDMP
+						DISPMSG
 						    ("warning: %s mout expect=0x%x, real=0x%x\n",
 						     ddp_get_module_name(module_list[i]), mout,
 						     DISP_REG_GET(mout_map[j].reg));
@@ -483,7 +483,7 @@ static void ddp_check_path_l(int *module_list)
 				if (sel_out_map[j].id_bit_map[k] == module_list[step]) {
 					if (DISP_REG_GET(sel_out_map[j].reg) != k) {
 						path_error += 1;
-						DISPDMP(
+						DISPMSG(
 						"error:out_s %s not connect to %s, expect=0x%x, real=0x%x\n",
 						ddp_get_module_name(module_list[i]),
 						ddp_get_module_name(module_list[step]),
@@ -512,7 +512,7 @@ static void ddp_check_path_l(int *module_list)
 				if (sel_in_map[j].id_bit_map[k] == module_list[step]) {
 					if (DISP_REG_GET(sel_in_map[j].reg) != k) {
 						path_error += 1;
-						DISPDMP(
+						DISPMSG(
 						"error:in_s %s not connect to %s, expect=0x%x, real=0x%x\n",
 						ddp_get_module_name(module_list[step]),
 						ddp_get_module_name(module_list[i]),
@@ -525,10 +525,10 @@ static void ddp_check_path_l(int *module_list)
 		}
 	}
 	if (path_error == 0) {
-		DISPDMP("path: %s to %s is connected\n", ddp_get_module_name(module_list[0]),
+		DISPMSG("path: %s to %s is connected\n", ddp_get_module_name(module_list[0]),
 			ddp_get_module_name(module_list[module_num - 1]));
 	} else {
-		DISPDMP("path: %s to %s not connected!!!\n", ddp_get_module_name(module_list[0]),
+		DISPMSG("path: %s to %s not connected!!!\n", ddp_get_module_name(module_list[0]),
 			ddp_get_module_name(module_list[module_num - 1]));
 	}
 }
@@ -665,7 +665,7 @@ static void ddp_check_mutex_l(int mutex_id, int *module_list, DDP_MODE ddp_mode)
 	int module_num = ddp_get_module_num_l(module_list);
 
 	if (mutex_id < DISP_MUTEX_DDP_FIRST || mutex_id > DISP_MUTEX_DDP_LAST) {
-		DISPDMP("error:check mutex fail:exceed mutex max (0 ~ %d)\n", DISP_MUTEX_DDP_LAST);
+		DISPMSG("error:check mutex fail:exceed mutex max (0 ~ %d)\n", DISP_MUTEX_DDP_LAST);
 		return;
 	}
 	real_value = DISP_REG_GET(DISP_REG_CONFIG_MUTEX_MOD(mutex_id));
@@ -674,13 +674,13 @@ static void ddp_check_mutex_l(int mutex_id, int *module_list, DDP_MODE ddp_mode)
 			expect_value |= (1 << module_mutex_map[module_list[i]].bit);
 	}
 	if (expect_value != real_value) {
-		DISPDMP("error:mutex %d error: expect 0x%x, real 0x%x\n", mutex_id, expect_value,
+		DISPMSG("error:mutex %d error: expect 0x%x, real 0x%x\n", mutex_id, expect_value,
 			real_value);
 	}
 	real_sof = DISP_REG_GET(DISP_REG_CONFIG_MUTEX_SOF(mutex_id));
 	expect_sof = ddp_get_mutex_sof(module_list[module_num - 1], ddp_mode);
 	if ((uint32_t) expect_sof != real_sof) {
-		DISPDMP("error:mutex %d sof error: expect %s, real %s\n", mutex_id,
+		DISPMSG("error:mutex %d sof error: expect %s, real %s\n", mutex_id,
 			ddp_get_mutex_sof_name(expect_sof),
 			ddp_get_mutex_sof_name((MUTEX_SOF) real_sof));
 	}
@@ -1070,4 +1070,13 @@ int ddp_path_top_clock_off(void)
 int disp_get_dst_module(DDP_SCENARIO_ENUM scenario)
 {
 	return ddp_get_dst_module(scenario);
+}
+int ddp_path_m4u_off(void)
+{
+	DISPMSG("ddp path m4u off\n");
+#ifdef MTKFB_NO_M4U
+	/* m4u disable */
+	DISP_REG_SET(0, DISP_REG_SMI_LARB_MMU_EN, 0xfffffff8);
+#endif
+	return 0;
 }

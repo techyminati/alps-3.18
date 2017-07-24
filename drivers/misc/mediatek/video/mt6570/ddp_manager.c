@@ -665,8 +665,10 @@ int dpmgr_path_init(disp_path_handle dp_handle, int encmdq)
 	module_num = ddp_get_module_num(handle->scenario);
 	cmdqHandle = encmdq ? handle->cmdqhandle : NULL;
 
-	DISPMSG("dpmgr_path_init: encmdq = %d\n", encmdq);
-	DISPRCD("path init on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	DISPDBG("dpmgr_path_init: encmdq = %d\n", encmdq);
+	DISPDBG("path init on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	/* turn off m4u */
+	ddp_path_m4u_off();
 	/* open top clock */
 	path_top_clock_on();
 	/* seting mutex */
@@ -749,12 +751,12 @@ int dpmgr_path_start(disp_path_handle dp_handle, int encmdq)
 	module_num = ddp_get_module_num(handle->scenario);
 	cmdqHandle = encmdq ? handle->cmdqhandle : NULL;
 
-	DISPMSG("path start on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	DISPDBG("path start on scenario %s\n", ddp_get_scenario_name(handle->scenario));
 	for (i = 0; i < module_num; i++) {
 		module_name = modules[i];
 		if (ddp_modules_driver[module_name] != 0) {
 			if (ddp_modules_driver[module_name]->start != 0) {
-				DISPMSG("scenario %s start module  %s\n",
+				DISPDBG("scenario %s start module  %s\n",
 					   ddp_get_scenario_name(handle->scenario),
 					   ddp_get_module_name(module_name));
 				ddp_modules_driver[module_name]->start(module_name, cmdqHandle);
@@ -903,7 +905,7 @@ int dpmgr_path_reset(disp_path_handle dp_handle, int encmdq)
 	return error > 0 ? -1 : 0;
 }
 
-#ifndef CONFIG_FPGA_EARLY_PORTING
+#ifdef MTKFB_FB_BYPASS_PQ
 static unsigned int dpmgr_is_PQ(DISP_MODULE_ENUM module)
 {
 	unsigned int isPQ = 0;
@@ -937,7 +939,7 @@ int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, 
 	modules = ddp_get_scenario_list(handle->scenario);
 	module_num = ddp_get_module_num(handle->scenario);
 
-	DISPMSG("path config ovl %d, rdma %d, wdma %d, dst %d on handle %p scenario %s\n",
+	DISPDBG("path config ovl %d, rdma %d, wdma %d, dst %d on handle %p scenario %s\n",
 		   config->ovl_dirty,
 		   config->rdma_dirty,
 		   config->wdma_dirty,
@@ -953,14 +955,14 @@ int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, 
 
 				if (ddp_modules_driver[module_name]->bypass != NULL) {
 					ddp_modules_driver[module_name]->bypass(module_name, 1);
-					DISPMSG("bypass PQ: %s\n", ddp_get_module_name(module_name));
+					DISPDBG("bypass PQ: %s\n", ddp_get_module_name(module_name));
 				}
 #ifdef MTKFB_FB_BYPASS_PQ
 			} else if (ddp_modules_driver[module_name]->config != 0) {
 #else
 			if (ddp_modules_driver[module_name]->config != 0) {
 #endif
-				DISPMSG("scenario %s config module %s\n",
+				DISPDBG("scenario %s config module %s\n",
 					   ddp_get_scenario_name(handle->scenario),
 					   ddp_get_module_name(module_name));
 				ddp_modules_driver[module_name]->config(module_name, config,
@@ -1065,7 +1067,7 @@ int dpmgr_path_trigger(disp_path_handle dp_handle, void *trigger_loop_handle, in
 	ASSERT(dp_handle != NULL);
 	handle = (ddp_path_handle) dp_handle;
 
-	DISPMSG("dpmgr_path_trigger on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	DISPDBG("dpmgr_path_trigger on scenario %s\n", ddp_get_scenario_name(handle->scenario));
 	cmdqHandle = encmdq ? handle->cmdqhandle : NULL;
 	modules = ddp_get_scenario_list(handle->scenario);
 	module_num = ddp_get_module_num(handle->scenario);
@@ -1075,7 +1077,7 @@ int dpmgr_path_trigger(disp_path_handle dp_handle, void *trigger_loop_handle, in
 		module_name = modules[i];
 		if (ddp_modules_driver[module_name] != 0) {
 			if (ddp_modules_driver[module_name]->trigger != 0) {
-				DISPRCD("%s trigger\n", ddp_get_module_name(module_name));
+				DISPDBG("dpmgr_path_trigger %s trigger\n", ddp_get_module_name(module_name));
 				ddp_modules_driver[module_name]->trigger(module_name,
 									 trigger_loop_handle);
 			}
@@ -1296,13 +1298,13 @@ int dpmgr_path_is_busy(disp_path_handle dp_handle)
 	modules = ddp_get_scenario_list(handle->scenario);
 	module_num = ddp_get_module_num(handle->scenario);
 
-	DISPRCD("path check busy on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	DISPDBG("path check busy on scenario %s\n", ddp_get_scenario_name(handle->scenario));
 	for (i = module_num - 1; i >= 0; i--) {
 		module_name = modules[i];
 		if (ddp_modules_driver[module_name] != 0) {
 			if (ddp_modules_driver[module_name]->is_busy != 0) {
 				if (ddp_modules_driver[module_name]->is_busy(module_name)) {
-					DISPMSG("%s is busy\n",
+					DISPDBG("%s is busy\n",
 						   ddp_get_module_name(module_name));
 					return 1;
 				}
@@ -1415,7 +1417,7 @@ int dpmgr_check_status(disp_path_handle dp_handle)
 
 	/* dump path */
 	{
-		DISPMSG("dpmgr_check_path_status path:");
+		DISPDBG("dpmgr_check_path_status path:");
 		for (i = 0; i < module_num; i++)
 			DISPMSG("%s-", ddp_get_module_name(modules[i]));
 		DISPMSG("\n");
@@ -1470,7 +1472,7 @@ int dpmgr_wait_event_timeout(disp_path_handle dp_handle, DISP_PATH_EVENT event, 
 	if (wq_handle->init) {
 		unsigned long long cur_time = ktime_to_ns(ktime_get());
 
-		DISPMSG("wait event %s on scenario %s\n", path_event_name(event),
+		DISPDBG("wait event %s on scenario %s\n", path_event_name(event),
 			   ddp_get_scenario_name(handle->scenario));
 
 		ret =
@@ -1485,7 +1487,7 @@ int dpmgr_wait_event_timeout(disp_path_handle dp_handle, DISP_PATH_EVENT event, 
 				   path_event_name(event), ret,
 				   ddp_get_scenario_name(handle->scenario));
 		} else {
-			DISPMSG("received event %s timeleft %d on scenario %s\n",
+			DISPDBG("received event %s timeleft %d on scenario %s\n",
 				   path_event_name(event), ret,
 				   ddp_get_scenario_name(handle->scenario));
 		}

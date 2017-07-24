@@ -426,7 +426,7 @@ static int _convert_fb_layer_to_disp_input(struct fb_overlay_layer *src, disp_in
 	dst->src_base_addr = src->src_base_addr;
 	dst->security = src->security;
 	dst->src_phy_addr = src->src_phy_addr;
-	DISPMSG("_convert_fb_layer_to_disp_input, dst->addr=0x%08lx\n",
+	DISPDBG("_convert_fb_layer_to_disp_input, dst->addr=0x%08lx\n",
 		(unsigned long)(dst->src_phy_addr));
 
 	dst->isTdshp = src->isTdshp;
@@ -466,12 +466,12 @@ static int _convert_fb_layer_to_disp_input(struct fb_overlay_layer *src, disp_in
 	dst->layer_enable = src->layer_enable;
 
 #if 1
-	DISPMSG("_convert_fb_layer_to_disp_input():id=%u, en=%u, next_idx=%u, vaddr=%p, paddr=%p,\n",
+	DISPDBG("_convert_fb_layer_to_disp_input():id=%u, en=%u, next_idx=%u, vaddr=%p, paddr=%p,\n",
 		dst->layer_id, dst->layer_enable, dst->next_buff_idx, dst->src_base_addr, dst->src_phy_addr);
-	DISPMSG("src fmt=%u, dst fmt=%u, pitch=%u, xoff=%u, yoff=%u, w=%u, h=%u\n",
+	DISPDBG("src fmt=%u, dst fmt=%u, pitch=%u, xoff=%u, yoff=%u, w=%u, h=%u\n",
 		src->src_fmt, dst->src_fmt, dst->src_pitch, dst->src_offset_x,
 		dst->src_offset_y, dst->src_width, dst->src_height);
-	DISPMSG("_convert_fb_layer_to_disp_input():target xoff=%u, target yoff=%u, target w=%u, target h=%u, aen=%u\n",
+	DISPDBG("_convert_fb_layer_to_disp_input():target xoff=%u, target yoff=%u, target w=%u, target h=%u, aen=%u\n",
 		dst->tgt_offset_x, dst->tgt_offset_y, dst->tgt_width, dst->tgt_height,
 		dst->alpha_enable);
 #endif
@@ -490,7 +490,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
 	disp_session_input_config *session_input;
 	disp_input_config *input;
 
-	DISPMSG("mtkfb_pan_display_impl begin\n");
+	DISPDBG("mtkfb_pan_display_impl begin\n");
 
 	if (no_update) {
 		DISPMSG("FB_ACTIVATE_NO_UPDATE flag found, ignore mtkfb_pan_display_impl\n");
@@ -498,7 +498,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
 		return ret;
 	}
 
-	DISPMSG("mtkfb_pan_display: offset(%u,%u), res(%u,%u), resv(%u,%u)\n",
+	DISPDBG("mtkfb_pan_display: offset(%u,%u), res(%u,%u), resv(%u,%u)\n",
 		var->xoffset, var->yoffset, info->var.xres, info->var.yres, info->var.xres_virtual,
 		info->var.yres_virtual);
 
@@ -563,7 +563,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
 	ret = primary_display_trigger(true, NULL, 0);
 
 	kfree(session_input);
-	DISPMSG("mtkfb_pan_display_impl end\n");
+	DISPDBG("mtkfb_pan_display_impl end\n");
 	return ret;
 }
 
@@ -625,9 +625,9 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 
 	DISPDBG("%s begin\n", __func__);
 
-	DISPMSG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
+	DISPDBG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
 		var->xres, var->yres, var->xres_virtual, var->yres_virtual);
-	DISPMSG("xoffset=%u, yoffset=%u, bits_per_pixel=%u\n", var->xoffset, var->yoffset, var->bits_per_pixel);
+	DISPDBG("xoffset=%u, yoffset=%u, bits_per_pixel=%u\n", var->xoffset, var->yoffset, var->bits_per_pixel);
 
 	bpp = var->bits_per_pixel;
 
@@ -657,7 +657,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 		var->yres_virtual = var->yres;
 
 	max_frame_size = fbdev->fb_size_in_byte;
-	DISPMSG("fbdev->fb_size_in_byte=0x%08lx\n", fbdev->fb_size_in_byte);
+	DISPDBG("fbdev->fb_size_in_byte=0x%08lx\n", fbdev->fb_size_in_byte);
 	line_size = var->xres_virtual * bpp / 8;
 
 	if (line_size * var->yres_virtual > max_frame_size) {
@@ -672,17 +672,17 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 		}
 	}
 
-	DISPMSG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
+	DISPDBG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
 		var->xres, var->yres, var->xres_virtual, var->yres_virtual);
-	DISPMSG("xoffset=%u, yoffset=%u, bits_per_pixel=%u\n", var->xoffset, var->yoffset, var->bits_per_pixel);
+	DISPDBG("xoffset=%u, yoffset=%u, bits_per_pixel=%u\n", var->xoffset, var->yoffset, var->bits_per_pixel);
 	if (var->xres + var->xoffset > var->xres_virtual)
 		var->xoffset = var->xres_virtual - var->xres;
 	if (var->yres + var->yoffset > var->yres_virtual)
 		var->yoffset = var->yres_virtual - var->yres;
 
-	DISPMSG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
+	DISPDBG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
 		var->xres, var->yres, var->xres_virtual, var->yres_virtual);
-	DISPMSG("xoffset=%u, yoffset=%u, bits_per_pixel=%u\n", var->xoffset, var->yoffset, var->bits_per_pixel);
+	DISPDBG("xoffset=%u, yoffset=%u, bits_per_pixel=%u\n", var->xoffset, var->yoffset, var->bits_per_pixel);
 
 	if (16 == bpp) {
 		var->red.offset = 11;
@@ -776,7 +776,7 @@ static int mtkfb_set_par(struct fb_info *fbi)
 
 	case 32:
 		fb_layer.src_use_color_key = 0;
-		DISPMSG("set_par,var->blue.offset=%d\n", var->blue.offset);
+		DISPDBG("set_par,var->blue.offset=%d\n", var->blue.offset);
 		fb_layer.src_fmt = (0 == var->blue.offset) ?  MTK_FB_FORMAT_BGRA8888 : MTK_FB_FORMAT_RGBX8888;
 		fb_layer.src_color_key = 0;
 		break;
@@ -792,9 +792,10 @@ static int mtkfb_set_par(struct fb_info *fbi)
 	fb_layer.layer_id = primary_display_get_option("FB_LAYER");
 	fb_layer.layer_enable = 1;
 	fb_layer.src_base_addr = (void *)((unsigned long)fbdev->fb_va_base + var->yoffset * fbi->fix.line_length);
-	DISPMSG("fb_pa=0x%08lx, var->yoffset=0x%08x,fbi->fix.line_length=0x%08x\n",
+	DISPDBG("fb_pa=0x%08lx, var->yoffset=0x%08x,fbi->fix.line_length=0x%08x\n",
 		fb_pa, var->yoffset, fbi->fix.line_length);
 	fb_layer.src_phy_addr = (void *)(fb_pa + var->yoffset * fbi->fix.line_length);
+	DISPDBG("fb_layer.src_phy_addr=0x%08lx\n", (fb_pa + var->yoffset * fbi->fix.line_length));
 	fb_layer.src_direct_link = 0;
 	fb_layer.src_offset_x = fb_layer.src_offset_y = 0;
 	fb_layer.src_pitch = ALIGN_TO(var->xres, MTK_FB_ALIGNMENT);
@@ -805,7 +806,7 @@ static int mtkfb_set_par(struct fb_info *fbi)
 	/* fb_layer.src_color_key = 0; */
 	fb_layer.layer_rotation = MTK_FB_ORIENTATION_0;
 	fb_layer.layer_type = LAYER_2D;
-	DISPMSG("mtkfb_set_par, fb_layer.src_fmt=%x\n", fb_layer.src_fmt);
+	DISPDBG("mtkfb_set_par, fb_layer.src_fmt=%x\n", fb_layer.src_fmt);
 
 	session_input = kzalloc(sizeof(*session_input), GFP_KERNEL);
 	if (!session_input)
@@ -2071,6 +2072,7 @@ unsigned int mtkfb_fm_auto_test(void)
 }
 
 
+#if 0
 static void _mtkfb_draw_block(unsigned long addr, unsigned int x, unsigned int y, unsigned int w,
 			      unsigned int h, unsigned int color)
 {
@@ -2143,6 +2145,7 @@ static int _mtkfb_internal_test(unsigned long va, unsigned int w, unsigned int h
 	DISPMSG("_mtkfb_internal_test end\n");
 	return 0;
 }
+#endif
 
 
 /* used when early porting, test pan display*/
@@ -2314,6 +2317,7 @@ static int mtkfb_probe(struct device *dev)
 
 	/* mtkfb should parse lcm name from kernel boot command line */
 	primary_display_init(mtkfb_find_lcm_driver(), lcd_fps, is_lcm_inited);
+	primary_display_diagnose();
 
 	init_state++; /* 1 */
 	MTK_FB_XRES = primary_display_get_width();
@@ -2360,9 +2364,9 @@ static int mtkfb_probe(struct device *dev)
 	}
 
 	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL) {
-		DISPERR("[mtkfb] Display is not normal stage, need to call _mtkfb_internal_test\n");
 		/* if SF does not work, Display should enable internal test */
-		_mtkfb_internal_test((unsigned long)(fbdev->fb_va_base), MTK_FB_XRES, MTK_FB_YRES);
+		/* if SF does not work, Display should enable internal test */
+		/* _mtkfb_internal_test((unsigned long)(fbdev->fb_va_base), MTK_FB_XRES, MTK_FB_YRES); */
 	}
 
 	r = mtkfb_register_sysfs(fbdev);
@@ -2402,12 +2406,13 @@ static int mtkfb_probe(struct device *dev)
 #endif
 
 	MSG_FUNC_LEAVE();
+	DISPMSG("mtkfb_probe end0\n");
 	return 0;
 
 cleanup:
 	mtkfb_free_resources(fbdev, init_state);
 
-	/* printk("mtkfb_probe end\n"); */
+	DISPMSG("mtkfb_probe end1\n");
 	return r;
 }
 

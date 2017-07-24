@@ -3465,6 +3465,7 @@ int ddp_dsi_is_busy(DISP_MODULE_ENUM module)
 
 		if (status.BUSY) {
 			busy++;
+#if 0
 			if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL) {
 				if (primary_display_is_video_mode()) {
 					DISPMSG("dsi busy_cnt = %d, video mode will clear busy.\n", busy);
@@ -3472,7 +3473,7 @@ int ddp_dsi_is_busy(DISP_MODULE_ENUM module)
 					busy = 0;
 				}
 			}
-
+#endif
 		}
 	}
 

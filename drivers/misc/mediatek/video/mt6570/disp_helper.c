@@ -39,8 +39,8 @@
 static unsigned int disp_global_stage = MAGIC_CODE | DISP_HELPER_STAGE_EARLY_PORTING;
 #else
 /* please change this to DISP_HELPER_STAGE_NORMAL after bring up done */
-static unsigned int disp_global_stage = MAGIC_CODE | DISP_HELPER_STAGE_BRING_UP;
 /* static unsigned int disp_global_stage = MAGIC_CODE | DISP_HELPER_STAGE_NORMAL; */
+static unsigned int disp_global_stage = MAGIC_CODE | DISP_HELPER_STAGE_NORMAL;
 #endif
 
 static int _is_early_porting_stage(void)
@@ -141,7 +141,11 @@ int disp_helper_get_option(DISP_HELPER_OPTION option)
 			if (_is_normal_stage())
 				return 1;
 			else if (_is_bringup_stage())
+#ifdef MTK_FB_CMDQ_DISABLE
 				return 0;
+#else
+				return 1;
+#endif
 			else if (_is_early_porting_stage())
 				return 0;
 
@@ -152,7 +156,11 @@ int disp_helper_get_option(DISP_HELPER_OPTION option)
 			if (_is_normal_stage())
 				return 1;
 			else if (_is_bringup_stage())
+#ifdef MTKFB_NO_M4U
 				return 0;
+#else
+				return 1;
+#endif
 			else if (_is_early_porting_stage())
 				return 0;
 
