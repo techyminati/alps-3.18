@@ -97,11 +97,11 @@
 /**************************
  * GPU DVFS OPP table setting
  ***************************/
-#define GPU_DVFS_FREQ0     (500500)	/* KHz */
+#define GPU_DVFS_FREQ0     (525000)	/* KHz */
 #define GPU_DVFS_FREQ1     (416000)	/* KHz */
-#define GPU_DVFS_FREQ2     (300300)	/* KHz */
-#define GPU_DVFS_FREQ3     (214500)	/* KHz */
-#define GPU_DVFS_FREQ4     (107250)	/* KHz */
+#define GPU_DVFS_FREQ2     (315000)	/* KHz */
+#define GPU_DVFS_FREQ3     (225000)	/* KHz */
+#define GPU_DVFS_FREQ4     (112500)	/* KHz */
 #define GPUFREQ_LAST_FREQ_LEVEL    (GPU_DVFS_FREQ4)
 
 #define GPU_DVFS_VOLT0     (115000)	/* mV x 100 (DFS only) */
@@ -281,7 +281,7 @@ static void _mt_gpufreq_aee_init(void)
 {
 	aee_rr_rec_gpu_dvfs_vgpu(0xFF);	/* no used */
 	aee_rr_rec_gpu_dvfs_oppidx(0xFF);
-	aee_rr_rec_gpu_dvfs_status(0xFF);
+	aee_rr_rec_gpu_dvfs_status(0xFC);
 }
 #endif
 
@@ -484,19 +484,19 @@ static void _mt_gpufreq_set_cur_freq(unsigned int freq_new)
 	int clksrc = 0;
 
 	switch (freq_new) {
-	case GPU_DVFS_FREQ0:	/* 500.5 MHz */
+	case GPU_DVFS_FREQ0:	/* 525 MHz */
 		clksrc = MT_CG_MPLL_D3;
 		break;
 	case GPU_DVFS_FREQ1:	/* 416 MHz */
 		clksrc = MT_CG_UPLL_D3;
 		break;
-	case GPU_DVFS_FREQ2:	/* 300.3 MHz */
+	case GPU_DVFS_FREQ2:	/* 315 MHz */
 		clksrc = MT_CG_MPLL_D5;
 		break;
-	case GPU_DVFS_FREQ3:	/* 214.5 MHz */
+	case GPU_DVFS_FREQ3:	/* 225 MHz */
 		clksrc = MT_CG_MPLL_D7;
 		break;
-	case GPU_DVFS_FREQ4:	/* 107.25 MHz */
+	case GPU_DVFS_FREQ4:	/* 112.5 MHz */
 		clksrc = MT_CG_MPLL_D14;
 		break;
 	default:
@@ -526,19 +526,19 @@ static unsigned int _mt_gpufreq_get_cur_freq(void)
 
 	switch (mfg_gfmux_sel) {
 	case MT_CG_MPLL_D3:
-		freq = GPU_DVFS_FREQ0;	/* 500.5 MHz */
+		freq = GPU_DVFS_FREQ0;	/* 525 MHz */
 		break;
 	case MT_CG_UPLL_D3:
 		freq = GPU_DVFS_FREQ1;	/* 416 MHz */
 		break;
 	case MT_CG_MPLL_D5:
-		freq = GPU_DVFS_FREQ2;	/* 300.3 MHz */
+		freq = GPU_DVFS_FREQ2;	/* 315 MHz */
 		break;
 	case MT_CG_MPLL_D7:
-		freq = GPU_DVFS_FREQ3;	/* 214.5 MHz */
+		freq = GPU_DVFS_FREQ3;	/* 225 MHz */
 		break;
 	case MT_CG_MPLL_D14:
-		freq = GPU_DVFS_FREQ4;	/* 107.25 MHz */
+		freq = GPU_DVFS_FREQ4;	/* 112.5 MHz */
 		break;
 	default:
 		gpufreq_err("@%s: Unknown MFG MUX value = 0x%x\n", __func__, mfg_gfmux_sel);
@@ -552,8 +552,12 @@ static unsigned int _mt_gpufreq_get_cur_freq(void)
 
 static unsigned int _mt_gpufreq_get_cur_volt(void)
 {
+#if 1 /* TODO: remove this! */
+	return 115000;
+#else
 	/* get Vcore from CPU DVFS driver */
 	return mt_cpufreq_get_cur_volt(MT_CPU_DVFS_LITTLE);
+#endif
 }
 
 
@@ -563,8 +567,8 @@ static unsigned int _mt_gpufreq_get_cur_volt(void)
 static void _mt_gpufreq_power_calculation(unsigned int idx, unsigned int freq, unsigned int volt,
 					  unsigned int temp)
 {
-#define GPU_ACT_REF_POWER	    402	/* mW  */
-#define GPU_ACT_REF_FREQ	    500000	/* KHz */
+#define GPU_ACT_REF_POWER	    253	/* mW  */
+#define GPU_ACT_REF_FREQ	    525000	/* KHz */
 #define GPU_ACT_REF_VOLT	    115000	/* mV x 100 */
 
 	unsigned int p_total = 0, p_dynamic = 0, p_leakage = 0, ref_freq = 0, ref_volt = 0;
@@ -1136,6 +1140,9 @@ unsigned int mt_gpufreq_target(unsigned int idx)
 #ifdef MT_GPUFREQ_PERFORMANCE_TEST
 	return 0;
 #endif
+
+	/* TODO: remove this bringup workaround */
+	return 0;
 
 	mutex_lock(&mt_gpufreq_lock);
 
@@ -2317,10 +2324,12 @@ static int __init _mt_gpufreq_init(void)
 {
 	int ret = 0;
 
+	/* TODO: remove this bringup workaround */
+	return 0;
+
 	gpufreq_info("@%s\n", __func__);
 
 #ifdef CONFIG_PROC_FS
-
 	/* init proc */
 	if (mt_gpufreq_create_procfs())
 		goto out;

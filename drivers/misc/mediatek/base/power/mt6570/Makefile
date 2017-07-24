@@ -37,7 +37,7 @@ endif
 
 #obj-y += mt_golden_setting.o
 #obj-y += mt_cpufreq.o
-#obj-y += mt_gpufreq.o
+obj-y += mt_gpufreq.o
 #obj-y += mt_ptp.o
 #obj-y += mt_dcm.o
 
