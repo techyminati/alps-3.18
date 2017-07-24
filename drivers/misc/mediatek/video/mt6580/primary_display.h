@@ -303,6 +303,7 @@ int mtkfb_get_debug_state(char *stringbuf, int buf_len);
 unsigned int mtkfb_fm_auto_test(void);
 int _parse_tag_videolfb(void);
 
+extern unsigned int recovery_start;
 extern int decouple_shorter_path;
 extern unsigned int isAEEEnabled;
 extern bool is_early_suspended;

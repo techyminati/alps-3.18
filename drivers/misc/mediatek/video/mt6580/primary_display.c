@@ -81,6 +81,7 @@
 
 unsigned int gEnable_DSI_ClkTrail;
 unsigned int recovery_wait = 0;
+unsigned int recovery_start = 0;
 int primary_display_use_cmdq = CMDQ_DISABLE;
 int primary_display_use_m4u = 1;
 DISP_PRIMARY_PATH_MODE primary_display_mode = DIRECT_LINK_MODE;
@@ -2730,6 +2731,7 @@ static int primary_display_recovery_thread(void *data)
 		primary_display_esd_check_enable(1);
 		DISPMSG("[Primary Recovery]  end\n");
 		recovery_wait = 0;
+		recovery_start = 0;
 		if (kthread_should_stop())
 			break;
 	}
@@ -2874,11 +2876,23 @@ static int _ovl_fence_release_callback(uint32_t userdata)
 		cmdqBackupReadSlot(pgc->ovl_status_info, 1, &status);
 		if ((status & 0x1) != 0) {
 			/* ovl is not idle !! */
-			DISPERR("disp ovl status error!! stat=0x%x\n", status);
+			DISPERR("disp ovl status error!! stat=0x%x, rdma stat=0x%x\n", status, recovery_start);
+
+			DISPMSG("[disp ovl status error]stop ESD check firstly\n");
+			primary_display_esd_check_enable(0);
+
 			/* disp_aee_print("ovl_stat 0x%x\n", status); */
 			ret = -1;
 			MMProfileLogEx(ddp_mmp_get_events()->primary_error,
 				       MMProfileFlagPulse, status, 0);
+			if (recovery_start == 1) {
+				DISPERR("[Primary Recovery] RDMA has been underflow and OVL status error\n");
+				primary_display_signal_recovery();
+			}
+		} else {
+			/* when OVL config status correctly, enabe ESD_check, and clear recovery_start. */
+			primary_display_esd_check_enable(1);
+			recovery_start = 0;
 		}
 	}
 

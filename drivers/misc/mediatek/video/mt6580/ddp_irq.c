@@ -359,6 +359,7 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 						    DISP_RDMA_INDEX_OFFSET * index));
 				DISPERR("IRQ: RDMA%d underflow! cnt=%d\n", index,
 				       cnt_rdma_underflow[index]++);
+				recovery_start = 1;
 				disp_irq_log_module |= 1 << module;
 				rdma_underflow_irq_cnt[index]++;
 			}
