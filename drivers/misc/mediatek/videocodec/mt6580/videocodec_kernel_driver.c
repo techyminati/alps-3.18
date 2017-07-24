@@ -165,6 +165,8 @@ VAL_UINT32_T VdecDvfsStep(void)
 
 /* ---> */
 #endif
+/* memory signature for memory protection */
+#define MEM_SIGNATURE 0x56636F64
 
 #define VDO_HW_WRITE(ptr, data)     mt_reg_sync_writel(data, ptr)
 #define VDO_HW_READ(ptr)           (*((volatile unsigned int * const)(ptr)))
@@ -888,6 +890,7 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
 				return -EFAULT;
 			}
 
+			rTempMem.u4MemSign = MEM_SIGNATURE;
 			rTempMem.u4ReservedSize /*kernel va */  =
 			    (VAL_ULONG_T) dma_alloc_coherent(vcodec_device, rTempMem.u4MemSize,
 							     (dma_addr_t *) &rTempMem.pvMemPa,
@@ -945,6 +948,15 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
 				MODULE_MFV_LOGE("[ERROR] VCODEC_FREE_NON_CACHE_BUFFER, copy_from_user failed: %lu\n",
 				     ret);
 				return -EFAULT;
+			}
+			if (rTempMem.u4MemSign != MEM_SIGNATURE) {
+				MODULE_MFV_LOGE("[ERROR] VCODEC_FREE_NON_CACHE_BUFFER, memory illegal: %d\n",
+				     rTempMem.u4MemSign);
+				return -EFAULT;
+			}
+			if (rTempMem.u4MemSize == 0 || rTempMem.u4ReservedSize == 0) {
+				MODULE_MFV_LOGE("[ERROR] VCODEC_FREE_NON_CACHE_BUFFER, memory size illegal\n");
+				     return -EFAULT;
 			}
 
 			dma_free_coherent(vcodec_device, rTempMem.u4MemSize,
