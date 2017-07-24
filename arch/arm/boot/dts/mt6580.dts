@@ -5,12 +5,15 @@
  * http://www.mediatek.com
  *
  */
-/dts-v1/;
-
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include "mt6580-pinfunc.h"
 #include <dt-bindings/mmc/mt6580-msdc.h>
+#include <generated/autoconf.h>
+
+#ifdef CONFIG_MTK_DTBO_FEATURE
+/dts-v1/;
+#endif
 
 / {
 	model = "MT6580";
@@ -176,7 +179,7 @@
 				clock-frequency = <13000000>;
 		};
 
-	bus {
+	bus: bus {
 		compatible = "simple-bus";
 		#address-cells = <1>;
 		#size-cells = <1>;
@@ -1649,7 +1652,6 @@
 	};
 };
 
-#include <cust.dtsi>
 #include <trusty.dtsi>
 
 &eintc {
