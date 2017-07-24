@@ -36,7 +36,7 @@ static u8 kpd_pwrkey_state = !KPD_PWRKEY_POLARITY;
 #endif
 
 static int kpd_show_hw_keycode = 1;
-#ifdef CONFIG_FPGA_EARLY_PORTING /*mark for fpga bringup*/
+#ifndef CONFIG_FPGA_EARLY_PORTING /*mark for fpga bringup*/
 #ifndef EVB_PLATFORM
 static int kpd_enable_lprst = 1;
 #endif
@@ -234,7 +234,7 @@ void kpd_auto_test_for_factorymode(void)
 /********************************************************************/
 void long_press_reboot_function_setting(void)
 {
-#ifdef CONFIG_FPGA_EARLY_PORTING /*mark for fpga bringup */
+#ifndef CONFIG_FPGA_EARLY_PORTING /*mark for fpga bringup */
 #ifndef EVB_PLATFORM
 	if (kpd_enable_lprst && get_boot_mode() == NORMAL_BOOT) {
 		kpd_info("Normal Boot long press reboot selection\n");
