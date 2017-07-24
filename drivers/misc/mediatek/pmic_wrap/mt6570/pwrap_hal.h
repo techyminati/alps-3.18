@@ -40,11 +40,11 @@
 #ifdef CONFIG_OF
 extern void __iomem *pwrap_base;
 extern void __iomem *topckgen_base;
-extern void __iomem *toprgu_base;
+extern void __iomem *toprgu_reg_base;
 #define PMIC_WRAP_BASE		(pwrap_base)
 #define MT_PMIC_WRAP_IRQ_ID	(pwrap_irq)
 #define TOP_CLOCK_CTRL_BASE		(topckgen_base)
-#define TOPRGU_BASE		(toprgu_base)
+#define TOPRGU_BASE		(toprgu_reg_base)
 #else
 #define PMIC_WRAP_BASE		(PWRAP_BASE)
 #define MT_PMIC_WRAP_IRQ_ID	(PMIC_WRAP_ERR_IRQ_BIT_ID)
