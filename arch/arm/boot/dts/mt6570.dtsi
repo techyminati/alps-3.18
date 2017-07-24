@@ -173,6 +173,7 @@ mtk-msdc.0 {
 	toprgu@10007000 {
 		compatible = "mediatek,toprgu";
 		reg = <0 0x10007000 0 0x1000>;
+		interrupts = <GIC_SPI 157 IRQ_TYPE_EDGE_FALLING>;
 	};
 
 	apxgpt@10008000 {
