@@ -98,7 +98,6 @@ int ccci_get_sub_module_cfg(int md_id, char name[], char out_buf[], int size)
 {
 	int actual_size = 0;
 	int net_ver = 0;
-	unsigned int type = 0;
 	struct rpc_cfg_inf_t rpc_cfg = { 2, 2048 };
 
 	if (strcmp(name, "rpc") == 0) {
@@ -115,14 +114,7 @@ int ccci_get_sub_module_cfg(int md_id, char name[], char out_buf[], int size)
 		*((int *)out_buf) = tty_smem_size[md_id];
 		actual_size = sizeof(int);
 	} else if (strcmp(name, "net") == 0) {
-		type = get_modem_support(md_id);
-		if (type == modem_wg)
-			net_ver = CCMNI_V2;
-		else if (type == modem_tg)
-			net_ver = CCMNI_V2;
-		else if ((type == modem_2g) || (type == modem_3g))
-			net_ver = CCMNI_V2;
-
+		net_ver = CCMNI_V2;
 		*((int *)out_buf) = net_ver;
 		actual_size = sizeof(int);
 	} else if (strcmp(name, "net_dl_ctl") == 0) {
@@ -168,6 +160,7 @@ static int cfg_md_mem_layout(int md_id)
 	unsigned int smem_base_before_map;
 	unsigned int md_rom_mem_base;
 	int ret = 0;
+	phys_addr_t tmp_addr;
 
 #ifdef MD_IMG_SIZE_ADJUST_BY_VER
 if (get_modem_support(md_id) == modem_2g)
@@ -177,24 +170,25 @@ else
 	dsp_len = DSP_REGION_LEN;
 #else
 	/* md_len = MD_IMG_RESRVED_SIZE + MD_RW_MEM_RESERVED_SIZE; */
-	md_len = get_resv_mem_size_for_md(md_id);
+	get_md_resv_mem_info(md_id, &tmp_addr, &md_len, NULL, NULL);
 	dsp_len = 0;
 #endif
 
 	/*  MD image */
-	md_mem_layout_tab[md_id].md_region_phy = get_md_mem_start_addr(md_id);
+	md_mem_layout_tab[md_id].md_region_phy = (unsigned int)tmp_addr;
 	md_mem_layout_tab[md_id].md_region_size = md_len;
 	md_rom_mem_base = md_mem_layout_tab[md_id].md_region_phy;
 
 	/*  DSP image */
-	md_mem_layout_tab[md_id].dsp_region_phy = get_md_mem_start_addr(md_id) + md_len;
+	md_mem_layout_tab[md_id].dsp_region_phy = (unsigned int)tmp_addr + md_len;
 	md_mem_layout_tab[md_id].dsp_region_size = dsp_len;
 
 	/*  Share memory */
-	smem_base_before_map = get_md_share_mem_start_addr(md_id);
+	get_md_resv_mem_info(md_id, NULL, NULL, &tmp_addr, &md_len);
+	smem_base_before_map = (unsigned int)tmp_addr;
 	/*  Store address before mapping */
 	md_mem_layout_tab[md_id].smem_region_phy_before_map = smem_base_before_map;
-	md_mem_layout_tab[md_id].smem_region_size = get_resv_share_mem_size_for_md(md_id);
+	md_mem_layout_tab[md_id].smem_region_size = md_len;
 
 #ifdef ENABLE_SW_MEM_REMAP
 	/* 32M align address - 0x40000000 */
@@ -202,7 +196,7 @@ else
 	md_mem_layout_tab[md_id].smem_region_phy = smem_base_before_map;
 #else
 	/* 0x40000000 is BANK4 start addr */
-	md_mem_layout_tab[md_id].smem_region_phy = smem_base_before_map - get_smem_base_addr(md_id) + 0x40000000;
+	md_mem_layout_tab[md_id].smem_region_phy = smem_base_before_map - md_rom_mem_base + 0x40000000;
 	/* set ap share memory remap */
 	set_ap_smem_remap(md_id, 0x40000000, smem_base_before_map);
 #endif
