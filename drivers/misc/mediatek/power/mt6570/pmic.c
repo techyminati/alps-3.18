@@ -4224,6 +4224,10 @@ static int pmic_mt_suspend(struct platform_device *dev, pm_message_t state)
 		pmic_get_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE),
 		pmic_get_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN));
 #endif
+#if 1
+/* for PMIC MT6350 suspend->resume can trigger HWOCV by SW */
+	pmic_set_register_value(PMIC_STRUP_AUXADC_START_SEL, 1);
+#endif
 	return 0;
 }
 
@@ -4293,6 +4297,10 @@ static int pmic_mt_resume(struct platform_device *dev)
 		pmic_get_register_value(PMIC_RG_VREF18_ENB),
 		pmic_get_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE),
 		pmic_get_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN));
+#if 1
+/* restore to HW mode */
+	pmic_set_register_value(PMIC_STRUP_AUXADC_START_SEL, 0);
+#endif
 	return 0;
 }
 
