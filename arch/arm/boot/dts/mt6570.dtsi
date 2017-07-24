@@ -286,8 +286,10 @@ mtk-msdc.0 {
 	};
 
 	m4u@10203000 {
+		cell-index = <0>;
 		compatible = "mediatek,m4u";
 		reg = <0 0x10203000 0 0x1000>;
+		interrupts =  <GIC_SPI 81 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	nb_mmu0@10203200 {
