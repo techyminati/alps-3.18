@@ -1276,8 +1276,7 @@ Sleep(60);//delay 2 frame for stable data for calibration
 
 UINT32 GC0310GetSensorID(UINT32 *sensorID)
 {
-
-	int retry = 2;
+	int retry = 3;
     // check if sensor ID correct
     do {
         *sensorID=((GC0310_read_cmos_sensor(0xf0)<< 8)|GC0310_read_cmos_sensor(0xf1));
@@ -1947,120 +1946,6 @@ void set_fixframerate_by_banding(UINT16 u2FrameRate,  kal_bool bBanding)
 		           LOG_INF("sensor do not support the banding");
 		}
     }
-	else if  ( 20 == u2FrameRate)
-	{
-           LOG_INF(" fix 20 fps");
-
-		if ( GC0310_BANDING_50HZ == bBanding )
-		{
-			CamWriteCmosSensor(0xfe,0x00);
-			CamWriteCmosSensor(0x05,0x00);
-			CamWriteCmosSensor(0x06,0x6a);
-			CamWriteCmosSensor(0x07,0x01);
-			CamWriteCmosSensor(0x08,0x04);
-
-			CamWriteCmosSensor(0xfe,0x01);
-			CamWriteCmosSensor(0x25,0x00); //step
-			CamWriteCmosSensor(0x26,0x96);
-
-			CamWriteCmosSensor(0x27,0x02); //20fps
-			CamWriteCmosSensor(0x28,0xee);
-			CamWriteCmosSensor(0x29,0x02); //20fps
-			CamWriteCmosSensor(0x2a,0xee);
-			CamWriteCmosSensor(0x2b,0x05); //10fps
-			CamWriteCmosSensor(0x2c,0xdc);
-			CamWriteCmosSensor(0x2d,0x0b); //5fps
-			CamWriteCmosSensor(0x2e,0xb8);
-			CamWriteCmosSensor(0x3c,0x00);
-			CamWriteCmosSensor(0xfe,0x00);
-
-		}
-		else if ( GC0310_BANDING_60HZ == bBanding  )
-		{
-			CamWriteCmosSensor(0xfe,0x00);
-			CamWriteCmosSensor(0x05,0x00);
-			CamWriteCmosSensor(0x06,0x6a);
-			CamWriteCmosSensor(0x07,0x01);
-			CamWriteCmosSensor(0x08,0x04);
-
-			CamWriteCmosSensor(0xfe,0x01);
-			CamWriteCmosSensor(0x25,0x00); //step
-			CamWriteCmosSensor(0x26,0x7d);
-
-			CamWriteCmosSensor(0x27,0x02); //20fps
-			CamWriteCmosSensor(0x28,0xee);
-			CamWriteCmosSensor(0x29,0x02); //20fps
-			CamWriteCmosSensor(0x2a,0xee);
-			CamWriteCmosSensor(0x2b,0x05); //10fps
-			CamWriteCmosSensor(0x2c,0xdc);
-			CamWriteCmosSensor(0x2d,0x0b); //5fps
-			CamWriteCmosSensor(0x2e,0xb8);
-			CamWriteCmosSensor(0x3c,0x00);
-			CamWriteCmosSensor(0xfe,0x00);
-
-
-		}
-		else
-		{
-		           LOG_INF("sensor do not support the banding");
-		}
-    }
-    else if ( 24 == u2FrameRate){
-        	           LOG_INF("fix 24 fps");
-
-		if ( GC0310_BANDING_50HZ == bBanding )
-		{
-			CamWriteCmosSensor(0xfe,0x00);
-			CamWriteCmosSensor(0x05,0x00);
-			CamWriteCmosSensor(0x06,0x6a);
-			CamWriteCmosSensor(0x07,0x00);
-			CamWriteCmosSensor(0x08,0x87);
-
-			CamWriteCmosSensor(0xfe,0x01);
-			CamWriteCmosSensor(0x25,0x00); //step
-			CamWriteCmosSensor(0x26,0x96);
-
-			CamWriteCmosSensor(0x27,0x02); //24fps
-			CamWriteCmosSensor(0x28,0x58);
-			CamWriteCmosSensor(0x29,0x02); //20fps
-			CamWriteCmosSensor(0x2a,0xee);
-			CamWriteCmosSensor(0x2b,0x05); //10fps
-			CamWriteCmosSensor(0x2c,0xdc);
-			CamWriteCmosSensor(0x2d,0x0b); //5fps
-			CamWriteCmosSensor(0x2e,0xb8);
-			CamWriteCmosSensor(0x3c,0x00);
-			CamWriteCmosSensor(0xfe,0x00);
-
-		}
-		else if ( GC0310_BANDING_60HZ == bBanding  )
-		{
-			CamWriteCmosSensor(0xfe,0x00);
-			CamWriteCmosSensor(0x05,0x00);
-			CamWriteCmosSensor(0x06,0x6a);
-			CamWriteCmosSensor(0x07,0x00);
-			CamWriteCmosSensor(0x08,0x87);
-
-			CamWriteCmosSensor(0xfe,0x01);
-			CamWriteCmosSensor(0x25,0x00); //step
-			CamWriteCmosSensor(0x26,0x7d);
-
-			CamWriteCmosSensor(0x27,0x02); //24fps
-			CamWriteCmosSensor(0x28,0x58);
-			CamWriteCmosSensor(0x29,0x02); //20fps
-			CamWriteCmosSensor(0x2a,0xee);
-			CamWriteCmosSensor(0x2b,0x05); //10fps
-			CamWriteCmosSensor(0x2c,0xdc);
-			CamWriteCmosSensor(0x2d,0x0b); //5fps
-			CamWriteCmosSensor(0x2e,0xb8);
-			CamWriteCmosSensor(0x3c,0x00);
-			CamWriteCmosSensor(0xfe,0x00);
-
-		}
-		else
-		{
-		           LOG_INF("sensor do not support the banding");
-		}
-    }
 	else
 	{
 	            LOG_INF("sensor do not support the Frame Rate");
@@ -2201,20 +2086,6 @@ UINT32 GC0310YUVSetVideoMode(UINT16 u2FrameRate)    // lanking add
        	set_fixframerate_by_banding(15, GC0310_banding_state);
 
 	}
-    else if (u2FrameRate == 20)
-        {
-           LOG_INF("fix20fps, GC0310_banding_state = %d\n", GC0310_banding_state);
-
-       	set_fixframerate_by_banding(20, GC0310_banding_state);
-
-	}
-    else if (u2FrameRate == 24)
-        {
-           LOG_INF("fix24fps, GC0310_banding_state = %d\n", GC0310_banding_state);
-
-       	set_fixframerate_by_banding(24, GC0310_banding_state);
-
-	}
     else
     {
 
@@ -2323,7 +2194,7 @@ UINT32 GC0310FeatureControl(MSDK_SENSOR_FEATURE_ENUM FeatureId,
     MSDK_SENSOR_CONFIG_STRUCT *pSensorConfigData=(MSDK_SENSOR_CONFIG_STRUCT *) pFeaturePara;
     MSDK_SENSOR_REG_INFO_STRUCT *pSensorRegData=(MSDK_SENSOR_REG_INFO_STRUCT *) pFeaturePara;
     LOG_INF("FeatureId = %d", FeatureId);
-    LOG_INF("shutter %d\n",GC0310_Read_Shutter());
+    /*LOG_INF("shutter %d\n",GC0310_Read_Shutter());*/
 
     switch (FeatureId)
     {
