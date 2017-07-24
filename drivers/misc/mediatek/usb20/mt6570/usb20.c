@@ -276,7 +276,7 @@ void set_usb_rdy(void)
 {
 	DBG(0, "set usb_rdy, wake up bat\n");
 	usb_rdy = 1;
-#ifndef CONFIG_MTK_SMART_BATTERY
+#ifdef CONFIG_MTK_SMART_BATTERY
 	wake_up_bat();
 #endif
 }
