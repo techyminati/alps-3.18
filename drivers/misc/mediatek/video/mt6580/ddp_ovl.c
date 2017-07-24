@@ -507,7 +507,7 @@ int ovl_layer_config(DISP_MODULE_ENUM module,
 
 #ifdef CONFIG_MTK_LCM_PHYSICAL_ROTATION_HW
 	value = value | (REG_FLD_VAL((L_CON_FLD_VIRTICAL_FLIP), 1) |
-			 REG_FLD_VAL((L_CON_FLD_HORI_FLIP), 1) | REG_FLD_VAL((L_CON_FLD_BTSW), 1));
+			 REG_FLD_VAL((L_CON_FLD_HORI_FLIP), 1));
 #endif
 
 	if (space == OVL_COLOR_SPACE_YUV)
@@ -524,8 +524,8 @@ int ovl_layer_config(DISP_MODULE_ENUM module,
 	bg_w = bg_h & 0xFFFF;
 	bg_h = bg_h >> 16;
 	DISP_REG_SET(handle, DISP_REG_OVL_L0_OFFSET + layer_offset,
-		     (bg_h - dst_h - dst_y) << 16 | (bg_w - dst_w - dst_x));
-	offset = (src_x + dst_w + 1) * bpp + (src_y + dst_h - 1) * src_pitch - 1;
+		     ((bg_h - dst_h - dst_y) << 16) | (bg_w - dst_w - dst_x));
+	offset = (src_x + dst_w) * bpp + (src_y + dst_h - 1) * src_pitch - 1;
 #else
 
 	DISP_REG_SET(handle, DISP_REG_OVL_L0_OFFSET + layer_offset, dst_y << 16 | dst_x);

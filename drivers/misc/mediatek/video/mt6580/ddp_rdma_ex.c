@@ -405,7 +405,7 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 				idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_MEM_GMC_SETTING_1,
 				0xFF);
 
-		if (((width >= 1280) && (height >= 800)) || ((width >= 800) && (height >= 1280))) {
+		if ((width >= 800) || ((width >= 1280) && (height <= 800))) {
 			ultra_low_level = 56;
 			pre_ultra_low_level = 83;
 			pre_ultra_high_level = 97;
@@ -426,7 +426,7 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 			fifo_valid_size = 83;
 			if (mode != (RDMA_MODE_DIRECT_LINK && isidle))
 				fifo_valid_size = 64;
-		} else if (((width >= 1280) && (height >= 720)) || ((width >= 720) && (height <= 1280))) {
+		} else if ((width >= 720) || ((width >= 1280) && (height <= 720))) {
 			/* HD */
 			/* Issue Reg threshold */
 			DISP_REG_SET(handle,
@@ -461,7 +461,7 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 						     DISP_REG_RDMA_MEM_GMC_SETTING_0, 0x0B01194B);
 				}
 			}
-		} else if (((width >= 540) && (height >= 960)) || ((width >= 960) && (height >= 540))) {
+		} else if ((width >= 540) || ((width >= 960) && (height <= 540))) {
 			/* qHD */
 			/* DISP_REG_SET(handle,idx*DISP_RDMA_INDEX_OFFSET+ DISP_REG_RDMA_MEM_GMC_SETTING_0, ); */
 			DISP_REG_SET(handle,
@@ -496,7 +496,7 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 						     DISP_REG_RDMA_MEM_GMC_SETTING_0, 0x07010E1C);
 				}
 			}
-		} else if (((width >= 480) && (height >= 640)) || ((width >= 640) && (height >= 480))) {
+		} else if ((width >= 480) || ((width >= 640) && (height <= 480))) {
 			/* WVGA */
 			/* Issue Reg threshold */
 			DISP_REG_SET(handle,
@@ -530,7 +530,7 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 							0x05010A06);
 				}
 			}
-		} else if (((width >= 320) && (height >= 480)) || ((width >= 480) && (height >= 320))) {
+		} else if ((width >= 320) || ((width >= 480) && (height <= 320))) {
 			/* HVGA */
 			/* Issue Reg threshold */
 			DISP_REG_SET(handle,

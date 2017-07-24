@@ -3584,16 +3584,12 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 			t0.CONFG = 0x04;	/* /BTA */
 			t0.Data0 = dsi_params->lcm_esd_check_table[i].cmd;
 			/* / 0xB0 is used to distinguish DCS cmd or Gerneric cmd, is that Right??? */
-			t0.Data_ID =
-			    (t0.Data0 <
-			     0xB0) ? DSI_DCS_READ_PACKET_ID : DSI_GERNERIC_READ_LONG_PACKET_ID;
+			t0.Data_ID = (t0.Data0 < 0xB0) ? DSI_DCS_READ_PACKET_ID : DSI_GERNERIC_READ_LONG_PACKET_ID;
 			t0.Data1 = 0;
 
 			/* write DSI CMDQ */
-			DSI_OUTREG32(cmdq_trigger_handle, &DSI_CMDQ_REG[dsi_i]->data[0],
-				     0x00013700);
-			DSI_OUTREG32(cmdq_trigger_handle, &DSI_CMDQ_REG[dsi_i]->data[1],
-				     AS_UINT32(&t0));
+			DSI_OUTREG32(cmdq_trigger_handle, &DSI_CMDQ_REG[dsi_i]->data[0], 0x00013700);
+			DSI_OUTREG32(cmdq_trigger_handle, &DSI_CMDQ_REG[dsi_i]->data[1], AS_UINT32(&t0));
 			DSI_OUTREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_CMDQ_SIZE, 2);
 
 			/* start DSI */
@@ -3602,10 +3598,10 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 
 			/* 1. wait DSI RD_RDY(must clear, in case of cpu RD_RDY interrupt handler) */
 			if (dsi_i == 0) {
-				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA,
-					      0x00000001, 0x1);
+				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA, 0x00000001, 0x1);
 				DSI_OUTREGBIT(cmdq_trigger_handle, struct DSI_INT_STATUS_REG,
 					      DSI_REG[dsi_i]->DSI_INTSTA, RD_RDY, 0x0);
+				DISPMSG("polling dsi read ready done in CMDQ_ESD_CHECK_READ\n");
 			}
 
 			/* 2. save RX data */
@@ -3620,36 +3616,27 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 						hSlot, i * 4 + 3, &DSI_REG[0]->DSI_RX_DATA3);
 			}
 
-
 			/* 3. write RX_RACK */
-			DSI_OUTREGBIT(cmdq_trigger_handle, struct DSI_RACK_REG, DSI_REG[dsi_i]->DSI_RACK,
-				      DSI_RACK, 1);
+			DSI_OUTREGBIT(cmdq_trigger_handle, struct DSI_RACK_REG, DSI_REG[dsi_i]->DSI_RACK, DSI_RACK, 1);
 
 			/* 4. polling not busy(no need clear) */
 			if (dsi_i == 0) {
-				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA,
-					      0x80000000, 0);
+				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA, 0x80000000, 0);
+				DISPMSG("polling dsi busy done in CMDQ_ESD_CHECK_READ\n");
 			}
-#if 0
-			else {	/* DSI1 */
 
-				DSI_POLLREG32(cmdq_trigger_handle, &DSI_REG[dsi_i]->DSI_INTSTA,
-					      0x80000000, 0);
-			}
-#endif
 			/* loop: 0~4 */
 		}
 
 		/* DSI_OUTREGBIT(cmdq_trigger_handle, DSI_INT_ENABLE_REG,DSI_REG[dsi_i]->DSI_INTEN,RD_RDY,0); */
 	} else if (state == CMDQ_ESD_CHECK_CMP) {
 
-		DISPDBG("[DSI]enter cmp\n");
 		/* cmp just once and only 1 return value */
 		for (i = 0; i < 3; i++) {
 			if (dsi_params->lcm_esd_check_table[i].cmd == 0)
 				break;
 
-			DISPDBG("[DSI]enter cmp i=%d\n", i);
+			DISPMSG("[DSI]enter cmp i=%d\n", i);
 
 			/* read data */
 			if (hSlot) {
@@ -3712,24 +3699,22 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 			if (packet_type == 0x1A || packet_type == 0x1C) {
 				recv_data_cnt = read_data0.byte1 + read_data0.byte2 * 16;
 				if (recv_data_cnt > 2) {
-					DISPDBG
+					DISPMSG
 					("Set receive data count from %d to 2 as ESD check supported max data count.\n",
 						recv_data_cnt);
 					recv_data_cnt = 2;
 				}
 				if (recv_data_cnt > dsi_params->lcm_esd_check_table[i].count) {
-					DISPDBG
+					DISPMSG
 					("Set receive data count from %d to %d as ESD check table specified.\n",
 							recv_data_cnt, dsi_params->lcm_esd_check_table[i].count);
 					recv_data_cnt = dsi_params->lcm_esd_check_table[i].count;
 				}
-				DISPDBG("DSI read long packet size: %d\n", recv_data_cnt);
+				DISPMSG("DSI read long packet size: %d\n", recv_data_cnt);
 				result = memcmp((void *)&(dsi_params->lcm_esd_check_table[i].para_list[0]),
 					(void *)&read_data1, recv_data_cnt);
-			} else if (packet_type == 0x11 ||
-				   packet_type == 0x12 ||
-				   packet_type == 0x21 ||
-				   packet_type == 0x22) {
+			} else if (packet_type == 0x11 || packet_type == 0x12 ||
+				   packet_type == 0x21 || packet_type == 0x22) {
 				/* short read response */
 				if (packet_type == 0x11 || packet_type == 0x21)
 					recv_data_cnt = 1;
@@ -3737,19 +3722,18 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 					recv_data_cnt = 2;
 
 				if (recv_data_cnt > dsi_params->lcm_esd_check_table[i].count) {
-					DISPDBG
-					("Set receive data count from %d to %d as ESD check table specified.\n",
+					DISPMSG("Set receive data count from %d to %d as ESD check table specified.\n",
 						recv_data_cnt, dsi_params->lcm_esd_check_table[i].count);
 					recv_data_cnt = dsi_params->lcm_esd_check_table[i].count;
 				}
-				DISPDBG("DSI read short packet size: %d\n", recv_data_cnt);
+				DISPMSG("DSI read short packet size: %d\n", recv_data_cnt);
 				result = memcmp((void *)&(dsi_params->lcm_esd_check_table[i].para_list[0]),
 						(void *)&read_data0.byte1, recv_data_cnt);
 			} else if (packet_type == 0x02) {
-				DISPDBG("read return type is 0x02\n");
+				DISPERR("read return type is 0x02\n");
 				result = 1;
 			} else {
-				DISPDBG("read return type is non-recognite, type = 0x%x\n", packet_type);
+				DISPERR("read return type is non-recognite, type = 0x%x\n", packet_type);
 				result = 1;
 			}
 

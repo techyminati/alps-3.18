@@ -89,7 +89,8 @@ typedef enum {
 
 typedef enum {
 	DISP_ALIVE = 0xf0,
-	DISP_SLEPT
+	DISP_SLEPT,
+	DISP_FREEZE,
 } DISP_POWER_STATE;
 
 typedef enum {
@@ -177,6 +178,7 @@ typedef struct {
 	uint32_t output_fence_id;
 	uint32_t interface_fence_id;
 	unsigned long long timestamp;
+	struct ion_client *client;
 } disp_internal_buffer_info;
 
 typedef struct {
@@ -308,4 +310,7 @@ extern int decouple_shorter_path;
 extern unsigned int isAEEEnabled;
 extern bool is_early_suspended;
 extern int dfo_query(const char *s, unsigned long *v);
+
+int primary_display_get_session_mode(void);
+int display_freeze_mode(int enable, int need_lock);
 #endif

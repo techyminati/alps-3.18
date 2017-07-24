@@ -1557,6 +1557,22 @@ int _ioctl_set_vsync(unsigned long arg)
 	return ret;
 }
 
+
+int _ioctl_screen_freeze(unsigned long arg)
+{
+	int ret = 0;
+	void __user *argp = (void __user *)arg;
+	unsigned int enable;
+
+	if (copy_from_user(&enable, argp, sizeof(unsigned int))) {
+		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
+		return -EFAULT;
+	}
+	ret = display_freeze_mode(enable, 1);
+
+	return ret;
+}
+
 int set_session_mode(disp_session_config *config_info, int force)
 {
 	int ret = 0;
@@ -1704,6 +1720,10 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	case DISP_IOCTL_GET_LCMINDEX:
 		{
 			return _ioctl_get_lcm_index(arg);
+		}
+	case DISP_IOCTL_SCREEN_FREEZE:
+		{
+			return _ioctl_screen_freeze(arg);
 		}
 	case DISP_IOCTL_AAL_EVENTCTL:
 	case DISP_IOCTL_AAL_GET_HIST:

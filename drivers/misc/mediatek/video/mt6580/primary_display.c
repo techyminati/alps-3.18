@@ -88,6 +88,7 @@ DISP_PRIMARY_PATH_MODE primary_display_mode = DIRECT_LINK_MODE;
 static unsigned long dim_layer_mva;
 typedef void (*fence_release_callback) (unsigned int data);
 static disp_internal_buffer_info *decouple_buffer_info[DISP_INTERNAL_BUFFER_COUNT];
+static disp_internal_buffer_info *freeze_buffer_info;
 static RDMA_CONFIG_STRUCT decouple_rdma_config;
 static WDMA_CONFIG_STRUCT decouple_wdma_config;
 static disp_mem_output_config mem_config;
@@ -144,6 +145,7 @@ typedef struct {
 	int vsync_drop;
 	unsigned int dc_buf_id;
 	unsigned int dc_buf[DISP_INTERNAL_BUFFER_COUNT];
+	unsigned int freeze_buf;
 	unsigned int force_fps_keep_count;
 	unsigned int force_fps_skip_count;
 	cmdqBackupSlotHandle cur_config_fence;
@@ -1149,8 +1151,15 @@ static int _DL_switch_to_DC_fast(void)
 
 	disp_ddp_path_config *data_config_dl = NULL;
 	disp_ddp_path_config *data_config_dc = NULL;
-	unsigned int mva = pgc->dc_buf[pgc->dc_buf_id];
+	unsigned int mva = 0;
 
+	if (pgc->freeze_buf) {
+		mva = pgc->freeze_buf;
+		DISPMSG("dl_to_dc, freeze mode, mva=0x%x is freeze_buf\n", pgc->freeze_buf);
+	} else {
+		mva = pgc->dc_buf[pgc->dc_buf_id];
+		DISPDBG("dl_to_dc, mva=0x%x is dc_buf[]\n", mva);
+	}
 	wdma_config.dstAddress = mva;
 
 	/* 1.save a temp frame to intermediate buffer */
@@ -1238,6 +1247,13 @@ static int _DL_switch_to_DC_fast(void)
 	    dpmgr_create_path(DDP_SCENARIO_PRIMARY_OVL_MEMOUT,
 			      pgc->cmdq_handle_ovl1to2_config);
 #endif
+
+	/*
+	 * FRAME_START will be used in decouple-mirror mode, for post-path fence release(rdma->dsi)
+	 */
+	dpmgr_enable_event(pgc->ovl2mem_path_handle, DISP_PATH_EVENT_FRAME_COMPLETE);
+	dpmgr_enable_event(pgc->ovl2mem_path_handle, DISP_PATH_EVENT_FRAME_START);
+
 	if (pgc->ovl2mem_path_handle) {
 		DISPMSG("dpmgr create ovl memout path SUCCESS(%p)\n",
 			  pgc->ovl2mem_path_handle);
@@ -1620,6 +1636,7 @@ static disp_internal_buffer_info *allocat_decouple_buffer(int size)
 		buf_info->mva = buffer_mva;
 		buf_info->size = mva_size;
 		buf_info->va = buffer_va;
+		buf_info->client = client;
 	} else {
 		DISPERR("Fatal error, kzalloc internal buffer info failed!!\n");
 		kfree(buf_info);
@@ -2091,6 +2108,8 @@ int _esd_check_config_handle_cmd(void)
 	/* 1.reset */
 	cmdqRecReset(pgc->cmdq_handle_config_esd);
 
+	_primary_path_lock(__func__);
+
 	/* 2.write first instruction */
 	/* cmd mode: wait CMDQ_SYNC_TOKEN_STREAM_EOF(wait trigger thread done) */
 	cmdqRecWaitNoClear(pgc->cmdq_handle_config_esd,
@@ -2113,6 +2132,8 @@ int _esd_check_config_handle_cmd(void)
 	ret = cmdqRecFlush(pgc->cmdq_handle_config_esd);
 	dprec_logger_done(DPREC_LOGGER_ESD_CMDQ, 0, 0);
 
+	DISPMSG("[ESD]_esd_check_config_handle_cmd wil out of path lock\n");
+	_primary_path_unlock(__func__);
 	DISPMSG("[ESD]_esd_check_config_handle_cmd ret=%d\n", ret);
 
 	if (ret)
@@ -2138,8 +2159,7 @@ int _esd_check_config_handle_vdo(void)
 	_primary_path_lock(__func__);
 
 	/* 2.stop dsi vdo mode */
-	dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd,
-			      CMDQ_STOP_VDO_MODE, 0);
+	dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_STOP_VDO_MODE, 0);
 
 	/* 3.write instruction(read from lcm) */
 	dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_ESD_CHECK_READ, 0);
@@ -2152,16 +2172,15 @@ int _esd_check_config_handle_vdo(void)
 	dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_START_VDO_MODE, 0);
 
 	/* 5. trigger path */
-	dpmgr_path_trigger(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd,
-			   CMDQ_ENABLE);
-
-	_primary_path_unlock(__func__);
+	dpmgr_path_trigger(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_ENABLE);
 
 	/* 6.flush instruction */
 	dprec_logger_start(DPREC_LOGGER_ESD_CMDQ, 0, 0);
 	ret = cmdqRecFlush(pgc->cmdq_handle_config_esd);
 	dprec_logger_done(DPREC_LOGGER_ESD_CMDQ, 0, 0);
 
+	DISPMSG("[ESD]_esd_check_config_handle_vdo wil out of path lock\n");
+	_primary_path_unlock(__func__);
 	DISPMSG("[ESD]_esd_check_config_handle_vdo ret=%d\n", ret);
 
 	if (ret)
@@ -2236,8 +2255,9 @@ int primary_display_esd_check(void)
 
 				dpmgr_path_trigger(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_ENABLE);
 
-				_primary_path_unlock(__func__);
 				cmdqRecFlush(pgc->cmdq_handle_config_esd);
+				_primary_path_unlock(__func__);
+				DISPMSG("[ESD]ESD check: EXT TE, video mode CMDQ flush done\n");
 
 				cmdqRecDestroy(pgc->cmdq_handle_config_esd);
 				pgc->cmdq_handle_config_esd = NULL;
@@ -2278,17 +2298,12 @@ int primary_display_esd_check(void)
 		       primary_display_cmdq_enabled());
 	if (primary_display_cmdq_enabled()) {
 		_primary_path_lock(__func__);
-		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
-			       MMProfileFlagPulse, 0, 1);
+		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm, MMProfileFlagPulse, 0, 1);
 
 		/* 0.create esd check cmdq */
-		cmdqRecCreate(CMDQ_SCENARIO_DISP_ESD_CHECK,
-			      &(pgc->cmdq_handle_config_esd));
-		dpmgr_path_build_cmdq(pgc->dpmgr_handle,
-				      pgc->cmdq_handle_config_esd,
-				      CMDQ_ESD_ALLC_SLOT, 0);
-		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
-			       MMProfileFlagPulse, 0, 2);
+		cmdqRecCreate(CMDQ_SCENARIO_DISP_ESD_CHECK, &(pgc->cmdq_handle_config_esd));
+		dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_ESD_ALLC_SLOT, 0);
+		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm, MMProfileFlagPulse, 0, 2);
 		DISPMSG("[ESD]ESD config thread=%p\n", pgc->cmdq_handle_config_esd);
 		_primary_path_unlock(__func__);
 
@@ -2298,9 +2313,7 @@ int primary_display_esd_check(void)
 		else
 			ret = _esd_check_config_handle_cmd();
 
-		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
-			       MMProfileFlagPulse,
-			       primary_display_is_video_mode(), 3);
+		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm, MMProfileFlagPulse, primary_display_is_video_mode(), 3);
 		if (ret == 1) {
 			/* cmdq fail */
 			if (_need_wait_esd_eof()) {
@@ -2317,13 +2330,12 @@ int primary_display_esd_check(void)
 		DISPMSG("[ESD]ESD config thread done~\n");
 
 		/* 2.check data(*cpu check now) */
-		ret = dpmgr_path_build_cmdq(pgc->dpmgr_handle,
-					    pgc->cmdq_handle_config_esd,
-					    CMDQ_ESD_CHECK_CMP, 0);
-		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm,
-			       MMProfileFlagPulse, 0, 4);
-		if (ret)
+		ret = dpmgr_path_build_cmdq(pgc->dpmgr_handle, pgc->cmdq_handle_config_esd, CMDQ_ESD_CHECK_CMP, 0);
+		MMProfileLogEx(ddp_mmp_get_events()->esd_rdlcm, MMProfileFlagPulse, 0, 4);
+		if (ret) {
+			DISPMSG("[ESD]ESD Check, CMDQ Read fail\n");
 			ret = 1;	/* esd check fail */
+		}
 destroy_cmdq:
 		dpmgr_path_build_cmdq(pgc->dpmgr_handle,
 				      pgc->cmdq_handle_config_esd,
@@ -2971,7 +2983,13 @@ static int _ovl_fence_release_callback(uint32_t userdata)
 			cmdqRecReset(cmdq_handle);
 			_cmdq_insert_wait_frame_done_token_mira(cmdq_handle);
 			cmdqBackupReadSlot(pgc->rdma_buff_info, 0, &addr);
+			DISPDBG("update RDMA dstbuff addr=0x%x, will impact freeze mode\n", addr);
+			if (pgc->state == DISP_FREEZE) {
+				addr = pgc->freeze_buf;
+				DISPMSG("update freeze mode RDMA dstbuff addr=0x%x\n", addr);
+			}
 			decouple_rdma_config.address = addr;
+
 			_config_rdma_input_data(&decouple_rdma_config,
 						pgc->dpmgr_handle, cmdq_handle);
 			_cmdq_set_config_handle_dirty_mira(cmdq_handle);
@@ -3300,11 +3318,13 @@ unsigned long get_dim_layer_mva_addr(void)
 		int frame_buffer_size = ALIGN_TO(DISP_GetScreenWidth(),
 						 MTK_FB_ALIGNMENT) *
 		    ALIGN_TO(DISP_GetScreenHeight(), MTK_FB_ALIGNMENT) * 4;
+
+#if 0
 		unsigned long dim_layer_va =
 		    pgc->framebuffer_va + (DISP_GetPages() -
 					   1) * frame_buffer_size;
-
 		memset_io((void *)dim_layer_va, 0, frame_buffer_size);
+#endif
 		dim_layer_mva =
 		    pgc->framebuffer_mva + (DISP_GetPages() -
 					    1) * frame_buffer_size;
@@ -3484,6 +3504,144 @@ int primary_suspend_release_fence(void)
 	return 0;
 }
 
+
+int __primary_display_switch_mode(int sess_mode, unsigned int session,
+					 int need_lock)
+{
+	int sw_only = 0;
+
+	DISPDBG("primary_display_switch_mode sess_mode %d, session 0x%x\n", sess_mode, session);
+	if (need_lock)
+		_primary_path_lock(__func__);
+
+	MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+		       MMProfileFlagStart, pgc->session_mode, sess_mode);
+
+	/* when current is freeze mode, alwasy switch decouple mode form all mode (DL and DC) */
+	if (pgc->state == DISP_FREEZE) {
+		DISPMSG("Current is freeze mode, sess_mode=%d will be set to be Decouple(%d)\n",
+			sess_mode, DISP_SESSION_DECOUPLE_MODE);
+		sess_mode = DISP_SESSION_DECOUPLE_MODE;
+	}
+
+	if (pgc->session_mode == sess_mode)
+		goto done;
+
+
+	if (pgc->state == DISP_SLEPT) {
+		DISPMSG("primary display switch from %s to %s in suspend state!!!\n",
+			session_mode_spy(pgc->session_mode),
+			session_mode_spy(sess_mode));
+		sw_only = 1;
+	}
+
+	if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
+	    && sess_mode == DISP_SESSION_DECOUPLE_MODE) {
+		/* dl to dc */
+		DISPMSG("primary display DL_switch_to_DC_fast\n");
+		DL_switch_to_DC_fast(sw_only);
+		pgc->session_mode = sess_mode;
+		DISPMSG("primary display is %s mode now\n",
+			session_mode_spy(pgc->session_mode));
+		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+			       MMProfileFlagPulse, pgc->session_mode,
+			       sess_mode);
+	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MODE
+		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
+		/* dc to dl */
+		DISPMSG("primary display DC_switch_to_DL_fast\n");
+		DC_switch_to_DL_fast(sw_only);
+		pgc->session_mode = sess_mode;
+		DISPMSG("primary display is %s mode now\n",
+			session_mode_spy(pgc->session_mode));
+		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+			       MMProfileFlagPulse, pgc->session_mode,
+			       sess_mode);
+		/* primary_display_diagnose(); */
+	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
+		   && sess_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE) {
+		/* dl to dl mirror */
+		pgc->session_mode = sess_mode;
+		DISPMSG("primary display is %s mode now\n",
+			session_mode_spy(pgc->session_mode));
+		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+			       MMProfileFlagPulse, pgc->session_mode,
+			       sess_mode);
+	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE
+		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
+		/*dl mirror to dl */
+		pgc->session_mode = sess_mode;
+		DISPMSG("primary display is %s mode now\n",
+			session_mode_spy(pgc->session_mode));
+		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+			       MMProfileFlagPulse, pgc->session_mode,
+			       sess_mode);
+	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
+		   && sess_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE) {
+		/* dl to dc mirror  mirror */
+		DISPMSG("primary display DL_switch_to_DC_Mirror_fast\n");
+		DL_switch_to_DC_fast(sw_only);
+		pgc->session_mode = sess_mode;
+		DISPMSG("primary display is %s mode now\n",
+			session_mode_spy(pgc->session_mode));
+		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+			       MMProfileFlagPulse, pgc->session_mode,
+			       sess_mode);
+		/* primary_display_diagnose(); */
+	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE
+		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
+		/*dc mirror  to dl */
+		DISPMSG("primary display DC_Mirror_switch_to_DL_fast\n");
+		DC_switch_to_DL_fast(sw_only);
+		pgc->session_mode = sess_mode;
+		DISPMSG("primary display is %s mode now\n",
+			session_mode_spy(pgc->session_mode));
+		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+			       MMProfileFlagPulse, pgc->session_mode,
+			       sess_mode);
+		/* primary_display_diagnose(); */
+	} else {
+		DISPERR("invalid mode switch from %s to %s\n",
+			session_mode_spy(pgc->session_mode),
+			session_mode_spy(sess_mode));
+	}
+done:
+	if (need_lock)
+		_primary_path_unlock(__func__);
+	pgc->session_id = session;
+
+	MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
+		       MMProfileFlagEnd, pgc->session_mode, sess_mode);
+	return 0;
+}
+
+int primary_display_switch_mode(int sess_mode, unsigned int session, int force)
+{
+	int ret;
+
+	DISPDBG("normal mode will kick idle firstly\n");
+	_primary_path_lock(__func__);
+	primary_display_idlemgr_kick((char *)__func__, 0);
+	DISPDBG("normal mode will switch display path mode\n");
+	ret = __primary_display_switch_mode(sess_mode, session, 0);
+	_primary_path_unlock(__func__);
+	DISPMSG("[DISP] %s done\n", __func__);
+	return ret;
+}
+
+int primary_display_switch_mode_nolock(int sess_mode, unsigned int session, int force)
+{
+	int ret;
+
+	/* _primary_path_lock(__func__); */
+	DISPDBG("freeze mode will switch display path mode\n");
+	ret = __primary_display_switch_mode(sess_mode, session, 0);
+	/* _primary_path_unlock(__func__); */
+	DISPDBG("[DISP] %s done\n", __func__);
+	return ret;
+}
+
+
 int primary_display_suspend(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
@@ -3498,11 +3656,22 @@ int primary_display_suspend(void)
 	/* Lock which is used to avoid esd and suspend affect */
 	_primary_path_esd_check_lock();
 	_primary_path_lock(__func__);
+
+	DISPDBG("primary_display_suspend, leave freeze mode[begin]\n");
+	display_freeze_mode(0, 0);
+	DISPDBG("primary_display_suspend, leave freeze mode[end]\n");
+
 	if (pgc->state == DISP_SLEPT) {
 		DISPMSG("primary display path is already sleep, skip\n");
 		goto done;
 	}
 	primary_display_idlemgr_kick((char *)__func__, 0);
+
+	if (primary_display_is_decouple_mode()) {
+		DISPMSG("primary display path should switch to be DIRECT_LINK\n");
+		/* switch back to DL mode before suspend */
+		__primary_display_switch_mode(DISP_SESSION_DIRECT_LINK_MODE, pgc->session_id, 0);
+	}
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 1);
@@ -3527,6 +3696,12 @@ int primary_display_suspend(void)
 			ret = -1;
 		}
 	}
+	/* for decouple mirror mode */
+	if (primary_display_is_decouple_mode()) {
+		DISPMSG("[POWER]primary display path is decouple mirror, if busy, wait frame complete\n");
+		if (dpmgr_path_is_busy(pgc->ovl2mem_path_handle))
+			dpmgr_wait_event_timeout(pgc->ovl2mem_path_handle, DISP_PATH_EVENT_FRAME_COMPLETE, HZ);
+	}
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 2);
@@ -3541,6 +3716,10 @@ int primary_display_suspend(void)
 
 	DISPDBG("[POWER]primary display path stop[begin]\n");
 	dpmgr_path_stop(pgc->dpmgr_handle, CMDQ_DISABLE);
+	if (primary_display_is_decouple_mode()) {
+		DISPMSG("[POWER]path is decouple mirror mode when suspend[end]\n");
+		dpmgr_path_stop(pgc->ovl2mem_path_handle, CMDQ_DISABLE);
+	}
 	DISPDBG("[POWER]primary display path stop[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 4);
@@ -3570,6 +3749,10 @@ int primary_display_suspend(void)
 
 	DISPDBG("[POWER]dpmanager path power off[begin]\n");
 	dpmgr_path_power_off(pgc->dpmgr_handle, CMDQ_DISABLE);
+	if (primary_display_is_decouple_mode()) {
+		DISPMSG("[POWER]path poer off is decouple mirror mode when suspend[end]\n");
+		dpmgr_path_power_off(pgc->ovl2mem_path_handle, CMDQ_DISABLE);
+	}
 	DISPDBG("[POWER]dpmanager path power off[end]\n");
 	MMProfileLogEx(ddp_mmp_get_events()->primary_suspend,
 		       MMProfileFlagPulse, 0, 8);
@@ -3646,7 +3829,7 @@ int primary_display_resume(void)
 		       0, 0);
 
 	_primary_path_lock(__func__);
-	if (pgc->state == DISP_ALIVE) {
+	if (pgc->state != DISP_SLEPT) {
 		DISPMSG("primary display path is already resume, skip\n");
 		goto done;
 	}
@@ -3655,6 +3838,10 @@ int primary_display_resume(void)
 
 	DISPDBG("dpmanager path power on[begin]\n");
 	dpmgr_path_power_on(pgc->dpmgr_handle, CMDQ_DISABLE);
+	if (primary_display_is_decouple_mode()) {
+		DISPMSG("[POWER]path power on is decouple mirror mode[end]\n");
+		dpmgr_path_power_on(pgc->ovl2mem_path_handle, CMDQ_DISABLE);
+	}
 	DISPDBG("dpmanager path power on[end]\n");
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
@@ -3691,6 +3878,11 @@ int primary_display_resume(void)
 				    NULL);
 
 		dpmgr_path_connect(pgc->dpmgr_handle, CMDQ_DISABLE);
+		if (primary_display_is_decouple_mode()) {
+			DISPMSG("[POWER]path connect is decouple mirror mode[end]\n");
+			dpmgr_path_connect(pgc->ovl2mem_path_handle, CMDQ_DISABLE);
+		}
+
 		MMProfileLogEx(ddp_mmp_get_events()->primary_resume,
 			       MMProfileFlagPulse, 1, 2);
 		lcm_param = disp_lcm_get_params(pgc->plcm);
@@ -3741,6 +3933,16 @@ int primary_display_resume(void)
 		ret = dpmgr_path_config(pgc->dpmgr_handle, data_config, NULL);
 		MMProfileLogEx(ddp_mmp_get_events()->primary_resume,
 			       MMProfileFlagPulse, 2, 2);
+		if (primary_display_is_decouple_mode()) {
+			DISPMSG("[POWER]path config is decouple mirror mode[end]\n");
+			data_config = dpmgr_path_get_last_config(pgc->ovl2mem_path_handle);
+
+			data_config->fps = pgc->lcm_fps;
+			data_config->dst_dirty = 1;
+			data_config->wdma_dirty = 1;
+			ret = dpmgr_path_config(pgc->ovl2mem_path_handle, data_config, NULL);
+			MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse, 2, 2);
+		}
 		data_config->dst_dirty = 0;
 	}
 	DISPDBG("[POWER]dpmanager re-init[end]\n");
@@ -3767,9 +3969,10 @@ int primary_display_resume(void)
 	DISPDBG("[POWER]dpmgr path start[begin]\n");
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
-	if (primary_display_is_decouple_mode())
+	if (primary_display_is_decouple_mode()) {
+		DISPMSG("[POWER]path start is decouple mirror mode[end]\n");
 		dpmgr_path_start(pgc->ovl2mem_path_handle, CMDQ_DISABLE);
-
+	}
 	DISPDBG("[POWER]dpmgr path start[end]\n");
 
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
@@ -3779,11 +3982,10 @@ int primary_display_resume(void)
 			       MMProfileFlagPulse, 1, 6);
 		DISPERR
 		    ("[POWER]Fatal error, we didn't trigger display path but it's already busy\n");
-		primary_display_diagnose();
 		ret = -1;
 		/* goto done; */
 	}
-
+	primary_display_diagnose();
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 7);
 	if (primary_display_is_video_mode()) {
@@ -3792,6 +3994,9 @@ int primary_display_resume(void)
 		/* for video mode, we need to force trigger here */
 		/* for cmd mode, just set DPREC_EVENT_CMDQ_SET_EVENT_ALLOW when trigger loop start */
 		dpmgr_path_trigger(pgc->dpmgr_handle, NULL, CMDQ_DISABLE);
+
+		/* insert a wait token to make sure first config after resume will config to HW when HW idle */
+		_cmdq_insert_wait_frame_done_token();
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->primary_resume, MMProfileFlagPulse,
 		       0, 8);
@@ -4143,7 +4348,7 @@ int primary_display_config_output(disp_mem_output_config *output)
 
 	if (primary_display_is_decouple_mode()) {
 
-		DISPDBG("config output for decoule mirror\n");
+		DISPDBG("config output for decoule mirror, will impact freeze mode\n");
 		/*decouple mirror mode */
 		ASSERT(output != NULL);
 		/* config ovl to mem mode path */
@@ -4386,9 +4591,11 @@ int primary_display_config_input_multiple(disp_session_input_config *
 
 	if (primary_display_is_decouple_mode()
 	    && !primary_display_is_mirror_mode()) {
+
 		pgc->dc_buf_id++;
 		pgc->dc_buf_id %= DISP_INTERNAL_BUFFER_COUNT;
 		wdma_mva = pgc->dc_buf[pgc->dc_buf_id];
+
 		decouple_wdma_config.dstAddress = wdma_mva;
 		_config_wdma_output(&decouple_wdma_config,
 				    pgc->ovl2mem_path_handle,
@@ -4468,118 +4675,6 @@ int primary_display_user_cmd(unsigned int cmd, unsigned long arg)
 	return ret;
 }
 
-int __primary_display_switch_mode(int sess_mode, unsigned int session,
-					 int need_lock)
-{
-	int sw_only = 0;
-
-	DISPDBG("primary_display_switch_mode sess_mode %d, session 0x%x\n", sess_mode, session);
-	if (need_lock)
-		_primary_path_lock(__func__);
-
-	MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-		       MMProfileFlagStart, pgc->session_mode, sess_mode);
-
-	if (pgc->session_mode == sess_mode)
-		goto done;
-
-	if (pgc->state == DISP_SLEPT) {
-		DISPMSG
-		    ("primary display switch from %s to %s in suspend state!!!\n",
-		     session_mode_spy(pgc->session_mode),
-		     session_mode_spy(sess_mode));
-		sw_only = 1;
-	}
-
-	if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
-	    && sess_mode == DISP_SESSION_DECOUPLE_MODE) {
-		/* dl to dc */
-		DL_switch_to_DC_fast(sw_only);
-		pgc->session_mode = sess_mode;
-		DISPDBG("primary display is %s mode now\n",
-			session_mode_spy(pgc->session_mode));
-		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-			       MMProfileFlagPulse, pgc->session_mode,
-			       sess_mode);
-	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MODE
-		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
-		/* dc to dl */
-		DISPMSG("primary display DC_switch_to_DL_fast\n");
-		DC_switch_to_DL_fast(sw_only);
-		pgc->session_mode = sess_mode;
-		DISPDBG("primary display is %s mode now\n",
-			session_mode_spy(pgc->session_mode));
-		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-			       MMProfileFlagPulse, pgc->session_mode,
-			       sess_mode);
-		/* primary_display_diagnose(); */
-	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
-		   && sess_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE) {
-		/* dl to dl mirror */
-		pgc->session_mode = sess_mode;
-		DISPDBG("primary display is %s mode now\n",
-			session_mode_spy(pgc->session_mode));
-		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-			       MMProfileFlagPulse, pgc->session_mode,
-			       sess_mode);
-	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MIRROR_MODE
-		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
-		/*dl mirror to dl */
-		pgc->session_mode = sess_mode;
-		DISPDBG("primary display is %s mode now\n",
-			session_mode_spy(pgc->session_mode));
-		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-			       MMProfileFlagPulse, pgc->session_mode,
-			       sess_mode);
-	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
-		   && sess_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE) {
-		/* dl to dc mirror  mirror */
-		DL_switch_to_DC_fast(sw_only);
-		pgc->session_mode = sess_mode;
-		DISPDBG("primary display is %s mode now\n",
-			session_mode_spy(pgc->session_mode));
-		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-			       MMProfileFlagPulse, pgc->session_mode,
-			       sess_mode);
-		/* primary_display_diagnose(); */
-	} else if (pgc->session_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE
-		   && sess_mode == DISP_SESSION_DIRECT_LINK_MODE) {
-		/*dc mirror  to dl */
-		DISPMSG("primary display DC_Mirror_switch_to_DL_fast\n");
-		DC_switch_to_DL_fast(sw_only);
-		pgc->session_mode = sess_mode;
-		DISPDBG("primary display is %s mode now\n",
-			session_mode_spy(pgc->session_mode));
-		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-			       MMProfileFlagPulse, pgc->session_mode,
-			       sess_mode);
-		/* primary_display_diagnose(); */
-	} else {
-		DISPERR("invalid mode switch from %s to %s\n",
-			session_mode_spy(pgc->session_mode),
-			session_mode_spy(sess_mode));
-	}
-done:
-	if (need_lock)
-		_primary_path_unlock(__func__);
-	pgc->session_id = session;
-
-	MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode,
-		       MMProfileFlagEnd, pgc->session_mode, sess_mode);
-	return 0;
-}
-
-int primary_display_switch_mode(int sess_mode, unsigned int session, int force)
-{
-	int ret;
-
-	_primary_path_lock(__func__);
-	primary_display_idlemgr_kick((char *)__func__, 0);
-	ret = __primary_display_switch_mode(sess_mode, session, 0);
-	_primary_path_unlock(__func__);
-
-	return ret;
-}
 
 void primary_display_idlemgr_enter_idle(int need_lock)
 {
@@ -4723,16 +4818,23 @@ void primary_display_idlemgr_leave_idle(int need_lock)
 					      DDP_IRQ_LEVEL_ALL);
 		}
 	}
+	DISPMSG("[DISP] %s done\n", __func__);
 }
 
 void primary_display_idlemgr_kick(char *source, int need_lock)
 {
 	MMProfileLogEx(ddp_mmp_get_events()->idlemgr, MMProfileFlagPulse, 1, 0);
 
+	if (pgc->state == DISP_FREEZE) {
+		DISPDBG("current is DISP_FREEZE, no need to kick idle\n");
+		return;
+	}
+
 	/* update kick timestamp */
 	idlemgr_last_kick_time = sched_clock();
 
 	if (primary_display_is_idle()) {
+		DISPDBG("idlemgr kick, and is idle now\n");
 		primary_display_set_idle_stat(0);
 		primary_display_idlemgr_leave_idle(need_lock);
 
@@ -4741,6 +4843,7 @@ void primary_display_idlemgr_kick(char *source, int need_lock)
 		/* wake up idlemgr process to monitor next idle stat */
 		wake_up_interruptible(&idlemgr_wait_queue);
 	}
+	DISPDBG("[DISP] %s done\n", __func__);
 }
 
 static int _primary_path_idlemgr_monitor_thread(void *data)
@@ -5268,6 +5371,11 @@ int primary_display_get_original_height(void)
 int primary_display_get_bpp(void)
 {
 	return 32;
+}
+
+int primary_display_get_dc_bpp(void)
+{
+	return 24;
 }
 
 void primary_display_set_max_layer(int maxlayer)
@@ -6399,8 +6507,7 @@ int primary_display_switch_dst_mode(int mode)
 		goto done;
 	}
 	if (pgc->state == DISP_SLEPT) {
-		DISPMSG
-		    ("[primary_display_switch_dst_mode], primary display path is already sleep, skip\n");
+		DISPMSG("[primary_display_switch_dst_mode], primary display path is already sleep, skip\n");
 		goto done;
 	}
 
@@ -6611,6 +6718,104 @@ int primary_display_switch_esd_mode(int mode)
 	return ret;
 }
 
+
+/* display freeze buffer feature */
+static DISP_POWER_STATE power_stat_backup;
+static int session_mode_backup;
+static int allocate_freeze_buffer(void)
+{
+	int height = primary_display_get_height();
+	int width = primary_display_get_width();
+	int bpp = primary_display_get_dc_bpp();
+	int buffer_size =  width * height * bpp / 8;
+
+	freeze_buffer_info = allocat_decouple_buffer(buffer_size);
+	if (freeze_buffer_info != NULL)
+		pgc->freeze_buf = freeze_buffer_info->mva;
+	else
+		return -1;
+
+	return 0;
+}
+
+static int release_freeze_buffer(unsigned int need_primary_lock)
+{
+	if (need_primary_lock)
+		_primary_path_lock(__func__);
+
+	if (freeze_buffer_info) {
+		DISPDBG("%s, freeze buffer is not null, will free it\n", __func__);
+		ion_free(freeze_buffer_info->client, freeze_buffer_info->handle);
+		DISPDBG("%s, freeze buffer free done, will destroy client\n", __func__);
+		ion_client_destroy(freeze_buffer_info->client);
+		DISPDBG("%s, freeze buffer, destroy client done\n", __func__);
+		kfree(freeze_buffer_info);
+		freeze_buffer_info = NULL;
+		pgc->freeze_buf = 0;
+	}
+
+	if (need_primary_lock)
+		_primary_path_unlock(__func__);
+	return 0;
+}
+
+int display_freeze_mode(int enable, int need_lock)
+{
+	int ret = 0;
+
+	DISPMSG("%s, enable:%d\n", __func__, enable);
+
+	if (need_lock)
+		_primary_path_lock(__func__);
+	if (enable) {
+		if (pgc->state == DISP_FREEZE || pgc->state == DISP_SLEPT) {
+			DISPERR("Can't enter freeze mode: current_stat=%d is not alive\n", pgc->state);
+			goto end;
+		}
+
+		if (primary_display_is_mirror_mode()) {
+			DISPERR("Can't enter freeze mode: current_mode=%s\n", session_mode_spy(pgc->session_mode));
+			goto end;
+		}
+
+		ret = allocate_freeze_buffer();
+		if (ret != 0) {
+			DISPERR("freeze buffer allocate failed, ret = %d\n", ret);
+			goto end;
+		}
+
+		DISPMSG("alloc freeze buffer done, power_stat_backup=%d, switch to decouple mode\n", power_stat_backup);
+
+		primary_display_idlemgr_kick((char *)__func__, 0);
+		DISPMSG("freeze mode will kick idle done\n");
+
+		power_stat_backup = pgc->state;
+		DISPMSG("freeze buffer, power_stat_backup=%d\n", power_stat_backup);
+		pgc->state = DISP_FREEZE;
+		session_mode_backup = pgc->session_mode;
+		primary_display_switch_mode_nolock(DISP_SESSION_DECOUPLE_MODE, pgc->session_id, 0);
+		DISPMSG("freeze mode done\n");
+	} else {
+		if (pgc->state != DISP_FREEZE) {
+			DISPMSG("current is not DISP_FREEZE\n");
+			goto end;
+		}
+		pgc->state = power_stat_backup;
+		DISPMSG("freeze will stop, power_stat_backup=%d, switch to backup mode\n", power_stat_backup);
+		primary_display_switch_mode_nolock(session_mode_backup, pgc->session_id, 0);
+		DISPMSG("leave freeze mode, path switch done\n");
+		release_freeze_buffer(0);
+		DISPMSG("release freeze buffer done\n");
+	}
+	if (need_lock)
+		_primary_path_unlock(__func__);
+	return 0;
+end:
+	if (need_lock)
+		_primary_path_unlock(__func__);
+
+	return -1;
+}
 
 static int width_array[] = { 2560, 1440, 1920, 1280, 1200, 800, 960, 640 };
 static int heigh_array[] = { 1440, 2560, 1200, 800, 1920, 1280, 640, 960 };

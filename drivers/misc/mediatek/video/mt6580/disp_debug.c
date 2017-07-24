@@ -195,7 +195,7 @@ void ddp_process_dbg_opt(const char *opt)
 {
 	int ret = 0;
 	char *buf = dbg_buf + strlen(dbg_buf);
-
+#if 0
 	if (0 == strncmp(opt, "regr:", 5)) {
 		char *p = (char *)opt + 5;
 		unsigned long addr = 0;
@@ -212,9 +212,11 @@ void ddp_process_dbg_opt(const char *opt)
 			sprintf(buf, "regr, invalid address 0x%lx\n", addr);
 			goto Error;
 		}
-	} else if (0 == strncmp(opt, "lfr_update", 10)) {
+	} else
+#endif
+	if (0 == strncmp(opt, "lfr_update", 10)) {
 		DSI_LFR_UPDATE(DISP_MODULE_DSI0, NULL);
-
+#if 0
 	} else if (0 == strncmp(opt, "regw:", 5)) {
 		char *p = (char *)opt + 5;
 		unsigned long addr = 0;
@@ -237,6 +239,7 @@ void ddp_process_dbg_opt(const char *opt)
 			sprintf(buf, "regw, invalid address 0x%lx\n", addr);
 			goto Error;
 		}
+#endif
 	} else if (0 == strncmp(opt, "dbg_log:", 8)) {
 		char *p = (char *)opt + 8;
 		unsigned int enable = 0;
@@ -574,6 +577,11 @@ void mtkfb_process_dbg_opt(const char *opt)
 			g_mobilelog = 1;
 		else if (0 == strncmp(opt + 7, "off", 3))
 			g_mobilelog = 0;
+	} else if (0 == strncmp(opt, "freeze:", 7)) {
+		if (0 == strncmp(opt + 7, "on", 2))
+			display_freeze_mode(1, 1);
+		else if (0 == strncmp(opt + 7, "off", 3))
+			display_freeze_mode(0, 1);
 	} else if (0 == strncmp(opt, "diagnose", 8)) {
 		primary_display_diagnose();
 		return;

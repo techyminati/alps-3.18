@@ -293,7 +293,7 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 				disp_irq_log_module |= 1 << module;
 			}
 			if (reg_val & (1 << 2))
-				DISPERR("IRQ: WDMA%d FIFO full!\n", index);
+				DISPMSG("IRQ: WDMA%d FIFO full!\n", index);
 
 			/* clear intr */
 			DISP_CPU_REG_SET(DISP_REG_WDMA_INTSTA + index * DISP_WDMA_INDEX_OFFSET,
