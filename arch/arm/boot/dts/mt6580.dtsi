@@ -108,7 +108,7 @@
 				     <GIC_SPI 7 IRQ_TYPE_LEVEL_LOW>;
 		};
 
-		memory@80000000 {
+	memory {
 				device_type = "memory";
 				reg = <0 0x80000000 0 0x20000000>;
 		};
