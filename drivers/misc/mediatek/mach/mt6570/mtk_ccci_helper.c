@@ -70,8 +70,8 @@ static unsigned int ccif_wdt_irqid[MAX_MD_NUM];
 #if 1				/*For Bring up */
 #define FEATURE_GET_MD_GPIO_NUM
 #define FEATURE_GET_MD_GPIO_VAL
-#define FEATURE_GET_MD_ADC_NUM
-#define FEATURE_GET_MD_ADC_VAL
+/* #define FEATURE_GET_MD_ADC_NUM */
+/* #define FEATURE_GET_MD_ADC_VAL */
 #define FEATURE_GET_MD_EINT_ATTR	/*disable for bring up  */
 #define FEATURE_GET_MD_EINT_ATTR_DTS
 /*#define FEATURE_GET_DRAM_TYPE_CLK*/

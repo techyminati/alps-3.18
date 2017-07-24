@@ -195,8 +195,12 @@ mtk-msdc.0 {
 
 	ap_ccif0@1000c000 {
 		compatible = "mediatek,ap_ccif0";
-		reg = <0 0x1000c000 0 0x1000>;
-		interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_LOW>;
+		reg = <0 0x1000c000 0 0x1000>,	/*AP_CCIF_BASE*/
+		      <0 0xa000d000 0 0x1000>;	/*MD_CCIF_BASE*/
+		interrupts = <GIC_SPI 93 IRQ_TYPE_LEVEL_LOW>, /* CCIF0 IRQ */
+			     <GIC_SPI 152 IRQ_TYPE_EDGE_FALLING>;/* MD WDT IRQ */
+		mediatek,ccif_capability = <2>;
+		mediatek,md_smem_size = <0x200000>; /* md share memory size */
 	};
 
 	md_ccif0@a000d000 {

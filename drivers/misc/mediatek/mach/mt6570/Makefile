@@ -19,7 +19,7 @@
 
 obj-y += mt_gpt.o
 obj-y += ca7_timer.o
-#obj-y += mtk_ccci_helper.o
+obj-y += mtk_ccci_helper.o
 
 ## Hibernation
 obj-$(CONFIG_MTK_HIBERNATION)	+= cpu_hibernate.o
