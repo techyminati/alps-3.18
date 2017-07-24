@@ -40,7 +40,7 @@ extern void __iomem *auxadc_efuse_base;
 #define ADC_CALI_EN_A_MASK 0x800
 #define ADC_CALI_EN_A_SHIFT 11
 
-#define AUXADC_NODE "mediatek,mt6735-auxadc"
+#define AUXADC_NODE "mediatek,ap-auxadc"
 
 #define AUXADC_CON0             (AUXADC_BASE + 0x000)
 #define AUXADC_CON1             (AUXADC_BASE + 0x004)
