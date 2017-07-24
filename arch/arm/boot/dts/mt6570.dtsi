@@ -786,6 +786,10 @@ mtk-msdc.0 {
 		/*clock-names = "btifc","apdmac";*/
 	};/* End of btif */
 
+	gps {
+	    compatible = "mediatek,gps";
+	};
+
 	disp_pwm@1100f000 {
 		compatible = "mediatek,disp_pwm";
 		reg = <0 0x1100f000 0 0x1000>;
