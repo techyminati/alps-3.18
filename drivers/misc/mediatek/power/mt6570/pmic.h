@@ -69,6 +69,43 @@ extern int mt_gpio_set_debounce(unsigned gpio, unsigned debounce);
 /*---------------------------------------------------*/
 
 /* controllable voltage , not fixed step */
+#define PMIC_LDO_GENEM(_name, _id, en, vol, array, use, mode)	\
+	{	\
+		.desc = {	\
+			.name = #_name,	\
+			.n_voltages = (sizeof(array)/sizeof(array[0])),	\
+			.ops = &mtk_regulator_ops,	\
+			.type = REGULATOR_VOLTAGE,	\
+		},	\
+		.init_data = {	\
+			.constraints = {	\
+				.valid_ops_mask = (mode),	\
+			},	\
+		},	\
+		.en_att = __ATTR(LDO_##_id##_STATUS, 0664, show_LDO_STATUS, store_LDO_STATUS),	\
+		.voltage_att = __ATTR(LDO_##_id##_VOLTAGE, 0664, show_LDO_VOLTAGE, store_LDO_VOLTAGE),	\
+		.pvoltages = (void *)(array),	\
+		.en_reg = (PMU_FLAGS_LIST_ENUM)(en),	\
+		.vol_reg = (PMU_FLAGS_LIST_ENUM)(vol),	\
+		.isUsedable = (use),	\
+	}
+
+#define PMIC_BUCK_GENEM(_name, _id, en, vol, min, max, step)	\
+	{	\
+		.desc = {	\
+			.name = #_name,	\
+			.n_voltages = ((max) - (min)) / (step) + 1,	\
+			.min_uV = (min),	\
+			.uV_step = (step),	\
+		},	\
+		.en_att = __ATTR(BUCK_##_id##_STATUS, 0664, show_BUCK_STATUS, store_BUCK_STATUS),	\
+		.voltage_att = __ATTR(BUCK_##_id##_VOLTAGE, 0664, show_BUCK_VOLTAGE, store_BUCK_VOLTAGE),	\
+		.qi_en_reg = (en),	\
+		.qi_vol_reg = (vol),	\
+		.isUsedable = 0,	\
+	}
+
+/* controllable voltage , not fixed step */
 #define PMIC_LDO_GEN1(_name, en, vol, array, use, mode)	\
 	{	\
 		.desc = {	\
@@ -148,6 +185,14 @@ extern int mt_gpio_set_debounce(unsigned gpio, unsigned debounce);
 		.isUsedable = (use),	\
 	}
 
+struct regulator;
+
+struct mtk_regulator_vosel {
+	unsigned int def_sel; /*-- default vosel --*/
+	unsigned int cur_sel; /*-- current vosel --*/
+	bool restore;
+};
+
 struct mtk_regulator {
 	struct regulator_desc desc;
 	struct regulator_init_data init_data;
@@ -162,6 +207,8 @@ struct mtk_regulator {
 	const void *pvoltages;
 	bool isUsedable;
 	struct regulator *reg;
+	/*--- Add to record selector ---*/
+	struct mtk_regulator_vosel vosel;
 };
 
 

@@ -425,6 +425,7 @@ static ssize_t store_pmic_access(struct device *dev, struct device_attribute *at
 				 size_t size)
 {
 	int ret = 0;
+	char *pvalue = NULL, *addr, *val;
 	unsigned int reg_value = 0;
 	unsigned int reg_address = 0;
 
@@ -432,22 +433,26 @@ static ssize_t store_pmic_access(struct device *dev, struct device_attribute *at
 	if (buf != NULL && size != 0) {
 		PMICLOG("[store_pmic_access] buf is %s\n", buf);
 		/*reg_address = simple_strtoul(buf, &pvalue, 16); */
-		ret = kstrtoul(buf, 16, (unsigned long *)&reg_address);
+
+		pvalue = (char *)buf;
+		if (size > 5) {
+			addr = strsep(&pvalue, " ");
+			ret = kstrtou32(addr, 16, (unsigned int *)&reg_address);
+		} else
+			ret = kstrtou32(pvalue, 16, (unsigned int *)&reg_address);
 
 		if (size > 5) {
-			/*reg_value = simple_strtoul((pvalue + 1), NULL, 16); */
-			buf = buf + 1;
-			ret = kstrtoul(buf, 16, (unsigned long *)&reg_value);
+			val =  strsep(&pvalue, " ");
+			ret = kstrtou32(val, 16, (unsigned int *)&reg_value);
 
-			PMICLOG("[store_pmic_access] write PMU reg 0x%x with value 0x%x !\n",
+			pr_err("[store_pmic_access] write PMU reg 0x%x with value 0x%x !\n",
 				reg_address, reg_value);
 			ret = pmic_config_interface(reg_address, reg_value, 0xFFFF, 0x0);
 		} else {
 			ret = pmic_read_interface(reg_address, &g_reg_value, 0xFFFF, 0x0);
-			PMICLOG("[store_pmic_access] read PMU reg 0x%x with value 0x%x !\n",
+			pr_err("[store_pmic_access] read PMU reg 0x%x with value 0x%x !\n",
 				reg_address, g_reg_value);
-			PMICLOG
-			    ("[store_pmic_access] Please use \"cat pmic_access\" to get value\r\n");
+			pr_err("[store_pmic_access] use \"cat pmic_access\" to get value(decimal)\r\n");
 		}
 	}
 	return size;
@@ -625,14 +630,18 @@ static int mtk_regulator_set_voltage_sel(struct regulator_dev *rdev, unsigned se
     6:2800000,->5
     7:3000000,->6
 */
+	mreg->vosel.cur_sel = selector;
 	if (strcmp(rdesc->name, "VGP2") == 0) {
 		if (mreg->vol_reg != 0) {
-			if (selector <= 3)
+			if (selector <= 3) {
 				pmic_set_register_value(mreg->vol_reg, selector);
-			else if (selector == 4)
+			} else if (selector == 4) {
+				mreg->vosel.cur_sel = (selector + 3);
 				pmic_set_register_value(mreg->vol_reg, selector + 3);
-			else
+			} else {
+				mreg->vosel.cur_sel = (selector - 1);
 				pmic_set_register_value(mreg->vol_reg, selector - 1);
+			}
 		}
 	} else {
 		if (mreg->vol_reg != 0)
@@ -1009,41 +1018,41 @@ static struct mtk_regulator mtk_bucks[] = {
 #else
 
 struct mtk_regulator mtk_ldos[] = {
-	PMIC_LDO_GEN1(vcn28, PMIC_RG_VCN28_EN, NULL, pmic_2v8_voltages, 1, PMIC_EN),
-	PMIC_LDO_GEN1(vtcxo, PMIC_RG_VTCXO_EN, NULL, pmic_2v2_voltages, 0, PMIC_EN),
-	PMIC_LDO_GEN1(va, PMIC_RG_VA_EN, PMIC_RG_VA_VOSEL, VA_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vcama, PMIC_RG_VCAMA_EN, PMIC_RG_VCAMA_VOSEL, VCAMA_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vcn33_bt, PMIC_RG_VCN33_EN_BT, PMIC_RG_VCN33_VOSEL, VCN33_voltages, 1,
+	PMIC_LDO_GENEM(vcn28, VCN28, PMIC_RG_VCN28_EN, NULL, pmic_2v8_voltages, 1, PMIC_EN),
+	PMIC_LDO_GENEM(vtcxo, VTCXO, PMIC_RG_VTCXO_EN, NULL, pmic_2v2_voltages, 0, PMIC_EN),
+	PMIC_LDO_GENEM(va, VA, PMIC_RG_VA_EN, PMIC_RG_VA_VOSEL, VA_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vcama, VCAMA, PMIC_RG_VCAMA_EN, PMIC_RG_VCAMA_VOSEL, VCAMA_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vcn33_bt, VCN33_BT, PMIC_RG_VCN33_EN_BT, PMIC_RG_VCN33_VOSEL, VCN33_voltages, 1,
 		      PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vcn33_wifi, PMIC_RG_VCN33_EN_WIFI, PMIC_RG_VCN33_VOSEL, VCN33_voltages, 1,
+	PMIC_LDO_GENEM(vcn33_wifi, VCN22_WIFI, PMIC_RG_VCN33_EN_WIFI, PMIC_RG_VCN33_VOSEL, VCN33_voltages, 1,
 		      PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vio28, PMIC_VIO28_EN, NULL, pmic_2v8_voltages, 0, PMIC_EN),
-	PMIC_LDO_GEN1(vsim1, PMIC_RG_VSIM1_EN, PMIC_RG_VSIM1_VOSEL, VSIM1_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vsim2, PMIC_RG_VSIM2_EN, PMIC_RG_VSIM2_VOSEL, VSIM2_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vusb, PMIC_RG_VUSB_EN, NULL, pmic_3v3_voltages, 1, PMIC_EN),
-	PMIC_LDO_GEN1(vgp1, PMIC_RG_VGP1_EN, PMIC_RG_VGP1_VOSEL, VGP1_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vgp2, PMIC_RG_VGP2_EN, PMIC_RG_VGP2_VOSEL, VGP2_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vemc_3v3, PMIC_RG_VEMC_3V3_EN, PMIC_RG_VEMC_3V3_VOSEL, VEMC3V3_voltages, 1,
+	PMIC_LDO_GENEM(vio28, VIO28, PMIC_VIO28_EN, NULL, pmic_2v8_voltages, 0, PMIC_EN),
+	PMIC_LDO_GENEM(vsim1, VSIM1, PMIC_RG_VSIM1_EN, PMIC_RG_VSIM1_VOSEL, VSIM1_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vsim2, VSIM2, PMIC_RG_VSIM2_EN, PMIC_RG_VSIM2_VOSEL, VSIM2_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vusb, VUSB, PMIC_RG_VUSB_EN, NULL, pmic_3v3_voltages, 1, PMIC_EN),
+	PMIC_LDO_GENEM(vgp1, VGP1, PMIC_RG_VGP1_EN, PMIC_RG_VGP1_VOSEL, VGP1_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vgp2, VGP2, PMIC_RG_VGP2_EN, PMIC_RG_VGP2_VOSEL, VGP2_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vemc_3v3, VEMC_3V3, PMIC_RG_VEMC_3V3_EN, PMIC_RG_VEMC_3V3_VOSEL, VEMC3V3_voltages, 1,
 		      PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vcamaf, PMIC_RG_VCAM_AF_EN, PMIC_RG_VCAM_AF_VOSEL, VCAMAF_voltages, 1,
+	PMIC_LDO_GENEM(vcamaf, VCAMAF, PMIC_RG_VCAM_AF_EN, PMIC_RG_VCAM_AF_VOSEL, VCAMAF_voltages, 1,
 		      PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vmc, PMIC_RG_VMC_EN, PMIC_RG_VMC_VOSEL, VMC_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vmch, PMIC_RG_VMCH_EN, PMIC_RG_VMCH_VOSEL, VMCH_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vibr, PMIC_RG_VIBR_EN, PMIC_RG_VIBR_VOSEL, VIBR_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vrtc, PMIC_VRTC_EN, NULL, pmic_2v8_voltages, 0, PMIC_EN),
-	PMIC_LDO_GEN1(vm, PMIC_RG_VM_EN, PMIC_RG_VM_VOSEL, VM_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vrf18, PMIC_RG_VRF18_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
-	PMIC_LDO_GEN1(vio18, PMIC_RG_VIO18_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
-	PMIC_LDO_GEN1(vcamd, PMIC_RG_VCAMD_EN, PMIC_RG_VCAMD_VOSEL, VCAMD_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vcamio, PMIC_RG_VCAM_IO_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
-	PMIC_LDO_GEN1(vgp3, PMIC_RG_VGP3_EN, PMIC_RG_VGP3_VOSEL, VGP3_voltages, 1, PMIC_EN_VOL),
-	PMIC_LDO_GEN1(vcn_1v8, PMIC_RG_VCN_1V8_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
+	PMIC_LDO_GENEM(vmc, VMC, PMIC_RG_VMC_EN, PMIC_RG_VMC_VOSEL, VMC_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vmch, VMCH, PMIC_RG_VMCH_EN, PMIC_RG_VMCH_VOSEL, VMCH_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vibr, VIBR, PMIC_RG_VIBR_EN, PMIC_RG_VIBR_VOSEL, VIBR_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vrtc, VRTC, PMIC_VRTC_EN, NULL, pmic_2v8_voltages, 0, PMIC_EN),
+	PMIC_LDO_GENEM(vm, VM, PMIC_RG_VM_EN, PMIC_RG_VM_VOSEL, VM_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vrf18, VRF18, PMIC_RG_VRF18_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
+	PMIC_LDO_GENEM(vio18, VIO18, PMIC_RG_VIO18_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
+	PMIC_LDO_GENEM(vcamd, VCAMD, PMIC_RG_VCAMD_EN, PMIC_RG_VCAMD_VOSEL, VCAMD_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vcamio, VCAMIO, PMIC_RG_VCAM_IO_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
+	PMIC_LDO_GENEM(vgp3, VGP3, PMIC_RG_VGP3_EN, PMIC_RG_VGP3_VOSEL, VGP3_voltages, 1, PMIC_EN_VOL),
+	PMIC_LDO_GENEM(vcn_1v8, VCN_1V8, PMIC_RG_VCN_1V8_EN, NULL, pmic_1v8_voltages, 1, PMIC_EN),
 };
 
 /* Buck only provide query voltage & enable */
 static struct mtk_regulator mtk_bucks[] = {
-	PMIC_BUCK_GEN(vpa, PMIC_QI_VPA_EN, PMIC_NI_VPA_VOSEL, 500000, 3650000, 50000),
-	PMIC_BUCK_GEN(vproc, PMIC_QI_VPROC_EN, PMIC_NI_VPROC_VOSEL, 700000, 1493750, 6250),
+	PMIC_BUCK_GENEM(vpa, VPA, PMIC_QI_VPA_EN, PMIC_NI_VPA_VOSEL, 500000, 3650000, 50000),
+	PMIC_BUCK_GENEM(vproc, VPROC, PMIC_QI_VPROC_EN, PMIC_NI_VPROC_VOSEL, 700000, 1493750, 6250),
 };
 
 #endif				/* End of #if defined(CONFIG_MTK_LEGACY) */
@@ -1170,7 +1179,7 @@ MODULE_DEVICE_TABLE(of, pmic_cust_of_ids);
 static int pmic_regulator_ldo_init(struct platform_device *pdev)
 {
 	struct device_node *np, *regulators;
-	int matched, i = 0, ret;
+	int matched, i = 0, ret = 0;
 
 	pdev->dev.of_node = of_find_compatible_node(NULL, NULL, "mediatek,mt_pmic");
 	np = of_node_get(pdev->dev.of_node);
@@ -1210,14 +1219,15 @@ static int pmic_regulator_ldo_init(struct platform_device *pdev)
 				PMICLOG("[regulator_register] pass to register %s\n",
 					mtk_ldos[i].desc.name);
 			}
+			/* To initialize varriables which were used to record status*/
+			mtk_ldos[i].vosel.def_sel = mtk_regulator_get_voltage_sel(mtk_ldos[i].rdev);
+			mtk_ldos[i].vosel.cur_sel = mtk_ldos[i].vosel.def_sel;
 			PMICLOG("[PMIC]mtk_ldos[%d].config.init_data min_uv:%d max_uv:%d\n", i,
 				mtk_ldos[i].config.init_data->constraints.min_uV,
 				mtk_ldos[i].config.init_data->constraints.max_uV);
 		}
 	}
 	of_node_put(regulators);
-	return 0;
-
 out:
 	of_node_put(np);
 	return ret;
@@ -1225,37 +1235,33 @@ out:
 
 static int pmic_mt_cust_probe(struct platform_device *pdev)
 {
-	struct device_node *np, *nproot, *regulators, *child;
-	const struct of_device_id *match;
-	int i;
+	struct device_node *nproot, *np, *regulators, *child;
+	int i, ret = 0;
 	unsigned int default_on;
 
 	PMICLOG("[PMIC]pmic_mt_cust_probe %s %s\n", pdev->name, pdev->id_entry->name);
 
 	/* check if device_id is matched */
-	match = of_match_device(pmic_cust_of_ids, &pdev->dev);
-	if (!match) {
-		PMICLOG("[PMIC]pmic_cust_of_ids do not matched\n");
-		return -EINVAL;
-	}
-
-	/* check customer setting */
-	np = of_find_compatible_node(NULL, NULL, "mediatek,mt6350");
-	if (np == NULL) {
+	nproot = of_find_compatible_node(NULL, NULL, "mediatek,mt_pmic");
+	if (nproot == NULL) {
 		pr_info("[PMIC]pmic_mt_cust_probe get node failed\n");
 		return -ENOMEM;
 	}
 
-	nproot = of_node_get(np);
-	if (!nproot) {
+	np = of_node_get(nproot);
+	if (!np) {
 		pr_info("[PMIC]pmic_mt_cust_probe of_node_get fail\n");
-		return -ENODEV;
+		ret = -ENODEV;
+		goto nonproot;
 	}
-	regulators = of_find_node_by_name(nproot, "regulators");
+
+	regulators = of_get_child_by_name(np, "ldo_regulators");
 	if (!regulators) {
-		pr_info("[PMIC]failed to find regulators node\n");
-		return -ENODEV;
+		PMICLOG("[PMIC]pmic_mt_cust_probe ldo regulators node not found\n");
+		ret = -ENODEV;
+		goto nonp;
 	}
+
 	for_each_child_of_node(regulators, child) {
 		/* check ldo regualtors and set it */
 		for (i = 0; i < ARRAY_SIZE(mt6350_regulator_matches); i++) {
@@ -1294,7 +1300,11 @@ static int pmic_mt_cust_probe(struct platform_device *pdev)
 	}
 	of_node_put(regulators);
 	PMICLOG("[PMIC]pmic_mt_cust_probe done\n");
-	return 0;
+nonp:
+	of_node_put(np);
+nonproot:
+	of_node_put(nproot);
+	return ret;
 }
 
 static int pmic_mt_cust_remove(struct platform_device *pdev)
@@ -1316,13 +1326,74 @@ static struct platform_driver mt_pmic_driver = {
 #endif				/* End of #ifdef CONFIG_OF */
 #endif				/* End of #if !defined CONFIG_MTK_LEGACY */
 /* TBD END */
+void pmic_regulator_suspend(void)
+{
+	int i;
+
+	for (i = 0; i < ARRAY_SIZE(mtk_ldos); i++) {
+		if (mtk_ldos[i].isUsedable == 1) {
+			if (mtk_ldos[i].vol_reg != 0) {
+				mtk_ldos[i].vosel.cur_sel = mtk_regulator_get_voltage_sel(mtk_ldos[i].rdev);
+				if (mtk_ldos[i].vosel.cur_sel != mtk_ldos[i].vosel.def_sel) {
+					mtk_ldos[i].vosel.restore = true;
+					pr_err("pmic_regulator_suspend(name=%s id=%d default_sel=%d current_sel=%d)\n",
+							mtk_ldos[i].rdev->desc->name, mtk_ldos[i].rdev->desc->id,
+							mtk_ldos[i].vosel.def_sel, mtk_ldos[i].vosel.cur_sel);
+				} else
+					mtk_ldos[i].vosel.restore = false;
+			}
+		}
+	}
+
+}
+
+void pmic_regulator_resume(void)
+{
+	int i, selector;
+
+	for (i = 0; i < ARRAY_SIZE(mtk_ldos); i++) {
+		if (mtk_ldos[i].isUsedable == 1) {
+			if (mtk_ldos[i].vol_reg != 0) {
+				if (mtk_ldos[i].vosel.restore == true) {
+					/*-- regulator voltage changed? --*/
+						selector = mtk_ldos[i].vosel.cur_sel;
+						pmic_set_register_value(mtk_ldos[i].vol_reg, selector);
+						pr_err("pmic_regulator_resume(name=%s id=%d default_sel=%d current_sel=%d)\n",
+							mtk_ldos[i].rdev->desc->name, mtk_ldos[i].rdev->desc->id,
+							mtk_ldos[i].vosel.def_sel, mtk_ldos[i].vosel.cur_sel);
+				}
+			}
+		}
+	}
+}
+
+static int pmic_regulator_pm_event(struct notifier_block *notifier, unsigned long pm_event, void *unused)
+{
+	switch (pm_event) {
+	case PM_HIBERNATION_PREPARE:	/* Going to hibernate */
+		pr_warn("[%s] pm_event %lu (IPOH)\n", __func__, pm_event);
+		return NOTIFY_DONE;
+
+	case PM_POST_HIBERNATION:	/* Hibernation finished */
+		pr_warn("[%s] pm_event %lu\n", __func__, pm_event);
+		pmic_regulator_resume();
+		return NOTIFY_DONE;
+	}
+	return NOTIFY_OK;
+}
+
+static struct notifier_block pmic_regulator_pm_notifier_block = {
+	.notifier_call = pmic_regulator_pm_event,
+	.priority = 0,
+};
+
 void mtk_regulator_init(struct platform_device *dev)
 {
 #if defined CONFIG_MTK_LEGACY
 	int i = 0;
-	int ret = 0;
 	int isEn = 0;
 #endif
+	int ret = 0;
 
 #if !defined CONFIG_MTK_LEGACY
 #ifdef CONFIG_OF
@@ -1383,6 +1454,10 @@ void mtk_regulator_init(struct platform_device *dev)
 		}
 	}
 #endif				/* End of #if !defined CONFIG_MTK_LEGACY */
+	ret = register_pm_notifier(&pmic_regulator_pm_notifier_block);
+	if (ret)
+		PMICLOG("****failed to register PM notifier %d\n", ret);
+
 }
 
 
@@ -2599,10 +2674,10 @@ void chrdet_int_handler(void)
 	}
 #endif
 	pmic_set_register_value(PMIC_RG_USBDL_RST, 1);
-#ifdef CONFIG_POWER_EXT
-#else
+#ifdef CONFIG_MTK_SMART_BATTERY
 	do_chrdet_int_task();
 #endif
+
 }
 
 #ifdef CONFIG_MTK_ACCDET
@@ -4197,17 +4272,22 @@ static int __init pmic_mt_init(void)
 	/* PMIC device driver register */
 	ret = platform_device_register(&pmic_mt_device);
 	if (ret) {
-		PMICLOG("****[pmic_mt_init] Unable to device register(%d)\n", ret);
+		pr_err("****[pmic_mt_init] Unable to device register(%d)\n", ret);
 		return ret;
 	}
 	ret = platform_driver_register(&pmic_mt_driver);
 	if (ret) {
-		PMICLOG("****[pmic_mt_init] Unable to register driver (%d)\n", ret);
+		pr_err("****[pmic_mt_init] Unable to register driver (%d)\n", ret);
+		return ret;
+	}
+	ret = platform_device_register(&mt_pmic_device);
+	if (ret) {
+		pr_err("****[pmic_mt_init] mt_pmic_device Unable to device register(%d)\n", ret);
 		return ret;
 	}
 	ret = platform_driver_register(&mt_pmic_driver);
 	if (ret) {
-		PMICLOG("****[pmic_mt_init] Unable to register driver by DT(%d)\n", ret);
+		pr_err("****[pmic_mt_init] mt_pmic_driver Unable to register driver by DT(%d)\n", ret);
 		return ret;
 	}
 #endif				/* End of #ifdef CONFIG_OF */
