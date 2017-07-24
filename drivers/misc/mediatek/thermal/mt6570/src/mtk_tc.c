@@ -129,7 +129,7 @@ int tscpu_polling_factor2 = 4;
 it means polling_delay will be 1/5 of original interval
 after mtktscpu reports > 65C w/o exit point */
 int fast_polling_trip_temp = 70000;
-int fast_polling_factor = 2;
+int fast_polling_factor = 1;
 int tscpu_cur_fp_factor = 1;
 int tscpu_next_fp_factor = 1;
 #endif
