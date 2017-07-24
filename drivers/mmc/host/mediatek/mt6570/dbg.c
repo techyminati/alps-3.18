@@ -1163,6 +1163,7 @@ void msdc_ett_hs400(struct msdc_host *host, int count, int voltage)
 #define ETT_VIO    (3)
 int msdc_ett_set_voltage(int type, int vol, int vol_on)
 {
+#ifndef FPGA_PLATFORM
 	if (vol < 0 || vol > 0x7f || vol_on < 0 || vol_on > 0x7f) {
 		pr_err("[%s]: invalid voltage: %d, %d\n", __func__, vol, vol_on);
 		return -1;
@@ -1191,11 +1192,13 @@ int msdc_ett_set_voltage(int type, int vol, int vol_on)
 		pr_err("[%s]: invalid type: %d\n", __func__, type);
 		break;
 	}
+#endif
 	return 0;
 }
 
 int msdc_ett_get_voltage(int type, int *vol, int *vol_on)
 {
+#ifndef FPGA_PLATFORM
 	if (type < 0) {
 		pr_err("[%s]: invalid type: %d\n", __func__, type);
 		return -1;
@@ -1217,6 +1220,7 @@ int msdc_ett_get_voltage(int type, int *vol, int *vol_on)
 		pr_err("[%s]: invalid type: %d\n", __func__, type);
 		break;
 	}
+#endif
 	return 0;
 }
 
@@ -1723,10 +1727,13 @@ static int msdc_help_proc_show(struct seq_file *m, void *v)
 	seq_puts(m, "\n   SPEED_MODE control:\n");
 	seq_printf(m,
 		   "          set speed mode:    echo %x 0 [host_id] [speed_mode] [driver_type] [max_current] [power_control] > msdc_debug\n",
-		   SD_TOOL_MSDC_HOST_MODE);
+		SD_TOOL_MSDC_HOST_MODE);
 	seq_printf(m, "          get speed mode:    echo %x 1 [host_id]\n", SD_TOOL_MSDC_HOST_MODE);
-	seq_printf(m,
-		   "            [speed_mode]       ff:N/A,  0:HS,      1:SDR12,   2:SDR25,   3:SDR:50,  4:SDR104,  5:DDR, 6:HS400\n");
+	seq_puts(m, "            [speed_mode]       0: MMC_TIMING_LEGACY	1: MMC_TIMING_MMC_HS	2: MMC_TIMING_SD_HS	 3: MMC_TIMING_UHS_SDR12\n"
+		    "                               4: MMC_TIMING_UHS_SDR25	5: MMC_TIMING_UHS_SDR50	6: MMC_TIMING_UHS_SDR104 7: MMC_TIMING_UHS_DDR50\n"
+		    "                               8: MMC_TIMING_MMC_DDR52	9: MMC_TIMING_MMC_HS200	A: MMC_TIMING_MMC_HS400\n"
+		    "		 [cmdq]             0: disable cmdq feature\n"
+		    "                               1: enable cmdq feature\n");
 	seq_printf(m,
 		   "            [driver_type]      ff:N/A,  0: type A, 1:type B,  2:type C,  3:type D\n");
 	seq_printf(m,
@@ -1979,6 +1986,196 @@ out:
 }
 #endif
 
+
+static void msdc_select_card_type(struct mmc_host *host)
+{
+	struct mmc_card *card = host->card;
+	u8 card_type = card->ext_csd.raw_card_type;
+	u32 caps = host->caps, caps2 = host->caps2;
+	unsigned int hs_max_dtr = 0, hs200_max_dtr = 0;
+	unsigned int avail_type = 0;
+
+	if (caps & MMC_CAP_MMC_HIGHSPEED &&
+	    card_type & EXT_CSD_CARD_TYPE_HS_26) {
+		hs_max_dtr = MMC_HIGH_26_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_HS_26;
+	}
+
+	if (caps & MMC_CAP_MMC_HIGHSPEED &&
+	    card_type & EXT_CSD_CARD_TYPE_HS_52) {
+		hs_max_dtr = MMC_HIGH_52_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_HS_52;
+	}
+
+	if (caps & MMC_CAP_1_8V_DDR &&
+	    card_type & EXT_CSD_CARD_TYPE_DDR_1_8V) {
+		hs_max_dtr = MMC_HIGH_DDR_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_DDR_1_8V;
+	}
+
+	if (caps & MMC_CAP_1_2V_DDR &&
+	    card_type & EXT_CSD_CARD_TYPE_DDR_1_2V) {
+		hs_max_dtr = MMC_HIGH_DDR_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_DDR_1_2V;
+	}
+
+	if (caps2 & MMC_CAP2_HS200_1_8V_SDR &&
+	    card_type & EXT_CSD_CARD_TYPE_HS200_1_8V) {
+		hs200_max_dtr = MMC_HS200_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_HS200_1_8V;
+	}
+
+	if (caps2 & MMC_CAP2_HS200_1_2V_SDR &&
+	    card_type & EXT_CSD_CARD_TYPE_HS200_1_2V) {
+		hs200_max_dtr = MMC_HS200_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_HS200_1_2V;
+	}
+
+	if (caps2 & MMC_CAP2_HS400_1_8V &&
+	    card_type & EXT_CSD_CARD_TYPE_HS400_1_8V) {
+		hs200_max_dtr = MMC_HS200_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_HS400_1_8V;
+	}
+
+	if (caps2 & MMC_CAP2_HS400_1_2V &&
+	    card_type & EXT_CSD_CARD_TYPE_HS400_1_2V) {
+		hs200_max_dtr = MMC_HS200_MAX_DTR;
+		avail_type |= EXT_CSD_CARD_TYPE_HS400_1_2V;
+	}
+
+	card->ext_csd.hs_max_dtr = hs_max_dtr;
+	card->ext_csd.hs200_max_dtr = hs200_max_dtr;
+	card->mmc_avail_type = avail_type;
+}
+
+static void msdc_set_host_mode_speed(struct msdc_host *host,
+		int spd_mode, int cmdq)
+
+{
+	/* Clear HS400, HS200 timing */
+	host->mmc->caps2 &=
+		~(MMC_CAP2_HS400_1_8V | MMC_CAP2_HS200_1_8V_SDR);
+	/* Clear other timing */
+	host->mmc->caps &= ~(MMC_CAP_SD_HIGHSPEED | MMC_CAP_MMC_HIGHSPEED |
+			     MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 |
+			     MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_SDR104 |
+			     MMC_CAP_UHS_DDR50 | MMC_CAP_1_8V_DDR);
+	switch (spd_mode) {
+	case MMC_TIMING_LEGACY:
+		pr_err("[SD_Debug]host  support MMC_TIMING_LEGACY\n");
+		break;
+	case MMC_TIMING_MMC_HS:
+		host->mmc->caps |= MMC_CAP_MMC_HIGHSPEED;
+		pr_err("[SD_Debug]host  support MMC_TIMING_MMC_HS\n");
+		break;
+	case MMC_TIMING_SD_HS:
+		host->mmc->caps |= MMC_CAP_SD_HIGHSPEED;
+		pr_err("[SD_Debug]host  support MMC_TIMING_SD_HS\n");
+		break;
+	case MMC_TIMING_UHS_SDR12:
+		host->mmc->caps |= MMC_CAP_UHS_SDR12;
+		pr_err("[SD_Debug]host  support MMC_CAP_UHS_SDR12\n");
+		break;
+	case MMC_TIMING_UHS_SDR25:
+		host->mmc->caps |= MMC_CAP_UHS_SDR25;
+		host->mmc->caps |= MMC_CAP_UHS_SDR12;
+		pr_err("[SD_Debug]host  support MMC_CAP_UHS_SDR12\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR25\n");
+		break;
+	case MMC_TIMING_UHS_SDR50:
+		host->mmc->caps |= MMC_CAP_UHS_SDR50;
+		host->mmc->caps |= MMC_CAP_UHS_SDR25;
+		host->mmc->caps |= MMC_CAP_UHS_SDR12;
+		pr_err("[SD_Debug]host  support MMC_CAP_UHS_SDR12\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR25\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR50\n");
+		break;
+	case MMC_TIMING_UHS_SDR104:
+		host->mmc->caps |= MMC_CAP_UHS_SDR104;
+		host->mmc->caps |= MMC_CAP_UHS_DDR50;
+		host->mmc->caps |= MMC_CAP_UHS_SDR50;
+		host->mmc->caps |= MMC_CAP_UHS_SDR25;
+		host->mmc->caps |= MMC_CAP_UHS_SDR12;
+		pr_err("[SD_Debug]host  support MMC_CAP_UHS_SDR12\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR25\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR50\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_DDR50\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR104\n");
+		break;
+	case MMC_TIMING_UHS_DDR50:
+		host->mmc->caps |= MMC_CAP_UHS_DDR50;
+		host->mmc->caps |= MMC_CAP_UHS_SDR50;
+		host->mmc->caps |= MMC_CAP_UHS_SDR25;
+		host->mmc->caps |= MMC_CAP_UHS_SDR12;
+		pr_err("[SD_Debug]host  support MMC_CAP_UHS_SDR12\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR25\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_SDR50\n");
+		pr_err("[SD_Debug]              MMC_CAP_UHS_DDR50\n");
+		break;
+	case MMC_TIMING_MMC_DDR52:
+		host->mmc->caps |= MMC_CAP_1_8V_DDR;
+		host->mmc->caps |= MMC_CAP_MMC_HIGHSPEED;
+		pr_err("[SD_Debug]host  support MMC_TIMING_MMC_HS\n");
+		pr_err("[SD_Debug]              MMC_TIMING_MMC_DDR52\n");
+		break;
+	case MMC_TIMING_MMC_HS200:
+		host->mmc->caps2 |= MMC_CAP2_HS200_1_8V_SDR;
+		host->mmc->caps |= MMC_CAP_1_8V_DDR;
+		host->mmc->caps |= MMC_CAP_MMC_HIGHSPEED;
+		pr_err("[SD_Debug]host  support MMC_TIMING_MMC_HS\n");
+		pr_err("[SD_Debug]              MMC_TIMING_MMC_DDR52\n");
+		pr_err("[SD_Debug]              MMC_TIMING_MMC_HS200\n");
+		break;
+	case MMC_TIMING_MMC_HS400:
+		host->mmc->caps2 |= MMC_CAP2_HS400_1_8V;
+		host->mmc->caps2 |= MMC_CAP2_HS200_1_8V_SDR;
+		host->mmc->caps |= MMC_CAP_1_8V_DDR;
+		host->mmc->caps |= MMC_CAP_MMC_HIGHSPEED;
+		pr_err("[SD_Debug]host  support MMC_TIMING_MMC_HS\n");
+		pr_err("[SD_Debug]              MMC_TIMING_MMC_DDR52\n");
+		pr_err("[SD_Debug]              MMC_TIMING_MMC_HS200\n");
+		pr_err("[SD_Debug]              MMC_TIMING_MMC_HS400\n");
+		break;
+	default:
+		pr_err("[SD_Debug]invalid speed mode:%d\n",
+			spd_mode);
+		break;
+	}
+
+#ifdef CONFIG_MTK_EMMC_CQ_SUPPORT
+	if (cmdq) {
+		pr_err("[SD_Debug] enable command queue feature\n");
+		host->mmc->card->ext_csd.cmdq_support = 1;
+		host->mmc->cmdq_support_changed = 1;
+	} else {
+		pr_err("[SD_Debug] disable command queue feature\n");
+		host->mmc->card->ext_csd.cmdq_support = 0;
+		host->mmc->cmdq_support_changed = 1;
+		host->mmc->card->ext_csd.cmdq_mode_en = 0;
+	}
+#else
+	pr_err("[SD_Debug] not support command queue feature yet\n");
+#endif
+
+	/*
+	 * support hw reset operation
+	 */
+	host->mmc->caps |= MMC_CAP_HW_RESET;
+	msdc_select_card_type(host->mmc);
+	mmc_claim_host(host->mmc);
+	/* Must set mmc_host ios.time = MMC_TIMING_LEGACY,
+	 * or clock will not be setted to 400K before mmc_init_card
+	 * CMD1 will timeout
+	 */
+	host->mmc->ios.timing = MMC_TIMING_LEGACY;
+	host->mmc->ios.clock = 26000;
+	if (mmc_hw_reset(host->mmc))
+		pr_err("[SD_Debug] Reinit card failed, Can not switch speed mode\n");
+	mmc_release_host(host->mmc);
+	host->mmc->caps &= ~MMC_CAP_HW_RESET;
+}
+
+
 static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t count,
 				     loff_t *data)
 {
@@ -1992,9 +2189,10 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 	unsigned int offset = 0;
 	unsigned int reg_value;
 	HOST_CAPS_SPEED_MODE spd_mode = CAPS_SPEED_NULL;
-	HOST_CAPS_DRIVE_TYPE drv_type = CAPS_DRIVE_NULL;
+	/* HOST_CAPS_DRIVE_TYPE drv_type = CAPS_DRIVE_NULL;
 	HOST_CAPS_MAX_CURRENT current_limit = CAPS_CURRENT_NULL;
 	HOST_CAPS_POWER_CONTROL pw_cr = CAPS_POWER_NULL;
+	*/
 	struct msdc_host *host = NULL;
 #ifdef MSDC_DMA_ADDR_DEBUG
 	struct dma_addr *dma_address, *p_dma_address;
@@ -2355,6 +2553,11 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 		if (id >= HOST_MAX_NUM || id < 0)
 			pr_err("[****SD_Debug****]msdc host_id error when modify msdc host mode\n");
 		else {
+			id = p2;
+			host = mtk_msdc_host[id];
+			spd_mode = p3;
+			msdc_set_host_mode_speed(host, spd_mode, 0);
+#if 0
 			if (p1 == 0) {
 				if (p3 <= UHS_DDR50 && p3 >= SDHC_HIGHSPEED)
 					spd_mode = p3;
@@ -2635,6 +2838,7 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 #endif
 				}
 			}
+#endif
 		}
 	} else if (cmd == SD_TOOL_DMA_STATUS) {
 		id = p1;

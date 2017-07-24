@@ -99,6 +99,7 @@ static int sd_ioctl_cd_pin_en(struct msdc_ioctl *msdc_ctl)
 		return -EINVAL;
 }
 
+#ifndef FPGA_PLATFORM
 static void simple_sd_get_driving(struct msdc_host *host,
 	struct msdc_ioctl *msdc_ctl)
 {
@@ -132,6 +133,7 @@ static void simple_sd_get_driving(struct msdc_host *host,
 		break;
 	}
 }
+#endif
 
 static int simple_sd_ioctl_multi_rw(struct msdc_ioctl *msdc_ctl)
 {

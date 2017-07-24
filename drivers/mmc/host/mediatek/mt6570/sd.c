@@ -103,6 +103,8 @@
 #include <mach/memory.h>
 #endif
 
+/* if for FPGA, clk is not need */
+#ifndef FPGA_PLATFORM
 #ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
 #else
@@ -111,6 +113,7 @@ struct clk *g_msdc0_pll_sel = NULL;
 struct clk *g_msdc0_pll_800m = NULL;
 struct clk *g_msdc0_pll_400m = NULL;
 struct clk *g_msdc0_pll_200m = NULL;
+#endif
 #endif
 
 static int msdc_get_card_status(struct mmc_host *mmc,
@@ -654,9 +657,11 @@ static void msdc_dump_dbg_register(struct msdc_host *host)
 
 static void msdc_dump_clock_sts(struct msdc_host *host)
 {
+#ifndef FPGA_PLATFORM
 #ifdef MTK_MSDC_BRINGUP_DEBUG
 	pr_err(" cg [0x10000024][bit18 for msdc1, bit17 for msdc0]=0x%x\n", sdr_read32(msdc_topckgen_base+0x24));
 	pr_err(" mux[0x10000000][bit20~22 for msdc1, bit11~13 for msdc0]=0x%x\n", sdr_read32(msdc_topckgen_base));
+#endif
 #endif
 }
 
@@ -695,6 +700,7 @@ static void msdc_dump_ldo_sts(struct msdc_host *host)
 
 void msdc_dump_gpio(struct msdc_host *host)
 {
+#ifndef FPGA_PLATFORM
 	if (host->id == 0) {
 		pr_err("MSDC0 shall set pin mode to 1\n");
 		pr_err("GPIO_MODE5=%x\n", sdr_read32(MSDC0_GPIO_MODE5_ADDR) & 0xfffffff0);
@@ -704,8 +710,10 @@ void msdc_dump_gpio(struct msdc_host *host)
 		pr_err("GPIO_MODE6=%x\n", sdr_read32(MSDC1_GPIO_MODE6_ADDR) & 0xffff0000);
 		pr_err("GPIO_MODE7=%x\n", sdr_read32(MSDC1_GPIO_MODE7_ADDR) & 0xff);
 	}
+#endif
 }
 
+#ifndef FPGA_PLATFORM
 #define MSDC_IOCONFIG_ITEMS     10
 static unsigned int msdc_ioconfg_reg_offsets[HOST_MAX_NUM][MSDC_IOCONFIG_ITEMS] = {
 	{MSDC0_SELGP_OFFSET,        MSDC0_IES_CFG_OFFSET,       MSDC0_SR_CFG_OFFSET,
@@ -743,9 +751,11 @@ static unsigned char msdc_ioconfig_names[MSDC_IOCONFIG_ITEMS][16] = {
 	"PULLR1",
 	"DRV"
 };
+#endif
 
 void msdc_dump_ioconfig_padctl(struct msdc_host *host)
 {
+ #ifndef FPGA_PLATFORM
 	unsigned int i;
 	unsigned int val = 0;
 	void __iomem *base;
@@ -761,6 +771,7 @@ void msdc_dump_ioconfig_padctl(struct msdc_host *host)
 		sdr_get_field(base+msdc_ioconfg_reg_offsets[host->id][i], msdc_ioconfg_reg_masks[host->id][i], val);
 		pr_err("%s=%x\n", msdc_ioconfig_names[i], val);
 	}
+#endif
 }
 
 #if 0
@@ -2013,6 +2024,7 @@ void msdc_gate_clock(struct msdc_host *host, int delay)
 	spin_unlock_irqrestore(&host->clk_gate_lock, flags);
 }
 
+#ifndef FPGA_PLATFORM
 static void msdc_suspend_clock(struct msdc_host *host)
 {
 	unsigned long flags;
@@ -2031,6 +2043,7 @@ static void msdc_suspend_clock(struct msdc_host *host)
 	}
 	spin_unlock_irqrestore(&host->clk_gate_lock, flags);
 }
+#endif
 
 /* host does need the clock on */
 void msdc_ungate_clock(struct msdc_host *host)
@@ -2317,7 +2330,6 @@ int sdio_autok_processed = 0;
 
 static void msdc_set_mclk(struct msdc_host *host, unsigned char timing, u32 hz)
 {
-	struct msdc_hw *hw = host->hw;
 	void __iomem *base = host->base;
 	u32 mode;
 	u32 flags;
@@ -2326,6 +2338,7 @@ static void msdc_set_mclk(struct msdc_host *host, unsigned char timing, u32 hz)
 	u32 hclk = host->hclk;
 	u32 hs400_src = 0;
 #ifndef FPGA_PLATFORM
+	struct msdc_hw *hw = host->hw;
 	u8 clksrc = hw->clk_src;
 #endif
 
@@ -7722,6 +7735,7 @@ static int msdc_ops_get_ro(struct mmc_host *mmc)
 /* ops.get_cd */
 static int msdc_ops_get_cd(struct mmc_host *mmc)
 {
+#ifndef FPGA_PLATFORM
 	struct msdc_host *host = mmc_priv(mmc);
 	void __iomem *base;
 	int level = 0;
@@ -7774,6 +7788,9 @@ static int msdc_ops_get_cd(struct mmc_host *mmc)
 
 	/* spin_unlock_irqrestore(&host->lock, flags); */
 	return host->card_inserted;
+#else
+	return 0;
+#endif
 }
 
 static void msdc_ops_card_event(struct mmc_host *mmc)
@@ -7926,6 +7943,11 @@ int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 	return 0;
 }
 
+static void msdc_hw_reset(struct mmc_host *mmc)
+{
+	pr_err("my empty %s\n", __func__);
+}
+
 static struct mmc_host_ops mt_msdc_ops = {
 	.post_req = msdc_post_req,
 	.pre_req = msdc_pre_req,
@@ -7938,6 +7960,7 @@ static struct mmc_host_ops mt_msdc_ops = {
 	.start_signal_voltage_switch = msdc_ops_switch_volt,
 	.execute_tuning = msdc_execute_tuning,
 	.card_busy = msdc_card_busy,
+	.hw_reset = msdc_hw_reset,
 };
 
 /*--------------------------------------------------------------------------*/
@@ -8637,7 +8660,7 @@ static int msdc_get_ccf_clk_pointer(struct platform_device *pdev,
 				struct msdc_host *host)
 {
 	int ret = 0;
-
+#ifndef FPGA_PLATFORM
 	if (pdev->id == 0) {
 		host->clock_control = devm_clk_get(&pdev->dev, "MSDC0-CLOCK");
 		g_msdc0_pll_sel = devm_clk_get(&pdev->dev, "MSDC0_PLL_SEL");
@@ -8680,6 +8703,7 @@ static int msdc_get_ccf_clk_pointer(struct platform_device *pdev,
 	}
 
 out:
+#endif
 	return ret;
 }
 #endif
@@ -8897,8 +8921,10 @@ int msdc_of_parse(struct mmc_host *mmc)
 static int msdc_drv_probe(struct platform_device *pdev)
 {
 	struct mmc_host *mmc;
+#ifndef FPGA_PLATFORM
 #ifndef CONFIG_MTK_LEGACY
 	struct device_node *msdc_node;
+#endif
 #endif
 	struct msdc_host *host;
 	void __iomem *base;
@@ -8991,6 +9017,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 		pr_err("of_iomap for infracfg base @ 0x%p\n", msdc_infracfg_base);
 	}
 
+#ifndef FPGA_PLATFORM
 #ifndef CONFIG_MTK_LEGACY
 	/* backup original dev.of_node */
 	msdc_node = pdev->dev.of_node;
@@ -9006,6 +9033,8 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	/* restore original dev.of_node */
 	pdev->dev.of_node = msdc_node;
 #endif
+#endif
+
 #ifdef FPGA_PLATFORM
 	if (fpga_pwr_gpio == NULL) {
 		fpga_pwr_gpio = of_iomap(pdev->dev.of_node, 1);
@@ -9143,6 +9172,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 			pr_debug("can't find msdc1_ins-eint compatible node\n");
 	}
 
+#ifndef FPGA_PLATFORM
 	/* get VMC CAL */
 	if ((pdev->id == 1) && (host->hw->host_function == MSDC_SD)) {
 		pmic_read_interface(0x052a, &g_msdc_vmc_cal_org, 0xf, 0x9);
@@ -9160,7 +9190,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 		}
 		pr_err("msdc1 VMC CAL org = 0x%x, shift = 0x%x\n", g_msdc_vmc_cal_org, g_msdc_vmc_cal_shift);
 	}
-
+#endif
 	/* Set host parameters to mmc */
 	mmc->ops = &mt_msdc_ops;
 	mmc->f_min = HOST_MIN_MCLK;
@@ -9453,12 +9483,14 @@ static int msdc_drv_remove(struct platform_device *pdev)
 	BUG_ON(!host);
 
 	ERR_MSG("removed !!!");
+#ifndef FPGA_PLATFORM
 #ifndef CONFIG_MTK_CLKMGR
 	/* clock unprepare */
 	if (host->clock_control)
 		clk_unprepare(host->clock_control);
 	if ((host->hw->host_function == MSDC_EMMC) && g_msdc0_pll_sel)
 		clk_unprepare(g_msdc0_pll_sel);
+#endif
 #endif
 	platform_set_drvdata(pdev, NULL);
 	mmc_remove_host(host->mmc);
