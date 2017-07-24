@@ -1450,17 +1450,20 @@ static s32 mt_i2c_probe(struct platform_device *pdev)
 	i2c->base = of_iomap(pdev->dev.of_node, 0);
 	if (!i2c->base) {
 		I2CERR("I2C iomap failed\n");
+		kfree(i2c);
 		return -ENODEV;
 	}
 
 	if (of_property_read_u32(pdev->dev.of_node, "cell-index", &pdev->id)) {
 		I2CERR("I2C get cell-index failed\n");
+		kfree(i2c);
 		return -ENODEV;
 	}
 	i2c->id = pdev->id;
 	irq = irq_of_parse_and_map(pdev->dev.of_node, 0);
 	if (!irq) {
 		I2CERR("I2C get irq failed\n");
+		kfree(i2c);
 		return -ENODEV;
 	}
 

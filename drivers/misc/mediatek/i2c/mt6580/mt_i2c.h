@@ -51,7 +51,7 @@
 #else
 /* extern int mt_get_bus_freq(void); */
 #define I2C_CLK_DIV	10	/* frequency divider */
-#define I2C_CLK_RATE  13300
+#define I2C_CLK_RATE  12500
 /* #define I2C_CLK_RATE	((mt_get_bus_freq() * 1000) / I2C_CLK_DIV) */
 #endif
 

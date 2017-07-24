@@ -115,10 +115,8 @@ int i2c_trans_data(int bus_id, int address, char *buf, int count, unsigned int e
 int mt_i2c_test(int id, int addr)
 {
 	int ret = 0;
-	unsigned long flag;
+	/* unsigned long flag; */
 /* unsigned char buffer[]={0x55}; */
-	if (id > 3)
-		flag = I2C_DIRECTION_FLAG;
 
 	/* flag |= 0x80000000; */
 	/* ret = i2c_trans_data(id, addr,buffer,1,flag,200); */
@@ -236,7 +234,6 @@ static ssize_t set_config(struct device *dev, struct device_attribute *attr, con
 	int timing;
 	int trans_num;
 	int trans_auxlen;
-	int dir = 0;
 
 	int number = 0;
 	int length = 0;
@@ -271,8 +268,6 @@ static ssize_t set_config(struct device *dev, struct device_attribute *attr, con
 				I2CERR("invalid operation\n");
 				goto err;
 			}
-			if (dir > 0)
-				ext_flag |= I2C_DIRECTION_FLAG;
 
 			if (trans_mode == 0) {
 				/* default is fifo */
@@ -326,7 +321,7 @@ static ssize_t set_config(struct device *dev, struct device_attribute *attr, con
 			}
 
 			if (trans_mode == 1) {	/*DMA MODE */
-				vir_addr = dma_alloc_coherent(dev, length >> 1,
+				vir_addr = dma_alloc_coherent(dev, (length >> 1) + 1,
 							      &dma_addr, GFP_KERNEL);
 				if (vir_addr == NULL) {
 
@@ -334,7 +329,7 @@ static ssize_t set_config(struct device *dev, struct device_attribute *attr, con
 					goto err;
 				}
 			} else {
-				vir_addr = kzalloc(length >> 1, GFP_KERNEL);
+				vir_addr = kzalloc((length >> 1) + 1, GFP_KERNEL);
 				if (vir_addr == NULL) {
 
 					I2CERR("alloc virtual memory failed\n");
@@ -365,25 +360,25 @@ static ssize_t set_config(struct device *dev, struct device_attribute *attr, con
 			if (ret >= 0) {
 				if (operation == 1) {
 					hex2string(vir_addr, tmpbuffer, length >> 1);
-					sprintf(data_buffer, "1 %s", tmpbuffer);
+					snprintf(data_buffer, sizeof(data_buffer), "1 %s", tmpbuffer);
 					I2CLOG("received data: %s\n", tmpbuffer);
 				} else if (operation == 0) {
 					hex2string(vir_addr, tmpbuffer, trans_auxlen);
-					sprintf(data_buffer, "1 %s", tmpbuffer);
+					snprintf(data_buffer, sizeof(data_buffer), "1 %s", tmpbuffer);
 					I2CLOG("received data: %s\n", tmpbuffer);
 				} else {
-					sprintf(data_buffer, "1 %s", "00");
+					snprintf(data_buffer, sizeof(data_buffer), "1 %s", "00");
 				}
 				I2CLOG("Actual return Value:%d 0x%p\n", ret, vir_addr);
 			} else if (ret < 0) {
 				if (ret == -EINVAL)
-					sprintf(data_buffer, "0 %s", "Invalid Parameter");
+					snprintf(data_buffer, sizeof(data_buffer), "0 %s", "Invalid Parameter");
 				else if (ret == -ETIMEDOUT)
-					sprintf(data_buffer, "0 %s", "Transfer Timeout");
+					snprintf(data_buffer, sizeof(data_buffer), "0 %s", "Transfer Timeout");
 				else if (ret == -EREMOTEIO)
-					sprintf(data_buffer, "0 %s", "Ack Error");
+					snprintf(data_buffer, sizeof(data_buffer), "0 %s", "Ack Error");
 				else
-					sprintf(data_buffer, "0 %s", "unknown error");
+					snprintf(data_buffer, sizeof(data_buffer), "0 %s", "unknown error");
 				I2CLOG("Actual return Value:%d 0x%p\n", ret, vir_addr);
 			}
 
@@ -481,9 +476,18 @@ static struct platform_device i2c_common_device = {
 
 static int __init xxx_init(void)
 {
+	int err = 0;
+
 	I2CLOG("i2c_common device init\n");
-	platform_device_register(&i2c_common_device);
-	return platform_driver_register(&i2c_common_driver);
+	err = platform_device_register(&i2c_common_device);
+	if (err)
+		return err;
+
+	err = platform_driver_register(&i2c_common_driver);
+	if (err)
+		platform_device_unregister(&i2c_common_device);
+
+	return err;
 }
 
 static void __exit xxx_exit(void)
