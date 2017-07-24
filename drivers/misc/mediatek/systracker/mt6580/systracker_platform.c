@@ -64,7 +64,7 @@ int systracker_handler(unsigned long addr, unsigned int fsr,
 	return -1;
 }
 
-static int systracker_platform_hook_fault(void)
+static int __init systracker_platform_hook_fault(void)
 {
 
 #ifdef CONFIG_ARM_LPAE
