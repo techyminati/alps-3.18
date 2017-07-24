@@ -2850,7 +2850,6 @@ TBD */
 static void pmic_int_handler(void)
 {
 	unsigned char i, j;
-	unsigned int ret;
 	unsigned int int0, int1;
 
 #if 1
@@ -2865,7 +2864,11 @@ static void pmic_int_handler(void)
 		unsigned int int_status_val = 0;
 
 		int_status_val = upmu_get_reg_value(interrupts[i].address);
-		PMICLOG("[PMIC_INT] addr[0x%x]=0x%x\n", interrupts[i].address, int_status_val);
+		if (int_status_val) {
+			pr_err(PMICTAG "[PMIC_INT] addr[0x%x]=0x%x\n",
+				interrupts[i].address, int_status_val);
+			upmu_set_reg_value(interrupts[i].address, int_status_val);
+		}
 
 		for (j = 0; j < PMIC_INT_WIDTH; j++) {
 			if ((int_status_val) & (1 << j)) {
@@ -2874,7 +2877,6 @@ static void pmic_int_handler(void)
 					interrupts[i].interrupts[j].callback();
 					interrupts[i].interrupts[j].times++;
 				}
-				ret = pmic_config_interface(interrupts[i].address, 0x1, 0x1, j);
 			}
 		}
 	}
