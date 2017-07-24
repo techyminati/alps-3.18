@@ -644,13 +644,13 @@
 		NFI@0x11001000 {
 			compatible = "mediatek,NFI";
 			reg = <0x11001000 0x1000>;
-			interrupts = <0 79 0x8>;
+			interrupts = <0 47 0x8>;
 		};
 
 		NFIECC@0x11002000 {
 			compatible = "mediatek,NFIECC";
 			reg = <0x11002000 0x1000>;
-			interrupts = <0 78 0x8>;
+			interrupts = <0 46 0x8>;
 		};
 
 		auxadc: adc_hw@11003000 {
