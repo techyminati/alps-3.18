@@ -2574,6 +2574,11 @@ int primary_display_esd_recovery(void)
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagPulse,
 		       0, 11);
+	/* set dirty to trigger one frame -- cmd mode */
+	if (!primary_display_is_video_mode()) {
+		cmdqCoreSetEvent(CMDQ_SYNC_TOKEN_CONFIG_DIRTY);
+		mdelay(40);
+	}
 done:
 	_primary_path_unlock(__func__);
 	DISPMSG("[ESD]ESD recovery end\n");
