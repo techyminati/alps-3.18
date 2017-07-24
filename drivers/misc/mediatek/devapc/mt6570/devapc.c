@@ -42,7 +42,7 @@
 #include "devapc.h"
 
 /* false for early porting */
-#define DEVAPC_TURN_ON  false
+#define DEVAPC_TURN_ON  1
 
 static struct cdev *g_devapc_ctrl;
 static unsigned int devapc_irq;
@@ -60,9 +60,9 @@ static struct DEVICE_INFO devapc_devices[] = {
 	{"INFRA_AO_PERISYS_CONFIG_REGS",            true},
 	{"INFRA_AO_RESERVED_0",                     true},
 	{"INFRA_AO_GPIO_CONTROLLER",                false},
-	{"INFRA_AO_TOP_LEVEL_SLP_MANAGER",          true},
+	{"INFRA_AO_TOP_LEVEL_SLP_MANAGER",          false},
 	{"INFRA_AO_TOP_LEVEL_RESET_GENERATOR",      true},
-	{"INFRA_AO_GPT",                            true},
+	{"INFRA_AO_GPT",                            false},
 	{"INFRA_AO_EFUSE",                          false},
 
 	/* 10 */
