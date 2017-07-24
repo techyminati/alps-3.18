@@ -778,7 +778,7 @@ mtk-msdc.0 {
 	spi@1100c000 {
 		compatible = "mediatek,mt6570-spi";
 		cell-index = <0>;
-		reg = <0x1100c000 0x1000>;
+		reg = <0 0x1100c000 0 0x1000>;
 		interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_LOW>;
 		mediatek,spi-padmacro = <0>;
 	};
