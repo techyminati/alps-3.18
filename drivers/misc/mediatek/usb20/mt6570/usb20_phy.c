@@ -23,6 +23,10 @@
 #define FRA (48)
 #define PARA (28)
 
+#ifdef CONFIG_MTK_UART_USB_SWITCH
+int usb_port_mode_temp = 0;
+#endif
+
 #ifdef FPGA_PLATFORM
 #include <linux/i2c.h>
 
@@ -281,7 +285,8 @@ bool usb_phy_check_in_uart_mode(void)
 		(usb_port_mode == 0x5E) || (usb_port_mode_temp == 1)) {
 		usb_port_mode_temp = 1;
 		return true;
-	} else
+	}
+
 		return false;
 }
 

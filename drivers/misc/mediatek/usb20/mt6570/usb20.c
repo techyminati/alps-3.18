@@ -267,6 +267,25 @@ static void mt_usb_disable(struct musb *musb)
 /* ================================ */
 /* connect and disconnect functions */
 /* ================================ */
+static int usb_rdy; /* default value 0 */
+
+void set_usb_rdy(void)
+{
+	DBG(0, "set usb_rdy, wake up bat\n");
+	usb_rdy = 1;
+#ifndef CONFIG_FPGA_EARLY_PORTING
+	wake_up_bat();
+#endif
+}
+
+kal_bool is_usb_rdy(void)
+{
+	if (usb_rdy)
+		return KAL_TRUE;
+	else
+		return KAL_FALSE;
+}
+
 bool mt_usb_is_device(void)
 {
 	DBG(4, "called\n");
@@ -298,7 +317,7 @@ void mt_usb_connect(void)
 		DBG(0, "!mtk_musb\n");
 	}
 #ifdef CONFIG_MTK_UART_USB_SWITCH
-	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power || (usb_port_mode_temp == 1))
+	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power)
 		return;
 #else
 	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power)
@@ -355,6 +374,9 @@ bool usb_cable_connected(void)
 	return true;
 #else
 
+	if (is_usb_rdy() == KAL_FALSE && mtk_musb->is_ready)
+		set_usb_rdy();
+
 #ifdef CONFIG_USB_MTK_OTG
 #if 0
     /* ALPS00775710 */
@@ -371,7 +393,6 @@ bool usb_cable_connected(void)
 
 /* #ifdef CONFIG_POWER_EXT */
 	/* if (mt_get_charger_type() */
-#ifdef CONFIG_MTK_SMART_BATTERY_FIX
 	 if ((mt_get_charger_type() == STANDARD_HOST) || (mt_get_charger_type() == CHARGING_HOST)
 /* #else */
 /* if (upmu_is_chr_det() */
@@ -381,9 +402,6 @@ bool usb_cable_connected(void)
 	} else {
 		return false;
 	}
-#else
-	return true;
-#endif
 
 #endif /* end FPGA_PLATFORM */
 }
@@ -630,7 +648,7 @@ static void uart_usb_switch_dump_register(void)
 	DBG(0, "[MUSB]addr: 0x1A, value: %x\n", USBPHY_READ8(0x1A));
 #endif
 	usb_enable_clock(false);
-	DBG(0, "[MUSB]addr: 0x110020B0 (UART0), value: %x\n\n", DRV_Reg8(ap_uart0_base + 0xB0));
+	/* DBG(0, "[MUSB]addr: 0x110020B0 (UART0), value: %x\n\n", DRV_Reg8(ap_uart0_base + 0xB0)); */
 }
 
 static ssize_t mt_usb_show_portmode(struct device *dev, struct device_attribute *attr, char *buf)
@@ -663,7 +681,7 @@ static ssize_t mt_usb_store_portmode(struct device *dev, struct device_attribute
 		DBG(0, "dev is null!!\n");
 		return count;
 	/* } else if (1 == sscanf(buf, "%d", &portmode)) { */
-	} else if (kstrtol(buf, 10, &portmode) == 0) {
+	} else if (kstrtol(buf, 10, (long *)&portmode) == 0) {
 		DBG(0, "\nUSB Port mode: current => %d (port_mode), change to => %d (portmode)\n",
 		    port_mode, portmode);
 		if (portmode >= PORT_MODE_MAX)
@@ -720,7 +738,7 @@ static ssize_t mt_usb_store_tx(struct device *dev, struct device_attribute *attr
 		DBG(0, "dev is null!!\n");
 		return count;
 	/* } else if (1 == sscanf(buf, "%d", &val)) { */
-	} else if (kstrtol(buf, 10, &val) == 0) {
+	} else if (kstrtol(buf, 10, (long *)&val) == 0) {
 		DBG(0, "\n Write TX : %d\n", val);
 
 #ifdef FPGA_PLATFORM
@@ -842,8 +860,9 @@ static int add_usb_i2c_driver(void)
 
 static int mt_usb_init(struct musb *musb)
 {
+#ifndef FPGA_PLATFORM
 	int ret;
-
+#endif
 	DBG(0, "mt_usb_init\n");
 
 	/* phy device added by dtsi, usbphy0 */
