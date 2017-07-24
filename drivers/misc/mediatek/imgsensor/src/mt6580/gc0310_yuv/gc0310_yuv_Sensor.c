@@ -471,10 +471,6 @@ void GC0310_set_iso(UINT16 para)
 void GC0310StreamOn(void)
 {
 return;
-    GC0310_write_cmos_sensor(0xfe,0x03);
-    GC0310_write_cmos_sensor(0xf3,0x83);
-    GC0310_write_cmos_sensor(0xfe,0x00);
-    Sleep(50);
 }
 
 void GC0310_MIPI_GetDelayInfo(uintptr_t delayAddr)

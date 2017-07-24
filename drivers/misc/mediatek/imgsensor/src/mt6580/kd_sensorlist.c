@@ -864,12 +864,16 @@ int iMultiWriteReg(u8 *pData, u16 lens, u16 i2cId)
 	int ret = 0;
 
 	if (gI2CBusNum == SUPPORT_I2C_BUS_NUM1) {
+		spin_lock(&kdsensor_drv_lock);
 		g_pstI2Cclient->addr = (i2cId >> 1);
 		g_pstI2Cclient->ext_flag = (g_pstI2Cclient->ext_flag) | (I2C_DMA_FLAG);
 		ret = i2c_master_send(g_pstI2Cclient, pData, lens);
+		spin_unlock(&kdsensor_drv_lock);
 	} else {
+		spin_lock(&kdsensor_drv_lock);
 		g_pstI2Cclient2->addr = (i2cId >> 1);
 		g_pstI2Cclient2->ext_flag = (g_pstI2Cclient2->ext_flag) | (I2C_DMA_FLAG);
+		spin_unlock(&kdsensor_drv_lock);
 		ret = i2c_master_send(g_pstI2Cclient2, pData, lens);
 	}
 
@@ -1522,7 +1526,9 @@ int kdSensorSyncFunctionPtr(void)
 	/* if the delay frame is 0 or 0xFF, stop to count */
 	if ((g_NewSensorExpGain.uISPGainDelayFrame != 0xFF)
 	    && (g_NewSensorExpGain.uISPGainDelayFrame != 0)) {
+		spin_lock(&kdsensor_drv_lock);
 		g_NewSensorExpGain.uISPGainDelayFrame--;
+		spin_unlock(&kdsensor_drv_lock);
 	}
 	mutex_unlock(&kdCam_Mutex);
 	return 0;
@@ -1669,7 +1675,7 @@ static inline int adopt_CAMERA_HW_CheckIsAlive(void)
 	MUINT32 sensorID = 0;
 	MUINT32 retLen = 0;
 	MSDK_SENSOR_RESOLUTION_INFO_STRUCT sensorResolution[2], *psensorResolution[2];
-	MUINT32 curr_sensor_id;
+	MUINT32 curr_sensor_id = 0;
 
 	KD_IMGSENSOR_PROFILE_INIT();
 	/* power on sensor */
@@ -2282,6 +2288,7 @@ static inline int adopt_CAMERA_HW_FeatureControl(void *pBuf)
 		g_NewSensorExpGain.uSensorExpDelayFrame = pSensorSyncInfo->uSensorExpDelayFrame;
 		g_NewSensorExpGain.uSensorGainDelayFrame = pSensorSyncInfo->uSensorGainDelayFrame;
 		g_NewSensorExpGain.uISPGainDelayFrame = pSensorSyncInfo->uISPGainDelayFrame;
+		spin_unlock(&kdsensor_drv_lock);
 		/* AE smooth not change shutter to speed up */
 		if ((0 == g_NewSensorExpGain.u2SensorNewExpTime)
 		    || (0xFFFF == g_NewSensorExpGain.u2SensorNewExpTime)) {
@@ -2314,7 +2321,9 @@ static inline int adopt_CAMERA_HW_FeatureControl(void *pBuf)
 		/* if the delay frame is 0 or 0xFF, stop to count */
 		if ((g_NewSensorExpGain.uISPGainDelayFrame != 0xFF)
 		    && (g_NewSensorExpGain.uISPGainDelayFrame != 0)) {
+			spin_lock(&kdsensor_drv_lock);
 			g_NewSensorExpGain.uISPGainDelayFrame--;
+			spin_unlock(&kdsensor_drv_lock);
 		}
 
 
@@ -2798,7 +2807,7 @@ static inline int adopt_CAMERA_HW_FeatureControl(void *pBuf)
 	case SENSOR_FEATURE_SET_MIN_MAX_FPS:
 	case SENSOR_FEATURE_GET_PDAF_INFO:
 	case SENSOR_FEATURE_GET_SENSOR_PDAF_CAPACITY:
-		/*  */
+
 		if (copy_to_user
 		    ((void __user *)pFeatureCtrl->pFeaturePara, (void *)pFeaturePara,
 		     FeatureParaLen)) {
