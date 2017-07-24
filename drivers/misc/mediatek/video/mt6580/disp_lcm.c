@@ -587,8 +587,12 @@ int disp_lcm_is_dual_dsi(disp_lcm_handle *plcm)
 {
 	LCM_PARAMS *lcm_param = NULL;
 
-	if (_is_lcm_inited(plcm))
+	if (_is_lcm_inited(plcm)) {
 		lcm_param = plcm->params;
+	} else {
+		DISPERR("input: plcm is null\n");
+		return 0;
+	}
 
 	if (lcm_param->dsi.dual_dsi_type == DUAL_DSI_CMD
 	    || lcm_param->dsi.dual_dsi_type == DUAL_DSI_VDO)

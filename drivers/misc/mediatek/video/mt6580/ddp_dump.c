@@ -101,25 +101,19 @@ static char *ddp_signal_0(int bit)
 
 static char *ddp_greq_check(int reg_val)
 {
-	if (reg_val & 0x3f)
-		return "smi greq not grant module: ";
-	else
+	int reg = 0;
+
+	reg = reg_val & 0x03;
+	switch (reg) {
+	case 2:
+		return "wdma0";
+	case 1:
+		return "rdma0";
+	case 0:
+		return "ovl0";
+	default:
 		return "N/A";
-
-	if (reg_val & 0x1)
-		return  "disp_wdma1, ";
-	if (reg_val & 0x1)
-		return "disp_rdma1, ";
-	if (reg_val & 0x1)
-		return "disp_ovl1, ";
-	if (reg_val & 0x1)
-		return "disp_wdma0, ";
-	if (reg_val & 0x1)
-		return "disp_rdma0, ";
-	if (reg_val & 0x1)
-		return "disp_ovl0, ";
-
-	return "N/A";
+	}
 }
 
 static char *ddp_get_mutex_module_name(unsigned int bit)
@@ -218,7 +212,6 @@ char *ddp_get_fmt_name(DISP_MODULE_ENUM module, unsigned int fmt)
 			return "unknown";
 		}
 	} else if (module == DISP_MODULE_MUTEX) {
-		fmt = fmt & 0x3;
 		switch (fmt) {
 		case 0:
 			return "single";

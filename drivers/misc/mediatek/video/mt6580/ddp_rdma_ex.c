@@ -563,7 +563,38 @@ void rdma_set_ultra(unsigned int idx, unsigned int width, unsigned int height, u
 				}
 			}
 		} else {
-			/* DISP_REG_SET(handle,idx*DISP_RDMA_INDEX_OFFSET+ DISP_REG_RDMA_MEM_GMC_SETTING_0, ); */
+			/* lower resolution than HVGA */
+			DISPERR("Resolution is lower than HVGA\n");
+			/* Issue Reg threshold */
+			DISP_REG_SET(handle,
+					idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_MEM_GMC_SETTING_1,
+					221);
+			/* Best ultra */
+			DISP_REG_SET(handle,
+					idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_MEM_GMC_SETTING_0,
+					0x06010816);
+			if (mode == RDMA_MODE_DIRECT_LINK) {
+				/* low:34 high:44 */
+				sodi_threshold = 34 | (44 << 10);
+				fifo_valid_size = 32;
+			} else {
+				/* mode == RDMA_MODE_DECOUPLE */
+				/* low:34 high:39 */
+				sodi_threshold = 34 | (39 << 10);
+				fifo_valid_size = 32;
+				/* home screen idle senario (300MHz), in future we should setting by different clock */
+				if (isidle) {
+					/* low:17 high:152 (decouple in WVGA when home screen idle senario) */
+					sodi_threshold = 18 | (21 << 10);
+					fifo_valid_size = 32;
+					DISP_REG_SET(handle,
+							idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_MEM_GMC_SETTING_1,
+							208);
+					DISP_REG_SET(handle,
+							idx * DISP_RDMA_INDEX_OFFSET + DISP_REG_RDMA_MEM_GMC_SETTING_0,
+							0x0201020C);
+				}
+			}
 		}
 	}
 
