@@ -1,13 +1,15 @@
 /*
- *
- *
- * This file is subject to the terms and conditions of the GNU General Public
- * License.  See the file COPYING in the main directory of this archive for
- * more details.
- *
- * mt65xx leds driver
- *
- */
+* Copyright (C) 2015 MediaTek Inc.
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 as
+* published by the Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See http://www.gnu.org/licenses/gpl-2.0.html for more details.
+*/
 
 #include <linux/module.h>
 #include <linux/platform_device.h>
@@ -184,13 +186,19 @@ struct cust_mt65xx_led *get_cust_led_dtsi(void)
 		for (i = 0; i < MT65XX_LED_TYPE_TOTAL; i++) {
 
 			char node_name[32] = "mediatek,";
+			if (strlen(node_name) + strlen(leds_name[i]) + 1 > sizeof(node_name)) {
+				LEDS_DEBUG("buffer for %s%s not enough\n", node_name, leds_name[i]);
+				pled_dtsi[i].mode = 0;
+				pled_dtsi[i].data = -1;
+				continue;
+			}
 
 			pled_dtsi[i].name = leds_name[i];
 
 			led_node =
 			    of_find_compatible_node(NULL, NULL,
-						    strcat(node_name,
-							   leds_name[i]));
+						    strncat(node_name,
+							   leds_name[i], sizeof(node_name) - strlen(node_name) - 1));
 			if (!led_node) {
 				LEDS_DEBUG("Cannot find LED node from dts\n");
 				pled_dtsi[i].mode = 0;
@@ -320,6 +328,7 @@ int mt_led_set_pwm(int pwm_num, struct nled_setting *led)
 	struct pwm_spec_config pwm_setting;
 	int time_index = 0;
 
+	memset(&pwm_setting, 0, sizeof(struct pwm_spec_config));
 	pwm_setting.pwm_no = pwm_num;
 	pwm_setting.mode = PWM_MODE_OLD;
 
@@ -328,6 +337,7 @@ int mt_led_set_pwm(int pwm_num, struct nled_setting *led)
 	/* We won't choose 32K to be the clock src of old mode because of system performance. */
 	/* The setting here will be clock src = 26MHz, CLKSEL = 26M/1625 (i.e. 16K) */
 	pwm_setting.clk_src = PWM_CLK_OLD_MODE_32K;
+	pwm_setting.pmic_pad = 0;
 
 	switch (led->nled_mode) {
 	/* Actually, the setting still can not to turn off NLED. We should disable PWM to turn off NLED. */
@@ -356,6 +366,10 @@ int mt_led_set_pwm(int pwm_num, struct nled_setting *led)
 		pwm_setting.PWM_MODE_OLD_REGS.THRESH =
 		    (led->blink_on_time * 100) / (led->blink_on_time +
 						  led->blink_off_time);
+		break;
+	default:
+		LEDS_DEBUG("Invalid nled mode\n");
+		return -1;
 	}
 
 	pwm_setting.PWM_MODE_FIFO_REGS.IDLE_VALUE = 0;
