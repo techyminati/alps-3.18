@@ -56,7 +56,7 @@
 #include "mtkfb_fence.h"
 #include "disp_drv_platform.h"
 #include "disp_recorder.h"
-#include "fbconfig_kdebug_x.h"
+#include "fbconfig_kdebug.h"
 #include "ddp_mmp.h"
 #include "mtk_sync.h"
 #include "ddp_irq.h"

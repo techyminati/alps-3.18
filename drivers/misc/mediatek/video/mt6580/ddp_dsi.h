@@ -18,7 +18,7 @@
 #include "lcm_drv.h"
 #include "ddp_hal.h"
 #include "ddp_info.h"
-#include "fbconfig_kdebug_x.h"
+#include "fbconfig_kdebug.h"
 #include "ddp_manager.h"
 
 #ifdef __cplusplus
