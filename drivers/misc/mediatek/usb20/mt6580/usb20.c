@@ -373,8 +373,29 @@ void mt_usb_disconnect(void)
 	DBG(0, "[MUSB] USB disconnect\n");
 }
 
+static bool musb_hal_is_vbus_exist(void)
+{
+	bool vbus_exist;
+
+#ifdef BYPASS_PMIC_LINKAGE
+	DBG(0, "force on");
+	vbus_exist = true;
+#else
+#ifdef CONFIG_POWER_EXT
+	vbus_exist = upmu_get_rgs_chrdet();
+#else
+	vbus_exist = upmu_is_chr_det();
+#endif
+#endif
+
+	return vbus_exist;
+
+}
+
 bool usb_cable_connected(void)
 {
+	bool connected = false, vbus_exist = false;
+
 #ifdef FPGA_PLATFORM
 	return true;
 #else
@@ -396,17 +417,21 @@ bool usb_cable_connected(void)
 #endif
 #endif
 
-/* #ifdef CONFIG_POWER_EXT */
-	/* if (mt_get_charger_type() */
-	 if ((mt_get_charger_type() == STANDARD_HOST) || (mt_get_charger_type() == CHARGING_HOST)
-/* #else */
-/* if (upmu_is_chr_det() */
-/* #endif */
-	   ) {
-		return true;
+	if ((mt_get_charger_type() == STANDARD_HOST) || (mt_get_charger_type() == CHARGING_HOST)) {
+		connected = true;
+
+		/* VBUS CHECK to avoid type miss-judge */
+		vbus_exist = musb_hal_is_vbus_exist();
+		DBG(0, "%s vbus_exist=%d\n", __func__, vbus_exist);
+
+		if (!vbus_exist)
+			connected = false;
+
 	} else {
-		return false;
+		connected = false;
 	}
+
+	return connected;
 
 #endif /* end FPGA_PLATFORM */
 }
