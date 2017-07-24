@@ -431,11 +431,14 @@ extern void __iomem		*clk_imgsys_base;
 #define UFOZIP_ENC_CLK_SW_CG_BIT	BIT(2)
 #define UFOENC_MM_SW_CG_BIT			BIT(8)
 #define UFODEC_MM_SW_CG_BIT			BIT(9)
+#define NFIECC0_SW_CG_BIT			BIT(10)
+
 #define CG_CTRL3_MASK	(UFOZIP_HCLK_SW_CG_BIT	\
 				| UFOZIP_DEC_CLK_SW_CG_BIT	\
 				| UFOZIP_ENC_CLK_SW_CG_BIT	\
 				| UFOENC_MM_SW_CG_BIT		\
-				| UFODEC_MM_SW_CG_BIT)
+				| UFODEC_MM_SW_CG_BIT		\
+				| NFIECC0_SW_CG_BIT)
 
 
 /***********************/
@@ -662,6 +665,7 @@ enum cg_clk_id {
 	MT_CG_UFOZIP_ENC_CLK_SW_CG,
 	MT_CG_UFOENC_MM_SW_CG,
 	MT_CG_UFODEC_MM_SW_CG,
+	MT_CG_NFIECC0_SW_CG,
 
 /* CG_MMSYS0 */
 	MT_CG_DISP0_SMI_COMMON,

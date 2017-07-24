@@ -644,7 +644,7 @@ static struct cg_clk clks[] = {
 		.mask = NFIECC_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL1],
-		.src = MT_CG_INVALID,
+		.src = MT_CG_NFIECC0_SW_CG,
 	}, /* AXIBUS */
 	[MT_CG_DEBUGSYS_SW_CG] = {
 		.name = __stringify(MT_CG_DEBUGSYS_SW_CG),
@@ -947,7 +947,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_UFOZIP_DEC_CLK_SW_CG] = {
 		.name = __stringify(MT_CG_UFOZIP_DEC_CLK_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = UFOZIP_DEC_CLK_SW_CG_BIT,
 		.ops = &rw_cg_clk_ops,
 		.grp = &grps[CG_CTRL3],
@@ -955,7 +955,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_UFOZIP_ENC_CLK_SW_CG] = {
 		.name = __stringify(MT_CG_UFOZIP_ENC_CLK_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = UFOZIP_ENC_CLK_SW_CG_BIT,
 		.ops = &rw_cg_clk_ops,
 		.grp = &grps[CG_CTRL3],
@@ -963,7 +963,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_UFOENC_MM_SW_CG] = {
 		.name = __stringify(MT_CG_UFOENC_MM_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = UFOENC_MM_SW_CG_BIT,
 		.ops = &rw_cg_clk_ops,
 		.grp = &grps[CG_CTRL3],
@@ -971,11 +971,19 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_UFODEC_MM_SW_CG] = {
 		.name = __stringify(MT_CG_UFODEC_MM_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = UFODEC_MM_SW_CG_BIT,
 		.ops = &rw_cg_clk_ops,
 		.grp = &grps[CG_CTRL3],
 		.src = MT_CG_UPLL_D3,
+	},
+	[MT_CG_NFIECC0_SW_CG] = {
+		.name = __stringify(MT_CG_NFIECC0_SW_CG),
+		.cnt = 1,
+		.mask = NFIECC0_SW_CG_BIT,
+		.ops = &rw_cg_clk_ops,
+		.grp = &grps[CG_CTRL3],
+		.src = MT_CG_INVALID,
 	},
 	/* CG_MMSYS0 */
 	[MT_CG_DISP0_SMI_COMMON] = {
@@ -2180,7 +2188,7 @@ static struct clkmux muxs[] = {
 		.ops		= &glitch_free_clkmux_ops,
 		.map		= _mt_clkmux_nfiecc_fgmux_sel_map,
 		.nr_map		= ARRAY_SIZE(_mt_clkmux_nfiecc_fgmux_sel_map),
-		.drain		= MT_CG_NFIECC_SW_CG,
+		.drain		= MT_CG_NFIECC0_SW_CG,
 	},
 };
 
@@ -4134,8 +4142,9 @@ static void mt_clks_init(void)
 	clk_writel(SET_CLK_GATING_CTRL1, NFI_SW_CG_BIT | NFIECC_SW_CG_BIT |
 		NFI2X_SW_CG_BIT | USB_SW_CG_BIT);
 	clk_writel(CLK_GATING_CTRL3,
-		(clk_readl(CLK_GATING_CTRL3) | MT_CG_UFOZIP_DEC_CLK_SW_CG |
-		MT_CG_UFOZIP_ENC_CLK_SW_CG | MT_CG_UFOENC_MM_SW_CG | MT_CG_UFODEC_MM_SW_CG));
+		(UFOZIP_HCLK_SW_CG_BIT | UFOZIP_DEC_CLK_SW_CG_BIT |
+		UFOZIP_ENC_CLK_SW_CG_BIT | UFOENC_MM_SW_CG_BIT |
+		UFODEC_MM_SW_CG_BIT | NFIECC0_SW_CG_BIT));
 	clk_writel(INFRA_RSVD1,
 		(clk_readl(INFRA_RSVD1) | PLL1_CK_BIT | PLL2_CK_BIT));
 	clk_writel(CLR_CLK_GATING_CTRL1, I2C0_SW_CG_BIT | I2C1_SW_CG_BIT | I2C2_SW_CG_BIT);
