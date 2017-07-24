@@ -142,7 +142,8 @@ static void internal_md_power_down(void)
 		MD_TOPSM_RM_PLL_MASK0(md_topsm_base));
 	mt_reg_sync_writel((*MD_TOPSM_RM_PLL_MASK1(md_topsm_base)) | 0x000000FF,
 		MD_TOPSM_RM_PLL_MASK1(md_topsm_base));
-	mt_reg_sync_writel((*MODEM2G_TOPSM_RM_PLL_MASK0(modem2g_topsm_base)) | 0xFFFFFFFF,
+	/*mt_reg_sync_writel((*MODEM2G_TOPSM_RM_PLL_MASK0(modem2g_topsm_base)) | 0xFFFFFFFF,*/
+	mt_reg_sync_writel(0xFFFFFFFF,
 		MODEM2G_TOPSM_RM_PLL_MASK0(modem2g_topsm_base));
 	mt_reg_sync_writel((*MODEM2G_TOPSM_RM_PLL_MASK1(modem2g_topsm_base)) | 0x0000000F,
 		MODEM2G_TOPSM_RM_PLL_MASK1(modem2g_topsm_base));

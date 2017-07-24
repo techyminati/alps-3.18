@@ -1594,6 +1594,7 @@ static int load_img_by_request_firmware(int md_id, struct image_info *img)
 	}
 	/*  Gen file name */
 	get_md_post_fix(md_id, post_fix, NULL);
+	post_fix[11] = '\0';
 	snprintf(md_image_post_fix[md_id], 12, "%s", post_fix);
 	if (img->type == MD_INDEX) {	/*  Gen MD image name */
 		snprintf(img_name, IMG_NAME_LEN, "modem_%s.img", post_fix);
@@ -1802,7 +1803,7 @@ void additional_operation_before_stop_md(int md_id)
 
 static void md_wdt_notify(int md_id)
 {
-	if (md_id < MAX_MD_NUM) {
+	if (md_id >= 0 && md_id < MAX_MD_NUM) {
 		if (wdt_notify_array[md_id] != NULL)
 			wdt_notify_array[md_id] (md_id);
 	}

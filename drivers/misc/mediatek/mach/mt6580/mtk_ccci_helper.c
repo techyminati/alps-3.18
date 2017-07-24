@@ -1287,8 +1287,9 @@ static struct ccci_pm_cb_item_t resume_cb_table[MAX_MD_NUM][MAX_SLEEP_API];
 void register_suspend_notify(int md_id, unsigned int id, void (*func) (int))
 {
 	if ((id >= MAX_SLEEP_API) || (func == NULL) || (md_id >= MAX_MD_NUM)) {
-		CH_MSG_INF(-1, "hlp", "(0)invalid suspend parameter(md:%d, cmd:%d)!\n",
+		CH_ERR_INF(-1, "hlp", "(0)invalid suspend parameter(md:%d, cmd:%d)!\n",
 		     md_id, id);
+		return;
 	}
 
 	if (suspend_cb_table[md_id][id].cb_func == NULL) {
@@ -1300,8 +1301,9 @@ void register_suspend_notify(int md_id, unsigned int id, void (*func) (int))
 void register_resume_notify(int md_id, unsigned int id, void (*func) (int))
 {
 	if ((id >= MAX_SLEEP_API) || (func == NULL) || (md_id >= MAX_MD_NUM)) {
-		CH_MSG_INF(-1, "hlp", "(0)invalid resume parameter(md:%d, cmd:%d)!\n",
+		CH_ERR_INF(-1, "hlp", "(0)invalid resume parameter(md:%d, cmd:%d)!\n",
 		     md_id, id);
+		return;
 	}
 
 	if (resume_cb_table[md_id][id].cb_func == NULL) {
@@ -1479,8 +1481,8 @@ int ccci_reserve_mem_of_init(struct reserved_mem *rmem)
 	if (strstr(CCCI_MD2_MEM_RESERVED_KEY, rmem->name))
 		md_id = MD_SYS2;
 
-	if (md_id < 0) {
-		CH_ERR("memory reserve key %s not support\n", rmem->name);
+	if (md_id < 0 || md_id >= MAX_MD_NUM) {
+		CH_ERR("memory reserve key %s not support, md_id=%d\n", rmem->name, md_id);
 		return 0;
 	}
 	CH_MSG_INF(md_id, "hlp",
