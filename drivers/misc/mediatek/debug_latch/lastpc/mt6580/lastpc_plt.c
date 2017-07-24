@@ -23,7 +23,7 @@ struct lastpc_imp {
 	void __iomem *toprgu_reg;
 };
 
-static int lastpc_plt_start(struct lastpc_plt *plt)
+static int __init lastpc_plt_start(struct lastpc_plt *plt)
 {
 	return 0;
 }
