@@ -548,6 +548,7 @@ bool spm_cpusys0_can_power_down(void)
 	!(spm_read(SPM_PWR_STATUS_2ND) & (CA7_CPU1 | CA7_CPU2 | CA7_CPU3));
 }
 
+#ifndef CONFIG_FPGA_EARLY_PORTING
 /**************************************
  * for non-CPU MTCMOS
  **************************************/
@@ -911,3 +912,5 @@ int spm_mtcmos_ctrl_connsys(int state)
 
 	return err;
 }
+
+#endif

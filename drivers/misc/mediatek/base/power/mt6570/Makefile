@@ -27,12 +27,15 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/lcm/inc/
 endif
 
 obj-y += mt_spm_mtcmos.o
+ifneq ($(CONFIG_FPGA_EARLY_PORTING),y)
 obj-y += mt_clkmgr_common.o
 obj-y += mt_clkmgr.o
-#obj-y += mt_golden_setting.o
 obj-y += mt_clkbuf_ctl.o
 obj-y += mt_pm_init.o
 obj-y += mt_sleep.o
+endif
+
+#obj-y += mt_golden_setting.o
 #obj-y += mt_cpufreq.o
 #obj-y += mt_gpufreq.o
 #obj-y += mt_ptp.o

@@ -130,8 +130,8 @@ mtk-msdc.0 {
 	};
 
 
-	top_clock_ctrl@10000000 {
-		compatible = "mediatek,top_clock_ctrl";
+	topckgen@10000000 {
+		compatible = "mediatek,topckgen";
 		reg = <0 0x10000000 0 0x1000>;
 	};
 
@@ -256,7 +256,7 @@ mtk-msdc.0 {
 	};
 
 	apmixedsys@10018000 {
-		compatible = "mediatek,apmixedsys";
+		compatible = "mediatek,apmixed";
 		reg = <0 0x10018000 0 0x1000>;
 	};
 
@@ -550,8 +550,8 @@ mtk-msdc.0 {
 		reg = <0 0x11160000 0 0x1000>;
 	};
 
-	mfgcfg@13000000 {
-		compatible = "mediatek,mfgcfg";
+	g3d_config@13000000 {
+		compatible = "mediatek,g3d_config";
 		reg = <0 0x13000000 0 0x1000>;
 	};
 
@@ -760,8 +760,8 @@ mtk-msdc.0 {
 		reg = <0 0x14038000 0 0x1000>;
 	};
 
-	img_gcon@15000000 {
-		compatible = "mediatek,img_gcon";
+	imgsys_config@15000000 {
+		compatible = "mediatek,imgsys_config";
 		reg = <0 0x15000000 0 0x1000>;
 	};
 
@@ -919,8 +919,8 @@ mtk-msdc.0 {
 		reg = <0 0x1500b000 0 0x1000>;
 	};
 
-	audiosys@11140000 {
-		compatible = "mediatek,audiosys";
+	audio@11140000 {
+		compatible = "mediatek,audio";
 		reg = <0 0x11140000 0 0x1000>;
 	};
 
