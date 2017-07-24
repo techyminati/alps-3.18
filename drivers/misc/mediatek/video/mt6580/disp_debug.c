@@ -667,7 +667,7 @@ void mtkfb_process_dbg_opt(const char *opt)
 
 		primary_display_switch_dst_mode(mode % 2);
 		return;
-	}  else if (0 == strncmp(opt, "cmmva_dprec", 11)) {
+	} else if (0 == strncmp(opt, "cmmva_dprec", 11)) {
 		dprec_handle_option(0x7);
 	} else if (0 == strncmp(opt, "cmmpa_dprec", 11)) {
 		dprec_handle_option(0x3);

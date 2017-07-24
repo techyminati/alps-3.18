@@ -270,6 +270,13 @@ void disp_helper_option_init(void)
 
 	/* use RGB565 format for decouple mode intermediate buffer */
 	disp_helper_set_option(DISP_HELPER_OPTION_DECOUPLE_MODE_USE_RGB565, 0);
+
+	/* GMO Optimization */
+#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE) && !defined(CONFIG_MTK_WFD_SUPPORT)
+	disp_helper_set_option(DISP_HELPER_OPTION_GMO_OPTIMIZE, 1);
+#else
+	disp_helper_set_option(DISP_HELPER_OPTION_GMO_OPTIMIZE, 0);
+#endif
 }
 
 int disp_helper_get_option_list(char *stringbuf, int buf_len)

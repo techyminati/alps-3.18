@@ -3698,11 +3698,11 @@ int ddp_dsi_build_cmdq(DISP_MODULE_ENUM module, void *cmdq_trigger_handle, CMDQ_
 
 			if (packet_type == 0x1A || packet_type == 0x1C) {
 				recv_data_cnt = read_data0.byte1 + read_data0.byte2 * 16;
-				if (recv_data_cnt > 2) {
+				if (recv_data_cnt > 10) {
 					DISPMSG
 					("Set receive data count from %d to 2 as ESD check supported max data count.\n",
 						recv_data_cnt);
-					recv_data_cnt = 2;
+					recv_data_cnt = 10;
 				}
 				if (recv_data_cnt > dsi_params->lcm_esd_check_table[i].count) {
 					DISPMSG
