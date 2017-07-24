@@ -494,7 +494,7 @@ static struct cg_clk clks[] = {
 	/* CG_CTRL0 (PERI/INFRA) */
 	[MT_CG_PWM_MM_SW_CG] = {
 		.name = __stringify(MT_CG_PWM_MM_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = PWM_MM_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL0],
@@ -510,7 +510,7 @@ static struct cg_clk clks[] = {
 	}, /* rg_cam_mux_sel */
 	[MT_CG_MFG_MM_SW_CG] = {
 		.name = __stringify(MT_CG_MFG_MM_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MFG_MM_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL0],
@@ -664,7 +664,7 @@ static struct cg_clk clks[] = {
 	}, /* AXIBUS */
 	[MT_CG_UART0_SW_CG] = {
 		.name = __stringify(MT_CG_UART0_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = UART0_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL1],
@@ -672,7 +672,7 @@ static struct cg_clk clks[] = {
 	}, /* rg_uart0_gfmux_sel */
 	[MT_CG_UART1_SW_CG] = {
 		.name = __stringify(MT_CG_UART1_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = UART1_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL1],
@@ -720,7 +720,7 @@ static struct cg_clk clks[] = {
 	}, /* rg_spinfi_gfmux_sel, rg_spinfi_mux_sel */
 	[MT_CG_MSDC0_SW_CG] = {
 		.name = __stringify(MT_CG_MSDC0_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MSDC0_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL1],
@@ -728,7 +728,7 @@ static struct cg_clk clks[] = {
 	}, /* rg_msdc0_mux_sel */
 	[MT_CG_MSDC1_SW_CG] = {
 		.name = __stringify(MT_CG_MSDC1_SW_CG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MSDC1_SW_CG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL1],
@@ -824,7 +824,7 @@ static struct cg_clk clks[] = {
 	}, /* MT_CG_SYS_26M */
 	[MT_CG_AUX_SW_CG_ADC] = {
 		.name = __stringify(MT_CG_AUX_SW_CG_ADC),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = AUX_SW_CG_ADC_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_CTRL1],
@@ -980,7 +980,7 @@ static struct cg_clk clks[] = {
 	/* CG_MMSYS0 */
 	[MT_CG_DISP0_SMI_COMMON] = {
 		.name = __stringify(MT_CG_DISP0_SMI_COMMON),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = SMI_COMMON_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -988,7 +988,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_SMI_LARB0] = {
 		.name = __stringify(MT_CG_DISP0_SMI_LARB0),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = SMI_LARB0_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -996,7 +996,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_CAM_MDP] = {
 		.name = __stringify(MT_CG_DISP0_CAM_MDP),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = CAM_MDP_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1004,7 +1004,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_MDP_RDMA] = {
 		.name = __stringify(MT_CG_DISP0_MDP_RDMA),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MDP_RDMA_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1012,7 +1012,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_MDP_RSZ0]	= {
 		.name = __stringify(MT_CG_DISP0_MDP_RSZ0),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MDP_RSZ0_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1020,7 +1020,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_MDP_RSZ1] = {
 		.name = __stringify(MT_CG_DISP0_MDP_RSZ1),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MDP_RSZ1_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1028,7 +1028,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_MDP_TDSHP] = {
 		.name = __stringify(MT_CG_DISP0_MDP_TDSHP),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MDP_TDSHP_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1036,7 +1036,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_MDP_WDMA] = {
 		.name = __stringify(MT_CG_DISP0_MDP_WDMA),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MDP_WDMA_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1044,7 +1044,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_MDP_WROT] = {
 		.name = __stringify(MT_CG_DISP0_MDP_WROT),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = MDP_WROT_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1052,7 +1052,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_FAKE_ENG] = {
 		.name = __stringify(MT_CG_DISP0_FAKE_ENG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = FAKE_ENG_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1060,7 +1060,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_OVL0] = {
 		.name = __stringify(MT_CG_DISP0_DISP_OVL0),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_OVL0_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1068,7 +1068,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_RDMA0] = {
 		.name = __stringify(MT_CG_DISP0_DISP_RDMA0),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_RDMA0_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1076,7 +1076,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_WDMA0] = {
 		.name = __stringify(MT_CG_DISP0_DISP_WDMA0),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_WDMA0_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1084,7 +1084,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_COLOR] = {
 		.name = __stringify(MT_CG_DISP0_DISP_COLOR),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_COLOR_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1092,7 +1092,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_AAL] = {
 		.name = __stringify(MT_CG_DISP0_DISP_AAL),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_AAL_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1100,7 +1100,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_GAMMA] = {
 		.name = __stringify(MT_CG_DISP0_DISP_GAMMAG),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_GAMMA_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1108,7 +1108,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP0_DISP_DITHER] = {
 		.name = __stringify(MT_CG_DISP0_DISP_DITHER),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DISP_DITHER_BIT,
 		.ops = &ao_cg_clk_ops,
 		.grp = &grps[CG_MMSYS0],
@@ -1118,7 +1118,7 @@ static struct cg_clk clks[] = {
 	/* CG_MMSYS1 */
 	[MT_CG_DISP1_DSI_ENGINE] = {
 		.name = __stringify(MT_CG_DISP1_DSI_ENGINE),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DSI_ENGINE_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_MMSYS1],
@@ -1126,7 +1126,7 @@ static struct cg_clk clks[] = {
 	},
 	[MT_CG_DISP1_DSI_DIGITAL] = {
 		.name = __stringify(MT_CG_DISP1_DSI_DIGITAL),
-		.cnt = 0,
+		.cnt = 1,
 		.mask = DSI_DIGITAL_BIT,
 		.ops = &general_gate_cg_clk_ops,
 		.grp = &grps[CG_MMSYS1],
