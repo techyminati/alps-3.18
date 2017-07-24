@@ -2772,6 +2772,7 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("MTK");
 
 /* dummy function for FPGA */
+#if 0
 #ifdef CONFIG_FPGA_EARLY_PORTING
 int md_power_off(enum subsys_id id, unsigned int timeout)
 {
@@ -2781,4 +2782,5 @@ int md_power_on(enum subsys_id id)
 {
 	return 0;
 }
+#endif
 #endif
