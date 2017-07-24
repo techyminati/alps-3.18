@@ -544,8 +544,8 @@ int spm_mtcmos_ctrl_cpusys0(int state, int chkWfiBeforePdn)
 
 bool spm_cpusys0_can_power_down(void)
 {
-	return !(spm_read(SPM_PWR_STATUS) & (CA7_CPU1 | CA7_CPU2 | CA7_CPU3)) &&
-	!(spm_read(SPM_PWR_STATUS_2ND) & (CA7_CPU1 | CA7_CPU2 | CA7_CPU3));
+	return !(spm_read(SPM_PWR_STATUS) & CA7_CPU1) &&
+	!(spm_read(SPM_PWR_STATUS_2ND) & CA7_CPU1);
 }
 
 #ifndef CONFIG_FPGA_EARLY_PORTING

@@ -162,7 +162,8 @@ mtk-msdc.0 {
 	sleep@10006000 {
 		compatible = "mediatek,sleep";
 		reg = <0 0x10006000 0 0x1000>;
-		interrupts = <GIC_SPI 88 IRQ_TYPE_LEVEL_LOW>;
+		interrupts = <GIC_SPI 88 IRQ_TYPE_LEVEL_LOW>,
+			     <GIC_SPI 89 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	toprgu@10007000 {
