@@ -1233,7 +1233,7 @@ bool msdc_hwPowerOn(unsigned int powerId, int powerVolt, char *mode_name)
 	/* New API voltage use micro V */
 	regulator_set_voltage(reg, powerVolt, powerVolt);
 	ret = regulator_enable(reg);
-	pr_err("msdc_hwPoweron:%d: name:%s ret(%d)", powerId, mode_name, ret);
+	/* pr_err("msdc_hwPoweron:%d: name:%s ret(%d)", powerId, mode_name, ret); */
 	if (ret)
 		return false;
 	else
