@@ -1798,11 +1798,11 @@ static int _thermal_limited_verify(struct mt_cpu_dvfs *p, int new_opp_idx)
 
 	if (found) {
 		target_khz = p->power_tbl[i].cpufreq_khz;
-		cpufreq_dbg("%s(): freq found, idx = %d, target_khz = %d, online_cpu = %d\n",
+		cpufreq_ver("%s(): freq found, idx = %d, target_khz = %d, online_cpu = %d\n",
 			     __func__, i, target_khz, online_cpu);
 	} else {
 		target_khz = p->limited_max_freq;
-		cpufreq_dbg("%s(): freq not found, set to limited_max_freq = %d\n", __func__,
+		cpufreq_ver("%s(): freq not found, set to limited_max_freq = %d\n", __func__,
 			     target_khz);
 	}
 
