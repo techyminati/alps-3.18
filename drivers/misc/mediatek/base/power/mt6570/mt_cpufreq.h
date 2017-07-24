@@ -44,6 +44,7 @@ enum top_ckmuxsel {
 /* Phase */
 enum pmic_wrap_phase_id {
 	PMIC_WRAP_PHASE_NORMAL,
+	PMIC_WRAP_PHASE_SUSPEND,
 	PMIC_WRAP_PHASE_DEEPIDLE,
 
 	NR_PMIC_WRAP_PHASE,
@@ -54,6 +55,14 @@ enum {
 	IDX_NM_VCORE,
 
 	NR_IDX_NM,
+};
+
+/* PMIC_WRAP_PHASE_SUSPEND */
+enum {
+	IDX_SP_AUXADC_START_CLR = 4,		/* 4 */
+	IDX_SP_AUXADC_START_SET,		/* 5 */
+
+	NR_IDX_SP,
 };
 
 enum {

@@ -62,6 +62,7 @@
 #include "mach/mt_freqhopping.h"
 #include "mt_ptp.h"
 /* #include "mach/upmu_sw.h" */
+#include <mt-plat/upmu_common.h>
 
 #ifndef __KERNEL__
 #include "freqhop_sw.h"
@@ -333,6 +334,13 @@ static struct pmic_wrap_setting pw = {
 		},
 		.nr_idx = NR_IDX_NM,
 	},
+
+	.set[PMIC_WRAP_PHASE_SUSPEND] = {
+		._[IDX_SP_AUXADC_START_CLR] = {MT6350_PMIC_STRUP_AUXADC_START_SW_ADDR, _BITS_(4:4, 0),},
+		._[IDX_SP_AUXADC_START_SET] = {MT6350_PMIC_STRUP_AUXADC_START_SW_ADDR, _BITS_(4:4, 1),},
+		.nr_idx = NR_IDX_SP,
+	},
+
 	.set[PMIC_WRAP_PHASE_DEEPIDLE] = {
 		._[IDX_DI_VCORE_NORMAL] = {PMIC_VCORE_VOSEL_CTRL_ADDR, _BITS_(1:1, 1),},
 		._[IDX_DI_VCORE_SLEEP] = {PMIC_VCORE_VOSEL_CTRL_ADDR, _BITS_(1:1, 0),},
