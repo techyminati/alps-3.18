@@ -152,12 +152,6 @@ struct GFH_CHECK_CFG_v1 {
 	unsigned char reserved[64];
 };
 
-enum PRODUCT_VER_TYPE {
-	INVALID_VARSION = 0,
-	DEBUG_VERSION,
-	RELEASE_VERSION
-};
-
 struct MD_CHECK_HEADER {
 	unsigned char check_header[12];	/* magic number is "CHECK_HEADER" */
 	unsigned int header_verno;	/* header structure version number */
@@ -186,23 +180,6 @@ struct CCCI_REGION_LAYOUT {
 	unsigned long ccif_region_len;
 	unsigned long mdcfg_region_base;
 	unsigned long mdcfg_region_len;
-};
-
-struct IMG_CHECK_INFO {
-	/* debug/release/invalid */
-	char *product_ver;
-	/*2G/3G/invalid */
-	char *image_type;
-	/* MT6573_S00(MT6573E1) or MT6573_S01(MT6573E2) */
-	char *platform;
-	/* build time string */
-	char *build_time;
-	/* project version, ex:11A_MD.W11.28 */
-	char *build_ver;
-	/*md rom+ram mem size */
-	unsigned int mem_size;
-	/*modem image actual size, exclude head size */
-	unsigned int md_img_size;
 };
 
 #define  NAME_LEN 100

@@ -65,24 +65,8 @@ static struct platform_device *ccif_plat_drv;
 /* -------------ccci load md&dsp image define----------------*/
 #define IMG_NAME_LEN    32
 
-static char *product_str[] = {[INVALID_VARSION] = INVALID_STR,
-	[DEBUG_VERSION] = DEBUG_STR,
-	[RELEASE_VERSION] = RELEASE_STR
-};
-
-static char *type_str[] = {[modem_invalid] = VER_INVALID_STR,
-	[modem_2g] = VER_2G_STR,
-	[modem_3g] = VER_3G_STR,
-	[modem_wg] = VER_WG_STR,
-	[modem_tg] = VER_TG_STR
-};
-
 static char ap_platform[16] = "";
-static struct MD_CHECK_HEADER md_sys_head[MAX_MD_NUM];
-static struct GFH_CHECK_CFG_v1 dsp_sys_head[MAX_MD_NUM];
-static struct image_info md_img_info[MAX_MD_NUM][2];
-
-char md_img_info_str[MAX_MD_NUM][256];
+static struct ccci_image_info md_img_info[1];
 
 static int img_is_dbg_ver[MAX_MD_NUM];
 static char md_image_post_fix[MAX_MD_NUM][12];
@@ -194,14 +178,14 @@ static void ccci_get_platform_ver(char *ver)
 #endif
 }
 
+char *ccci_get_ap_platform(void)
+{
+	return ap_platform;
+}
+
 int is_modem_debug_ver(int md_id)
 {
 	return img_is_dbg_ver[md_id];
-}
-
-char *get_md_info_str(int md_id)
-{
-	return md_img_info_str[md_id];
 }
 
 int get_dts_settings(int md_id)
@@ -1032,169 +1016,11 @@ void ccci_rpc_work_helper(int md_id, int *p_pkt_num, struct RPC_PKT pkt[],
 
 static int clear_md_region_protection(int md_id)
 {
-#ifdef ENABLE_EMI_PROTECTION
-	unsigned int rom_mem_mpu_id, rw_mem_mpu_id;
-
-	CCCI_MSG_INF(md_id, "ctl", "Clear MD%d region protect...\n", md_id + 1);
-	switch (md_id) {
-	case MD_SYS1:
-		rom_mem_mpu_id = 1;	/* 0; */
-		rw_mem_mpu_id = 2;	/* 1; */
-		break;
-
-	default:
-		CCCI_MSG_INF(md_id, "ctl",
-			     "[error]md id(%d) invalid when clear MPU protect\n",
-			     md_id + 1);
-		return -1;
-	}
-
-	CCCI_MSG_INF(md_id, "ctl", "Clear MPU protect MD%d ROM region<%d>\n",
-		     md_id + 1, rom_mem_mpu_id);
-	emi_mpu_set_region_protection(0,	/*START_ADDR */
-		0,	/*END_ADDR */
-		rom_mem_mpu_id,	/*region */
-		SET_ACCESS_PERMISSON(NO_PROTECTION,
-					NO_PROTECTION,
-					NO_PROTECTION,
-					NO_PROTECTION));
-
-	CCCI_MSG_INF(md_id, "ctl", "Clear MPU protect MD%d R/W region<%d>\n",
-		     md_id + 1, rom_mem_mpu_id);
-	emi_mpu_set_region_protection(0,	/*START_ADDR */
-		0,	/*END_ADDR */
-		rw_mem_mpu_id,	/*region */
-		SET_ACCESS_PERMISSON(NO_PROTECTION,
-					NO_PROTECTION,
-					NO_PROTECTION,
-					NO_PROTECTION));
-#endif
-
 	return 0;
 }
 
 static void enable_mem_access_protection(int md_id)
 {
-#ifdef ENABLE_EMI_PROTECTION
-	unsigned int shr_mem_phy_start, shr_mem_phy_end, shr_mem_mpu_id,
-	    shr_mem_mpu_attr;
-	unsigned int rom_mem_phy_start, rom_mem_phy_end, rom_mem_mpu_id,
-	    rom_mem_mpu_attr;
-	unsigned int rw_mem_phy_start, rw_mem_phy_end, rw_mem_mpu_id,
-	    rw_mem_mpu_attr;
-	struct image_info *img_info;
-	struct ccci_mem_layout_t *md_layout;
-
-#ifdef EMI_MPU_SET_AP_REGION
-	unsigned int ap_mem_mpu_id, ap_mem_mpu_attr;
-	unsigned int kernel_base;
-	unsigned int dram_size;
-	unsigned int ap_mem_phy_end;
-#endif	/* #ifdef EMI_MPU_SET_AP_REGION */
-	/*  For MT6582 */
-	/* =================================================================== */
-	/*             | Region |  D0(AP)  |  D1(MD0)  |D2(CONNSYS)|  D3(MM) */
-	/* ------------+------------------------------------------------------ */
-	/*  Secure OS  |    0   |RW(S)     |Forbidden  |Forbidden  |Forbidden */
-	/* ------------+------------------------------------------------------ */
-	/*  MD0 ROM    |    1   |RO(S/NS)  |RO(S/NS)   |Forbidden  |Forbidden */
-	/* ------------+------------------------------------------------------ */
-	/*  MD0 R/W+   |    2   |Forbidden |No protect |Forbidden  |Forbidden */
-	/* ------------+------------------------------------------------------ */
-	/*  MD0 Share  |    3   |No protect|No protect |Forbidden  |Forbidden */
-	/* ------------+------------------------------------------------------ */
-	/* CONNSYS Code|    4   |Forbidden |Forbidden  |RO(S/NS)   |Forbidden */
-	/* ------------+------------------------------------------------------ */
-	/* AP-Con Share|    5   |No protect|Forbidden  |No product |Forbidden */
-	/* ------------+------------------------------------------------------ */
-	/*  AP         |   6~7  |No protect|RO(S/NS)   |Forbidden  |No protect */
-	/* =================================================================== */
-
-	switch (md_id) {
-	case MD_SYS1:
-		img_info = md_img_info[md_id];
-		md_layout = &md_mem_layout_tab[md_id];
-		rom_mem_mpu_id = 1;
-		rw_mem_mpu_id = 2;
-		shr_mem_mpu_id = 3;
-		rom_mem_mpu_attr = SET_ACCESS_PERMISSON(FORBIDDEN, FORBIDDEN, SEC_R_NSEC_R,
-					 SEC_R_NSEC_R);
-		rw_mem_mpu_attr = SET_ACCESS_PERMISSON(FORBIDDEN, FORBIDDEN, NO_PROTECTION,
-					 FORBIDDEN);
-		shr_mem_mpu_attr = SET_ACCESS_PERMISSON(FORBIDDEN, FORBIDDEN, NO_PROTECTION,
-					 NO_PROTECTION);
-		break;
-
-	default:
-		CCCI_MSG_INF(md_id, "ctl",
-			     "[error]md id(%d) invalid when MPU protect\n",
-			     md_id + 1);
-		return;
-	}
-
-#ifdef EMI_MPU_SET_AP_REGION
-	kernel_base = get_phys_offset();
-#ifdef ENABLE_DRAM_API
-	dram_size = get_max_DRAM_size();
-#else
-	dram_size = 256 * 1024 * 1024;
-#endif
-	ap_mem_mpu_id = 7;
-	ap_mem_mpu_attr = SET_ACCESS_PERMISSON(NO_PROTECTION, FORBIDDEN, SEC_R_NSEC_R,
-				 NO_PROTECTION);
-#endif	/* #ifdef EMI_MPU_SET_AP_REGION */
-
-	shr_mem_phy_start = md_layout->smem_region_phy_before_map;
-	shr_mem_phy_end = md_layout->smem_region_phy_before_map + 0x200000;
-	/* end addr: EMI MPU ignore the lowest 16bit */
-	shr_mem_phy_end = ((shr_mem_phy_end + 0xFFFF) & (~0xFFFF)) - 1;
-	rom_mem_phy_start = md_layout->md_region_phy;
-	rom_mem_phy_end =
-	    ((md_layout->md_region_phy + img_info[MD_INDEX].size +
-	      0xFFFF) & (~0xFFFF)) - 1;
-	/*  64KB align */
-	rw_mem_phy_start = (md_layout->md_region_phy + img_info[MD_INDEX].size + 0xFFFF) & (~0xFFFF);
-	rw_mem_phy_end = md_layout->md_region_phy + md_layout->md_region_size;
-	/* end addr: EMI MPU ignore the lowest 16bit */
-	rw_mem_phy_end = ((rw_mem_phy_end + 0xFFFF) & (~0xFFFF)) - 1;
-
-	CCCI_MSG_INF(md_id, "ctl",
-		     "MPU Start protect MD%d ROM region<%d:%08x:%08x>\n",
-		     md_id + 1, rom_mem_mpu_id, rom_mem_phy_start,
-		     rom_mem_phy_end);
-	emi_mpu_set_region_protection(rom_mem_phy_start,	/*START_ADDR */
-				      rom_mem_phy_end,	/*END_ADDR */
-				      rom_mem_mpu_id,	/*region */
-				      rom_mem_mpu_attr);
-
-	CCCI_MSG_INF(md_id, "ctl",
-		     "MPU Start protect MD%d R/W region<%d:%08x:%08x>\n",
-		     md_id + 1, rw_mem_mpu_id, rw_mem_phy_start,
-		     rw_mem_phy_end);
-	emi_mpu_set_region_protection(rw_mem_phy_start,	/*START_ADDR */
-				      rw_mem_phy_end,	/*END_ADDR */
-				      rw_mem_mpu_id,	/*region */
-				      rw_mem_mpu_attr);
-
-	CCCI_MSG_INF(md_id, "ctl",
-		     "MPU Start protect MD%d Share region<%d:%08x:%08x>\n",
-		     md_id + 1, shr_mem_mpu_id, shr_mem_phy_start,
-		     shr_mem_phy_end);
-	emi_mpu_set_region_protection(shr_mem_phy_start,	/*START_ADDR */
-				      shr_mem_phy_end,	/*END_ADDR */
-				      shr_mem_mpu_id,	/*region */
-				      shr_mem_mpu_attr);
-
-#ifdef EMI_MPU_SET_AP_REGION
-	/* end addr: EMI MPU ignore the lowest 16bit */
-	ap_mem_phy_end = (((kernel_base + dram_size) + 0xFFFF) & (~0xFFFF)) - 1;
-	CCCI_MSG_INF(md_id, "ctl",
-		     "MPU Start protect AP region<%d:%08x:%08x>\n",
-		     ap_mem_mpu_id, kernel_base, ap_mem_phy_end);
-	emi_mpu_set_region_protection(kernel_base, ap_mem_phy_end,
-				ap_mem_mpu_id, ap_mem_mpu_attr);
-#endif	/* #ifdef EMI_MPU_SET_AP_REGION */
-#endif
 }
 
 static void set_ap_region_protection(int md_id)
@@ -1226,550 +1052,58 @@ static void set_ap_region_protection(int md_id)
 }
 
 
-/*********************************************************************************/
-/* check MD&dsp header structure                                                 */
-/* return: 0, no dsp header; >0, dsp header check ok; <0, dsp header check fail */
-/*********************************************************************************/
-static int check_dsp_header(int md_id,
-			    unsigned int parse_addr, struct image_info *image)
-{
-	int ret = 0;
-	char *start_addr = (char *)parse_addr;
-	struct GFH_HEADER *gfh_head = (struct GFH_HEADER *) parse_addr;
-	struct GFH_FILE_INFO_v1 *gfh_file_head = NULL;
-	struct GFH_CHECK_CFG_v1 *gfh_check_head = &dsp_sys_head[md_id];
-	unsigned int dsp_ver = DSP_VER_INVALID;
-	unsigned int ap_ver = DSP_VER_INVALID;
-	bool file_info_check = false;
-	bool header_check = false;
-	bool ver_check = false;
-	bool image_check = false;
-	bool platform_check = false;
-
-	if (gfh_head == NULL) {
-		CCCI_MSG_INF(md_id, "ctl", "ioremap DSP image failed!\n");
-		ret = -ENOMEM;
-		goto out;
-	}
-
-	while ((gfh_head->m_magic_ver & 0xFFFFFF) == GFH_HEADER_MAGIC_NO) {
-		if (gfh_head->m_type == GFH_FILE_INFO_TYPE) {
-			gfh_file_head = (struct GFH_FILE_INFO_v1 *) gfh_head;
-			file_info_check = true;
-
-			/* check image type: DSP_ROM or DSP_BL */
-			if (gfh_file_head->m_file_type == DSP_ROM_TYPE)
-				image_check = true;
-		} else if (gfh_head->m_type == GFH_CHECK_HEADER_TYPE) {
-			*gfh_check_head = *(struct GFH_CHECK_CFG_v1 *) gfh_head;
-			header_check = true;
-
-			/* check image version: 2G or 3G */
-#ifdef ENABLE_2G_3G_CHECK
-			if (gfh_check_head->m_image_type ==
-			    get_modem_support(md_id))
-				ver_check = true;
-#else
-			ver_check = true;
-#endif
-			image->ap_info.image_type =
-			    type_str[get_modem_support(md_id)];
-			image->img_info.image_type =
-			    type_str[gfh_check_head->m_image_type];
-
-			/* get dsp product version: debug or release */
-			image->img_info.product_ver =
-			    product_str[gfh_check_head->m_product_ver];
-
-#ifdef ENABLE_CHIP_VER_CHECK
-			if (!strncmp
-			    (gfh_check_head->m_platform_id, ap_platform,
-			     AP_PLATFORM_LEN)) {
-				platform_check = true;
-			}
-#else
-			platform_check = true;
-#endif
-			image->img_info.platform =
-			    gfh_check_head->m_platform_id;
-
-			/* get build version and build time */
-			image->img_info.build_ver =
-			    gfh_check_head->m_project_id;
-			image->img_info.build_time =
-			    gfh_check_head->m_build_time;
-		}
-
-		start_addr += gfh_head->m_size;
-		gfh_head = (struct GFH_HEADER *) start_addr;
-	}
-
-	CCCI_MSG_INF(md_id, "ctl", "\n");
-	CCCI_MSG_INF(md_id, "ctl",
-		     "**********************DSP image check****************************\n");
-	if (!file_info_check && !header_check) {
-		CCCI_MSG_INF(md_id, "ctl",
-			     "GFH_FILE_INFO header and GFH_CHECK_HEADER not exist!\n");
-		CCCI_MSG_INF(md_id, "ctl",
-			     "[Reason]No DSP_ROM, please check this image!\n");
-		ret = -CCCI_ERR_LOAD_IMG_DSP_CHECK;
-	} else if (file_info_check && !header_check) {
-		CCCI_MSG_INF(md_id, "ctl", "GFH_CHECK_HEADER not exist!\n");
-
-		/* check the image version from file_info structure */
-		dsp_ver = (gfh_file_head->m_file_ver >> DSP_2G_BIT) & 0x1;
-		dsp_ver = dsp_ver ? AP_IMG_2G : AP_IMG_3G;
-		ap_ver = get_modem_support(md_id);
-
-		if (dsp_ver == ap_ver)
-			ver_check = true;
-
-		image->ap_info.image_type = type_str[ap_ver];
-		image->img_info.image_type = type_str[dsp_ver];
-
-		if (image_check && ver_check) {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "GFH_FILE_INFO header check OK!\n");
-		} else {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "[Error]GFH_FILE_INFO check fail!\n");
-			if (!image_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]not DSP_ROM image, please check this image!\n");
-
-			if (!ver_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]DSP type(2G/3G) mis-match to AP!\n");
-
-			ret = -CCCI_ERR_LOAD_IMG_DSP_CHECK;
-		}
-
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[type]=%s\n",
-			     (image_check ? DSP_ROM_STR : DSP_BL_STR));
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[ver]=%s, (AP)[ver]=%s\n",
-			     image->img_info.image_type,
-			     image->ap_info.image_type);
-	} else if (!file_info_check && header_check) {
-		CCCI_MSG_INF(md_id, "ctl", "GFH_FILE_INFO header not exist!\n");
-
-		if (ver_check && platform_check) {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "GFH_CHECK_HEADER header check OK!\n");
-		} else {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "[Error]GFH_CHECK_HEADER check fail!\n");
-
-			if (!ver_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]DSP type(2G/3G) mis-match to AP!\n");
-
-			if (!platform_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]DSP platform version mis-match to AP!\n");
-
-			ret = -CCCI_ERR_LOAD_IMG_DSP_CHECK;
-		}
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[ver]=%s, (AP)[ver]=%s\n",
-			     image->img_info.image_type,
-			     image->ap_info.image_type);
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[plat]=%s, (AP)[plat]=%s\n",
-			     image->img_info.platform, image->ap_info.platform);
-		CCCI_MSG_INF(md_id, "ctl",
-			     "(DSP)[build_Ver]=%s, [build_time]=%s\n",
-			     image->img_info.build_ver,
-			     image->img_info.build_time);
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[product_ver]=%s\n",
-			     product_str[gfh_check_head->m_product_ver]);
-
-	} else {
-		if (image_check && ver_check && platform_check) {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "GFH_FILE_INFO header and GFH_CHECK_HEADER check OK!\n");
-		} else {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "[Error]DSP header check fail!\n");
-			if (!image_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]No DSP_ROM, please check this image!\n");
-
-			if (!ver_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]DSP type(2G/3G) mis-match to AP!\n");
-
-			if (!platform_check)
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Reason]DSP platform version mis-match to AP!\n");
-
-			ret = -CCCI_ERR_LOAD_IMG_DSP_CHECK;
-		}
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[type]=%s\n",
-			     (image_check ? DSP_ROM_STR : DSP_BL_STR));
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[ver]=%s, (AP)[ver]=%s\n",
-			     image->img_info.image_type,
-			     image->ap_info.image_type);
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[plat]=%s, (AP)[plat]=%s\n",
-			     image->img_info.platform, image->ap_info.platform);
-		CCCI_MSG_INF(md_id, "ctl",
-			     "(DSP)[build_Ver]=%s, [build_time]=%s\n",
-			     image->img_info.build_ver,
-			     image->img_info.build_time);
-		CCCI_MSG_INF(md_id, "ctl", "(DSP)[product_ver]=%s\n",
-			     product_str[gfh_check_head->m_product_ver]);
-
-	}
-	CCCI_MSG_INF(md_id, "ctl",
-		     "**********************DSP image check****************************\r\n");
-
- out:
-	return ret;
-
-}
-
-static int check_md_header(int md_id,
-			   unsigned int parse_addr, struct image_info *image)
-{
-	int ret;
-	bool md_type_check = false;
-	bool md_plat_check = false;
-	bool md_sys_match = false;
-	bool md_size_check = false;
-	unsigned int md_size = 0;
-	struct MD_CHECK_HEADER *head = &md_sys_head[md_id];
-
-	memcpy(head, (void *)(parse_addr - sizeof(struct MD_CHECK_HEADER)),
-	       sizeof(struct MD_CHECK_HEADER));
-
-	CCCI_MSG_INF(md_id, "ctl", "\n");
-	CCCI_MSG_INF(md_id, "ctl",
-		     "**********************MD image check***************************\n");
-	ret = strncmp(head->check_header, MD_HEADER_MAGIC_NO, 12);
-	if (ret) {
-		CCCI_MSG_INF(md_id, "ctl", "md check header not exist!\n");
-		ret = 0;
-	} else {
-		if (head->header_verno != MD_HEADER_VER_NO) {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "[Error]md check header version mis-match to AP:[%d]!\n",
-				     head->header_verno);
-		} else {
-#ifdef ENABLE_2G_3G_CHECK
-			if ((head->image_type != AP_IMG_INVALID)
-			    && (head->image_type == get_modem_support(md_id))) {
-				md_type_check = true;
-			}
-#else
-			md_type_check = true;
-#endif
-
-#ifdef ENABLE_CHIP_VER_CHECK
-			if (!strncmp
-			    (head->platform, ap_platform, AP_PLATFORM_LEN)) {
-				md_plat_check = true;
-			}
-#else
-			md_plat_check = true;
-#endif
-
-			if (head->bind_sys_id == (md_id + 1))
-				md_sys_match = true;
-#ifdef ENABLE_MEM_SIZE_CHECK
-			if (head->header_verno >= 2) {
-				md_size = get_resv_mem_size_for_md(md_id);
-				if (head->mem_size == md_size) {
-					md_size_check = true;
-				} else if (head->mem_size < md_size) {
-					md_size_check = true;
-					CCCI_MSG_INF(md_id, "ctl",
-						     "[Warning]md size in md header isn't sync to DFO setting: (%08x, %08x)\n",
-						     head->mem_size, md_size);
-				}
-				image->img_info.mem_size = head->mem_size;
-				image->ap_info.mem_size = md_size;
-			} else {
-				md_size_check = true;
-			}
-#else
-			md_size_check = true;
-#endif
-
-			image->ap_info.image_type =
-			    type_str[get_modem_support(md_id)];
-			image->img_info.image_type = type_str[head->image_type];
-			image->ap_info.platform = ap_platform;
-			image->img_info.platform = head->platform;
-			image->img_info.build_time = head->build_time;
-			image->img_info.build_ver = head->build_ver;
-			image->img_info.product_ver =
-			    product_str[head->product_ver];
-
-			if (md_type_check && md_plat_check && md_sys_match
-			    && md_size_check) {
-				CCCI_MSG_INF(md_id, "ctl",
-					     "Modem header check OK!\n");
-			} else {
-				CCCI_MSG_INF(md_id, "ctl",
-					     "[Error]Modem header check fail!\n");
-				if (!md_type_check)
-					CCCI_MSG_INF(md_id, "ctl",
-						     "[Reason]MD type(2G/3G) mis-match to AP!\n");
-
-				if (!md_plat_check)
-					CCCI_MSG_INF(md_id, "ctl",
-						     "[Reason]MD platform mis-match to AP!\n");
-
-				if (!md_sys_match)
-					CCCI_MSG_INF(md_id, "ctl",
-						     "[Reason]MD image is not for MD SYS%d!\n",
-						     md_id + 1);
-
-				if (!md_size_check)
-					CCCI_MSG_INF(md_id, "ctl",
-						     "[Reason]MD mem size mis-match to AP setting!\n");
-
-				ret = -CCCI_ERR_LOAD_IMG_MD_CHECK;
-			}
-
-			CCCI_MSG_INF(md_id, "ctl",
-				     "(MD)[type]=%s, (AP)[type]=%s\n",
-				     image->img_info.image_type,
-				     image->ap_info.image_type);
-			CCCI_MSG_INF(md_id, "ctl",
-				     "(MD)[plat]=%s, (AP)[plat]=%s\n",
-				     image->img_info.platform,
-				     image->ap_info.platform);
-			if (head->header_verno >= 2) {
-				CCCI_MSG_INF(md_id, "ctl",
-					     "(MD)[size]=%x, (AP)[size]=%x\n",
-					     image->img_info.mem_size,
-					     image->ap_info.mem_size);
-				if (head->md_img_size) {
-					if (image->size >= head->md_img_size)
-						image->size = head->md_img_size;
-					else {
-						CCCI_MSG_INF(md_id, "ctl",
-							     "[Reason]MD image size mis-match to AP!\n");
-						ret =
-						    -CCCI_ERR_LOAD_IMG_MD_CHECK;
-					}
-					image->ap_info.md_img_size =
-					    image->size;
-					image->img_info.md_img_size =
-					    head->md_img_size;
-				}
-				/* image->size -= 0x1A0; workaround for md not check in check header */
-				CCCI_MSG_INF(md_id, "ctl",
-					       "(MD)[img_size]=%x, (AP)[img_size]=%x\n",
-					       head->md_img_size, image->size);
-			}
-			CCCI_MSG_INF(md_id, "ctl",
-				     "(MD)[build_ver]=%s, [build_time]=%s\n",
-				     image->img_info.build_ver,
-				     image->img_info.build_time);
-			CCCI_MSG_INF(md_id, "ctl", "(MD)[product_ver]=%s\n",
-				     image->img_info.product_ver);
-		}
-	}
-	CCCI_MSG_INF(md_id, "ctl",
-		     "**********************MD image check***************************\r\n");
-
-	return ret;
-}
-
-static int load_img_by_request_firmware(int md_id, struct image_info *img)
-{
-#define MAX_REMAP_SIZE (1024 * 1024)
-	int ret = 0;
-	int check_ret = 0;
-	int read_size = 0;
-	unsigned long load_addr = 0;
-	void *start = NULL;
-	unsigned long end_addr;
-	const struct firmware *fw_entry = NULL;
-	const int dsp_header_size = 1024;
-	int size_per_read = MAX_REMAP_SIZE;
-	char post_fix[12];
-	char img_name[IMG_NAME_LEN];
-
-	if (ccif_plat_drv == NULL) {
-		CCCI_ERR_INF(md_id, "ctl", "ccif_plat_drv == NULL\n");
-		ret = -CCCI_ERR_LOAD_IMG_FILE_OPEN;
-		goto out;
-	}
-	/*  Gen file name */
-	get_md_post_fix(md_id, post_fix, NULL);
-	snprintf(md_image_post_fix[md_id], 12, "%s", post_fix);
-	if (img->type == MD_INDEX) {	/*  Gen MD image name */
-		snprintf(img_name, IMG_NAME_LEN, "modem_%s.img", post_fix);
-	} else if (img->type == DSP_INDEX) {	/*  Gen DSP image name */
-		snprintf(img_name, IMG_NAME_LEN, "DSP_ROM_%s.img", post_fix);
-	} else {
-		CCCI_MSG_INF(md_id, "ctl", "[Error]Invalid img type%d\n", img->type);
-		return -CCCI_ERR_INVALID_PARAM;
-	}
-
-
-	img->offset = 0;
-	img->tail_length = 0;
-
-	CCCI_MSG_INF(md_id, "ctl", "Not cipher image: %s\n", img_name);
-	ret = request_firmware(&fw_entry, img_name, &ccif_plat_drv->dev);
-	if (ret != 0) {
-		CCCI_ERR_INF(md_id, "ctl",
-			     "load_firmware failed:ret=%d!\n", ret);
-		goto out;
-	}
-	CCCI_MSG_INF(md_id, "ctl", "Firmware:size=%d\n", fw_entry->size);
-	/*load modem img context to kernel addr*/
-	load_addr = img->address;
-	img->size = fw_entry->size;
-	while (1) {
-		/*  Map 1M memory */
-		CCCI_DBG_MSG(md_id, "ctl", "Firmware:read_size=%d, size_per_read=%d\n", read_size, size_per_read);
-		start = ioremap_nocache((load_addr + read_size), MAX_REMAP_SIZE);
-		if (start == 0) {
-			CCCI_ERR_INF(md_id, "ctl", "image ioremap fail %d\n", (unsigned int)(load_addr + read_size));
-			ret = -CCCI_ERR_LOAD_IMG_NOMEM;
-			goto out;
-		}
-		if (read_size + size_per_read > img->size - img->tail_length)
-			size_per_read = img->size - img->tail_length - read_size;
-		else
-			size_per_read = MAX_REMAP_SIZE;
-		memcpy(start, fw_entry->data + read_size, size_per_read);
-		iounmap(start);
-		start = NULL;
-		read_size += size_per_read;
-		if (read_size == img->size - img->tail_length)
-			break;
-	}
-	CCCI_MSG_INF(md_id, "ctl", "Firmware check header:load_addr=%lx, size=%d\n", load_addr, img->size);
-	if (img->type == MD_INDEX) {
-		start = ioremap_nocache(round_down(load_addr + img->size - 0x4000, 0x4000),
-			round_up(img->size, 0x4000) - round_down(img->size - 0x4000, 0x4000));
-		end_addr =
-		    ((unsigned int)start + img->size - round_down(img->size - 0x4000, 0x4000));
-		check_ret = check_md_header(md_id, end_addr, img);
-		if (check_ret < 0) {
-			ret = check_ret;
-			goto out;
-		}
-	} else if (img->type == DSP_INDEX) {
-		start = ioremap_nocache(load_addr, dsp_header_size);
-		check_ret = check_dsp_header(md_id, (unsigned int)start, img);
-		if (check_ret < 0) {
-			ret = check_ret;
-			goto out;
-		}
-	}
-	ret = read_size;
-	CCCI_MSG_INF(md_id, "ctl", "Request firmware: %s (size=0x%x) to 0x%lx\n",
-		     img->file_name, img->size - img->tail_length, load_addr);
- out:
-	if (fw_entry != NULL) {
-		release_firmware(fw_entry);
-		fw_entry = NULL;
-	}
-	if (start != NULL) {
-		iounmap(start);
-		start = NULL;
-	}
-	return ret;
-}
-
 static int load_img_cfg(int md_id)
 {
 	struct ccci_mem_layout_t *layout;
 
+	if (md_id != MD_SYS1)
+		return 0;
+
 	layout = &md_mem_layout_tab[md_id];
-	md_img_info[md_id][MD_INDEX].type = MD_INDEX;
-	md_img_info[md_id][MD_INDEX].address = layout->md_region_phy;
-	md_img_info[md_id][MD_INDEX].offset = 0;
-	md_img_info[md_id][MD_INDEX].load_firmware = load_img_by_request_firmware;
-	md_img_info[md_id][MD_INDEX].flags = CAN_BE_RELOAD | LOAD_ONE_TIME;
-	md_img_info[md_id][MD_INDEX].ap_info.platform = ap_platform;
+	md_img_info[md_id].address = layout->md_region_phy;
+	md_img_info[md_id].ap_info.platform = ap_platform;
+	md_img_info[md_id].ap_platform = ap_platform;
+	md_img_info[md_id].type = IMG_MD;
 	return 0;
 }
 
-int ccci_load_firmware(int md_id, unsigned int load_flag, char img_err_str[],
-		       int len)
+int ccci_load_firmware_helper(int md_id, char img_err_str[], int len)
 {
-	int i;
 	int ret = 0;
-	int ret_a[IMG_CNT] = { 0 };
-	int img_need_load;
-	struct image_info *img_ptr = NULL;
-	char *img_str, *str;
+	char *str;
 
-	img_ptr = md_img_info[md_id];
-	img_str = md_img_info_str[md_id];
+	if (md_id != MD_SYS1)
+		return ret;
+
+	if (ccif_plat_drv == NULL) {
+		CCCI_ERR_INF(md_id, "ctl", "ccif_plat_drv == NULL\n");
+		snprintf(img_err_str, len, "ccif_plat_drv == NULL");
+		ret = -CCCI_ERR_LOAD_IMG_FILE_OPEN;
+		return ret;
+	}
 
 	/* step1: clear modem protection when start to load firmware */
 	clear_md_region_protection(md_id);
 
 	/* step2: load image */
-	for (i = 0; i < IMG_CNT; i++) {
-		img_need_load = load_flag & img_ptr[i].flags;
-		if (img_need_load && img_ptr[i].load_firmware) {
-			ret_a[i] = img_ptr[i].load_firmware(md_id, &img_ptr[i]);
-			if (ret_a[i] < 0) {
-				CCCI_MSG_INF(md_id, "ctl",
-					     "load firmware fail for %s!\n",
-					     img_ptr[i].file_name);
-			}
-		} else if (img_need_load == 0) {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "Not load firmware for %s!\n",
-				     (i ? DSP_IMAGE_NAME : MOEDM_IMAGE_NAME));
-		} else {
-			CCCI_MSG_INF(md_id, "ctl",
-				     "load null firmware for %s!\n",
-				     img_ptr[i].file_name);
-			ret_a[i] = -CCCI_ERR_LOAD_IMG_FIRM_NULL;
-		}
+	str = md_image_post_fix[md_id];
+	ret = ccci_load_firmware(md_id, &md_img_info[md_id], img_err_str, str,
+			&ccif_plat_drv->dev);
+	if (ret < 0) {
+		CCCI_ERR_INF(md_id, "ctl",
+			     "load_firmware failed:ret=%d!\n", ret);
+		ret = -CCCI_ERR_LOAD_IMG_LOAD_FIRM;
+		return ret;
 	}
 
-	/* Construct image information string */
-	sprintf(img_str,
-		"MD:%s*%s*%s*%s*%s\nAP:%s*%s*%08x*%08x (MD)%08x*%08x\n",
-		img_ptr[MD_INDEX].img_info.image_type,
-		img_ptr[MD_INDEX].img_info.platform,
-		img_ptr[MD_INDEX].img_info.build_ver,
-		img_ptr[MD_INDEX].img_info.build_time,
-		img_ptr[MD_INDEX].img_info.product_ver,
-		img_ptr[MD_INDEX].ap_info.image_type,
-		img_ptr[MD_INDEX].ap_info.platform,
-		img_ptr[MD_INDEX].ap_info.mem_size,
-		img_ptr[MD_INDEX].ap_info.md_img_size,
-		img_ptr[MD_INDEX].img_info.mem_size,
-		img_ptr[MD_INDEX].img_info.md_img_size);
-
 	/*  Image info ready */
-	str = img_ptr[MD_INDEX].img_info.product_ver;
+	str = md_img_info[md_id].img_info.product_ver;
 	if (NULL == str)
 		img_is_dbg_ver[md_id] = MD_DEBUG_REL_INFO_NOT_READY;
 	else if (strcmp(str, "Debug") == 0)
 		img_is_dbg_ver[md_id] = MD_IS_DEBUG_VERSION;
 	else
 		img_is_dbg_ver[md_id] = MD_IS_RELEASE_VERSION;
-
-	/*  Prepare error string if needed */
-	if (img_err_str != NULL) {
-		if (ret_a[MD_INDEX] == -CCCI_ERR_LOAD_IMG_SIGN_FAIL) {
-			snprintf(img_err_str, len, "%s Signature check fail\n",
-				 img_ptr[i].file_name);
-			CCCI_MSG_INF(md_id, "ctl", "signature check fail!\n");
-		} else if (ret_a[MD_INDEX] == -CCCI_ERR_LOAD_IMG_CIPHER_FAIL) {
-			snprintf(img_err_str, len, "%s Cipher chekc fail\n",
-				 img_ptr[i].file_name);
-			CCCI_MSG_INF(md_id, "ctl", "cipher check fail!\n");
-		} else if (ret_a[MD_INDEX] == -CCCI_ERR_LOAD_IMG_FILE_OPEN) {
-			snprintf(img_err_str, len, "Modem image not exist\n");
-		} else if (ret_a[MD_INDEX] == -CCCI_ERR_LOAD_IMG_MD_CHECK) {
-			snprintf(img_err_str, len, "Modem mismatch to AP\n\n");
-		}
-	}
-	if (ret_a[MD_INDEX] < 0)
-		ret = -CCCI_ERR_LOAD_IMG_LOAD_FIRM;
 
 	return ret;
 }
@@ -1805,7 +1139,7 @@ void additional_operation_before_stop_md(int md_id)
 
 static void md_wdt_notify(int md_id)
 {
-	if (md_id < MAX_MD_NUM) {
+	if (md_id >= 0 && md_id < MAX_MD_NUM) {
 		if (wdt_notify_array[md_id] != NULL)
 			wdt_notify_array[md_id] (md_id);
 	}
@@ -2174,9 +1508,9 @@ static int ungate_md1(void)
 		return -1;
 
 	/*set the start address to let modem to run */
-	ccci_write32(md1_boot_slave_Key, 0x3567C766);	/* 6582 no change */
-	ccci_write32(md1_boot_slave_Vector, 0x0);	/* 6582 no change */
-	ccci_write32(md1_boot_slave_En, 0xA3B66175);	/* 6582 no change */
+	ccci_write32(md1_boot_slave_Key, 0x3567C766);
+	ccci_write32(md1_boot_slave_Vector, 0x0);
+	ccci_write32(md1_boot_slave_En, 0xA3B66175);
 
 	return 0;
 }
@@ -2610,7 +1944,6 @@ static int md_init(int md_id)
 
 	load_img_cfg(md_id);
 
-	memset(md_img_info_str[md_id], 0, sizeof(md_img_info_str[md_id]));
 	register_ccci_kern_func_by_md_id(md_id, ID_GET_TXPOWER, get_txpower);
 
 	return ret;
