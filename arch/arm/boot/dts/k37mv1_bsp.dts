@@ -715,5 +715,5 @@
 };
 /* USB GPIO Kernal Standardization end */
 
-#include <cust.dtsi>
+#include <k37mv1_bsp/cust.dtsi>
 /*End of this file, DO NOT ADD ANYTHING HERE*/
