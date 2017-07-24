@@ -1392,7 +1392,7 @@ static int pwrap_of_iomap(void)
 		return -ENOMEM;
 	}
 
-	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,top_clock_ctrl");
+	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,topckgen");
 	if (!topckgen_node) {
 		pr_info("get TOPCKGEN failed\n");
 		return -ENODEV;
@@ -1456,7 +1456,7 @@ static int __init pwrap_hal_init(void)
 		return -ENOMEM;
 	}
 
-	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,top_clock_ctrl");
+	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,topckgen");
 	if (!topckgen_node) {
 		pr_info("get TOPCKGEN failed\n");
 		return -ENODEV;
