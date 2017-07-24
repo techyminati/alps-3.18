@@ -1635,15 +1635,6 @@ mtk-msdc.0 {
 		reg = <0 0x84000000 0 0x1000>;
 	};
 
-
-	mtkfb: mtkfb@0 {
-		compatible = "mediatek,mtkfb";
-	};
-
-	dsi_te: dsi_te {
-		compatible = "mediatek,dsi_te-eint";
-	};
-
 	mt_pmic_regulator {
 		compatible = "mediatek,mt_pmic";
 		buck_regulators {
@@ -1856,6 +1847,14 @@ mtk-msdc.0 {
 			vcn_1v8-supply = <&mt_pmic_vcn_1v8_ldo_reg>;
 		};/* End of regulators_supply */
 	};/* End of mt_pmic_regulator */
+
+	mtkfb: mtkfb@0 {
+		compatible = "mediatek,mtkfb";
+	};
+
+	dsi_te: dsi_te {
+		compatible = "mediatek,dsi_te-eint";
+	};
 
 	rf_clock_buffer_ctrl:rf_clock_buffer {
 		compatible = "mediatek,rf_clock_buffer";
