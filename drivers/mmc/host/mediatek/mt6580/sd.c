@@ -2476,15 +2476,17 @@ static void msdc_set_mclk(struct msdc_host *host, unsigned char timing, u32 hz)
 	/* need because clk changed */
 	msdc_set_timeout(host, host->timeout_ns, host->timeout_clks);
 
+#if defined(MSDC0_EMMC50_SUPPORT)
 	if (mode == 0x3) {
 		msdc_set_smpl(host, 1, host->hw->cmd_edge, TYPE_CMD_RESP_EDGE, NULL);
 		msdc_set_smpl(host, 1, host->hw->rdata_edge, TYPE_READ_DATA_EDGE, NULL);
 		msdc_set_smpl(host, 1, host->hw->wdata_edge, TYPE_WRITE_CRC_EDGE, NULL);
-	} else {
+	} else
+#endif
+	{
 		msdc_set_smpl(host, 0, host->hw->cmd_edge, TYPE_CMD_RESP_EDGE, NULL);
 		msdc_set_smpl(host, 0, host->hw->rdata_edge, TYPE_READ_DATA_EDGE, NULL);
 		msdc_set_smpl(host, 0, host->hw->wdata_edge, TYPE_WRITE_CRC_EDGE, NULL);
-
 	}
 
 	pr_err("msdc%d Set<%dK> src:<%dK> sclk:<%dK> timing<%d> mode:%d div:%d\n",
