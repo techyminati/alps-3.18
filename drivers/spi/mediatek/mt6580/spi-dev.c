@@ -402,14 +402,15 @@ static ssize_t spi_store(struct device *dev,
 			return -ENOMEM;
 	}
 
+	if (!buf) {
+		SPIDEV_LOG("buf is NULL.\n");
+		goto out;
+	}
+
 	if (!strncmp(buf, "-h", 2)) {
 		SPIDEV_MSG("Please input the parameters for this device.\n");
 	} else if (!strncmp(buf, "-w", 2)) {
 		buf += 3;
-		if (!buf) {
-			SPIDEV_LOG("buf is NULL.\n");
-			goto out;
-		}
 		if (!strncmp(buf, "setuptime=", 10) && (1 == sscanf(buf + 10, "%d", &setuptime))) {
 			SPIDEV_MSG("setuptime is:%d\n", setuptime);
 			chip_config->setuptime = setuptime;
@@ -485,6 +486,8 @@ static ssize_t spi_store(struct device *dev,
 		/* spi_setup(spi); */
 	}
 out:
+	if (!spi->controller_data)
+		kfree(chip_config);
 	return count;
 }
 
@@ -547,10 +550,10 @@ spi_msg_store(struct device *dev, struct device_attribute *attr, const char *buf
 		SPIDEV_MSG("Please input the message of this device to send and receive.\n");
 	} else if (!strncmp(buf, "-w", 2)) {
 		buf += 3;
-		if (!buf) {
+		/* if (!buf) {
 			SPIDEV_LOG("Parameter is not enough.\n");
 			goto out;
-		}
+		} */
 		if (!strncmp(buf, "len=", 4) && 1 == sscanf(buf + 4, "%d", &len)) {
 			spi_setup_xfer(&spi->dev, &transfer, len, 0);
 			spi_message_add_tail(&transfer, &msg);
@@ -568,10 +571,10 @@ spi_msg_store(struct device *dev, struct device_attribute *attr, const char *buf
 		}
 	} else if (!strncmp(buf, "-func", 5)) {
 		buf += 6;
-		if (!buf) {
+		/* if (!buf) {
 			SPIDEV_LOG("Parameter is not enough.\n");
 			goto out;
-		}
+		} */
 		if (!strncmp(buf, "len=", 4) && 1 == sscanf(buf + 4, "%d", &len)) {
 			spi_setup_xfer(&spi->dev, &transfer, len, 1);
 			spi_message_add_tail(&transfer, &msg);
