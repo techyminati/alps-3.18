@@ -250,6 +250,13 @@ mtk-msdc.0 {
 		reg = <0 0x10017000 0 0x1000>;
 	};
 
+	cpu_dbgapb: cpu_dbgapb@10170000 {
+		compatible = "mediatek,hw_dbg";
+		num = <2>;
+		reg = <0 0x10170000 0 0x2000>,
+		      <0 0x10172000 0 0x2000>;
+	};
+
 	audio@11140000 {
 			compatible = "mediatek,audio";
 			reg = <0 0x11140000 0 0x10000>;
