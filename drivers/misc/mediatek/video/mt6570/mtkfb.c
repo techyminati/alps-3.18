@@ -479,6 +479,7 @@ static int _convert_fb_layer_to_disp_input(struct fb_overlay_layer *src, disp_in
 	return 0;
 }
 
+
 static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info *info)
 {
 	uint32_t offset = 0;
@@ -489,7 +490,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
 	disp_session_input_config *session_input;
 	disp_input_config *input;
 
-	/* DISPFUNC(); */
+	DISPMSG("mtkfb_pan_display_impl begin\n");
 
 	if (no_update) {
 		DISPMSG("FB_ACTIVATE_NO_UPDATE flag found, ignore mtkfb_pan_display_impl\n");
@@ -497,7 +498,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
 		return ret;
 	}
 
-	DISPMSG("pan_display: offset(%u,%u), res(%u,%u), resv(%u,%u)\n",
+	DISPMSG("mtkfb_pan_display: offset(%u,%u), res(%u,%u), resv(%u,%u)\n",
 		var->xoffset, var->yoffset, info->var.xres, info->var.yres, info->var.xres_virtual,
 		info->var.yres_virtual);
 
@@ -562,6 +563,7 @@ static int mtkfb_pan_display_impl(struct fb_var_screeninfo *var, struct fb_info 
 	ret = primary_display_trigger(true, NULL, 0);
 
 	kfree(session_input);
+	DISPMSG("mtkfb_pan_display_impl end\n");
 	return ret;
 }
 
@@ -621,7 +623,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 
 	struct mtkfb_device *fbdev = (struct mtkfb_device *)fbi->par;
 
-	/* DISPFUNC(); */
+	DISPDBG("%s begin\n", __func__);
 
 	DISPMSG("mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u,\n",
 		var->xres, var->yres, var->xres_virtual, var->yres_virtual);
@@ -739,6 +741,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 	var->sync = 0;
 
 	MSG_FUNC_LEAVE();
+	DISPDBG("%s end\n", __func__);
 	return 0;
 }
 
@@ -756,7 +759,7 @@ static int mtkfb_set_par(struct fb_info *fbi)
 	disp_session_input_config *session_input;
 	disp_input_config *input;
 
-	/* DISPFUNC(); */
+	DISPDBG("%s begin\n", __func__);
 	memset(&fb_layer, 0, sizeof(struct fb_overlay_layer));
 	switch (bpp) {
 	case 16:
@@ -829,6 +832,7 @@ out:
 	memcpy(&fb_layer_context, &fb_layer, sizeof(fb_layer));
 
 	MSG_FUNC_LEAVE();
+	DISPDBG("%s end\n", __func__);
 	return 0;
 }
 
@@ -1886,13 +1890,13 @@ static int __parse_tag_videolfb_extra(unsigned long node)
 	if (!prop)
 		return -1;
 	if (size >= sizeof(mtkfb_lcm_name)) {
-		DISPMSG("%s: error to get lcmname size=%ld\n", __func__, size);
+		DISPMSG("[mtkfb]%s: error to get lcmname size=%ld\n", __func__, size);
 		return -1;
 	}
 	memset((void *)mtkfb_lcm_name, 0, sizeof(mtkfb_lcm_name));
 	strncpy((char *)mtkfb_lcm_name, prop, sizeof(mtkfb_lcm_name));
 	mtkfb_lcm_name[size] = '\0';
-	pr_debug("__parse_tag_videolfb_extra done\n");
+	pr_debug("[mtkfb] __parse_tag_videolfb_extra done\n");
 	return 0;
 }
 
@@ -1918,7 +1922,7 @@ static int __parse_tag_videolfb(unsigned long node)
 		return 0;
 	}
 
-	DISPMSG("[DT][videolfb] videolfb_tag not found\n");
+	DISPMSG("[mtkfb][DT][videolfb] videolfb_tag not found\n");
 	return -1;
 }
 
@@ -1930,30 +1934,29 @@ int _parse_tag_videolfb(void)
 
 	if (is_videofb_parse_done)
 		return 0;
-#ifdef MTK_NO_DISP_IN_LK
-	DISPMSG("[DT][videolfb] zaikuo, workaround for LK not ready\n"); /* after LK ready, remove this code */
-	return 1;
-#endif
 
-	if (of_scan_flat_dt(fb_early_init_dt_get_chosen, &node) > 0) {
+	DISPMSG("[mtkfb][DT][videolfb] _parse_tag_videolfb\n");
+	ret = of_scan_flat_dt(fb_early_init_dt_get_chosen, &node);
+	if (node) {
 		ret = __parse_tag_videolfb(node);
-		if (ret)
-			__parse_tag_videolfb_extra(node);
-
-		if (!ret) {
-			is_videofb_parse_done = 1;
-
-			pr_debug("[DT][videolfb] lcmfound=%d, fps=%d, fb_base=%p, vram=%d, lcmname=%s\n",
-			     islcmconnected, lcd_fps, (void *)fb_base, vramsize, mtkfb_lcm_name);
-			return 0;
-		}
-
-		DISPMSG("[DT][videolfb] videolfb_tag not found\n");
-		return 1;
+		if (!ret)
+			goto found;
+		ret = __parse_tag_videolfb_extra(node);
+		if (!ret)
+			goto found;
+	} else {
+		DISPMSG("[mtkfb][DT][videolfb] of_chosen not found\n");
 	}
-
-	DISPMSG("[DT][videolfb] of_chosen not found\n");
-	return 1;
+	return -1;
+found:
+	is_videofb_parse_done = 1;
+	DISPMSG("[mtkfb][DT][videolfb] islcmfound = %d\n", islcmconnected);
+	DISPMSG("[mtkfb][DT][videolfb] is_lcm_inited = %d\n", is_lcm_inited);
+	DISPMSG("[mtkfb][DT][videolfb] fps        = %d\n", lcd_fps);
+	DISPMSG("[mtkfb][DT][videolfb] fb_base    = 0x%lx\n", (unsigned long)fb_base);
+	DISPMSG("[mtkfb][DT][videolfb] vram       = 0x%x (%d)\n", vramsize, vramsize);
+	DISPMSG("[mtkfb][DT][videolfb] lcmname    = %s\n", mtkfb_lcm_name);
+	return 0;
 }
 
 phys_addr_t mtkfb_get_fb_base(void)
@@ -2035,7 +2038,7 @@ unsigned int mtkfb_fm_auto_test(void)
 
 	r = mtkfb_check_var(&var, mtkfb_fbi);
 	if (r != 0)
-		PRNERR("failed to mtkfb_check_var\n");
+		PRNERR("[mtkfb] failed to mtkfb_check_var\n");
 
 	mtkfb_fbi->var = var;
 
@@ -2060,9 +2063,9 @@ unsigned int mtkfb_fm_auto_test(void)
 	result = primary_display_lcm_ATA();
 
 	if (result == 0)
-		DISPERR("ATA LCM failed\n");
+		DISPERR("[mtkfb] ATA LCM failed\n");
 	else
-		DISPMSG("ATA LCM passed\n");
+		DISPMSG("[mtkfb] ATA LCM passed\n");
 
 	return result;
 }
@@ -2078,19 +2081,9 @@ static void _mtkfb_draw_block(unsigned long addr, unsigned int x, unsigned int y
 	for (j = 0; j < h; j++) {
 		for (i = 0; i < w; i++)
 			mt_reg_sync_writel(color, (start_addr + i * 4 + j * MTK_FB_XRESV * 4));
-
 	}
 }
 
-#if 0
-static long int get_current_time_us(void)
-{
-	struct timeval t;
-
-	do_gettimeofday(&t);
-	return (t.tv_sec & 0xFFF) * 1000000 + t.tv_usec;
-}
-#endif
 
 static int _mtkfb_internal_test(unsigned long va, unsigned int w, unsigned int h)
 {
@@ -2099,6 +2092,8 @@ static int _mtkfb_internal_test(unsigned long va, unsigned int w, unsigned int h
 	unsigned int color = 0;
 	int _internal_test_block_size = 120;
 
+	DISPMSG("_mtkfb_internal_test begin\n");
+	DISPMSG("_mtkfb_internal_test draw 1 begin\n");
 	for (i = 0; i < w * h / _internal_test_block_size / _internal_test_block_size; i++) {
 		color = (i & 0x1) * 0xff;
 		/* color += ((i&0x2)>>1)*0xff00; */
@@ -2116,7 +2111,9 @@ static int _mtkfb_internal_test(unsigned long va, unsigned int w, unsigned int h
 		   __func__, (1000*100/(ttt/1000/1000))/100, (1000*100/(ttt/1000/1000))%100);
 	 */
 	/* return 0; */
+	DISPMSG("_mtkfb_internal_test draw 1 end\n");
 
+	DISPMSG("_mtkfb_internal_test draw 2 begin\n");
 	_internal_test_block_size = 20;
 	for (i = 0; i < w * h / _internal_test_block_size / _internal_test_block_size; i++) {
 		color = (i & 0x1) * 0xff;
@@ -2128,6 +2125,9 @@ static int _mtkfb_internal_test(unsigned long va, unsigned int w, unsigned int h
 				  _internal_test_block_size, _internal_test_block_size, color);
 	}
 	primary_display_trigger(1, NULL, 0);
+	DISPMSG("_mtkfb_internal_test draw 2 end\n");
+
+	DISPMSG("_mtkfb_internal_test draw 3 begin\n");
 	_internal_test_block_size = 30;
 	for (i = 0; i < w * h / _internal_test_block_size / _internal_test_block_size; i++) {
 		color = (i & 0x1) * 0xff;
@@ -2139,9 +2139,11 @@ static int _mtkfb_internal_test(unsigned long va, unsigned int w, unsigned int h
 				  _internal_test_block_size, _internal_test_block_size, color);
 	}
 	primary_display_trigger(1, NULL, 0);
-
+	DISPMSG("_mtkfb_internal_test draw 3 end\n");
+	DISPMSG("_mtkfb_internal_test end\n");
 	return 0;
 }
+
 
 /* used when early porting, test pan display*/
 int pan_display_test(int frame_num, int bpp)
@@ -2162,7 +2164,7 @@ int pan_display_test(int frame_num, int bpp)
 	h = mtkfb_fbi->var.yres;
 	fb_h = fb_size / (w * Bpp) - 10;
 
-	DISPMSG("%s: frame_num=%d,bpp=%d, w=%d,h=%d,fb_h=%d\n",
+	DISPMSG("[mtkfb] %s: frame_num=%d,bpp=%d, w=%d,h=%d,fb_h=%d\n",
 		__func__, frame_num, bpp, w, h, fb_h);
 
 	for (i = 0; i < fb_h; i++)
@@ -2193,8 +2195,6 @@ int pan_display_test(int frame_num, int bpp)
 	return 0;
 }
 
-/* Rushmore EP */
-#define FPGA_DEBUG_PAN
 
 #ifdef FPGA_DEBUG_PAN
 static int update_test_kthread(void *data)
@@ -2238,12 +2238,13 @@ static int mtkfb_probe(struct device *dev)
 	struct fb_info *fbi;
 	int init_state;
 	int r = 0;
-#ifdef DISP_GPIO_DTS
+
 	struct platform_device *pdev;
+#ifdef DISP_GPIO_DTS
 	long dts_gpio_state = 0;
 #endif
 
-	pr_debug("mtkfb_probe\n");
+	DISPMSG("[mtkfb] mtkfb_probe\n");
 
 #ifdef CONFIG_OF
 	_parse_tag_videolfb();
@@ -2251,16 +2252,16 @@ static int mtkfb_probe(struct device *dev)
 	{
 		char *p = NULL;
 
-		pr_debug("%s, %s\n", __func__, saved_command_line);
+		DISPMSG("%s, %s\n", __func__, saved_command_line);
 		p = strstr(saved_command_line, "fps=");
 		if (p == NULL) {
 			lcd_fps = 6000;
-			pr_debug("[FB driver] mtkfb can not get fps from uboot\n");
+			DISPMSG("[FB driver] mtkfb can not get fps from uboot\n");
 		} else {
 			p += 4;
 			r = kstrtol(p, 10, &lcd_fps);
 			if (r)
-				pr_err("mtkfb/%s: errno %d\n", __func__, r);
+				DISPERR("[mtkfb] %s: errno %d\n", __func__, r);
 			if (0 == lcd_fps)
 				lcd_fps = 6000;
 		}
@@ -2269,14 +2270,13 @@ static int mtkfb_probe(struct device *dev)
 
 	init_state = 0;
 
-#ifdef DISP_GPIO_DTS
 	pdev = to_platform_device(dev);
+#ifdef DISP_GPIO_DTS
 	/* repo call DTS gpio module, if not necessary, invoke nothing */
 	dts_gpio_state = disp_dts_gpio_init_repo(pdev);
 	if (dts_gpio_state != 0)
 		dev_err(&pdev->dev, "retrieve GPIO DTS failed.");
 #endif
-
 	fbi = framebuffer_alloc(sizeof(struct mtkfb_device), dev);
 	if (!fbi) {
 		DISPERR("mtkfb unable to allocate memory for device info\n");
@@ -2290,11 +2290,10 @@ static int mtkfb_probe(struct device *dev)
 	dev_set_drvdata(dev, fbdev);
 
 	{
-#ifndef MTK_NO_DISP_IN_LK
 #ifdef CONFIG_OF
-		/* printk("mtkfb_probe:get FB MEM REG\n"); */
+		DISPMSG("[mtkfb] mtkfb_probe: get FB MEM REG\n");
 		_parse_tag_videolfb();
-		/* printk("mtkfb_probe: fb_pa = %p\n",(void *)fb_base); */
+		DISPMSG("[mtkfb] mtkfb_probe: fb_pa = 0x%p\n", (void *)fb_base);
 
 		disp_hal_allocate_framebuffer(fb_base, (fb_base + vramsize - 1),
 					      (unsigned long *)&fbdev->fb_va_base, &fb_pa);
@@ -2303,38 +2302,13 @@ static int mtkfb_probe(struct device *dev)
 #else
 		struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
+		DISPMSG("[mtkfb] mtkfb_probe: NO_CONFIG_OF and get FB MEM REG\n");
 		vramsize = res->end - res->start + 1;
-		/* ASSERT(DISP_GetVRamSize() <= (res->end - res->start + 1)); */
 		disp_hal_allocate_framebuffer(res->start, res->end,
 					      (unsigned int *)&fbdev->fb_va_base, &fb_pa);
 		fbdev->fb_pa_base = res->start;
 #endif
-#else
-		{
-			struct resource res;
 
-			unsigned long fb_mem_addr_pa = 0;
-			unsigned long fb_mem_addr_va = 0;
-
-			pr_debug("mtkfb_probe:get FB MEM REG\n");
-
-			if (0 != of_address_to_resource(dev->of_node, 0, &res)) {
-				r = -ENOMEM;
-				goto cleanup;
-			}
-			fb_mem_addr_pa = res.start;
-
-			fb_mem_addr_va = (unsigned long)of_iomap(dev->of_node, 0);
-
-			pr_debug("mtkfb_probe: fb_pa = 0x%lx, fb_va = 0x%lx\n", fb_mem_addr_pa,
-				 fb_mem_addr_va);
-
-			disp_hal_allocate_framebuffer(res.start, res.end,
-						      (unsigned int *)&fbdev->fb_va_base, &fb_pa);
-			fbdev->fb_pa_base = res.start;
-			fbdev->fb_va_base = fb_mem_addr_va;
-		}
-#endif
 	}
 	primary_display_set_frame_buffer_address((unsigned long)fbdev->fb_va_base, fb_pa);
 
@@ -2365,15 +2339,14 @@ static int mtkfb_probe(struct device *dev)
 	init_state++; /* 2 */
 
 	/* Register to system */
-
 	r = mtkfb_fbinfo_init(fbi);
 	if (r) {
-		DISPERR("mtkfb_fbinfo_init fail, r = %d\n", r);
+		DISPERR("[mtkfb] mtkfb_fbinfo_init fail, r = %d\n", r);
 		goto cleanup;
 	}
 	init_state++; /* 4 */
 	mtkfb_fbi = fbi;
-	pr_debug("\nmtkfb_fbinfo_init done\n");
+	DISPMSG("[mtkfb] mtkfb_fbinfo_init done\n");
 
 	if (disp_helper_get_stage() == DISP_HELPER_STAGE_NORMAL) {
 		/* dal_init should after mtkfb_fbinfo_init, otherwise layer 3 will show dal background color */
@@ -2386,26 +2359,29 @@ static int mtkfb_probe(struct device *dev)
 		ret = DAL_Init(fbVA, fbPA);
 	}
 
-	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL)
+	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL) {
+		DISPERR("[mtkfb] Display is not normal stage, need to call _mtkfb_internal_test\n");
+		/* if SF does not work, Display should enable internal test */
 		_mtkfb_internal_test((unsigned long)(fbdev->fb_va_base), MTK_FB_XRES, MTK_FB_YRES);
-
+	}
 
 	r = mtkfb_register_sysfs(fbdev);
 	if (r) {
-		DISPERR("mtkfb_register_sysfs fail, r = %d\n", r);
+		DISPERR("[mtkfb] mtkfb_register_sysfs fail, r = %d\n", r);
 		goto cleanup;
 	}
 	init_state++; /* 5 */
 
 	r = register_framebuffer(fbi);
 	if (r != 0) {
-		DISPERR("mtkfb register_framebuffer failed\n");
+		DISPERR("[mtkfb] register_framebuffer failed\n");
 		goto cleanup;
 	}
 
-	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL)
+	if (disp_helper_get_stage() != DISP_HELPER_STAGE_NORMAL) {
+		DISPERR("[mtkfb] Display is not normal stage, will diagnose\n");
 		primary_display_diagnose();
-
+	}
 
 	/* this function will get fb_heap base address to ion for management frame buffer */
 	ion_drv_create_FB_heap(mtkfb_get_fb_base(), mtkfb_get_fb_size() - DAL_GetLayerSize());

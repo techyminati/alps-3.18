@@ -665,6 +665,7 @@ int dpmgr_path_init(disp_path_handle dp_handle, int encmdq)
 	module_num = ddp_get_module_num(handle->scenario);
 	cmdqHandle = encmdq ? handle->cmdqhandle : NULL;
 
+	DISPMSG("dpmgr_path_init: encmdq = %d\n", encmdq);
 	DISPRCD("path init on scenario %s\n", ddp_get_scenario_name(handle->scenario));
 	/* open top clock */
 	path_top_clock_on();
@@ -748,12 +749,12 @@ int dpmgr_path_start(disp_path_handle dp_handle, int encmdq)
 	module_num = ddp_get_module_num(handle->scenario);
 	cmdqHandle = encmdq ? handle->cmdqhandle : NULL;
 
-	DISPRCD("path start on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	DISPMSG("path start on scenario %s\n", ddp_get_scenario_name(handle->scenario));
 	for (i = 0; i < module_num; i++) {
 		module_name = modules[i];
 		if (ddp_modules_driver[module_name] != 0) {
 			if (ddp_modules_driver[module_name]->start != 0) {
-				DISPRCD("scenario %s start module  %s\n",
+				DISPMSG("scenario %s start module  %s\n",
 					   ddp_get_scenario_name(handle->scenario),
 					   ddp_get_module_name(module_name));
 				ddp_modules_driver[module_name]->start(module_name, cmdqHandle);
@@ -936,7 +937,7 @@ int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, 
 	modules = ddp_get_scenario_list(handle->scenario);
 	module_num = ddp_get_module_num(handle->scenario);
 
-	DISPRCD("path config ovl %d, rdma %d, wdma %d, dst %d on handle %p scenario %s\n",
+	DISPMSG("path config ovl %d, rdma %d, wdma %d, dst %d on handle %p scenario %s\n",
 		   config->ovl_dirty,
 		   config->rdma_dirty,
 		   config->wdma_dirty,
@@ -945,30 +946,21 @@ int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, 
 	for (i = 0; i < module_num; i++) {
 		module_name = modules[i];
 		if (ddp_modules_driver[module_name] != 0) {
-#ifndef CONFIG_FPGA_EARLY_PORTING
-#ifdef CONFIG_FOR_SOURCE_PQ
-			if (module_name == DISP_MODULE_COLOR0) {
-				set_color_bypass(DISP_MODULE_ENUM module, int bypass, void *cmdq_handle);
-				set_color_bypass(DISP_MODULE_COLOR0, 1, cmdq_handle);
-			}
-#endif
+
+#ifdef MTKFB_FB_BYPASS_PQ
 			if (gddp_bypass_pq == 1 && dpmgr_is_PQ(module_name) == 1) {
-#else
-			{
 #endif
 
 				if (ddp_modules_driver[module_name]->bypass != NULL) {
 					ddp_modules_driver[module_name]->bypass(module_name, 1);
-					/* DDPMSG("-- bypass %s\n", ddp_get_module_name(module_name)); */
+					DISPMSG("bypass PQ: %s\n", ddp_get_module_name(module_name));
 				}
-#ifndef CONFIG_FPGA_EARLY_PORTING
+#ifdef MTKFB_FB_BYPASS_PQ
 			} else if (ddp_modules_driver[module_name]->config != 0) {
 #else
-			}
-
 			if (ddp_modules_driver[module_name]->config != 0) {
 #endif
-				DISPRCD("scenario %s  config module %s\n",
+				DISPMSG("scenario %s config module %s\n",
 					   ddp_get_scenario_name(handle->scenario),
 					   ddp_get_module_name(module_name));
 				ddp_modules_driver[module_name]->config(module_name, config,
@@ -1073,7 +1065,7 @@ int dpmgr_path_trigger(disp_path_handle dp_handle, void *trigger_loop_handle, in
 	ASSERT(dp_handle != NULL);
 	handle = (ddp_path_handle) dp_handle;
 
-	DISPRCD("dpmgr_path_trigger on scenario %s\n", ddp_get_scenario_name(handle->scenario));
+	DISPMSG("dpmgr_path_trigger on scenario %s\n", ddp_get_scenario_name(handle->scenario));
 	cmdqHandle = encmdq ? handle->cmdqhandle : NULL;
 	modules = ddp_get_scenario_list(handle->scenario);
 	module_num = ddp_get_module_num(handle->scenario);
@@ -1310,7 +1302,7 @@ int dpmgr_path_is_busy(disp_path_handle dp_handle)
 		if (ddp_modules_driver[module_name] != 0) {
 			if (ddp_modules_driver[module_name]->is_busy != 0) {
 				if (ddp_modules_driver[module_name]->is_busy(module_name)) {
-					DISPRCD("%s is busy\n",
+					DISPMSG("%s is busy\n",
 						   ddp_get_module_name(module_name));
 					return 1;
 				}
@@ -1423,7 +1415,7 @@ int dpmgr_check_status(disp_path_handle dp_handle)
 
 	/* dump path */
 	{
-		DISPMSG("path:");
+		DISPMSG("dpmgr_check_path_status path:");
 		for (i = 0; i < module_num; i++)
 			DISPMSG("%s-", ddp_get_module_name(modules[i]));
 		DISPMSG("\n");
@@ -1476,9 +1468,9 @@ int dpmgr_wait_event_timeout(disp_path_handle dp_handle, DISP_PATH_EVENT event, 
 	wq_handle = &handle->wq_list[event];
 
 	if (wq_handle->init) {
-		unsigned long long cur_time = sched_clock();
+		unsigned long long cur_time = ktime_to_ns(ktime_get());
 
-		DISPRCD("wait event %s on scenario %s\n", path_event_name(event),
+		DISPMSG("wait event %s on scenario %s\n", path_event_name(event),
 			   ddp_get_scenario_name(handle->scenario));
 
 		ret =
@@ -1493,7 +1485,7 @@ int dpmgr_wait_event_timeout(disp_path_handle dp_handle, DISP_PATH_EVENT event, 
 				   path_event_name(event), ret,
 				   ddp_get_scenario_name(handle->scenario));
 		} else {
-			DISPRCD("received event %s timeleft %d on scenario %s\n",
+			DISPMSG("received event %s timeleft %d on scenario %s\n",
 				   path_event_name(event), ret,
 				   ddp_get_scenario_name(handle->scenario));
 		}
@@ -1503,6 +1495,42 @@ int dpmgr_wait_event_timeout(disp_path_handle dp_handle, DISP_PATH_EVENT event, 
 		   ddp_get_scenario_name(handle->scenario));
 	return ret;
 }
+
+int _dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event, unsigned long long *event_ts)
+{
+	int ret = -1;
+	ddp_path_handle handle;
+	DPMGR_WQ_HANDLE *wq_handle;
+
+	ASSERT(dp_handle != NULL);
+	handle = (ddp_path_handle) dp_handle;
+	wq_handle = &handle->wq_list[event];
+	if (wq_handle->init) {
+		unsigned long long cur_time = ktime_to_ns(ktime_get());
+
+		DISPRCD("wait event %s on scenario %s\n", path_event_name(event),
+			   ddp_get_scenario_name(handle->scenario));
+		cur_time = ktime_to_ns(ktime_get());
+		ret = wait_event_interruptible(wq_handle->wq, cur_time < wq_handle->data);
+		if (ret < 0) {
+			DISPERR("wait %s interrupt by other ret %d on scenario %s\n",
+				   path_event_name(event), ret,
+				   ddp_get_scenario_name(handle->scenario));
+		} else {
+			DISPRCD("received event %s ret %d on scenario %s\n",
+				   path_event_name(event), ret,
+				   ddp_get_scenario_name(handle->scenario));
+		}
+		if (event_ts)
+			*event_ts = wq_handle->data;
+		return ret;
+	}
+	DISPERR("wait event %s not initialized on scenario %s\n", path_event_name(event),
+		   ddp_get_scenario_name(handle->scenario));
+	return ret;
+
+}
+
 
 int dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
 {
@@ -1514,7 +1542,7 @@ int dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
 	handle = (ddp_path_handle) dp_handle;
 	wq_handle = &handle->wq_list[event];
 	if (wq_handle->init) {
-		unsigned long long cur_time = sched_clock();
+		unsigned long long cur_time = ktime_to_ns(ktime_get());
 
 		DISPRCD("wait event %s on scenario %s\n", path_event_name(event),
 			   ddp_get_scenario_name(handle->scenario));
@@ -1536,6 +1564,11 @@ int dpmgr_wait_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
 	return ret;
 }
 
+int dpmgr_wait_event_ts(disp_path_handle dp_handle, DISP_PATH_EVENT event, unsigned long long *event_ts)
+{
+	return _dpmgr_wait_event(dp_handle, event, event_ts);
+}
+
 int dpmgr_signal_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
 {
 	ddp_path_handle handle = (ddp_path_handle) dp_handle;
@@ -1544,7 +1577,7 @@ int dpmgr_signal_event(disp_path_handle dp_handle, DISP_PATH_EVENT event)
 	ASSERT(dp_handle != NULL);
 
 	if (handle->wq_list[event].init) {
-		wq_handle->data = sched_clock();
+		wq_handle->data = ktime_to_ns(ktime_get());
 		DISPRCD("wake up evnet %s on scenario %s\n", path_event_name(event),
 			   ddp_get_scenario_name(handle->scenario));
 		wake_up_interruptible(&(handle->wq_list[event].wq));
@@ -1573,7 +1606,7 @@ static void dpmgr_irq_handler(DISP_MODULE_ENUM module, unsigned int regvalue)
 				if (handle->wq_list[j].init
 				    && irq_bit == handle->irq_event_map[j].irq_bit) {
 					dprec_stub_event(j);
-					handle->wq_list[j].data = sched_clock();
+					handle->wq_list[j].data = ktime_to_ns(ktime_get());
 					DISPRCD("irq signal event %s on cycle %llu on scenario %s\n",
 					       path_event_name(j), handle->wq_list[j].data,
 					       ddp_get_scenario_name(handle->scenario));

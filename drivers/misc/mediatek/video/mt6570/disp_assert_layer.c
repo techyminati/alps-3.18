@@ -152,7 +152,7 @@ DAL_STATUS DAL_Clean(void)
 	static int dal_clean_cnt;
 	MFC_CONTEXT *ctxt = (MFC_CONTEXT *) mfc_handle;
 
-	DISPMSG("[DISP] %s\n", __func__);
+	DISPMSG("[MTKFB_DAL] DAL_Clean\n");
 	if (NULL == mfc_handle)
 		return DAL_STATUS_NOT_READY;
 
@@ -252,7 +252,7 @@ DAL_STATUS DAL_Printf(const char *fmt, ...)
 	disp_input_config *input;
 	MFC_STATUS r;
 
-	DISPMSG("[DISP] %s\n", __func__);
+	DISPMSG("[MTKFB_DAL] %s\n", __func__);
 	if (NULL == mfc_handle)
 		return DAL_STATUS_NOT_READY;
 

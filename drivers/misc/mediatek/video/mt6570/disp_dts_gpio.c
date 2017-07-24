@@ -13,7 +13,7 @@
 
 #include "disp_dts_gpio.h"
 #include <linux/bug.h>
-
+#include <linux/pinctrl/consumer.h>
 #include <linux/kernel.h> /* printk */
 
 static struct pinctrl *this_pctrl; /* static pinctrl instance */

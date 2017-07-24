@@ -188,7 +188,7 @@ unsigned int PanelMaster_set_PM_enable(unsigned int value);
 uint32_t DSI_dcs_read_lcm_reg_v2(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, uint8_t cmd,
 			       uint8_t *buffer, uint8_t buffer_size);
 void *get_dsi_params_handle(uint32_t dsi_idx);
-
+int ddp_dsi_start(DISP_MODULE_ENUM module, void *cmdq);
 DSI_STATUS DSI_BIST_Pattern_Test(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, bool enable,
 				 unsigned int color);
 extern DDP_MODULE_DRIVER ddp_driver_dsi0;

@@ -62,8 +62,8 @@ static unsigned int disp_pwm_get_pwmmux(void)
 *****************************************************************************/
 int disp_pwm_set_pwmmux(unsigned int clk_req)
 {
-	int ret = 0;
 	unsigned int regsrc;
+	int ret = 0;
 
 	regsrc = disp_pwm_get_pwmmux();
 #ifdef CONFIG_MTK_CLKMGR /* MTK Clock Manager */

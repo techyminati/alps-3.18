@@ -11,19 +11,7 @@
 # GNU General Public License for more details.
 #
 
-obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
-			mtkfb.o                \
-			disp_assert_layer.o    \
-			primary_display.o      \
-			disp_lcm.o             \
-			disp_utils.o           \
-			disp_debug.o           \
-			mtk_disp_mgr.o         \
-			mtk_mira.o             \
-			mtk_ovl.o              \
-			disp_dts_gpio.o        \
-			disp_helper.o          \
-			ddp_ovl.o              \
+obj-$(CONFIG_MTK_FB) += ddp_ovl.o              \
 			ddp_rdma_ex.o          \
 			ddp_wdma_ex.o          \
 			ddp_dsi.o              \
@@ -37,7 +25,19 @@ obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
 			ddp_color_format.o     \
 			ddp_mmp.o              \
 			ddp_met.o              \
-			ddp_misc.o
+			ddp_misc.o             \
+			disp_lcm.o             \
+			disp_utils.o           \
+			disp_debug.o           \
+			disp_assert_layer.o    \
+			disp_dts_gpio.o        \
+			disp_helper.o          \
+			primary_display.o      \
+			mtkfb_console.o        \
+			mtk_disp_mgr.o         \
+			mtk_mira.o             \
+			mtk_ovl.o              \
+			mtkfb.o
 
 ccflags-y +=	-I$(srctree)/drivers/misc/mediatek/video/include/                     \
 		-I$(srctree)/drivers/misc/mediatek/video/common/                      \

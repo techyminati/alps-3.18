@@ -734,39 +734,31 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_LOW>;
 	};
 
-	mtkfb: mtkfb@0 {
-		compatible = "mediatek,mtkfb";
-	};
-
-	dsi_te: dsi_te {
-		compatible = "mediatek,dsi_te-eint";
-	};
-
 	lcm: lcm {
 		compatible = "mediatek,mt6570-lcm";
 	};
 
-	DISPSYS@0x14007000 {
-		compatible = "mediatek,DISPSYS";
-		reg = <0x14000000 0x1000>,/*DISP_SYS */
-		<0x14007000 0x1000>,	/*DISP_OVL0*/
-		<0x14008000 0x1000>,	/*DISP_OVL1*/
-		<0x14009000 0x1000>,	/*DISP_RDMA0*/
-		<0x1400A000 0x1000>,	/*DISP_RDMA1*/
-		<0x1400B000 0x1000>,	/*DISP_WDMA0*/
-		<0x1400C000 0x1000>,	/*DISP_COLOR*/
-		<0x1400D000 0x1000>,	/*DISP_CCORR*/
-		<0x1400E000 0x1000>,	/*DISP_AAL*/
-		<0x1400F000 0x1000>,	/*DISP_GAMMA*/
-		<0x14010000 0x1000>,	/*DISP_DITHER*/
-		<0x14011000 0x1000>,	/*DISP_UFOE*/
-		<0x14012000 0x1000>,	/*DISP_DSI0*/
-		<0x14013000 0x1000>,	/*DISP_DPI0*/
-		<0x1100F000 0x1000>,	/*DISP_PWM*/
-		<0x14015000 0x1000>,	/*DISP_MUTEX*/
-		<0x14016000 0x1000>,	/*DISP_SMI_LARB0 */
-		<0x14017000 0x1000>,	/*DISP_SMI_COMMOM*/
-		<0x14018000 0x1000>;	/*MIPITX0,real chip would use this*/
+	dispsys: dispsys@0x14007000 {
+		compatible = "mediatek,dispsys";
+		reg = <0 0x14000000 0 0x1000>,	/*DISP_SYS */
+		      <0 0x14007000 0 0x1000>,	/*DISP_OVL0*/
+		      <0 0x14008000 0 0x1000>,	/*DISP_OVL1*/
+		      <0 0x14009000 0 0x1000>,	/*DISP_RDMA0*/
+		      <0 0x1400A000 0 0x1000>,	/*DISP_RDMA1*/
+		      <0 0x1400B000 0 0x1000>,	/*DISP_WDMA0*/
+		      <0 0x1400C000 0 0x1000>,	/*DISP_COLOR*/
+		      <0 0x1400D000 0 0x1000>,	/*DISP_CCORR*/
+		      <0 0x1400E000 0 0x1000>,	/*DISP_AAL*/
+		      <0 0x1400F000 0 0x1000>,	/*DISP_GAMMA*/
+		      <0 0x14010000 0 0x1000>,	/*DISP_DITHER*/
+		      <0 0x14011000 0 0x1000>,	/*DISP_UFOE*/
+		      <0 0x14012000 0 0x1000>,	/*DISP_DSI0*/
+		      <0 0x14013000 0 0x1000>,	/*DISP_DPI0*/
+		      <0 0x1100F000 0 0x1000>,	/*DISP_PWM*/
+		      <0 0x14015000 0 0x1000>,	/*DISP_MUTEX*/
+		      <0 0x14016000 0 0x1000>,	/*DISP_SMI_LARB0 */
+		      <0 0x14017000 0 0x1000>,	/*DISP_SMI_COMMOM*/
+		      <0 0x14018000 0 0x1000>;	/*MIPITX0,real chip would use this*/
 
 		interrupts = <0 0 8>,   /*DISP_SYS */
 			     <0 119 8>, /*DISP_OVL0 */
@@ -1465,6 +1457,14 @@ mtk-msdc.0 {
 	tdd@84000000 {
 		compatible = "mediatek,tdd";
 		reg = <0 0x84000000 0 0x1000>;
+	};
+
+	mtkfb: mtkfb@0 {
+		compatible = "mediatek,mtkfb";
+	};
+
+	dsi_te: dsi_te {
+		compatible = "mediatek,dsi_te-eint";
 	};
 
 };

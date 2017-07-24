@@ -13,11 +13,14 @@
 
 #include <linux/slab.h>
 #include <linux/types.h>
+#include <linux/delay.h>
+#include "ddp_dsi.h"
 #include "disp_log.h"
 #include "lcm_drv.h"
 #include "disp_drv_platform.h"
 #include "ddp_manager.h"
 #include "disp_lcm.h"
+#include "primary_display.h"
 #include "mtkfb.h"
 
 
@@ -309,7 +312,14 @@ int disp_lcm_init(disp_lcm_handle *plcm, int force)
 			DISPERR("FATAL ERROR, lcm_drv->init is null\n");
 			return -1;
 		}
+#if 0
+		DISPMSG("disp_lcm_init DSI Pattern 1\n");
+		ddp_dsi_start(DISP_MODULE_DSI0, NULL);
+		DSI_BIST_Pattern_Test(DISP_MODULE_DSI0, NULL, true, 0x00ffff00);
 
+		primary_display_diagnose();
+
+#endif
 		return 0;
 	}
 
@@ -587,8 +597,12 @@ int disp_lcm_is_dual_dsi(disp_lcm_handle *plcm)
 {
 	LCM_PARAMS *lcm_param = NULL;
 
-	if (_is_lcm_inited(plcm))
+	if (_is_lcm_inited(plcm)) {
 		lcm_param = plcm->params;
+	} else {
+		DISPERR("input: plcm is null\n");
+		return 0;
+	}
 
 	if (lcm_param->dsi.dual_dsi_type == DUAL_DSI_CMD
 	    || lcm_param->dsi.dual_dsi_type == DUAL_DSI_VDO)

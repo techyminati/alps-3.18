@@ -217,6 +217,24 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 			module = DISP_MODULE_DSI0;
 			reg_val = (DISP_REG_GET(dsi_reg_va + 0xC) & 0xff);
 
+			DISPMSG("DSI0, irq_reg_val = 0x%lx\n", reg_val);
+			/* if (reg_val & (1 << 0)) */
+				/* DISPIRQ("IRQ: DSI%d LPRX_RD_READY!\n", index); */
+			if (reg_val & (1 << 1))
+				DISPIRQ("IRQ: DSI%d command done!\n", index);
+			if (reg_val & (1 << 2))
+				DISPIRQ("IRQ: DSI%d TE ready!\n", index);
+			if (reg_val & (1 << 3))
+				DISPIRQ("IRQ: DSI%d VM done!\n", index);
+			if (reg_val & (1 << 4))
+				DISPIRQ("IRQ: DSI%d frame done!\n", index);
+			if (reg_val & (1 << 5))
+				DISPIRQ("IRQ: DSI%d VM_CMD_DONE!\n", index);
+			if (reg_val & (1 << 7))
+				DISPIRQ("IRQ: DSI%d TE timeout!\n", index);
+			if (reg_val & (1 << 31))
+				DISPIRQ("IRQ: DSI%d busy!\n", index);
+
 			if (primary_display_esd_cust_get() == 1) {
 				/* rd_rdy won't be cleared and ESD & Read LCM will clear this bit. */
 				reg_val = reg_val & 0xfffe;

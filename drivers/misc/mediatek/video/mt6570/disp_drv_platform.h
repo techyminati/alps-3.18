@@ -98,4 +98,58 @@ typedef enum {
  */
 #define DISP_NO_AEE
 
+/**
+ * when CONFIG_MTK_FPGA_EARLY_PORTING is enabled. this flag should be open.
+ * Early porting stage, FPGA environment, CLK should be disabled.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+#define ENABLE_CLK_MGR
+/* #endif */
+
+/**
+ * when CONFIG_MTK_FPGA_EARLY_PORTING is enabled. this flag should be open.
+ * Early porting stage, FPGA environment, CMDQ should be disabled.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+#define MTK_FB_CMDQ_DISABLE
+/* #endif */
+
+/**
+ * Disable M4U of display engines.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+#define MTKFB_NO_M4U
+/* #endif */
+
+/**
+ * Bring-up display in kernel stage (not LK stage).
+ * Please also turn on the option MACH_FPGA_NO_DISPLAY=y in LK.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+/* #define MTK_NO_DISP_IN_LK */
+/* #endif */
+
+/**
+ * Bypass ALL display PQ engine.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+#define MTKFB_FB_BYPASS_PQ
+/* #endif */
+
+/**
+ * Enable display auto-update testing.
+ * Display driver would fill the FB and output to panel directly while probe complete.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+/* #define FPGA_DEBUG_PAN */
+/* #endif */
+
+/**
+ * Enable display auto-update testing.
+ * Display driver would fill the FB and output to panel directly while probe complete.
+ */
+/* #ifndef CONFIG_FPGA_EARLY_PORTING */
+#define MTK_DISPLAY_SODI_DISABLE
+/* #endif */
+
 #endif /* __DISP_DRV_PLATFORM_H__ */

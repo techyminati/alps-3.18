@@ -28,70 +28,62 @@
 static char *ddp_signal_0(int bit)
 {
 	switch (bit) {
-	case 31:
-		return "dpi0_sel_mm_dpi0          ";
-	case 30:
-		return "dis0_sel_mm_dsi0          ";
-	case 29:
-		return "rdma1_sout1_mm_dpi0_sin2  ";
-	case 28:
-		return "rdma1_sout0_mm_dsi0_sin2  ";
 	case 27:
-		return "rdma1_mm_rdma1_sout       ";
+		return "dpi_sel_dpi0                          ";
 	case 26:
-		return "ovl1_mout2_mm_ovl0        ";
+		return "dsi_sel_dsi0                          ";
 	case 25:
-		return "ovl1_mout1_mm_wdma1       ";
+		return "disp_rdma1_mout_out1_dpi_sel_in2      ";
 	case 24:
-		return "ovl1_mout0_mm_rdma1       ";
+		return "disp_rdma1_mout_out0_dsi_sel_in2      ";
 	case 23:
-		return "ovl1_mm_ovl1_mout         ";
+		return "disp_rdma1_disp_rdma1_sout            ";
 	case 22:
-		return "wdma0_sel_mm_wdma0        ";
+		return "disp_wdma0_sel_disp_wdma0             ";
 	case 21:
-		return "ufoe_mout2_mm_wdma0_sin2  ";
+		return "ufoe_mout_out2_disp_wdma0_sel_in2     ";
 	case 20:
-		return "ufoe_mout1_mm_dpi0_sin0   ";
+		return "ufoe_mout_out1_dpi0_sel_in0           ";
 	case 19:
-		return "ufoe_mout0_mm_dsi0_sin0   ";
+		return "ufoe_mout_out0_dsi0_sel_in0           ";
 	case 18:
-		return "ufoe_mm_ufoe_mout         ";
+		return "ufoe_ufoe_mout                        ";
 	case 17:
-		return "ufoe_sel_mm_ufoe          ";
+		return "ufoe_sel_disp_ufoe                    ";
 	case 16:
-		return "rdma0_sout3_mm_dpi0_sin1  ";
+		return "disp_rdma0_sout_out3_mm_dpi0_sel_in1  ";
 	case 15:
-		return "rdma0_sout2_mm_dsi0_sin1  ";
+		return "disp_rdma0_sout_out2_mm_dsi0_sel_in1  ";
 	case 14:
-		return "rdma0_sout1_mm_color_sin0 ";
+		return "disp_rdma0_sout_out1_mm_color_sel_in0 ";
 	case 13:
-		return "rdma0_sout0_mm_ufoe_sin0  ";
+		return "disp_rdma0_sout_out0_mm_ufoe_sel_in0  ";
 	case 12:
-		return "rdma0_mm_rdma0_sout       ";
+		return "disp_rdma0_disp_rdma0_sout            ";
 	case 11:
-		return "dither_mout2_mm_wdma0_sin1";
+		return "dither_mout_out2_disp_wdma0_sel_in1   ";
 	case 10:
-		return "dither_mout1_mm_ufoe_sin1 ";
+		return "dither_mout_out1_disp_ufoe_sel_in1    ";
 	case 9:
-		return "dither_mout0_mm_rdma0     ";
+		return "dither_mout_out0_disp_rdma0           ";
 	case 8:
-		return "dither_mm_dither_mout     ";
+		return "dither_dither_mout                    ";
 	case 7:
-		return "gamma_mm_dither           ";
+		return "gamma_dither                          ";
 	case 6:
-		return "aal_mm_gamma              ";
+		return "aal_gamma                             ";
 	case 5:
-		return "ccorr_mm_aal              ";
+		return "ccorr_aal                             ";
 	case 4:
-		return "color_mm_ccorr            ";
+		return "color_ccorr                           ";
 	case 3:
-		return "color_sel_mm_color        ";
+		return "color_sel_mm_color                    ";
 	case 2:
-		return "ovl0_mout1_mm_wdma0_sin0  ";
+		return "ovl0_mout_out1_wdma0_sel_in0          ";
 	case 1:
-		return "ovl0_mout0_mm_color_sin1  ";
+		return "ovl0_mout_out0_color_sel_in1          ";
 	case 0:
-		return "ovl0_mm_ovl0_mout         ";
+		return "ovl0_ovl0_mout                        ";
 	default:
 		DISPERR("ddp_signal_0, unknown bit=%d\n", bit);
 		return "unknown";
@@ -138,7 +130,7 @@ static char *ddp_get_mutex_module_name(unsigned int bit)
 	case 11:
 		return "ccorr";
 	case 12:
-		return "color0";
+		return "color";
 	case 13:
 		return "aal";
 	case 14:
@@ -218,7 +210,6 @@ char *ddp_get_fmt_name(DISP_MODULE_ENUM module, unsigned int fmt)
 			return "unknown";
 		}
 	} else if (module == DISP_MODULE_MUTEX) {
-		fmt = fmt & 0x3;
 		switch (fmt) {
 		case 0:
 			return "single";
@@ -302,6 +293,7 @@ static char *ddp_clock_1(int bit)
 static void mutex_dump_reg(void)
 {
 	DISPDMP("==DISP MUTEX REGS==\n");
+	DISPDMP("MUTEX REG ADDR   =0x%lx\n", DISPSYS_MUTEX_BASE);
 	DISPDMP("(0x000)M_INTEN   =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MUTEX_INTEN));
 	DISPDMP("(0x004)M_INTSTA  =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MUTEX_INTSTA));
 	DISPDMP("(0x008)M_HW_DCM  =0x%x\n", DISP_REG_GET(DISP_REG_CONFIG_MUTEX_HW_DCM));
@@ -426,9 +418,7 @@ static void mmsys_config_dump_analysis(void)
 	int len = 0;
 
 	unsigned int valid0 = DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a0);
-	unsigned int valid1 = DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a4);
-	unsigned int ready0 = DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a8);
-	unsigned int ready1 = DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8ac);
+	unsigned int ready0 = DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8a4);
 	unsigned int greq = DISP_REG_GET(DISPSYS_CONFIG_BASE + 0x8d0);
 
 	DISPDMP("==DISP MMSYS_CONFIG ANALYSIS==\n");
@@ -455,8 +445,7 @@ static void mmsys_config_dump_analysis(void)
 			strcat(clock_on, ddp_clock_1(i));
 	}
 	DISPDMP("clock on modules:%s\n", clock_on);
-	DISPDMP("valid0=0x%x, valid1=0x%x, ready0=0x%x, ready1=0x%x, greq=0%x\n",
-		valid0, valid1, ready0, ready1, greq);
+	DISPDMP("valid0=0x%x, ready0=0x%x, greq=0%x\n", valid0, ready0, greq);
 	for (i = 0; i < 32; i++) {
 		pos = clock_on;
 		if ((valid0 & (1 << i)) == 0)

@@ -21,10 +21,6 @@
 #include "cmdq_core.h"
 #include "ddp_hal.h"
 
-#ifndef CONFIG_FPGA_EARLY_PORTING
-/* MIPITX and DSI */
-#define ENABLE_CLK_MGR
-#endif
 
 struct MIPITX_DSI_CON_REG {
 	unsigned RG_DSI_LDOCORE_EN:1;
@@ -1190,10 +1186,10 @@ static inline unsigned long disp_addr_convert(unsigned long va)
 #define DISP_REG_MASK(handle, reg32, val, mask)	\
 	do { \
 		dprec_reg_op((void *)handle, (unsigned long)reg32, val, mask);\
-		 if (handle == NULL) \
+		if (handle == NULL) \
 			mt_reg_sync_writel((unsigned int)(INREG32(reg32)&~(mask))|(val), \
 				(volatile unsigned long *)(reg32));\
-		 else \
+		else \
 			cmdqRecWrite((cmdqRecHandle)handle, disp_addr_convert((unsigned long)reg32), val, mask); \
 	} while (0)
 

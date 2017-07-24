@@ -283,9 +283,12 @@ static int disp_probe(struct platform_device *pdev)
 	int new_count;
 	static unsigned int disp_probe_cnt;
 
-	if (disp_probe_cnt != 0)
+	if (disp_probe_cnt != 0) {
+		DISPMSG("disp_probe return directly\n");
 		return 0;
+	}
 
+	DISPMSG("disp_probe begin\n");
 	new_count = nr_dispsys_dev + 1;
 	/* dispsys_dev = krealloc(dispsys_dev, sizeof(struct dispsys_device) * new_count, GFP_KERNEL); */
 	dispsys_dev = kcalloc(new_count, sizeof(*dispsys_dev), GFP_KERNEL);
@@ -305,6 +308,7 @@ static int disp_probe(struct platform_device *pdev)
 			return -ENOMEM;
 		}
 		dispsys_reg[i] = (unsigned long)dispsys_dev->regs[i];
+		DISPMSG("disp_probe, dispsys_reg[%d] = 0x%lx\n", i, dispsys_reg[i]);
 		/* Move to here for outof for_loop, due to it will be needed soon after request_irq */
 		if (i == DISP_REG_DSI0)
 			dsi_reg_va = dispsys_reg[DISP_REG_DSI0];
@@ -366,7 +370,7 @@ static int disp_probe(struct platform_device *pdev)
 		return -ENOMEM;
 	}
 
-	DISPDBG("dispsys probe done.\n");
+	DISPDBG("disp probe end.\n");
 	/* NOT_REFERENCED(class_dev); */
 	return 0;
 }
@@ -410,7 +414,7 @@ static const struct file_operations disp_fops = {
 };
 
 static const struct of_device_id dispsys_of_ids[] = {
-	{.compatible = "mediatek,DISPSYS",},
+	{.compatible = "mediatek,dispsys",},
 	{}
 };
 
@@ -431,13 +435,14 @@ static int __init disp_init(void)
 {
 	int ret = 0;
 
-	DISPDBG("Register the disp driver\n");
+	DISPMSG("Register the disp driver begin\n");
 	if (platform_driver_register(&dispsys_of_driver)) {
 		DISPERR("failed to register disp driver\n");
 		/* platform_device_unregister(&disp_device); */
 		ret = -ENODEV;
 		return ret;
 	}
+	DISPMSG("Register the disp driver end\n");
 
 	return 0;
 }

@@ -152,9 +152,9 @@ void wdma_calc_ultra(unsigned int idx, unsigned int width, unsigned int height, 
 	unsigned int blank_overhead = 115;	/* it is 1.15, need to divide 100 later */
 	unsigned int rdma_fifo_width = 16;	/* in unit of byte */
 	/* bpp is defined by disp_wdma's output format */
-	unsigned int pre_ultra_low_time;	/* in unit of 0.5 us */
-	unsigned int ultra_low_time;	/* in unit of 0.5 us */
-	unsigned int ultra_high_time;	/* in unit of 0.5 us */
+	unsigned int pre_ultra_low_time = 0;	/* in unit of 0.5 us */
+	unsigned int ultra_low_time = 0;	/* in unit of 0.5 us */
+	unsigned int ultra_high_time = 0;	/* in unit of 0.5 us */
 
 	/* working variables */
 	unsigned int consume_levels_per_sec;
@@ -173,6 +173,8 @@ void wdma_calc_ultra(unsigned int idx, unsigned int width, unsigned int height, 
 		pre_ultra_low_time = 2;	/* in unit of 0.5 us */
 		ultra_low_time = 4;	/* in unit of 0.5 us */
 		ultra_high_time = 5;	/* in unit of 0.5 us */
+	} else {
+		DISPERR("Disp wdma bpp is wrong value %d\n", bpp);
 	}
 	/* consume_levels_per_sec =
 		((long long unsigned int)width*height*frame_rate*blank_overhead*bpp)/rdma_fifo_width/100; */

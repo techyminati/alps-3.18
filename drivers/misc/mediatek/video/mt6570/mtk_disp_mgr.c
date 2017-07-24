@@ -1536,6 +1536,8 @@ int _ioctl_wait_vsync(unsigned long arg)
 	if (session_info)
 		dprec_done(&session_info->event_waitvsync, 0, 0);
 
+	if (copy_to_user(argp, &vsync_config, sizeof(vsync_config)))
+		DISPERR("[FB]: copy_to_user failed!line:%d\n", __LINE__);
 	return ret;
 }
 
@@ -1786,6 +1788,7 @@ static int mtk_disp_mgr_probe(struct platform_device *pdev)
 {
 	struct class_device;
 	struct class_device *class_dev = NULL;
+	int ret = 0;
 
 	DISPMSG("mtk_disp_mgr_probe called!\n");
 
@@ -1796,8 +1799,11 @@ static int mtk_disp_mgr_probe(struct platform_device *pdev)
 	mtk_disp_mgr_cdev->owner = THIS_MODULE;
 	mtk_disp_mgr_cdev->ops = &mtk_disp_mgr_fops;
 
-	cdev_add(mtk_disp_mgr_cdev, mtk_disp_mgr_devno, 1);
-
+	ret = cdev_add(mtk_disp_mgr_cdev, mtk_disp_mgr_devno, 1);
+	if (ret) {
+		DISPMSG("mtk_disp_mgr_probe was failed, ruturn %d\n", ret);
+		return ret;
+	}
 	mtk_disp_mgr_class = class_create(THIS_MODULE, DISP_SESSION_DEVICE);
 	class_dev =
 	    (struct class_device *)device_create(mtk_disp_mgr_class, NULL,

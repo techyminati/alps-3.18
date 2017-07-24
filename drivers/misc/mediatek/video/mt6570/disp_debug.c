@@ -421,7 +421,7 @@ void ddp_process_dbg_opt(const char *opt)
 				DISPDMP("i=%d, module=%s, va=0x%lx, pa=0x%lx, irq(%d,%d)\n",
 					i, ddp_get_reg_module_name(i), dispsys_reg[i],
 					ddp_reg_pa_base[i], dispsys_irq[i], ddp_irq_num[i]);
-				sprintf(buf_temp,
+				snprintf(buf_temp, 100,
 					"i=%d, module=%s, va=0x%lx, pa=0x%lx, irq(%d,%d)\n", i,
 					ddp_get_reg_module_name(i), dispsys_reg[i],
 					ddp_reg_pa_base[i], dispsys_irq[i], ddp_irq_num[i]);
