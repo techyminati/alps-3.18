@@ -4405,7 +4405,7 @@ int mt_clkmgr_init(void)
 	dump_clk_info();
 
 	initialized = 1;
-	/* mt_freqhopping_init(); */
+	mt_freqhopping_init();
 	clkmux_sel(MT_CLKMUX_MFG_MUX_SEL, MT_CG_UPLL_D3, "clkmgr");
 	EXIT_FUNC(FUNC_LV_API);
 	return 0;
