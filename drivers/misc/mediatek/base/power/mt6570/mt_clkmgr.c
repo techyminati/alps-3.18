@@ -1962,17 +1962,13 @@ static const struct clkmux_map _mt_clkmux_aud_intbus_sel_map[] = {
 /* Clock Mux Selection1 */
 static const struct clkmux_map _mt_clkmux_nfi2x_gfmux_sel_map[] = {
 	{ .val = 0x8,	.id = MT_CG_SYS_26M,	.mask = 0x78, },
-	{ .val = 0x11,	.id = MT_CG_MPLL_D8,	.mask = 0x7F, },
-	{ .val = 0x12,	.id = MT_CG_MPLL_D10,	.mask = 0x7F, },
-	{ .val = 0x14,	.id = MT_CG_MPLL_D14,	.mask = 0x7F, },
-	{ .val = 0x21,	.id = MT_CG_MPLL_D16,	.mask = 0x7F, },
-	{ .val = 0x22,	.id = MT_CG_MPLL_D28,	.mask = 0x7F, },
-	{ .val = 0x24,	.id = MT_CG_MPLL_D40,	.mask = 0x7F, },
-	{ .val = 0x61,	.id = MT_CG_MPLL_D14,	.mask = 0x7F, },
-	{ .val = 0x62,	.id = MT_CG_MPLL_D24,	.mask = 0x7F, },
-	{ .val = 0x51,	.id = MT_CG_MPLL_D7,	.mask = 0x7F, },
-	{ .val = 0x52,	.id = MT_CG_MPLL_D8,	.mask = 0x7F, },
-	{ .val = 0x54,	.id = MT_CG_MPLL_D12,	.mask = 0x7F, },
+	{ .val = 0x11,	.id = MT_CG_MPLL_D12,	.mask = 0x7F, },
+	{ .val = 0x12,	.id = MT_CG_MPLL_D8,	.mask = 0x7F, },
+	{ .val = 0x14,	.id = MT_CG_MPLL_D6,	.mask = 0x7F, },
+	{ .val = 0x20,	.id = MT_CG_MPLL_D4,	.mask = 0x38, },
+	{ .val = 0x51,	.id = MT_CG_MPLL_D10,	.mask = 0x7F, },
+	{ .val = 0x52,	.id = MT_CG_MPLL_D7,	.mask = 0x7F, },
+	{ .val = 0x54,	.id = MT_CG_MPLL_D5,	.mask = 0x7F, },
 };
 static const struct clkmux_map _mt_clkmux_nfi1x_infra_sel_map[] = {
 	{ .val = 0x0 << 7,	.id = MT_CG_SYS_26M,	.mask = 0x1 << 7, },
