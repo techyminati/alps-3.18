@@ -5986,6 +5986,10 @@ static MINT32 ISP_remove(struct platform_device *pDev)
 	/* unmaping ISP CAM_REGISTER registers */
 	for (i = 0; i < 2; i++) {
 		pRes = platform_get_resource(pDev, IORESOURCE_MEM, 0);
+		if (pRes == NULL) {
+			LOG_ERR("fail: platform_get_resource get null ptr");
+			continue;
+		}
 		release_mem_region(pRes->start, (pRes->end - pRes->start + 1));
 	}
 
@@ -6435,7 +6439,7 @@ EXPORT_SYMBOL(ISP_RegCallback);
 ********************************************************************************/
 bool ISP_UnregCallback(ISP_CALLBACK_ENUM Type)
 {
-	if (Type > ISP_CALLBACK_AMOUNT) {
+	if (Type >= ISP_CALLBACK_AMOUNT) {
 		LOG_ERR("Type(%d) must smaller than %d", Type, ISP_CALLBACK_AMOUNT);
 		return false;
 	}
