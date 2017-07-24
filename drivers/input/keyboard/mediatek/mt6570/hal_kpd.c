@@ -212,7 +212,7 @@ void kpd_auto_test_for_factorymode(void)
 
 	kpd_factory_mode_handler();
 	kpd_print("begin kpd_auto_test_for_factorymode!\n");
-#ifdef CONFIG_FPGA_EARLY_PORTING /* mark for fpga bringup */
+#ifndef CONFIG_FPGA_EARLY_PORTING /* mark for fpga bringup */
 	if (pmic_get_register_value(PMIC_PWRKEY_DEB) == 1) {
 		kpd_print("power key release\n");
 	} else {
