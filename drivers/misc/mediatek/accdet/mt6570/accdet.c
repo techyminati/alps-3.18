@@ -39,9 +39,9 @@ int accdet_irq;
 unsigned int gpiopin, headsetdebounce;
 unsigned int accdet_eint_type;
 struct headset_mode_settings *cust_headset_settings;
-#define ACCDET_DEBUG(format, args...)	pr_debug("%s %d "format, __func__, __LINE__, ##args)
-#define ACCDET_INFO(format, args...)	pr_info("%s %d "format, __func__, __LINE__, ##args)
-#define ACCDET_ERROR(format, args...)	pr_info("%s %d "format, __func__, __LINE__, ##args)
+#define ACCDET_DEBUG(format, args...)	pr_debug(format, ##args)
+#define ACCDET_INFO(format, args...)	pr_info(format, ##args)
+#define ACCDET_ERROR(format, args...)	pr_info(format, ##args)
 static void send_accdet_status_event(int cable_type, int status);
 static struct input_dev *kpd_accdet_dev;
 static struct cdev *accdet_cdev;
@@ -504,11 +504,15 @@ static void send_accdet_status_event(int cable_type, int status)
 	switch (cable_type) {
 	case HEADSET_NO_MIC:
 		input_report_switch(kpd_accdet_dev, SW_HEADPHONE_INSERT, status);
+		input_report_switch(kpd_accdet_dev, SW_JACK_PHYSICAL_INSERT, status);
 		input_sync(kpd_accdet_dev);
-		ACCDET_DEBUG("[accdet][send_accdet_status_Inputevent]LineOut %s\n", status?"PlugIn":"PlugOut");
+		ACCDET_DEBUG("[accdet][send_accdet_status_Inputevent]Headphone %s\n",
+			status?"PlugIn":"PlugOut");
 		break;
 	case HEADSET_MIC:
 		input_report_switch(kpd_accdet_dev, SW_MICROPHONE_INSERT, status);
+		input_report_switch(kpd_accdet_dev, SW_HEADPHONE_INSERT, status);
+		input_report_switch(kpd_accdet_dev, SW_JACK_PHYSICAL_INSERT, status);
 		input_sync(kpd_accdet_dev);
 		ACCDET_DEBUG("[accdet][send_accdet_status_Inputevent]MICROPHONE(4-pole) %s\n",
 			status?"PlugIn":"PlugOut");
@@ -1248,6 +1252,7 @@ int mt_accdet_probe(struct platform_device *dev)
 	__set_bit(EV_SW, kpd_accdet_dev->evbit);
 	__set_bit(SW_HEADPHONE_INSERT, kpd_accdet_dev->swbit);
 	__set_bit(SW_MICROPHONE_INSERT, kpd_accdet_dev->swbit);
+	__set_bit(SW_JACK_PHYSICAL_INSERT, kpd_accdet_dev->swbit);
 	__set_bit(SW_LINEOUT_INSERT, kpd_accdet_dev->swbit);
 
 
