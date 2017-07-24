@@ -528,7 +528,7 @@ static snd_pcm_uframes_t mtk_pcm_hdmi_pointer(struct snd_pcm_substream
 static void SetHDMIBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 
-	kal_uint32 volatile u4tmpMrg1;
+	/* kal_uint32 volatile u4tmpMrg1; */
 
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	AFE_BLOCK_T *pblock = &(pMemControl->rBlock);
@@ -550,11 +550,10 @@ static void SetHDMIBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw
 	Afe_Set_Reg(AFE_HDMI_END, pblock->pucPhysBufAddr + (pblock->u4BufferSize - 1), 0xffffffff);
 
 	u4tmpMrg1 = Afe_Get_Reg(AFE_HDMI_BASE);
-#endif
 	u4tmpMrg1 &= 0x00ffffff;
 
 	PRINTK_AUD_HDMI("SetHDMIBuffer AFE_HDMI_BASE =0x%x\n", u4tmpMrg1);
-
+#endif
 }
 
 
