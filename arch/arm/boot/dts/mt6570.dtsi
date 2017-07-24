@@ -201,7 +201,7 @@ mtk-msdc.0 {
 		#interrupt-cells = <2>;
 		interrupt-controller;
 
-		mediatek,max_eint_num = <25>;
+		mediatek,max_eint_num = <26>;
 	};
 
 	ap_ccif0@1000c000 {
