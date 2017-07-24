@@ -4378,6 +4378,7 @@ void iomap(void)
 	muxs[MT_CLKMUX_SMI_GFMUX_SEL].base_addr = CLK_MUX_SEL1;
 	muxs[MT_CLKMUX_USB_GFMUX_SEL].base_addr = CLK_MUX_SEL1;
 	muxs[MT_CLKMUX_SCAM_MUX_SEL].base_addr = CLK_MUX_SEL1;
+	muxs[MT_CLKMUX_NFIECC_FGMUX_SEL].base_addr = CLK_MUX_SEL7;
 
 	plls[ARMPLL].base_addr = ARMPLL_CON0;
 	plls[ARMPLL].pwr_addr = ARMPLL_PWR_CON0;
