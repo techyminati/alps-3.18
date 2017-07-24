@@ -74,6 +74,10 @@ extern struct headset_mode_settings *get_cust_headset_settings(void);
 extern struct headset_key_custom *get_headset_key_custom_setting(void);
 extern void accdet_create_attr_func(void);	/*from accdet_drv.c*/
 extern struct of_device_id accdet_of_match[];
+#ifdef CONFIG_FOUR_KEY_HEADSET
+extern int IMM_GetOneChannelValue(int dwChannel, int data[4], int *rawdata);
+#endif
+
 void mt_accdet_remove(void);
 void mt_accdet_suspend(void);
 void mt_accdet_resume(void);
