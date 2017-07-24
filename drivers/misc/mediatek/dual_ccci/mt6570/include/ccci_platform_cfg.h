@@ -106,6 +106,20 @@
 #ifdef CONFIG_FW_LOADER_USER_HELPER
 #define ENABLE_LOAD_IMG_BY_REQUEST_FIRMWARE
 #endif
+
+/*#define FEATURE_GET_TD_EINT_NUM*/
+#define FEATURE_GET_MD_GPIO_NUM
+#define FEATURE_GET_MD_GPIO_VAL
+/* #define FEATURE_GET_MD_ADC_NUM */
+/* #define FEATURE_GET_MD_ADC_VAL */
+#define FEATURE_GET_MD_EINT_ATTR	/*disable for bring up  */
+#define FEATURE_GET_MD_EINT_ATTR_DTS
+/*#define FEATURE_GET_DRAM_TYPE_CLK*/
+/*#define FEATURE_MD_FAST_DORMANCY*/
+#define FEATURE_GET_MD_BAT_VOL
+#define FEATURE_PM_IPO_H	/*disable for bring up */
+/*#define FEATURE_DFO_EN					  Always bring up*/
+
 /*******************AP CCIF register define**********************/
 #define CCIF_BASE			(AP_CCIF_BASE)
 #define CCIF_CON(addr)			((addr) + 0x0100)
