@@ -25,6 +25,10 @@
 /*----------------------------------------------------------------------
 static variable defination
 ----------------------------------------------------------------------*/
+#ifdef CONFIG_FOUR_KEY_HEADSET
+#define AUX_IN2_KEY (12)
+static int g_FourKey_ADC_channel = AUX_IN2_KEY;
+#endif
 
 #define REGISTER_VALUE(x)   (x - 1)
 static int button_press_debounce = 0x400;
@@ -524,10 +528,24 @@ static void multi_key_detection(int current_status)
 {
 	int m_key = 0;
 	int cali_voltage = 0;
+#ifdef CONFIG_FOUR_KEY_HEADSET
+	int data[4], adc_raw = 0, ap_key_vol = 0;
+#endif
 
 	if (0 == current_status) {
 		cali_voltage = PMIC_IMM_GetOneChannelValue(MULTIKEY_ADC_CHANNEL, 1, 1);
-		/*ACCDET_DEBUG("[Accdet]adc cali_voltage1 = %d mv\n", cali_voltage);*/
+		/*ACCDET_DEBUG("[Accdet]adc cali_voltage1 = %d mV\n", cali_voltage);*/
+#ifdef CONFIG_FOUR_KEY_HEADSET
+		if (cali_voltage < 100) {
+			IMM_GetOneChannelValue(g_FourKey_ADC_channel, data, &adc_raw);
+			ap_key_vol = (data[0] * 1000 + data[2]) * 189 / 169;
+			/*skip the case that user press the key very very quickly and repeatedly*/
+			if (ap_key_vol > 130 || ap_key_vol - cali_voltage > 35 || cali_voltage - ap_key_vol > 35)
+				cali_voltage = 1500;
+			else if (ap_key_vol < cali_voltage)
+				cali_voltage = ap_key_vol;
+		}
+#endif
 		m_key = cur_key = key_check(cali_voltage);
 	}
 	mdelay(30);
@@ -888,13 +906,13 @@ void accdet_get_dts_data(void)
 		of_property_read_u32(node, "accdet-mic-mode", &accdet_dts_data.accdet_mic_mode);
 		#ifdef CONFIG_FOUR_KEY_HEADSET
 		of_property_read_u32_array(node, "headset-four-key-threshold", four_key, ARRAY_SIZE(four_key));
-		memcpy(&accdet_dts_data.four_key, four_key+1, sizeof(four_key));
+		memcpy(&accdet_dts_data.four_key, four_key+1, sizeof(struct four_key_threshold));
 		ACCDET_INFO("[Accdet]mid-Key = %d, voice = %d, up_key = %d, down_key = %d\n",
 		     accdet_dts_data.four_key.mid_key_four, accdet_dts_data.four_key.voice_key_four,
 		     accdet_dts_data.four_key.up_key_four, accdet_dts_data.four_key.down_key_four);
 		#else
 		of_property_read_u32_array(node, "headset-three-key-threshold", three_key, ARRAY_SIZE(three_key));
-		memcpy(&accdet_dts_data.three_key, three_key+1, sizeof(three_key));
+		memcpy(&accdet_dts_data.three_key, three_key+1, sizeof(struct three_key_threshold));
 		ACCDET_INFO("[Accdet]mid-Key = %d, up_key = %d, down_key = %d\n",
 		     accdet_dts_data.three_key.mid_key, accdet_dts_data.three_key.up_key,
 		     accdet_dts_data.three_key.down_key);
