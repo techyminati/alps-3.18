@@ -1361,6 +1361,7 @@ static long ISP_Buf_CTRL_FUNC_FRMB(unsigned long Param)
 		case ISP_RT_BUF_CTRL_ENQUE_FRMB:
 		case ISP_RT_BUF_CTRL_ENQUE_IMD_FRMB:
 			/*  */
+			deque_buf.sof_cnt = 0;
 			if (copy_from_user
 			    (&rt_buf_info, (void __user *)rt_buf_ctrl.data_ptr,
 			     sizeof(ISP_RT_BUF_INFO_STRUCT_FRMB)) == 0) {
