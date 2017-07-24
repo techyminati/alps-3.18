@@ -68,14 +68,26 @@ static int systracker_platform_hook_fault(void)
 {
 
 #ifdef CONFIG_ARM_LPAE
-	hook_fault_code(0x10, systracker_handler, SIGTRAP, 0,
+	hook_fault_code(0x10,
+			systracker_handler,
+			SIGTRAP,
+			0,
 			"Systracker debug exception");
-	hook_fault_code(0x11, systracker_handler, SIGTRAP, 0,
+	hook_fault_code(0x11,
+			systracker_handler,
+			SIGTRAP,
+			0,
 			"Systracker debug exception");
 #else
-	hook_fault_code(0x8, systracker_handler, SIGTRAP, 0,
+	hook_fault_code(0x8,
+			systracker_handler,
+			SIGTRAP,
+			0,
 			"Systracker debug exception");
-	hook_fault_code(0x16, systracker_handler, SIGTRAP, 0,
+	hook_fault_code(0x16,
+			systracker_handler,
+			SIGTRAP,
+			0,
 			"Systracker debug exception");
 #endif
 	return 0;
