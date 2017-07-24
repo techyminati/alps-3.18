@@ -27,7 +27,6 @@
 #include "mt-smp.h"
 #include "smp.h"
 #include "hotplug.h"
-#define SRAMROM_BASE (0x100000)
 
 #define SLAVE1_MAGIC_REG (SRAMROM_BASE+0x38)
 #define SLAVE2_MAGIC_REG (SRAMROM_BASE+0x38)
@@ -91,7 +90,7 @@ void __cpuinit mt_smp_secondary_init(unsigned int cpu)
 int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 {
 	unsigned long timeout;
-	static void __iomem *infracfg_ao_base, *sramrom_base;
+	static void __iomem *infracfg_ao_base;
 
 	pr_crit("Boot slave CPU\n");
 
@@ -135,14 +134,12 @@ int __cpuinit mt_smp_boot_secondary(unsigned int cpu, struct task_struct *idle)
 	switch (cpu) {
 	case 1:
 
-/*#ifdef CONFIG_MTK_FPGA*/
-sramrom_base = ioremap(SRAMROM_BASE, 0x1000);
-		/*mt_reg_sync_writel(SLAVE1_MAGIC_NUM, SLAVE1_MAGIC_REG);*/
-		mt_reg_sync_writel(SLAVE1_MAGIC_NUM, sramrom_base+0x38);
+#ifdef CONFIG_MTK_FPGA
+		mt_reg_sync_writel(SLAVE1_MAGIC_NUM, SLAVE1_MAGIC_REG);
 		HOTPLUG_INFO("SLAVE1_MAGIC_NUM:%x\n", SLAVE1_MAGIC_NUM);
 		iounmap(sramrom_base);
-/*#endif*/
-/*		spm_mtcmos_ctrl_cpu1(STA_POWER_ON, 1);*/
+#endif
+		spm_mtcmos_ctrl_cpu1(STA_POWER_ON, 1);
 		break;
 	case 2:
 #ifdef CONFIG_MTK_FPGA
@@ -203,13 +200,9 @@ void __init mt_smp_init_cpus(void)
 
 void __init mt_smp_prepare_cpus(unsigned int max_cpus)
 {
-#if 0
-	mt_reg_sync_writel(virt_to_phys(mt_secondary_startup), SLAVE_JUMP_REG);
-#else
-	static void __iomem *infracfg_ao_base, *sramrom_base;
+	static void __iomem *infracfg_ao_base;
 
 	infracfg_ao_base = ioremap(MT6570_INFRACFG_AO, 0x1000);
-	sramrom_base = ioremap(SRAMROM_BASE, 0x1000);
 	/* enable bootrom power down mode */
 	writel_relaxed(readl(infracfg_ao_base + 0x804) | SW_ROM_PD,
 		       infracfg_ao_base + 0x804);
@@ -219,14 +212,11 @@ void __init mt_smp_prepare_cpus(unsigned int max_cpus)
 	writel_relaxed(virt_to_phys(mt_secondary_startup),
 		       infracfg_ao_base + 0x800);
 
-	mt_reg_sync_writel(virt_to_phys(mt_secondary_startup), sramrom_base+0x34);
 	iounmap(infracfg_ao_base);
-	iounmap(sramrom_base);
 
 
 	/* initial spm_mtcmos memory map */
 	spm_mtcmos_cpu_init();
-#endif
 }
 
 static struct smp_operations mt6570_smp_ops __initdata = {
