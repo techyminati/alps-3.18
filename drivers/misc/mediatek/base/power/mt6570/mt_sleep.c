@@ -409,7 +409,7 @@ void slp_module_init(void)
 	slp_notice("SLEEP_DPIDLE_EN:%d, REPLACE_DEF_WAKESRC:%d, SUSPEND_LOG_EN:%d\n",
 		   SLP_SLEEP_DPIDLE_EN, SLP_REPLACE_DEF_WAKESRC, SLP_SUSPEND_LOG_EN);
 
-#if 0 /* TODO: disable for bring-up */
+#if 1
 	suspend_set_ops(&slp_suspend_ops);
 #endif
 

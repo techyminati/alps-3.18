@@ -393,11 +393,9 @@ static int __init mt_power_management_init(void)
 
 	pm_power_off = mt_power_off;
 
-/* TODO: fix build error */
-#if 0
 	/* cpu dormant driver init */
 	mt_cpu_dormant_init();
-#endif
+
 	spm_module_init();
 	slp_module_init();
 	mt_clkmgr_init();

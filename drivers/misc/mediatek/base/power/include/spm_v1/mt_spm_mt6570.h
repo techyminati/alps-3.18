@@ -229,6 +229,10 @@ extern u32 spm_irq_7;
 #define SPM_PCM_PASR_DPD_0		(SPM_BASE + 0xb60)
 #define SPM_PCM_PASR_DPD_1		(SPM_BASE + 0xb64)
 #define SPM_PCM_PASR_DPD_2		(SPM_BASE + 0xb68)
+#if defined(CONFIG_ARCH_MT6570)
+#define SPM_SLEEP_NFI_SRAM_CON		(SPM_BASE + 0xc38)
+#define SPM_SLEEP_UFOZIP_SRAM_CON	(SPM_BASE + 0xc3c)
+#endif
 #define SPM_PCM_PASR_DPD_3		(SPM_BASE + 0xb6c)
 #define SPM_SLEEP_CA7_WFI0_EN		(SPM_BASE + 0xf00)
 #define SPM_SLEEP_CA7_WFI1_EN		(SPM_BASE + 0xf04)
@@ -416,6 +420,15 @@ void spm_ap_bsi_gen(unsigned int *clk_buf_cfg);
 
 
 unsigned int spm_get_cpu_pwr_status(void);
+
+#if defined(CONFIG_ARCH_MT6570)
+/* ufozip sram pwr control */
+unsigned int spm_get_sleep_ufozip_sram_config(void);
+void spm_set_sleep_ufozip_sram_config(int sram_pdn);
+/* nfi sram pwr control */
+unsigned int spm_get_sleep_nfi_sram_config(void);
+void spm_set_sleep_nfi_sram_config(int sram_pdn, int sram_ckiso, int sram_sleep_b, int sram_isoint_b);
+#endif
 
 /**************************************
  * Macro and Inline
