@@ -1863,4 +1863,16 @@ mtk-msdc.0 {
 		#mediatek,clkbuf-config = <2 1 1 1>;
 	};
 
+	bat_meter: bat_meter {
+		compatible = "mediatek,bat_meter";
+	};
+
+	BAT_NOTIFY {
+		compatible = "mediatek,bat_notify";
+	};
+
+	bat_comm: bat_comm {
+		compatible = "mediatek,battery";
+	};
+
 };
