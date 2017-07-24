@@ -20,12 +20,10 @@
 #include "disp_event.h"
 #include "ddp_ovl.h"
 
-#if 0
 #ifdef CONFIG_FPGA_EARLY_PORTING
-
+#ifndef CONFIG_MTK_CLKMGR
 #define enable_clock(...)
 #define disable_clock(...)
-
 #endif
 #endif
 

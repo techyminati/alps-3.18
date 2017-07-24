@@ -856,6 +856,7 @@ static int larb_clock_off(int larb)
 		M4UMSG("error: unknown larb id  %d, %s\n", larb, __func__);
 	break;
 	}
+
 	return 0;
 }
 

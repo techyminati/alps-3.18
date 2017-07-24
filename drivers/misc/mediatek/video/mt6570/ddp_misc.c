@@ -19,9 +19,9 @@
 #include "ddp_aal.h"
 #include "ddp_pwm.h"
 #include "ddp_dither.h"
-/* #include <mach/mt_irq.h> */
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
-
+#endif
 #include"ddp_misc.h"
 
 #include "disp_log.h"

@@ -12,7 +12,9 @@
  */
 
 #define LOG_TAG "OVL"
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #include <linux/delay.h>
 #include "ddp_info.h"
 #include "ddp_hal.h"

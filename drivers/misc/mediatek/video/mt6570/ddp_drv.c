@@ -56,7 +56,9 @@
 /* #include <mach/mt_reg_base.h> */
 /* #include <mach/mt_irq.h> */
 /* #include <mach/irqs.h> */
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #include <mt-plat/sync_write.h>
 #include "m4u.h"
 
@@ -452,7 +454,16 @@ static void __exit disp_exit(void)
 
 }
 
+static int __init disp_init_debug_buffer(void)
+{
+	pr_warn("Init the disp log buffer\n");
+	init_log_buffer();
+
+	return 0;
+}
+
 #ifndef MTK_FB_DO_NOTHING
+arch_initcall(disp_init_debug_buffer);
 module_init(disp_init);
 module_exit(disp_exit);
 #endif

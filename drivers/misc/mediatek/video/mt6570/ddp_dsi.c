@@ -66,7 +66,7 @@ static void __iomem *ddp_apmixed_base;
 #define AP_PLL_CON0 (ddp_apmixed_base + 0x00)
 #endif
 
-#define clk_readl(addr) DRV_Reg32(addr)
+#define clk_readl(addr) INREG32(addr)
 #define clk_writel(addr, val) mt_reg_sync_writel(val, addr)
 #define clk_setl(addr, val) mt_reg_sync_writel(clk_readl(addr) | (val), addr)
 #define clk_clrl(addr, val) mt_reg_sync_writel(clk_readl(addr) & ~(val), addr)
@@ -410,7 +410,8 @@ DSI_STATUS DSI_DisableClk(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 
 void DSI_sw_clk_trail(int module_idx)
 {
-	DEFINE_SPINLOCK(s_lock);
+	static DEFINE_SPINLOCK(s_lock);
+
 	unsigned long flags;
 
 	register unsigned long *SW_CTRL_CON0_addr;
@@ -1498,10 +1499,8 @@ void DSI_PHY_clk_setting(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_DSI_PA
 
 void DSI_PHY_TIMCONFIG(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_DSI_PARAMS *dsi_params)
 {
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	int i = 0;
-#ifdef CONFIG_FPGA_EARLY_PORTING
-	return 0;
-#endif
 
 	struct DSI_PHY_TIMCON0_REG timcon0;
 	struct DSI_PHY_TIMCON1_REG timcon1;
@@ -1633,6 +1632,8 @@ void DSI_PHY_TIMCONFIG(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, LCM_DSI_PARA
 			  INREG32(&DSI_REG[i]->DSI_PHY_TIMECON2),
 			  INREG32(&DSI_REG[i]->DSI_PHY_TIMECON3));
 	}
+
+#endif /* CONFIG_FPGA_EARLY_PORTING */
 }
 
 
@@ -2055,7 +2056,7 @@ void DSI_set_cmdq_V2(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, unsigned cmd, 
 	unsigned long goto_addr, mask_para, set_para;
 	DSI_T0_INS t0;
 	DSI_T2_INS t2;
-	/* DISPFUNC(); */
+
 	for (d = DSI_MODULE_BEGIN(module); d <= DSI_MODULE_END(module); d++) {
 		if (0 != DSI_REG[d]->DSI_MODE_CTRL.MODE) {	/* not in cmd mode */
 			struct DSI_VM_CMD_CON_REG vm_cmdq;
@@ -2757,10 +2758,12 @@ void DSI_ChangeClk(DISP_MODULE_ENUM module, uint32_t clk)
 
 int ddp_dsi_init(DISP_MODULE_ENUM module, void *cmdq)
 {
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	DSI_STATUS ret = DSI_STATUS_OK;
+#endif
 	int i = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	/* DSI_OUTREG32(cmdq, 0xf0000048, 0x80000000); */
 	/* DSI_OUTREG32(cmdq, MMSYS_CONFIG_BASE+0x108, 0xffffffff); */
 	/* DSI_OUTREG32(cmdq, MMSYS_CONFIG_BASE+0x118, 0xffffffff); */
@@ -3032,8 +3035,9 @@ int ddp_dsi_config(DISP_MODULE_ENUM module, disp_ddp_path_config *config, void *
 			  _dsi_context[0].dsi_params.PLL_CLOCK);
 		DSI_PHY_clk_setting(module, NULL, dsi_config);
 	}
-
+#ifndef CONFIG_FPGA_EARLY_PORTING
 force_config:
+#endif
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
 		/* if(CMD_MODE == dsi_config->mode) */
 		if (dsi_config->mode == CMD_MODE
@@ -3055,8 +3059,9 @@ force_config:
 	/* Enable clk low power per Line ; */
 	if (dsi_config->clk_lp_per_line_enable)
 		DSI_PHY_CLK_LP_PerLine_config(module, cmdq, dsi_config);
-
+#ifndef CONFIG_FPGA_EARLY_PORTING
 done:
+#endif
 	return 0;
 }
 
@@ -3079,7 +3084,7 @@ int ddp_dsi_stop(DISP_MODULE_ENUM module, void *cmdq_handle)
 	int i = 0;
 	unsigned int tmp = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	/* ths caller should call wait_event_or_idle for frame stop event then. */
 	/* DSI_SetMode(module, cmdq_handle, CMD_MODE); */
 
@@ -3238,7 +3243,9 @@ int ddp_dsi_clk_on(DISP_MODULE_ENUM module, void *cmdq_handle, unsigned int leve
 
 int ddp_dsi_clk_off(DISP_MODULE_ENUM module, void *cmdq_handle, unsigned int level)
 {
+#ifdef ENABLE_CLK_MGR
 	int ret = 0;
+#endif
 
 	if (level > 0)
 		DSI_PHY_clk_switch(module, NULL, false);
@@ -3370,9 +3377,11 @@ int ddp_dsi_reset(DISP_MODULE_ENUM module, void *cmdq_handle)
 
 int ddp_dsi_power_on(DISP_MODULE_ENUM module, void *cmdq_handle)
 {
+#ifdef ENABLE_CLK_MGR
 	int ret = 0;
+#endif
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	/* DSI_DumpRegisters(module,1); */
 	if (!s_isDsiPowerOn) {
@@ -3435,10 +3444,12 @@ int ddp_dsi_power_on(DISP_MODULE_ENUM module, void *cmdq_handle)
 int ddp_dsi_power_off(DISP_MODULE_ENUM module, void *cmdq_handle)
 {
 	int i = 0;
+#ifdef ENABLE_CLK_MGR
 	int ret = 0;
 	unsigned int value = 0;
+#endif
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	/* DSI_DumpRegisters(module,1); */
 
 	if (s_isDsiPowerOn) {
@@ -3495,7 +3506,6 @@ int ddp_dsi_is_busy(DISP_MODULE_ENUM module)
 	int i = 0;
 	int busy = 0;
 	struct DSI_INT_STATUS_REG status;
-	/* DISPFUNC(); */
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
 		status = DSI_REG[i]->DSI_INTSTA;

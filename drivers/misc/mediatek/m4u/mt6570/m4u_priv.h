@@ -27,7 +27,6 @@
 #define M4UMSG(string, args...)	pr_err("[M4U] "string, ##args)
 #define M4UINFO(string, args...) pr_debug("[M4U] "string, ##args)
 
-
 #include "m4u_hw.h"
 
 

@@ -21,8 +21,10 @@
 #include "cmdq_core.h"
 #include "ddp_hal.h"
 
+#ifndef CONFIG_FPGA_EARLY_PORTING
 /* MIPITX and DSI */
 #define ENABLE_CLK_MGR
+#endif
 
 struct MIPITX_DSI_CON_REG {
 	unsigned RG_DSI_LDOCORE_EN:1;

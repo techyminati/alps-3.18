@@ -12,7 +12,9 @@
  */
 
 #define LOG_TAG "WDMA"
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #include <linux/delay.h>
 
 #include "disp_log.h"

@@ -20,6 +20,18 @@
 #include "mmprofile.h"
 #include "disp_log.h"
 
+#define dprec_string_max_length         512
+#define dprec_dump_max_length           (1024 * 16 * 4)
+#define LOGGER_BUFFER_SIZE              (16 * 1024)
+#define ERROR_BUFFER_COUNT              2
+#define FENCE_BUFFER_COUNT              22
+#define DEBUG_BUFFER_COUNT              4
+#define DUMP_BUFFER_COUNT               2
+#define STATUS_BUFFER_COUNT             1
+#define DPREC_ERROR_LOG_BUFFER_LENGTH   \
+	(1024 * 16 + LOGGER_BUFFER_SIZE * \
+	(ERROR_BUFFER_COUNT + FENCE_BUFFER_COUNT + DEBUG_BUFFER_COUNT + DUMP_BUFFER_COUNT + STATUS_BUFFER_COUNT))
+
 extern struct MTKFB_MMP_Events_t {
 	MMP_Event MTKFB;
 	MMP_Event CreateSyncTimeline;

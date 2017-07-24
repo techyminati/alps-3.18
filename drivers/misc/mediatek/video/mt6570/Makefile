@@ -12,6 +12,7 @@
 #
 
 obj-$(CONFIG_MTK_FB) += mtkfb_console.o        \
+			mtkfb.o                \
 			disp_assert_layer.o    \
 			primary_display.o      \
 			disp_lcm.o             \
@@ -51,11 +52,12 @@ ccflags-y +=	-I$(srctree)/drivers/misc/mediatek/video/include/                  
 		-I$(srctree)/drivers/misc/mediatek/base/power/include/                \
 		-I$(srctree)/drivers/misc/mediatek/m4u/$(MTK_PLATFORM)/               \
 		-I$(srctree)/drivers/misc/mediatek/mmp/                               \
-		-I$(srctree)/drivers/misc/mediatek/sync/
+		-I$(srctree)/drivers/misc/mediatek/sync/                              \
+		-I$(srctree)/drivers/staging/android/ion                              \
+		-I$(srctree)/drivers/staging/android/ion/mtk
 
 ccflags-$(CONFIG_MTK_LCM) += -I$(srctree)/drivers/misc/mediatek/lcm/inc/
-ccflags-y += -I$(srctree)/drivers/staging/android/ion \
-             -I$(srctree)/drivers/staging/android/ion/mtk
+
 ccflags-y += -DMET_USER_EVENT_SUPPORT
 
 ifeq ($(CONFIG_MMPROFILE),y)

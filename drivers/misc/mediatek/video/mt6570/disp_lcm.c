@@ -289,7 +289,7 @@ int disp_lcm_init(disp_lcm_handle *plcm, int force)
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 
@@ -319,8 +319,6 @@ int disp_lcm_init(disp_lcm_handle *plcm, int force)
 
 LCM_PARAMS *disp_lcm_get_params(disp_lcm_handle *plcm)
 {
-	/* DISPFUNC(); */
-
 	if (_is_lcm_inited(plcm))
 		return plcm->params;
 	else
@@ -329,7 +327,7 @@ LCM_PARAMS *disp_lcm_get_params(disp_lcm_handle *plcm)
 
 LCM_INTERFACE_ID disp_lcm_get_interface_id(disp_lcm_handle *plcm)
 {
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	if (_is_lcm_inited(plcm))
 		return plcm->lcm_if_id;
@@ -342,7 +340,7 @@ int disp_lcm_update(disp_lcm_handle *plcm, int x, int y, int w, int h,
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 		if (lcm_drv->update) {
@@ -370,7 +368,7 @@ int disp_lcm_esd_check(disp_lcm_handle *plcm)
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 		if (lcm_drv->esd_check)
@@ -388,7 +386,7 @@ int disp_lcm_esd_recover(disp_lcm_handle *plcm)
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 		if (lcm_drv->esd_recover) {
@@ -409,7 +407,7 @@ int disp_lcm_suspend(disp_lcm_handle *plcm)
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 		if (lcm_drv->suspend) {
@@ -433,7 +431,7 @@ int disp_lcm_resume(disp_lcm_handle *plcm)
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 
@@ -461,7 +459,7 @@ int disp_lcm_set_backlight(disp_lcm_handle *plcm, void *handle, int level)
 {
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
 		if (lcm_drv->set_backlight_cmdq) {
@@ -497,7 +495,7 @@ unsigned int disp_lcm_ATA(disp_lcm_handle *plcm)
 	unsigned int ret = 0;
 	LCM_DRIVER *lcm_drv = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	if (_is_lcm_inited(plcm)) {
 		lcm_drv = plcm->drv;
@@ -548,7 +546,6 @@ void *disp_lcm_switch_mode(disp_lcm_handle *plcm, int mode)
 
 int disp_lcm_is_video_mode(disp_lcm_handle *plcm)
 {
-	/* DISPFUNC(); */
 	LCM_PARAMS *lcm_param = NULL;
 
 	if (_is_lcm_inited(plcm))

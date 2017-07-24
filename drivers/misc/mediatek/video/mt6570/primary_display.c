@@ -1907,7 +1907,6 @@ static int _convert_disp_input_to_rdma(RDMA_CONFIG_STRUCT *dst,
 int _trigger_display_interface(int blocking, void *callback,
 			       unsigned int userdata)
 {
-	/* DISPFUNC(); */
 	if (_should_wait_path_idle())
 		dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 					 DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
@@ -2488,7 +2487,6 @@ int primary_display_esd_recovery(void)
 	DISP_STATUS ret = DISP_STATUS_OK;
 	LCM_PARAMS *lcm_param = NULL;
 
-	/* DISPFUNC(); */
 	dprec_logger_start(DPREC_LOGGER_ESD_RECOVERY, 0, 0);
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagStart,
 		       0, 0);
@@ -3352,8 +3350,6 @@ int primary_display_release_fence_fake(void)
 	unsigned int session_id = MAKE_DISP_SESSION(DISP_SESSION_PRIMARY, 0);
 	int i = 0;
 
-	/* DISPFUNC(); */
-
 	for (i = 0; i < PRIMARY_DISPLAY_SESSION_LAYER_COUNT; i++) {
 		if (i == primary_display_get_option("ASSERT_LAYER")
 		    && is_DAL_Enabled()) {
@@ -3847,7 +3843,7 @@ int primary_display_start(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_lock(__func__);
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
@@ -3867,7 +3863,7 @@ int primary_display_stop(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_lock(__func__);
 
 	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
@@ -4633,11 +4629,13 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 	}
 
 	if (primary_display_is_video_mode()) {
+#ifndef CONFIG_FPGA_EARLY_PORTING
 		/* this is sodi global switch option */
 		spm_enable_sodi(1);
 		/* set 1 for CG Mode, 0 for power down mode */
 		/* Video mode does not need to control spm_sodi_mempll_pwr_mode */
 		/* spm_sodi_mempll_pwr_mode(1); */
+#endif
 		MMProfileLogEx(ddp_mmp_get_events()->sodi_enable,
 			       MMProfileFlagPulse, 0, 0);
 	}
@@ -4645,9 +4643,11 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 
 void primary_display_idlemgr_leave_idle(int need_lock)
 {
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	if (primary_display_is_video_mode())
 		spm_enable_sodi(0);
+#endif
 
 	if (primary_display_is_video_mode() &&
 	    disp_helper_get_option(DISP_HELPER_OPTION_IDLEMGR_SWTCH_DECOUPLE)) {
@@ -5146,10 +5146,10 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited
 done:
 
 	dst_module = _get_dst_module_by_lcm(pgc->plcm);
-
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	/* for sodi + decouple mode */
 	enable_soidle_by_bit(MT_CG_DISP0_DISP_WDMA0);
-
+#endif
 	_primary_path_unlock(__func__);
 	return ret;
 }
@@ -5454,7 +5454,7 @@ int primary_display_enable_path_cg(int enable)
 	DISPDBG("%s primary display's path cg\n",
 		enable ? "enable" : "disable");
 	_primary_path_lock(__func__);
-
+#ifdef ENABLE_CLK_MGR
 	if (enable) {
 		ret += disable_clock(MT_CG_DISP0_DISP_OVL0, "DDP");
 		ret += disable_clock(MT_CG_DISP0_DISP_AAL, "DDP");
@@ -5472,7 +5472,7 @@ int primary_display_enable_path_cg(int enable)
 		ret += enable_clock(MT_CG_DISP0_SMI_LARB0, "Debug");
 		ret += enable_clock(MT_CG_DISP0_SMI_COMMON, "Debug");
 	}
-
+#endif
 	_primary_path_unlock(__func__);
 
 	return ret;
@@ -6293,7 +6293,7 @@ int Panel_Master_dsi_config_entry(const char *name, void *config_value)
 	LCM_DRIVER *pLcm_drv = NULL;
 	int esd_check_backup = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	pLcm_drv = DISP_GetLcmDrv();
 	esd_check_backup = atomic_read(&esd_check_task_wakeup);
@@ -6374,7 +6374,7 @@ int primary_display_switch_dst_mode(int mode)
 #ifdef DISP_SWITCH_DST_MODE
 	void *lcm_cmd = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_switch_dst_lock();
 	disp_sw_mutex_lock(&(pgc->capture_lock));
 	if (pgc->plcm->params->type != LCM_TYPE_DSI) {
@@ -6496,7 +6496,6 @@ int primary_display_cmdq_set_reg(unsigned int addr, unsigned int val)
  */
 int primary_display_switch_esd_mode(int mode)
 {
-	/* DISPFUNC(); */
 	int ret = 0;
 
 	if (pgc->plcm->params->dsi.customization_esd_check_enable != 0)

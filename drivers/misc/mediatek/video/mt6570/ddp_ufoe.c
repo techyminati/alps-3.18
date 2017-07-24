@@ -12,7 +12,9 @@
  */
 
 #define LOG_TAG "UFOE"
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #include <linux/delay.h>
 #include "disp_log.h"
 #include "ddp_info.h"

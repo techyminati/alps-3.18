@@ -20,7 +20,9 @@
 #include "m4u.h"
 /* #include <mach/mt6585_pwm.h> */
 /* #include <mach/mt_reg_base.h> */
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 /* #include <mach/mt_irq.h> */
 /* #include <mach/boot.h> */
 /* #include <board-custom.h> */

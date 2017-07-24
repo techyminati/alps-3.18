@@ -12,8 +12,9 @@
  */
 
 #define LOG_TAG "RDMA"
-
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #include <linux/delay.h>
 #include "m4u.h"
 #include "disp_log.h"
@@ -667,23 +668,23 @@ int rdma_config(DISP_MODULE_ENUM module,
 
 int rdma_clock_on(DISP_MODULE_ENUM module, void *handle)
 {
-	unsigned int idx = rdma_index(module);
 #ifdef ENABLE_CLK_MGR
+	unsigned int idx = rdma_index(module);
+
 	if (idx == 0)
 		enable_clock(MT_CG_DISP0_DISP_RDMA0, "RDMA0");
 #endif
-	/* DDPMSG("rdma_%d_clock_on CG 0x%x\n",idx, DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0)); */
 	return 0;
 }
 
 int rdma_clock_off(DISP_MODULE_ENUM module, void *handle)
 {
-	unsigned int idx = rdma_index(module);
 #ifdef ENABLE_CLK_MGR
+	unsigned int idx = rdma_index(module);
+
 	if (idx == 0)
 		disable_clock(MT_CG_DISP0_DISP_RDMA0, "RDMA0");
 #endif
-	/* DDPMSG("rdma_%d_clock_off CG 0x%x\n",idx, DISP_REG_GET(DISP_REG_CONFIG_MMSYS_CG_CON0)); */
 	return 0;
 }
 

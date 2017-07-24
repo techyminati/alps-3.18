@@ -14,6 +14,9 @@
 #define LOG_TAG "ddp_manager"
 #include <linux/slab.h>
 #include <linux/mutex.h>
+#ifdef CONFIG_MTK_CLKMGR
+#include <mach/mt_clkmgr.h>
+#endif
 #include "lcm_drv.h"
 #include "ddp_reg.h"
 #include "ddp_path.h"
@@ -32,7 +35,6 @@
 #include "mtkfb_fence.h"
 #include "primary_display.h"
 #include "mtk_disp_mgr.h"
-#include <mach/mt_clkmgr.h>
 
 #ifdef CONFIG_FOR_SOURCE_PQ
 #include "ddp_color.h"
@@ -900,6 +902,7 @@ int dpmgr_path_reset(disp_path_handle dp_handle, int encmdq)
 	return error > 0 ? -1 : 0;
 }
 
+#ifndef CONFIG_FPGA_EARLY_PORTING
 static unsigned int dpmgr_is_PQ(DISP_MODULE_ENUM module)
 {
 	unsigned int isPQ = 0;
@@ -918,6 +921,7 @@ static unsigned int dpmgr_is_PQ(DISP_MODULE_ENUM module)
 
 	return isPQ;
 }
+#endif
 
 int dpmgr_path_config(disp_path_handle dp_handle, disp_ddp_path_config *config, void *cmdq_handle)
 {

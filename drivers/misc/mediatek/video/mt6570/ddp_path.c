@@ -16,7 +16,9 @@
 
 #include <mt-plat/sync_write.h>
 #include <linux/types.h>
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #include "disp_log.h"
 #include "ddp_reg.h"
 #include "ddp_hal.h"

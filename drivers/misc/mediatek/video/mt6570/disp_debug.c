@@ -24,7 +24,9 @@
 #include <linux/dma-mapping.h>
 #include <linux/interrupt.h>
 #include <mt-plat/aee.h>
+#ifdef CONFIG_MTK_CLKMGR
 #include <mach/mt_clkmgr.h>
+#endif
 #ifdef CONFIG_MTK_LEGACY
 #include <mt-plat/mt_gpio.h>
 #else
