@@ -127,8 +127,8 @@ static struct DEVICE_INFO devapc_devices[] = {
 
 	/* 60 */
 	{"AUDIO",                                   false},
-	{"MD1_PERIPHERALS",                         true},
 	{"CONN_PERIPHERALS",                        false},
+	{"MD1_PERIPHERALS",                         true},
 	{"MFG_0",                                   true},
 	{"MFG_1",                                   true},
 	{"MMSYS_CONFIG",                            true},
