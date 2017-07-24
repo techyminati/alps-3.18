@@ -2086,14 +2086,6 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 					pr_err("[****SD_Debug****]msdc%d's pll source is %d\n",
 					       id, msdc_clock_src[id]);
 					break;
-				case 2:
-					pr_err("[****SD_Debug****]msdc%d's pll source is %d\n",
-					       id, msdc_clock_src[id]);
-					break;
-				case 3:
-					pr_err("[****SD_Debug****]msdc%d's pll source is %d\n",
-					       id, msdc_clock_src[id]);
-					break;
 				}
 			}
 		} else
@@ -2109,10 +2101,6 @@ static ssize_t msdc_debug_proc_write(struct file *file, const char *buf, size_t 
 				base = mtk_msdc_host[0]->base;
 			if (id == 1 && mtk_msdc_host[1])
 				base = mtk_msdc_host[1]->base;
-			if (id == 2 && mtk_msdc_host[2])
-				base = mtk_msdc_host[2]->base;
-			if (id == 3 && mtk_msdc_host[3])
-				base = mtk_msdc_host[3]->base;
 
 			host = mtk_msdc_host[id];
 			if ((offset == 0x18 || offset == 0x1C) && p1 != 4) {
