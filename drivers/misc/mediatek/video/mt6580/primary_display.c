@@ -3316,9 +3316,7 @@ unsigned long get_dim_layer_mva_addr(void)
 {
 	if (dim_layer_mva == 0) {
 		int frame_buffer_size = ALIGN_TO(DISP_GetScreenWidth(),
-						 MTK_FB_ALIGNMENT) *
-		    ALIGN_TO(DISP_GetScreenHeight(), MTK_FB_ALIGNMENT) * 4;
-
+						 MTK_FB_ALIGNMENT) * DISP_GetScreenHeight() * 4;
 #if 0
 		unsigned long dim_layer_va =
 		    pgc->framebuffer_va + (DISP_GetPages() -
@@ -6057,7 +6055,7 @@ uint32_t DISP_GetPages(void)
 uint32_t DISP_GetFBRamSize(void)
 {
 	return ALIGN_TO(DISP_GetScreenWidth(), MTK_FB_ALIGNMENT) *
-	    ALIGN_TO(DISP_GetScreenHeight(), MTK_FB_ALIGNMENT) *
+	    DISP_GetScreenHeight() *
 	    ((DISP_GetScreenBpp() + 7) >> 3) * DISP_GetPages();
 }
 
