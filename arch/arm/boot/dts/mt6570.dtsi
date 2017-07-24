@@ -202,6 +202,7 @@ mtk-msdc.0 {
 		interrupt-controller;
 
 		mediatek,max_eint_num = <26>;
+		mediatek,max_hw_deb_cnt = <25>;
 	};
 
 	ap_ccif0@1000c000 {
