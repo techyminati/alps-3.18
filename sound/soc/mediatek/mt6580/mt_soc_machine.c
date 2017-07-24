@@ -401,8 +401,9 @@ static char const PareGetkeyAna[] = "Getanareg";
 static ssize_t mt_soc_debug_write(struct file *f, const char __user *buf,
 				  size_t count, loff_t *offset)
 {
+#define MAX_DEBUG_WRITE_INPUT 256
 	int ret = 0;
-	char InputString[256];
+	char InputString[MAX_DEBUG_WRITE_INPUT];
 	char *token1 = NULL;
 	char *token2 = NULL;
 	char *token3 = NULL;
@@ -414,11 +415,21 @@ static ssize_t mt_soc_debug_write(struct file *f, const char __user *buf,
 	unsigned int long regvalue = 0;
 	char delim[] = " ,";
 
-	memset((void *)InputString, 0, 256);
-	if (copy_from_user((InputString), buf, count))
-		pr_warn("copy_from_user mt_soc_debug_write count = %zu temp = %s\n", count, InputString);
+	memset((void *)InputString, 0, MAX_DEBUG_WRITE_INPUT);
 
-	temp = kstrdup(InputString, GFP_KERNEL);
+	if (count > MAX_DEBUG_WRITE_INPUT)
+		count = MAX_DEBUG_WRITE_INPUT;
+
+	if (copy_from_user((InputString), buf, count))
+		pr_warn("%s(), copy_from_user fail, mt_soc_debug_write count = %zu, temp = %s\n",
+			__func__, count, InputString);
+
+	temp = kstrndup(InputString, MAX_DEBUG_WRITE_INPUT, GFP_KERNEL);
+	if (!temp) {
+		pr_warn("%s(), kstrndup fail\n", __func__);
+		goto exit;
+	}
+
 	pr_warn("copy_from_user mt_soc_debug_write count = %zu temp = %s pointer = %p\n",
 		count, InputString, InputString);
 	token1 = strsep(&temp, delim);
@@ -479,6 +490,9 @@ static ssize_t mt_soc_debug_write(struct file *f, const char __user *buf,
 	}
 	audckbufEnable(false);
 	AudDrv_Clk_Off();
+
+	kfree(temp);
+exit:
 	return count;
 }
 
