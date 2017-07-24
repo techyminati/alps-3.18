@@ -639,10 +639,10 @@ mtk-msdc.0 {
 	};
 
 	auxadc: adc_hw@11003000 {
-			compatible = "mediatek,ap-auxadc";
-			reg = <0 0x11003000 0 0x1000>;
-			interrupts = <GIC_SPI 35 IRQ_TYPE_EDGE_FALLING>;
-		};
+		compatible = "mediatek,ap-auxadc";
+		reg = <0 0x11003000 0 0x1000>;
+		interrupts = <GIC_SPI 35 IRQ_TYPE_EDGE_FALLING>;
+	};
 
 	fhctl@11004000 {
 		compatible = "mediatek,fhctl";
@@ -704,6 +704,9 @@ mtk-msdc.0 {
 		vtouch-supply = <&mt_pmic_vgp1_ldo_reg>;
 	};
 
+	accdet: accdet {
+		compatible = "mediatek,mt6570-accdet";
+	};
 /* sensor part */
 		hwmsensor@0 {
 			compatible = "mediatek,hwmsensor";
