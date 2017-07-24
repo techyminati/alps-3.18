@@ -2740,13 +2740,15 @@ struct wake_lock pmicThread_lock;
 void wake_up_pmic(void)
 {
 	PMICLOG("[wake_up_pmic]\r\n");
-	wake_up_process(pmic_thread_handle);
-
+	if (pmic_thread_handle != NULL) {
 #ifdef CONFIG_PM_WAKELOCKS
-	__pm_stay_awake(&pmicThread_lock);
+		__pm_stay_awake(&pmicThread_lock);
 #else
-	wake_lock(&pmicThread_lock);
+		wake_lock(&pmicThread_lock);
 #endif
+		wake_up_process(pmic_thread_handle);
+	} else
+		pr_err(PMICTAG "[%s] pmic_thread_handle not ready\n", __func__);
 }
 EXPORT_SYMBOL(wake_up_pmic);
 
@@ -2759,9 +2761,8 @@ void mt_pmic_eint_irq(void)
 #else
 irqreturn_t mt_pmic_eint_irq(int irq, void *desc)
 {
-
-	PMICLOG("[mt_pmic_eint_irq] receive interrupt\n");
 	disable_irq_nosync(irq);
+	PMICLOG("[mt_pmic_eint_irq] disable PMIC irq\n");
 	wake_up_pmic();
 
 	return IRQ_HANDLED;
@@ -2854,18 +2855,17 @@ void PMIC_EINT_SETTING(void)
 	mt_eint_unmask(g_eint_pmic_num);
 TBD */
 #else
-	node = of_find_compatible_node(NULL, NULL, "mediatek, pmic-eint");
+	node = of_find_compatible_node(NULL, NULL, "mediatek,mt6350-pmic");
 	if (node) {
 		of_property_read_u32_array(node, "debounce", ints, ARRAY_SIZE(ints));
 		mt_gpio_set_debounce(ints[0], ints[1]);
 
 		g_pmic_irq = irq_of_parse_and_map(node, 0);
-		ret =
-		    request_irq(g_pmic_irq, mt_pmic_eint_irq, IRQF_TRIGGER_NONE, "pmic-eint", NULL);
+		ret = request_irq(g_pmic_irq, mt_pmic_eint_irq,
+			IRQF_TRIGGER_NONE, "pmic-eint", NULL);
 		if (ret > 0)
 			PMICLOG("EINT IRQ LINENNOT AVAILABLE\n");
 
-		enable_irq(g_pmic_irq);
 		enable_irq_wake(g_pmic_irq);
 	} else
 		PMICLOG("%s can't find compatible node\n", __func__);
@@ -4029,9 +4029,8 @@ static int pmic_mt_probe(struct platform_device *dev)
 	pmic_thread_handle = kthread_create(pmic_thread_kthread, (void *)NULL, "pmic_thread");
 	if (IS_ERR(pmic_thread_handle)) {
 		pmic_thread_handle = NULL;
-		PMICLOG("[pmic_thread_kthread_mt6350] creation fails\n");
+		pr_err(PMICTAG "[pmic_thread_kthread_mt6350] creation fails\n");
 	} else {
-		wake_up_process(pmic_thread_handle);
 		PMICLOG("[pmic_thread_kthread_mt6350] kthread_create Done\n");
 	}
 	PMIC_EINT_SETTING();
