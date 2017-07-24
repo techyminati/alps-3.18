@@ -267,6 +267,25 @@ static void mt_usb_disable(struct musb *musb)
 /* ================================ */
 /* connect and disconnect functions */
 /* ================================ */
+static int usb_rdy; /* default value 0 */
+
+void set_usb_rdy(void)
+{
+	DBG(0, "set usb_rdy, wake up bat\n");
+	usb_rdy = 1;
+#ifndef CONFIG_FPGA_EARLY_PORTING
+	wake_up_bat();
+#endif
+}
+
+kal_bool is_usb_rdy(void)
+{
+	if (usb_rdy)
+		return KAL_TRUE;
+	else
+		return KAL_FALSE;
+}
+
 bool mt_usb_is_device(void)
 {
 	DBG(4, "called\n");
@@ -355,6 +374,9 @@ bool usb_cable_connected(void)
 	return true;
 #else
 
+	if (is_usb_rdy() == KAL_FALSE && mtk_musb->is_ready)
+		set_usb_rdy();
+
 #ifdef CONFIG_USB_MTK_OTG
 #if 0
     /* ALPS00775710 */
@@ -371,7 +393,6 @@ bool usb_cable_connected(void)
 
 /* #ifdef CONFIG_POWER_EXT */
 	/* if (mt_get_charger_type() */
-#ifdef CONFIG_MTK_SMART_BATTERY_FIX
 	 if ((mt_get_charger_type() == STANDARD_HOST) || (mt_get_charger_type() == CHARGING_HOST)
 /* #else */
 /* if (upmu_is_chr_det() */
@@ -381,9 +402,6 @@ bool usb_cable_connected(void)
 	} else {
 		return false;
 	}
-#else
-	return true;
-#endif
 
 #endif /* end FPGA_PLATFORM */
 }
@@ -842,8 +860,9 @@ static int add_usb_i2c_driver(void)
 
 static int mt_usb_init(struct musb *musb)
 {
+#ifndef FPGA_PLATFORM
 	int ret;
-
+#endif
 	DBG(0, "mt_usb_init\n");
 
 	/* phy device added by dtsi, usbphy0 */

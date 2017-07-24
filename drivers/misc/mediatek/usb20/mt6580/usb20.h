@@ -43,7 +43,7 @@ extern unsigned int mt_gpio_to_irq(unsigned int gpio);
 #define SWITCH_CHARGER 1
 #endif
 
-#if defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_FPGA_EARLY_PORTING)
 #define FPGA_PLATFORM 1
 #endif
 
@@ -67,6 +67,7 @@ extern bool upmu_is_chr_det(void);
 extern kal_uint32 upmu_get_rgs_chrdet(void);
 extern void BATTERY_SetUSBState(int usb_state);
 extern void upmu_interrupt_chrdet_int_en(kal_uint32 val);
+extern CHARGER_TYPE mt_get_charger_type(void);
 
 /* specific USB fuctnion */
 typedef enum {
@@ -119,6 +120,7 @@ extern void ncp1854_set_otg_en(unsigned int val);
 #ifdef FPGA_PLATFORM
 extern void USB_PHY_Write_Register8(UINT8 var,  UINT8 addr);
 extern UINT8 USB_PHY_Read_Register8(UINT8 addr);
+extern struct i2c_client *usb_i2c_client;
 #endif
 
 #endif
