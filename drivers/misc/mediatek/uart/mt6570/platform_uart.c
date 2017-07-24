@@ -22,17 +22,17 @@
 #include <linux/serial_core.h>
 #include <linux/serial.h>
 
-#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)
 #include <mach/mt_clkmgr.h>
 #if 0
 #include <mach/mt_idle.h>
 #endif
-#endif				/* defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)*/
+#endif				/* defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)*/
 
-#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_LEGACY) && !defined(CONFIG_FPGA_EARLY_PORTING)
 #include "mach/mt_gpio.h"
 #include <cust_gpio_usage.h>
-#endif /* defined(CONFIG_MTK_LEGACY) && !defined (CONFIG_MTK_FPGA)*/
+#endif /* defined(CONFIG_MTK_LEGACY) && !defined (CONFIG_FPGA_EARLY_PORTING)*/
 
 #include <linux/delay.h>
 #include "include/mtk_uart.h"
@@ -72,7 +72,7 @@ static struct mtk_uart_setting mtk_uart_default_settings[] = {
 	 .tx_trig = UART_FCR_TXFIFO_1B_TRI, .rx_trig = UART_FCR_RXFIFO_12B_TRI,
 
 	 /* .uart_base = AP_UART0_BASE, .irq_num = UART0_IRQ_BIT_ID, .irq_sen = MT_LEVEL_SENSITIVE, */
-#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)
 	 .set_bit = PDN_FOR_UART1, .clr_bit = PDN_FOR_UART1, .pll_id = PDN_FOR_UART1,
 #endif
 	 .sysrq = FALSE, .hw_flow = TRUE, .vff = TRUE,
@@ -82,7 +82,7 @@ static struct mtk_uart_setting mtk_uart_default_settings[] = {
 	 .tx_trig = UART_FCR_TXFIFO_1B_TRI, .rx_trig = UART_FCR_RXFIFO_12B_TRI,
 
 	 /* .uart_base = AP_UART1_BASE, .irq_num = UART1_IRQ_BIT_ID, .irq_sen = MT_LEVEL_SENSITIVE, */
-#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)
 	 .set_bit = PDN_FOR_UART2, .clr_bit = PDN_FOR_UART2, .pll_id = PDN_FOR_UART2,
 #endif
 	 .sysrq = FALSE, .hw_flow = TRUE, .vff = TRUE,
@@ -1448,12 +1448,12 @@ static void mtk_uart_cal_baud(struct mtk_uart *uart, int baudrate, int highspeed
 void mtk_uart_baud_setting(struct mtk_uart *uart, int baudrate)
 {
 	u32 uartclk;
-#if defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_FPGA_EARLY_PORTING)
 	u32 tmp_div;
 #endif
 	uartclk = uart->sysclk;
 
-#if defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_FPGA_EARLY_PORTING)
 	tmp_div = (uartclk) / (unsigned int)baudrate;
 	if (tmp_div > 255)
 		mtk_uart_cal_baud(uart, baudrate, 2);
@@ -1559,7 +1559,7 @@ void mtk_uart_set_flow_ctrl(struct mtk_uart *uart, int mode)
 /*---------------------------------------------------------------------------*/
 void mtk_uart_power_up(struct mtk_uart *uart)
 {
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	struct mtk_uart_setting *setting;
 
 	setting = uart->setting;
@@ -1584,13 +1584,13 @@ void mtk_uart_power_up(struct mtk_uart *uart)
 #endif
 	}
 	MSG(FUC, "%s(%d) => up\n", __func__, uart->poweron_count);
-#endif				/* End of CONFIG_MTK_FPGA */
+#endif				/* End of CONFIG_FPGA_EARLY_PORTING */
 }
 
 /*---------------------------------------------------------------------------*/
 void mtk_uart_power_down(struct mtk_uart *uart)
 {
-#ifndef CONFIG_MTK_FPGA
+#ifndef CONFIG_FPGA_EARLY_PORTING
 	struct mtk_uart_setting *setting;
 
 	setting = uart->setting;
@@ -1615,7 +1615,7 @@ void mtk_uart_power_down(struct mtk_uart *uart)
 #endif
 		MSG(FUC, "%s(%d) => dn\n", __func__, uart->poweron_count);
 	}
-#endif				/* End of CONFIG_MTK_FPGA */
+#endif				/* End of CONFIG_FPGA_EARLY_PORTING */
 }
 
 /*---------------------------------------------------------------------------*/
@@ -2359,7 +2359,7 @@ void mtk_uart_enable_dpidle(struct mtk_uart *uart)
 {
 /* FIX-ME early porting */
 #if 0
-#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)
 	enable_dpidle_by_bit(uart->setting->pll_id);
 	enable_soidle_by_bit(uart->setting->pll_id);
 #endif
@@ -2371,7 +2371,7 @@ void mtk_uart_disable_dpidle(struct mtk_uart *uart)
 {
 /* FIX-ME early porting */
 #if 0
-#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)
 	disable_dpidle_by_bit(uart->setting->pll_id);
 	disable_soidle_by_bit(uart->setting->pll_id);
 #endif

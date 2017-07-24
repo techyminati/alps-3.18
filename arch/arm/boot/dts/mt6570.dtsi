@@ -363,27 +363,27 @@ mtk-msdc.0 {
 	};
 
 	ap_dma_uart0_tx@11000480 {
-			compatible = "mediatek,AP_DMA_UART0_TX";
-			reg = <0 0x11000480 0 0x80>;
-			interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_LOW>;
+		compatible = "mediatek,AP_DMA_UART0_TX";
+		reg = <0 0x11000480 0 0x80>;
+		interrupts = <GIC_SPI 56 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	ap_dma_uart0_rx@11000500 {
-			compatible = "mediatek,AP_DMA_UART0_RX";
-			reg = <0 0x11000500 0 0x80>;
-			interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_LOW>;
+		compatible = "mediatek,AP_DMA_UART0_RX";
+		reg = <0 0x11000500 0 0x80>;
+		interrupts = <GIC_SPI 57 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	ap_dma_uart1_tx@11000580 {
-			compatible = "mediatek,AP_DMA_UART1_TX";
-			reg = <0 0x11000580 0 0x80>;
-			interrupts = <GIC_SPI 58 IRQ_TYPE_LEVEL_LOW>;
+		compatible = "mediatek,AP_DMA_UART1_TX";
+		reg = <0 0x11000580 0 0x80>;
+		interrupts = <GIC_SPI 58 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	ap_dma_uart1_rx@11000600 {
-			compatible = "mediatek,AP_DMA_UART1_RX";
-			reg = <0 0x11000600 0 0x80>;
-			interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_LOW>;
+		compatible = "mediatek,AP_DMA_UART1_RX";
+		reg = <0 0x11000600 0 0x80>;
+		interrupts = <GIC_SPI 59 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	nfi@11001000 {
@@ -410,17 +410,17 @@ mtk-msdc.0 {
 	};
 
 	ap_uart0@11005000 {
-			cell-index = <0>;
-			compatible = "mediatek,AP_UART0";
-			reg = <0 0x11005000 0 0x1000>;
-			interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_LOW>;
+		cell-index = <0>;
+		compatible = "mediatek,AP_UART0";
+		reg = <0 0x11005000 0 0x1000>;
+		interrupts = <GIC_SPI 44 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	ap_uart1@11006000 {
-			cell-index = <1>;
-			compatible = "mediatek,AP_UART1";
-			reg = <0 0x11006000 0 0x1000>;
-			interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_LOW>;
+		cell-index = <1>;
+		compatible = "mediatek,AP_UART1";
+		reg = <0 0x11006000 0 0x1000>;
+		interrupts = <GIC_SPI 45 IRQ_TYPE_LEVEL_LOW>;
 	};
 
 	pwm@11008000 {

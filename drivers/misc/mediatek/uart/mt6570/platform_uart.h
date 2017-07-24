@@ -55,7 +55,7 @@
 /*---------------------------------------------------------------------------*/
 #define UART_MAJOR                  204
 #define UART_MINOR                  209
-#if defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_FPGA_EARLY_PORTING)
 #define UART_NR                     2
 #else
 #define UART_NR                     2
@@ -88,13 +88,13 @@
 #define UART3_VFF_RX_IRQ_ID  AP_DMA_UART2_RX_IRQ_BIT_ID
 #endif
 /*------ PDN Section -----------------------*/
-#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA)
+#if defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING)
 #define PDN_FOR_UART1	MT_CG_UART0_SW_CG
 #define PDN_FOR_UART2	MT_CG_UART1_SW_CG
 /* #define PDN_FOR_UART3 MT_CG_INFRA_UART2 */
 /* #define PDN_FOR_UART4 MT_CG_INFRA_UART3 */
 #define PDN_FOR_DMA     MT_CG_APDMA_SW_CG
-#endif				/* defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_MTK_FPGA) */
+#endif				/* defined(CONFIG_MTK_CLKMGR) && !defined(CONFIG_FPGA_EARLY_PORTING) */
 
 #if (defined(CONFIG_FIQ_DEBUGGER_CONSOLE) && defined(CONFIG_FIQ_DEBUGGER))
 #define DEFAULT_FIQ_UART_PORT           (3)
@@ -116,7 +116,7 @@
 #define MTK_SYSCLK_1536          15360000
 /*---------------------------------------------------------------------------*/
 /*FIXME: MT6593 FPGA porting*/
-#ifdef CONFIG_MTK_FPGA
+#ifdef CONFIG_FPGA_EARLY_PORTING
 #ifdef FIX_TO_26M
 #define UART_SYSCLK                 MTK_SYSCLK_26
 #else
