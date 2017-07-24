@@ -1646,7 +1646,7 @@ long mtk_disp_mgr_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int ret = -1;
 
-	DISPDBG("mtk_disp_mgr_ioctl, cmd=%s, arg=0x%08x\n", _session_ioctl_spy(cmd), arg);
+	DISPDBG("mtk_disp_mgr_ioctl, cmd=%s, arg=0x%lx\n", _session_ioctl_spy(cmd), arg);
 
 	switch (cmd) {
 	case DISP_IOCTL_CREATE_SESSION:
