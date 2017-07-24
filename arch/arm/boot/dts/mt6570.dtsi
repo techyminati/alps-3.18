@@ -144,6 +144,20 @@ mtk-msdc.0 {
 		reg = <0 0x10003000 0 0x1000>;
 	};
 
+	syscfg_pctl_a: syscfg_pctl_a@10211000 {
+		compatible = "mediatek,mt6580-pctl-a-syscfg", "syscon";
+		reg = <0x10211000 0x1000>;
+	};
+
+	pio: pinctrl@10005000 {
+		compatible = "mediatek,mt6580-pinctrl";
+		reg = <0x10005000 0x1000>;
+		mediatek,pctl-regmap = <&syscfg_pctl_a>;
+		pins-are-numbered;
+		gpio-controller;
+		#gpio-cells = <2>;
+	};
+
 	gpio@10005000 {
 		compatible = "mediatek,gpio";
 		reg = <0 0x10005000 0 0x1000>;

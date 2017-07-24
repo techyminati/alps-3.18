@@ -1,15 +1,17 @@
 /*
- * Copyright (C) 2015 MediaTek Inc.
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
- * published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- */
+* Copyright (C) 2016 MediaTek Inc.
+*
+* This program is free software; you can redistribute it and/or modify
+* it under the terms of the GNU General Public License version 2 as
+* published by the Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+* See http://www.gnu.org/licenses/gpl-2.0.html for more details.
+*/
+
+
 
 #ifndef _GPIO_CFG_H_
 #define _GPIO_CFG_H_
@@ -421,18 +423,18 @@ PIN_addr_t PULLEN_addr_t[] = {
   /* 7 */ {"IO_CFG_R_BASE", 0x000},
   /* 8 */ {"IO_CFG_R_BASE", 0x000},
   /* 9 */ {"IO_CFG_B_BASE", 0x000},
-  /* 10 */ {"IO_CFG_B_BASE", 0x000},
-  /* 11 */ {"IO_CFG_B_BASE", 0x000},
-  /* 12 */ {"IO_CFG_B_BASE", 0x000},
+  /* 10 */ {"IO_CFG_B_BASE", 0x030},
+  /* 11 */ {"IO_CFG_B_BASE", 0x030},
+  /* 12 */ {"IO_CFG_B_BASE", 0x030},
   /* 13 */ {"IO_CFG_B_BASE", 0x000},
-  /* 14 */ {"IO_CFG_B_BASE", 0x000},
-  /* 15 */ {"IO_CFG_B_BASE", 0x000},
-  /* 16 */ {"IO_CFG_B_BASE", 0x000},
-  /* 17 */ {"IO_CFG_B_BASE", 0x000},
-  /* 18 */ {"IO_CFG_B_BASE", 0x000},
-  /* 19 */ {"IO_CFG_B_BASE", 0x000},
-  /* 20 */ {"IO_CFG_B_BASE", 0x000},
-  /* 21 */ {"IO_CFG_B_BASE", 0x000},
+  /* 14 */ {"IO_CFG_B_BASE", 0x030},
+  /* 15 */ {"IO_CFG_B_BASE", 0x030},
+  /* 16 */ {"IO_CFG_B_BASE", 0x030},
+  /* 17 */ {"IO_CFG_B_BASE", 0x030},
+  /* 18 */ {"IO_CFG_B_BASE", 0x030},
+  /* 19 */ {"IO_CFG_B_BASE", 0x030},
+  /* 20 */ {"IO_CFG_B_BASE", 0x030},
+  /* 21 */ {"IO_CFG_B_BASE", 0x030},
   /* 22 */ {"IO_CFG_L_BASE", 0x000},
   /* 23 */ {"IO_CFG_L_BASE", 0x000},
   /* 24 */ {"IO_CFG_L_BASE", 0x000},
@@ -514,19 +516,19 @@ PIN_offset PULLEN_offset[] = {
   /* 6 */ {2},
   /* 7 */ {3},
   /* 8 */ {4},
-  /* 9 */ {2},
-  /* 10 */ {3},
-  /* 11 */ {4},
-  /* 12 */ {5},
+  /* 9 */  {11},
+  /* 10 */ {12},
+  /* 11 */ {13},
+  /* 12 */ {14},
   /* 13 */ {6},
-  /* 14 */ {7},
-  /* 15 */ {8},
-  /* 16 */ {9},
-  /* 17 */ {10},
-  /* 18 */ {11},
-  /* 19 */ {12},
-  /* 20 */ {13},
-  /* 21 */ {14},
+  /* 14 */ {15},
+  /* 15 */ {16},
+  /* 16 */ {17},
+  /* 17 */ {18},
+  /* 18 */ {19},
+  /* 19 */ {20},
+  /* 20 */ {21},
+  /* 21 */ {22},
   /* 22 */ {0},
   /* 23 */ {1},
   /* 24 */ {2},
@@ -610,19 +612,19 @@ PIN_addr_t PULL_addr_t[] = {
   /* 6 */ {"IO_CFG_R_BASE", 0x00C},
   /* 7 */ {"IO_CFG_R_BASE", 0x00C},
   /* 8 */ {"IO_CFG_R_BASE", 0x00C},
-  /* 9 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 10 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 11 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 12 */ {"IO_CFG_B_BASE", 0x00C},
+  /* 9 */  {"IO_CFG_B_BASE", 0x018},
+  /* 10 */ {"IO_CFG_B_BASE", 0x018},
+  /* 11 */ {"IO_CFG_B_BASE", 0x018},
+  /* 12 */ {"IO_CFG_B_BASE", 0x018},
   /* 13 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 14 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 15 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 16 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 17 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 18 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 19 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 20 */ {"IO_CFG_B_BASE", 0x00C},
-  /* 21 */ {"IO_CFG_B_BASE", 0x00C},
+  /* 14 */ {"IO_CFG_B_BASE", 0x018},
+  /* 15 */ {"IO_CFG_B_BASE", 0x018},
+  /* 16 */ {"IO_CFG_B_BASE", 0x018},
+  /* 17 */ {"IO_CFG_B_BASE", 0x018},
+  /* 18 */ {"IO_CFG_B_BASE", 0x018},
+  /* 19 */ {"IO_CFG_B_BASE", 0x018},
+  /* 20 */ {"IO_CFG_B_BASE", 0x018},
+  /* 21 */ {"IO_CFG_B_BASE", 0x018},
   /* 22 */ {"IO_CFG_L_BASE", 0x00C},
   /* 23 */ {"IO_CFG_L_BASE", 0x00C},
   /* 24 */ {"IO_CFG_L_BASE", 0x00C},
@@ -704,19 +706,19 @@ PIN_offset PULL_offset[] = {
   /* 6 */ {2},
   /* 7 */ {3},
   /* 8 */ {4},
-  /* 9 */ {2},
-  /* 10 */ {3},
-  /* 11 */ {4},
-  /* 12 */ {5},
+  /* 9 */  {11},
+  /* 10 */ {12},
+  /* 11 */ {13},
+  /* 12 */ {14},
   /* 13 */ {6},
-  /* 14 */ {7},
-  /* 15 */ {8},
-  /* 16 */ {9},
-  /* 17 */ {10},
-  /* 18 */ {11},
-  /* 19 */ {12},
-  /* 20 */ {13},
-  /* 21 */ {14},
+  /* 14 */ {15},
+  /* 15 */ {16},
+  /* 16 */ {17},
+  /* 17 */ {18},
+  /* 18 */ {19},
+  /* 19 */ {20},
+  /* 20 */ {21},
+  /* 21 */ {22},
   /* 22 */ {0},
   /* 23 */ {1},
   /* 24 */ {2},
