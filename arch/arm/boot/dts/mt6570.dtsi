@@ -1878,3 +1878,5 @@ mtk-msdc.0 {
 	};
 
 };
+
+#include <cust.dtsi>
