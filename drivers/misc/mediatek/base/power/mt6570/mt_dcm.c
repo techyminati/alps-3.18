@@ -1528,6 +1528,7 @@ static int mt_dcm_dts_map(void)
 
 int mt_dcm_init(void)
 {
+	return 0;
 	if (dcm_initiated)
 		return 0;
 

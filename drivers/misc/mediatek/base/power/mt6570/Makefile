@@ -39,7 +39,7 @@ obj-y += mt_ptp.o
 endif
 
 #obj-y += mt_golden_setting.o
-#obj-y += mt_dcm.o
+obj-y += mt_dcm.o
 
 obj-y += mt-smp.o
 obj-y += hotplug.o
