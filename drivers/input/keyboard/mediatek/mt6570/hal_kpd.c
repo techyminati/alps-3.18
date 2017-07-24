@@ -36,8 +36,10 @@ static u8 kpd_pwrkey_state = !KPD_PWRKEY_POLARITY;
 #endif
 
 static int kpd_show_hw_keycode = 1;
+#ifdef CONFIG_FPGA_EARLY_PORTING /*mark for fpga bringup*/
 #ifndef EVB_PLATFORM
 static int kpd_enable_lprst = 1;
+#endif
 #endif
 static u16 kpd_keymap_state[KPD_NUM_MEMS] = {
 	0xffff, 0xffff, 0xffff, 0xffff, 0x00ff
@@ -210,6 +212,7 @@ void kpd_auto_test_for_factorymode(void)
 
 	kpd_factory_mode_handler();
 	kpd_print("begin kpd_auto_test_for_factorymode!\n");
+#ifdef CONFIG_FPGA_EARLY_PORTING /* mark for fpga bringup */
 	if (pmic_get_register_value(PMIC_PWRKEY_DEB) == 1) {
 		kpd_print("power key release\n");
 	} else {
@@ -225,11 +228,13 @@ void kpd_auto_test_for_factorymode(void)
 		kpd_pmic_rstkey_handler(1);
 	}
 #endif
+#endif
 }
 
 /********************************************************************/
 void long_press_reboot_function_setting(void)
 {
+#ifdef CONFIG_FPGA_EARLY_PORTING /*mark for fpga bringup */
 #ifndef EVB_PLATFORM
 	if (kpd_enable_lprst && get_boot_mode() == NORMAL_BOOT) {
 		kpd_info("Normal Boot long press reboot selection\n");
@@ -276,6 +281,7 @@ void long_press_reboot_function_setting(void)
 #else
 	pmic_set_register_value(PMIC_RG_PWRKEY_RST_EN, 0x01);
 	pmic_set_register_value(PMIC_RG_HOMEKEY_RST_EN, 0x00);
+#endif
 #endif
 }
 
