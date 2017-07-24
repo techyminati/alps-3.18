@@ -1380,7 +1380,7 @@ static int pwrap_of_iomap(void)
 	struct device_node *toprgu_node;
 	struct device_node *topckgen_node;
 
-	toprgu_node = of_find_compatible_node(NULL, NULL, "mediatek,TOPRGU");
+	toprgu_node = of_find_compatible_node(NULL, NULL, "mediatek,toprgu");
 	if (!toprgu_node) {
 		pr_info("get TOPRGU failed\n");
 		return -ENODEV;
@@ -1392,7 +1392,7 @@ static int pwrap_of_iomap(void)
 		return -ENOMEM;
 	}
 
-	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,TOPCKGEN");
+	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,top_clock_ctrl");
 	if (!topckgen_node) {
 		pr_info("get TOPCKGEN failed\n");
 		return -ENODEV;
@@ -1444,7 +1444,7 @@ static int __init pwrap_hal_init(void)
 	struct device_node *toprgu_node;
 	struct device_node *topckgen_node;
 
-	toprgu_node = of_find_compatible_node(NULL, NULL, "mediatek,TOPRGU");
+	toprgu_node = of_find_compatible_node(NULL, NULL, "mediatek,toprgu");
 	if (!toprgu_node) {
 		pr_info("get TOPRGU failed\n");
 		return -ENODEV;
@@ -1456,7 +1456,7 @@ static int __init pwrap_hal_init(void)
 		return -ENOMEM;
 	}
 
-	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,TOPCKGEN");
+	topckgen_node = of_find_compatible_node(NULL, NULL, "mediatek,top_clock_ctrl");
 	if (!topckgen_node) {
 		pr_info("get TOPCKGEN failed\n");
 		return -ENODEV;
@@ -1468,7 +1468,7 @@ static int __init pwrap_hal_init(void)
 		return -ENOMEM;
 	}
 
-	pwrap_node = of_find_compatible_node(NULL, NULL, "mediatek,PWRAP");
+	pwrap_node = of_find_compatible_node(NULL, NULL, "mediatek,pwrap");
 	if (!pwrap_node) {
 		pr_info("PWRAP get node failed\n");
 		return -ENODEV;
@@ -1514,3 +1514,5 @@ static int __init pwrap_hal_init(void)
 	return ret;
 }
 postcore_initcall(pwrap_hal_init);
+
+
