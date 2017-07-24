@@ -1976,6 +1976,12 @@ void platform_deinit(int md_id)
 }
 static int ccci_plat_probe(struct platform_device *plat_dev)
 {
+	if (!get_modem_is_enabled(MD_SYS1)) {
+		CCCI_MSG_INF(MD_SYS1, "ctl", "modem %d not enable, exit\n", MD_SYS1 + 1);
+		return -1;
+	}
+	CCCI_MSG_INF(MD_SYS1, "ctl", "modem %d enabled\n", MD_SYS1 + 1);
+
 	ccif_plat_drv = plat_dev;
 	CCCI_MSG_INF(-1, "ctl", "ccci_plat_probe (%p)\n", ccif_plat_drv);
 	return 0;
@@ -2077,12 +2083,6 @@ int __init ccci_mach_init(void)
 	ap_infra_base = INFRACFG_AO_BASE;
 	ap_mcu_reg_base = MCUSYS_CFGREG_BASE;
 #endif
-	ret = platform_device_register(&ap_ccif0_plat_dev);
-	if (ret) {
-		CCCI_MSG_INF(-1, "ctl", "ccci_plat_device register fail(%d)\n", ret);
-		return ret;
-	}
-	CCCI_MSG_INF(-1, "ctl", "ccci_plat_device register success\n");
 
 	ret = platform_driver_register(&ap_ccif0_plat_driver);
 	if (ret) {
