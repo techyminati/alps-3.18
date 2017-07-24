@@ -720,9 +720,10 @@ static int base_ops_init02(struct ptp_det *det)
 static int base_ops_mon_mode(struct ptp_det *det)
 {
 #ifndef CPUDVFS_WORKAROUND_FOR_GIT
+#ifdef CONFIG_THERMAL
 	struct TS_PTPOD ts_info;
 	thermal_bank_name ts_bank;
-
+#endif
 	FUNC_ENTER(FUNC_LV_HELP);
 
 	if (!HAS_FEATURE(det, FEA_MON)) {
@@ -2303,7 +2304,7 @@ static int __init ptp_init(void)
 {
 	int err = 0;
 	struct device_node *node = NULL;
-
+	return err;
 	FUNC_ENTER(FUNC_LV_MODULE);
 	node = of_find_compatible_node(NULL, NULL, "mediatek,PTP_FSM");
 

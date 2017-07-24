@@ -34,11 +34,11 @@ obj-y += mt_clkbuf_ctl.o
 obj-y += mt_pm_init.o
 obj-y += mt_sleep.o
 obj-y += mt_gpufreq.o
+obj-y += mt_cpufreq.o
+obj-y += mt_ptp.o
 endif
 
 #obj-y += mt_golden_setting.o
-#obj-y += mt_cpufreq.o
-#obj-y += mt_ptp.o
 #obj-y += mt_dcm.o
 
 obj-y += mt-smp.o

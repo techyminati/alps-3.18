@@ -1149,7 +1149,8 @@ BUG_ON(dds & _BITMASK_(26:24));/* should not use posdiv */
 #if !defined(__KERNEL__) && defined(MTKDRV_FREQHOP)
 		fhdrv_dvt_dvfs_enable(ARMCA7PLL_ID, dds);
 #else				/* __KERNEL__ */
-#ifndef CPUDVFS_WORKAROUND_FOR_GIT
+/* #ifndef CPUDVFS_WORKAROUND_FOR_GIT FIX ME */
+#if 0
 		mt_dfs_armpll(FH_ARMCA7_PLLID, dds);
 #endif
 #endif				/* ! __KERNEL__ */
@@ -1717,7 +1718,8 @@ void mt_cpufreq_thermal_protect(unsigned int limited_power)
 			     p->limited_max_freq, p->limited_max_ncpu);
 
 		cpufreq_unlock(flag);	/* <- unlock */
-#ifndef CPUDVFS_WORKAROUND_FOR_GIT
+/* #ifndef CPUDVFS_WORKAROUND_FOR_GIT FIX ME*/
+#if 0
 		hps_set_cpu_num_limit(LIMIT_THERMAL, p->limited_max_ncpu, 0);
 #endif
 		/* correct opp idx will be calcualted in _thermal_limited_verify() */
@@ -2728,7 +2730,7 @@ static int __init _mt_cpufreq_pdrv_init(void)
 	int ret = 0;
 
 	FUNC_ENTER(FUNC_LV_MODULE);
-
+	return ret;
 #ifdef CONFIG_PROC_FS
 
 	/* init proc */
