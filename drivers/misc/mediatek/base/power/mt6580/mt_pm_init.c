@@ -78,8 +78,8 @@
 
 #endif
 
-#define FREQ_MTR_CTRL_REG               (0x10000000 + 0x10)
-#define FREQ_MTR_CTRL_RDATA		(0x10000000 + 0x14)
+#define FREQ_MTR_CTRL_REG               (FREQ_MTR_CTRL)
+#define FREQ_MTR_CTRL_RDATA		(FREQ_MTR_CTRL + 0x4)
 #define RG_FQMTR_CKDIV_GET(x)           (((x) >> 28) & 0x3)
 #define RG_FQMTR_CKDIV_SET(x)           (((x) & 0x3) << 28)
 #define RG_FQMTR_FIXCLK_SEL_GET(x)      (((x) >> 24) & 0x3)
