@@ -334,7 +334,7 @@ void clk_buf_get_swctrl_status(CLK_BUF_SWCTRL_STATUS_T *status)
 }
 
 
-#if defined(CONFIG_PM)
+#if defined(CONFIG_PM) && defined(CONFIG_MT_ENG_BUILD)
 static ssize_t clk_buf_ctrl_store(struct kobject *kobj,
 		struct kobj_attribute *attr, const char *buf, size_t count)
 {
@@ -454,7 +454,7 @@ bool clk_buf_init(void)
 	}
 #endif				/* ! CONFIG_MTK_LEGACY */
 
-#if defined(CONFIG_PM)
+#if defined(CONFIG_PM) && defined(CONFIG_MT_ENG_BUILD)
 	if (clk_buf_fs_init())
 		return 0;
 #endif
