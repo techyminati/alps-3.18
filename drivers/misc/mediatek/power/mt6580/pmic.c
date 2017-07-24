@@ -145,8 +145,6 @@ static DEFINE_MUTEX(pmic_lock_mutex);
 #define CONFIG_PMIC_HW_ACCESS_EN
 #endif
 
-#define PMICLOG(fmt, arg...)   pr_debug(PMICTAG fmt, ##arg)
-/* #define PMICLOG(fmt, arg...) do{}while(0) */
 
 static DEFINE_MUTEX(pmic_access_mutex);
 
@@ -363,7 +361,7 @@ void mt6350_dump_register(void)
  */
 void upmu_interrupt_chrdet_int_en(unsigned int val)
 {
-	PMICLOG("[upmu_interrupt_chrdet_int_en] val=%d.\r\n", val);
+	PMICLOG_DBG("[upmu_interrupt_chrdet_int_en] val=%d.\r\n", val);
 
 	pmic_set_register_value(PMIC_RG_INT_EN_CHRDET, val);
 }
@@ -377,7 +375,7 @@ unsigned int upmu_get_rgs_chrdet(void)
 	unsigned int val = 0;
 
 	val = pmic_get_register_value(PMIC_RGS_CHRDET);
-	PMICLOG("[upmu_get_rgs_chrdet] CHRDET status = %d\n", val);
+	PMICLOG_DBG("[upmu_get_rgs_chrdet] CHRDET status = %d\n", val);
 
 	return val;
 }
@@ -1562,7 +1560,7 @@ void low_battery_protect_init(void)
 
 void bat_h_int_handler(void)
 {
-	PMICLOG("[bat_h_int_handler]....\n");
+	PMICLOG_DBG("[bat_h_int_handler]....\n");
 
 	/* sub-task */
 #ifdef LOW_BATTERY_PROTECT
@@ -1593,7 +1591,7 @@ void bat_h_int_handler(void)
 
 void bat_l_int_handler(void)
 {
-	PMICLOG("[bat_l_int_handler]....\n");
+	PMICLOG_DBG("[bat_l_int_handler]....\n");
 
 	/* sub-task */
 #ifdef LOW_BATTERY_PROTECT
@@ -1760,7 +1758,7 @@ void battery_oc_protect_reinit(void)
 
 void fg_cur_h_int_handler(void)
 {
-	PMICLOG("[fg_cur_h_int_handler]....\n");
+	PMICLOG_DBG("[fg_cur_h_int_handler]....\n");
 
 	/* sub-task */
 #ifdef BATTERY_OC_PROTECT
@@ -1781,7 +1779,7 @@ void fg_cur_h_int_handler(void)
 
 void fg_cur_l_int_handler(void)
 {
-	PMICLOG("[fg_cur_l_int_handler]....\n");
+	PMICLOG_DBG("[fg_cur_l_int_handler]....\n");
 
 	/* sub-task */
 #ifdef BATTERY_OC_PROTECT
@@ -1931,7 +1929,7 @@ enum hrtimer_restart bat_percent_notify_task(struct hrtimer *timer)
 {
 	bat_percent_notify_flag = true;
 	wake_up_interruptible(&bat_percent_notify_waiter);
-	PMICLOG("bat_percent_notify_task is called\n");
+	PMICLOG_DBG("bat_percent_notify_task is called\n");
 
 	return HRTIMER_NORESTART;
 }
@@ -2368,7 +2366,7 @@ enum hrtimer_restart dlpt_notify_task(struct hrtimer *timer)
 {
 	dlpt_notify_flag = true;
 	wake_up_interruptible(&dlpt_notify_waiter);
-	PMICLOG("dlpt_notify_task is called\n");
+	PMICLOG_DBG("dlpt_notify_task is called\n");
 
 	return HRTIMER_NORESTART;
 }
@@ -2503,7 +2501,7 @@ void pwrkey_int_handler(void)
 	static bool key_press;
 #endif
 
-	PMICLOG("[pwrkey_int_handler] Press pwrkey %d\n", pmic_get_register_value(PMIC_PWRKEY_DEB));
+	PMICLOG_DBG("[pwrkey_int_handler] Press pwrkey %d\n", pmic_get_register_value(PMIC_PWRKEY_DEB));
 	if (pmic_get_register_value(PMIC_PWRKEY_DEB) == 1) {
 #if defined(CONFIG_MTK_KERNEL_POWER_OFF_CHARGING_FIX)
 		if (g_boot_mode == KERNEL_POWER_OFF_CHARGING_BOOT) {
@@ -2557,7 +2555,7 @@ void kpd_pmic_rstkey_handler(unsigned long pressed)
 
 void homekey_int_handler(void)
 {
-	PMICLOG("[homekey_int_handler] Press homekey %d\n",
+	PMICLOG_DBG("[homekey_int_handler] Press homekey %d\n",
 		pmic_get_register_value(PMIC_FCHRKEY_DEB));
 
 #ifdef KPD_PMIC_RSTKEY_MAP
@@ -2575,7 +2573,7 @@ void homekey_int_handler(void)
 
 void chrdet_int_handler(void)
 {
-	PMICLOG("[chrdet_int_handler]CHRDET status = %d....\n",
+	PMICLOG_DBG("[chrdet_int_handler]CHRDET status = %d....\n",
 		pmic_get_register_value(PMIC_RGS_CHRDET));
 
 #ifdef CONFIG_MTK_KERNEL_POWER_OFF_CHARGING
@@ -2602,7 +2600,7 @@ void accdet_int_handler(void)
 {
 	unsigned int ret = 0;
 
-	PMICLOG("[accdet_int_handler]....\n");
+	PMICLOG_DBG("[accdet_int_handler]....\n");
 
 	ret = accdet_irq_handler();
 	if (0 == ret)
@@ -2614,7 +2612,7 @@ void accdet_int_handler(void)
 #ifdef CONFIG_MTK_RTC
 void rtc_int_handler(void)
 {
-	PMICLOG("[rtc_int_handler]....\n");
+	PMICLOG_DBG("[rtc_int_handler]....\n");
 #ifndef CONFIG_EARLY_LINUX_PORTING
 	rtc_irq_handler();
 #endif
@@ -2656,7 +2654,7 @@ struct wake_lock pmicThread_lock;
 
 void wake_up_pmic(void)
 {
-	PMICLOG("[wake_up_pmic]\r\n");
+	PMICLOG_DBG("[wake_up_pmic]\r\n");
 	wake_up_process(pmic_thread_handle);
 
 #ifdef CONFIG_PM_WAKELOCKS
@@ -2677,7 +2675,7 @@ void mt_pmic_eint_irq(void)
 irqreturn_t mt_pmic_eint_irq(int irq, void *desc)
 {
 
-	PMICLOG("[mt_pmic_eint_irq] receive interrupt\n");
+	PMICLOG_DBG("[mt_pmic_eint_irq] receive interrupt\n");
 	disable_irq_nosync(irq);
 	wake_up_pmic();
 
@@ -2697,7 +2695,7 @@ void pmic_enable_interrupt(unsigned int intNo, unsigned int en, char *str)
 		return;
 	}
 
-	PMICLOG("[pmic_enable_interrupt] intno=%d en=%d str=%s shf=%d no=%d [0x%x]=0x%x\r\n", intNo,
+	PMICLOG_DBG("[pmic_enable_interrupt] intno=%d en=%d str=%s shf=%d no=%d [0x%x]=0x%x\r\n", intNo,
 		en, str, shift, no, interrupts[shift].en, upmu_get_reg_value(interrupts[shift].en));
 
 	if (en == 1)
@@ -2722,7 +2720,7 @@ void pmic_register_interrupt_callback(unsigned int intNo, void (EINT_FUNC_PTR) (
 		return;
 	}
 
-	PMICLOG("[pmic_register_interrupt_callback] intno=%d \r\n", intNo);
+	PMICLOG_DBG("[pmic_register_interrupt_callback] intno=%d \r\n", intNo);
 
 	interrupts[shift].interrupts[no].callback = EINT_FUNC_PTR;
 
@@ -2803,7 +2801,7 @@ static void pmic_int_handler(void)
 #if 1
 	int0 = upmu_get_reg_value(MT6350_INT_CON0);
 	int1 = upmu_get_reg_value(MT6350_INT_CON1);
-	PMICLOG("int0 = %x int1 = %x\n", int0, int1);
+	PMICLOG_DBG("int0 = %x int1 = %x\n", int0, int1);
 	upmu_set_reg_value(MT6350_INT_CON0_CLR, 0x0210);	/* bit[9], bit[4] */
 
 #endif
@@ -2816,7 +2814,7 @@ static void pmic_int_handler(void)
 
 		for (j = 0; j < PMIC_INT_WIDTH; j++) {
 			if ((int_status_val) & (1 << j)) {
-				PMICLOG("[PMIC_INT][%s]\n", interrupts[i].interrupts[j].name);
+				PMICLOG_DBG("[PMIC_INT][%s]\n", interrupts[i].interrupts[j].name);
 				if (interrupts[i].interrupts[j].callback != NULL) {
 					interrupts[i].interrupts[j].callback();
 					interrupts[i].interrupts[j].times++;
@@ -2849,7 +2847,7 @@ static int pmic_thread_kthread(void *x)
 
 		for (i = 0; i < ARRAY_SIZE(interrupts); i++) {
 			int_status_val = upmu_get_reg_value(interrupts[i].address);
-			PMICLOG("[PMIC_INT] after ,int_status_val[0x%x]=0x%x\n",
+			PMICLOG_DBG("[PMIC_INT] after ,int_status_val[0x%x]=0x%x\n",
 				interrupts[i].address, int_status_val);
 		}
 
@@ -3974,7 +3972,7 @@ static int pmic_mt_probe(struct platform_device *dev)
 {
 	int ret_device_file = 0, i;
 
-	PMICLOG("******** MT pmic driver probe!! ********\n");
+	PMICLOG_DBG("******** MT pmic driver probe!! ********\n");
 
 	detect_battery_plug_out_status();
 	dump_ldo_status_read_debug();
@@ -4009,7 +4007,7 @@ static int pmic_mt_probe(struct platform_device *dev)
 		PMICLOG("[pmic_thread_kthread_mt6350] creation fails\n");
 	} else {
 		wake_up_process(pmic_thread_handle);
-		PMICLOG("[pmic_thread_kthread_mt6350] kthread_create Done\n");
+		PMICLOG_DBG("[pmic_thread_kthread_mt6350] kthread_create Done\n");
 	}
 	PMIC_EINT_SETTING();
 	PMICLOG("[PMIC_EINT_SETTING] Done\n");
@@ -4123,7 +4121,7 @@ static void pmic_mt_shutdown(struct platform_device *dev)
 
 static int pmic_mt_suspend(struct platform_device *dev, pm_message_t state)
 {
-	PMICLOG("******** MT pmic driver suspend!! ********\n");
+	PMICLOG_DBG("******** MT pmic driver suspend!! ********\n");
 
 #ifdef LOW_BATTERY_PROTECT
 	lbat_min_en_setting(0);
@@ -4175,7 +4173,7 @@ static int pmic_mt_suspend(struct platform_device *dev, pm_message_t state)
 
 static int pmic_mt_resume(struct platform_device *dev)
 {
-	PMICLOG("******** MT pmic driver resume!! ********\n");
+	PMICLOG_DBG("******** MT pmic driver resume!! ********\n");
 
 #ifdef LOW_BATTERY_PROTECT
 	lbat_min_en_setting(0);
