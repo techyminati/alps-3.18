@@ -7938,8 +7938,6 @@ static int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 {
 	struct msdc_host *host = mmc_priv(mmc);
 	int ret = 0;
-	int sdio_res_exist = 0;
-	int error_type_value = 0;
 
 	msdc_init_tune_path(host, mmc->ios.timing);
 	host->tuning_in_progress = true;
@@ -8042,7 +8040,6 @@ static int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 	}
 
 
-out:
 	if (ret) {
 		/* FIX ME, consider to use msdc_dump_info() to replace all */
 		msdc_dump_clock_sts(host);
