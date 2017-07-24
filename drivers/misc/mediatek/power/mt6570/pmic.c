@@ -145,9 +145,6 @@ static DEFINE_MUTEX(pmic_lock_mutex);
 #define CONFIG_PMIC_HW_ACCESS_EN
 #endif
 
-#define PMICLOG(fmt, arg...)   pr_debug(PMICTAG fmt, ##arg)
-/* #define PMICLOG(fmt, arg...) do{}while(0) */
-
 static DEFINE_MUTEX(pmic_access_mutex);
 
 unsigned int pmic_read_interface(unsigned int RegNum, unsigned int *val, unsigned int MASK,

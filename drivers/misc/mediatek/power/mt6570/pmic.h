@@ -16,6 +16,8 @@
 
 
 #define PMIC_DEBUG
+/* enable this to show more low */
+/*#define PMIC_DEBUG_PR_DBG*/
 
 /*
  * The CHIP INFO
@@ -30,7 +32,13 @@
 #define PMICDEB(fmt, arg...)     pr_debug(PMICTAG "cpuid=%d, " fmt, raw_smp_processor_id(), ##arg)
 #define PMICFUC(fmt, arg...)     pr_debug(PMICTAG "cpuid=%d, %s\n", raw_smp_processor_id(), __func__)
 #endif
-#define PMICLOG(fmt, arg...)     pr_debug(PMICTAG fmt, ##arg)
+
+#if defined PMIC_DEBUG_PR_DBG
+#define PMICLOG(fmt, arg...)     pr_err(PMICTAG fmt, ##arg)
+#else
+#define PMICLOG(fmt, arg...)
+#endif  /*-- defined PMIC_DEBUG_PR_DBG --*/
+#define PMICERR(fmt, arg...)     pr_debug(PMICTAG "ERROR,line=%d " fmt, __LINE__, ##arg)
 #define PMICREG(fmt, arg...)     pr_debug(PMICTAG fmt, ##arg)
 
 #define PMIC_EN REGULATOR_CHANGE_STATUS
