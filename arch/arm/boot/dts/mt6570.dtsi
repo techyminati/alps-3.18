@@ -660,7 +660,7 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_LOW>;
 	};
 
-	i2c0@11009000 {
+	i2c0: i2c0@11009000 {
 		compatible = "mediatek,mt6570-i2c";
 		cell-index = <0>;
 		reg = <0 0x11009000 0 0x1000>;
@@ -670,7 +670,7 @@ mtk-msdc.0 {
 		#size-cells = <0>;
 	};
 
-	i2c1@1100a000 {
+	i2c1: i2c1@1100a000 {
 		compatible = "mediatek,mt6570-i2c";
 		cell-index = <1>;
 		reg = <0 0x1100a000 0 0x1000>;
@@ -680,7 +680,7 @@ mtk-msdc.0 {
 		#size-cells = <0>;
 	};
 
-	i2c2@1100b000 {
+	i2c2: i2c2@1100b000 {
 		compatible = "mediatek,mt6570-i2c";
 		cell-index = <2>;
 		reg = <0 0x1100b000 0 0x1000>;
