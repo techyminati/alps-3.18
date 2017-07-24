@@ -2024,7 +2024,7 @@ void msdc_gate_clock(struct msdc_host *host, int delay)
 	spin_unlock_irqrestore(&host->clk_gate_lock, flags);
 }
 
-#ifndef FPGA_PLATFORM
+#ifdef CONFIG_PM
 static void msdc_suspend_clock(struct msdc_host *host)
 {
 	unsigned long flags;
