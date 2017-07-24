@@ -424,9 +424,11 @@ mtk-msdc.0 {
 	};
 
 	sys_cirq@10202000 {
-		compatible = "mediatek,sys_cirq";
+		compatible = "mediatek,mt6580-sys_cirq", "mediatek,mt6735-sys_cirq";
 		reg = <0 0x10202000 0 0x1000>;
 		interrupts = <GIC_SPI 158 IRQ_TYPE_LEVEL_LOW>;
+		mediatek,cirq_num = <126>;
+		mediatek,spi_start_offset = <32>;
 	};
 
 	m4u@10203000 {
