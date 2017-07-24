@@ -395,9 +395,9 @@ static int start_devapc(void)
 
 	init_devpac();
 	for (i = 0; i < ARRAY_SIZE(devapc_devices); ++i) {
+		clear_vio_status(i);
+		unmask_module_irq(i);
 		if (devapc_devices[i].forbidden == true) {
-			clear_vio_status(i);
-			unmask_module_irq(i);
 			set_module_apc(i, E_DOMAIN_1, E_L3);
 		}
 	}

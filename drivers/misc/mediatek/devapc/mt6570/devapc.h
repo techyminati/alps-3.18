@@ -27,9 +27,9 @@
 #define DAPC_INPUT_TYPE_DEBUG_ON	200
 #define DAPC_INPUT_TYPE_DEBUG_OFF	100
 
-/*For EMI API DEVAPC0_D0_VIO_STA_3, idx:105*/
-/*#define INDEX_EMI                105*/
-#define ABORT_EMI                0x200
+/*For EMI API DEVAPC0_D0_VIO_STA_3, idx:104*/
+/*#define INDEX_EMI                104*/
+#define ABORT_EMI                0x100
 /*Define constants*/
 #define DEVAPC_DEVICE_NUMBER    98
 #define DEVAPC_MASK_NUMBER      104
