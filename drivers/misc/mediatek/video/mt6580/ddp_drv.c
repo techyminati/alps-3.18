@@ -430,7 +430,6 @@ static int __init disp_init(void)
 	int ret = 0;
 
 	DISPDBG("Register the disp driver\n");
-	init_log_buffer();
 	if (platform_driver_register(&dispsys_of_driver)) {
 		DISPERR("failed to register disp driver\n");
 		/* platform_device_unregister(&disp_device); */
@@ -453,7 +452,16 @@ static void __exit disp_exit(void)
 
 }
 
+static int __init disp_init_debug_buffer(void)
+{
+	pr_warn("Init the disp log buffer\n");
+	init_log_buffer();
+
+	return 0;
+}
+
 #ifndef MTK_FB_DO_NOTHING
+arch_initcall(disp_init_debug_buffer);
 module_init(disp_init);
 module_exit(disp_exit);
 #endif
