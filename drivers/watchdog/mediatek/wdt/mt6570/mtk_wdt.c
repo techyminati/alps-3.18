@@ -535,7 +535,7 @@ static void wdt_fiq(void *arg, void *regs, void *svc_sp)
 #endif
 
 #if 0
-	asm volatile("mov %0, %1\n\t"
+	asm ("mov %0, %1\n\t"
 		  "mov fp, %2\n\t"
 		 : "=r" (sp)
 		 : "r" (svc_sp), "r" (preg[11])
