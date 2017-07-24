@@ -699,6 +699,59 @@ mtk-msdc.0 {
 		vtouch-supply = <&mt_pmic_vgp1_ldo_reg>;
 	};
 
+/* sensor part */
+		hwmsensor@0 {
+			compatible = "mediatek,hwmsensor";
+		};
+		gsensor@0 {
+			compatible = "mediatek,gsensor";
+		};
+		alsps:als_ps@0 {
+			compatible = "mediatek,als_ps";
+		};
+		m_batch_pl@0 {
+			compatible = "mediatek,m_batch_pl";
+		};
+		batchsensor@0 {
+			compatible = "mediatek,batchsensor";
+		};
+		m_acc_pl@0 {
+			compatible = "mediatek,m_acc_pl";
+		};
+		m_alsps_pl@0 {
+			compatible = "mediatek,m_alsps_pl";
+		};
+		gyro:gyroscope@0 {
+			compatible = "mediatek,gyroscope";
+		};
+		m_gyro_pl@0 {
+			compatible = "mediatek,m_gyro_pl";
+		};
+		barometer@0 {
+			compatible = "mediatek,barometer";
+		};
+		m_baro_pl@0 {
+			compatible = "mediatek,m_baro_pl";
+		};
+		msensor@0 {
+			compatible = "mediatek,msensor";
+		};
+		m_mag_pl@0 {
+			compatible = "mediatek,m_mag_pl";
+		};
+		orientation@0 {
+			compatible = "mediatek,orientation";
+		};
+		als: als {
+			compatible = "mediatek, als-eint";
+		};
+		gse_1: gse_1 {
+			compatible = "mediatek, gse_1-eint";
+			status = "disabled";
+		};
+
+/* sensor end */
+
 	spi@1100c000 {
 		compatible = "mediatek,mt6570-spi";
 		cell-index = <0>;
