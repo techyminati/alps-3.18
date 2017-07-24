@@ -1529,6 +1529,7 @@ DRIVER_ATTR(emi_wp_vio, 0644, emi_wp_vio_show, emi_wp_vio_store);
 
 static void protect_ap_region(void)
 {
+#if 0 /* discard ap region */
 	unsigned int ap_mem_mpu_id, ap_mem_mpu_attr;
 	unsigned int kernel_base;
 	phys_addr_t dram_size;
@@ -1550,6 +1551,7 @@ static void protect_ap_region(void)
 				      (kernel_base+dram_size-1),
 				      ap_mem_mpu_id,
 				      ap_mem_mpu_attr);
+#endif
 }
 
 
@@ -1610,9 +1612,6 @@ static int __init emi_mpu_mod_init(void)
 	       mt_emi_reg_read(EMI_CHKER_TYPE));
 	pr_err("[EMI MPU] EMI_CHKER_ADR = 0x%x\n",
 	       mt_emi_reg_read(EMI_CHKER_ADR));
-
-	/* disable emi mpu */
-	return 0;
 
 	/* Set Device APC initialization for EMI-MPU. */
 	mt_devapc_emi_initial();
