@@ -430,6 +430,7 @@ static int __init disp_init(void)
 	int ret = 0;
 
 	DISPDBG("Register the disp driver\n");
+	init_log_buffer();
 	if (platform_driver_register(&dispsys_of_driver)) {
 		DISPERR("failed to register disp driver\n");
 		/* platform_device_unregister(&disp_device); */
