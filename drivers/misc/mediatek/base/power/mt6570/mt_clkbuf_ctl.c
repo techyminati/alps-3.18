@@ -23,7 +23,7 @@
 /* Include files */
 /*=============================================================*/
 
-/* #define RF_CLK_BUF_BRING_UP // test for bring up */
+#define RF_CLK_BUF_BRING_UP
 
 #ifdef __KERNEL__		/* for kernel */
 
@@ -168,7 +168,10 @@ static void check_clk_buf_regs(void)
 unsigned int CLK_BUF1_STATUS, CLK_BUF2_STATUS, CLK_BUF3_STATUS, CLK_BUF4_STATUS;
 #endif				/* ! CONFIG_MTK_LEGACY */
 
+#ifndef RF_CLK_BUF_BRING_UP
 static int audio_ref_count = 1;
+#endif
+
 static void clk_buf_ctrl_buf1(CLK_BUF_SWCTRL_STATUS_T *status)
 {
 	/* clk_buf_dbg("#@# CLKBUF %d %d %d %d\n", status[0], status[1], status[2], status[3]); */
