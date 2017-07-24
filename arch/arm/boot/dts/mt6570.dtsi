@@ -193,10 +193,15 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 110 IRQ_TYPE_NONE>;
 	};
 
-	apirq@1000b000 {
-		compatible = "mediatek,apirq";
+	eintc: eintc@1000b000 {
+		compatible = "mediatek,mt-eic";
 		reg = <0 0x1000b000 0 0x1000>;
 		interrupts = <GIC_SPI 94 IRQ_TYPE_LEVEL_HIGH>;
+
+		#interrupt-cells = <2>;
+		interrupt-controller;
+
+		mediatek,max_eint_num = <25>;
 	};
 
 	ap_ccif0@1000c000 {
