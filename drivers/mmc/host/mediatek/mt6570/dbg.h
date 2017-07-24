@@ -69,6 +69,7 @@ struct sdio_profile {
 	struct cmd_profile cmd53_rx_blk[100];
 };
 
+#define MTK_MSDC_ERROR_TUNE_DEBUG
 #ifdef MTK_MSDC_ERROR_TUNE_DEBUG
 #define MTK_MSDC_ERROR_NONE (0)
 #define MTK_MSDC_ERROR_CMD_TMO (0x1)

@@ -25,6 +25,7 @@ obj-$(CONFIG_MMC_MTK) += sd.o
 
 obj-$(CONFIG_MMC_MTK) += dbg.o
 obj-$(CONFIG_MMC_MTK) += mt_sd_misc.o
+obj-$(CONFIG_MMC_MTK) += autok.o
 #obj-$(CONFIG_MMC_MTK) += sdio_autok.o sdio_autok_proc.o ettagent.o
 
 # kdump/kpainc interface move to lk

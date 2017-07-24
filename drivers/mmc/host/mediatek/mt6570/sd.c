@@ -81,6 +81,7 @@
 #include "dbg.h"
 
 #include<mt-plat/upmu_common.h>
+#include "autok.h"
 
 /* weiping fix */
 #if 0
@@ -7932,6 +7933,138 @@ static int msdc_card_busy(struct mmc_host *mmc)
 	return 0;
 }
 
+#if 1
+static int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
+{
+	struct msdc_host *host = mmc_priv(mmc);
+	int ret = 0;
+	int sdio_res_exist = 0;
+	int error_type_value = 0;
+
+	msdc_init_tune_path(host, mmc->ios.timing);
+	host->tuning_in_progress = true;
+	#ifndef FPGA_PLATFORM
+    /* pmic_force_vcore_pwm(true);*/
+    /* set PWM mode for MT6351 */
+	#endif
+	msdc_ungate_clock(host);
+	if (host->hw->host_function == MSDC_SD) {
+		if (mmc->ios.timing == MMC_TIMING_UHS_SDR104 ||
+			mmc->ios.timing == MMC_TIMING_UHS_SDR50) {
+			autok_init_sdr104(host);
+			ret = autok_execute_tuning(host, NULL);
+			#if 0
+			if (host->is_autok_done == 0) {
+				pr_err("[AUTOK]SDcard autok\n");
+				ret = autok_execute_tuning(host, sd_autok_res[AUTOK_VCORE_HIGH]);
+				host->is_autok_done = 1;
+			} else {
+				autok_init_sdr104(host);
+				autok_tuning_parameter_init(host, sd_autok_res[AUTOK_VCORE_HIGH]);
+			}
+			#endif
+		}
+	} else if (host->hw->host_function == MSDC_EMMC) {
+		if (mmc->ios.timing == MMC_TIMING_MMC_HS200) {
+			if (opcode == MMC_SEND_STATUS) {
+				pr_err("[AUTOK]eMMC HS200 Tune CMD only\n");
+				ret = hs200_execute_tuning_cmd(host, NULL);
+			} else {
+				pr_err("[AUTOK]eMMC HS200 Tune\n");
+				ret = hs200_execute_tuning(host, NULL);
+			}
+		} else if (mmc->ios.timing == MMC_TIMING_MMC_HS400) {
+			if (opcode == MMC_SEND_STATUS) {
+				pr_err("[AUTOK]eMMC HS400 Tune CMD only\n");
+				ret = hs400_execute_tuning_cmd(host, NULL);
+			} else {
+				pr_err("[AUTOK]eMMC HS400 Tune\n");
+				ret = hs400_execute_tuning(host, NULL);
+			}
+		}
+	} else if (host->hw->host_function == MSDC_SDIO) {
+	#if 0
+		if (host->is_autok_done) {
+			autok_init_sdr104(host);
+			/* Check which vcore setting to apply */
+			if (vcorefs_get_hw_opp() == OPPI_PERF)
+				autok_tuning_parameter_init(host, sdio_autok_res[AUTOK_VCORE_HIGH]);
+			else
+				autok_tuning_parameter_init(host, sdio_autok_res[AUTOK_VCORE_LOW]);
+
+			goto out;
+		}
+		/* HQA need read autok setting from file */
+		sdio_res_exist = sdio_autok_res_exist(host);
+
+		pr_err("[AUTOK]SDIO SDR104 Tune\n");
+		/* Wait DFVS ready for excute autok here */
+		sdio_autok_wait_dvfs_ready();
+
+		/* Performance mode, return 0 pass */
+		if (vcorefs_request_dvfs_opp(KIR_AUTOK_SDIO, OPPI_PERF) != 0)
+			pr_err("vcorefs_request_dvfs_opp@OPPI_PERF fail!\n");
+		if (sdio_res_exist)
+			sdio_autok_res_apply(host, AUTOK_VCORE_HIGH);
+		else
+			autok_execute_tuning(host, sdio_autok_res[AUTOK_VCORE_HIGH]);
+		sdio_set_hw_dvfs(AUTOK_VCORE_HIGH, 0, host);
+
+		/* Low power mode, return 0 pass */
+		if (vcorefs_request_dvfs_opp(KIR_AUTOK_SDIO, OPPI_LOW_PWR) != 0)
+			pr_err("vcorefs_request_dvfs_opp@OPPI_LOW_PWR fail!\n");
+		if (sdio_res_exist)
+			sdio_autok_res_apply(host, AUTOK_VCORE_LOW);
+		else
+			autok_execute_tuning(host, sdio_autok_res[AUTOK_VCORE_LOW]);
+		sdio_set_hw_dvfs(AUTOK_VCORE_LOW, 1, host);
+
+		if (autok_res_check(sdio_autok_res[AUTOK_VCORE_HIGH],
+				sdio_autok_res[AUTOK_VCORE_LOW]) == 0) {
+			pr_err("[AUTOK] No need change para when dvfs\n");
+		} else {
+			pr_err("[AUTOK] Need change para when dvfs\n");
+
+			/* Use HW DVFS */
+			sdio_use_dvfs = 1;
+			/* Enable DVFS handshake */
+			spm_msdc_dvfs_setting(MSDC2_DVFS, 1);
+		}
+
+		/* Un-request, return 0 pass */
+		if (vcorefs_request_dvfs_opp(KIR_AUTOK_SDIO, OPPI_UNREQ) != 0)
+			pr_err("vcorefs_request_dvfs_opp@OPPI_UNREQ fail!\n");
+
+
+		host->is_autok_done = 1;
+		complete(&host->autok_done);
+	#endif
+	}
+
+
+out:
+	if (ret) {
+		/* FIX ME, consider to use msdc_dump_info() to replace all */
+		msdc_dump_clock_sts(host);
+		msdc_dump_ldo_sts(host);
+		pr_err("msdc%d latest_INT_status<0x%.8x>\n", host->id,
+				latest_int_status[host->id]);
+		msdc_dump_register(host);
+		msdc_dump_dbg_register(host);
+	}
+
+	host->tuning_in_progress = false;
+#ifndef FPGA_PLATFORM
+	/* pmic_force_vcore_pwm(false);*/
+    /* set non-PWM mode for MT6351 */
+#endif
+	msdc_gate_clock(host, 1);
+
+	return 0;
+}
+#endif
+#if 0
+/* enable autok */
 int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 {
 #ifdef CONFIG_SDIOAUTOK_SUPPORT
@@ -7942,7 +8075,7 @@ int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 #endif
 	return 0;
 }
-
+#endif
 static void msdc_hw_reset(struct mmc_host *mmc)
 {
 	pr_err("my empty %s\n", __func__);

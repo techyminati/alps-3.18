@@ -627,7 +627,8 @@ enum {
 #define MSDC_HW_DBG3_SEL         (0x1f << 24)
 #define MSDC_HW_DBG_WRAPTYPE_SEL (0x3UL  << 29)
 
-#if defined(MSDC0_EMMC50_SUPPORT)
+/* #if defined(MSDC0_EMMC50_SUPPORT) */
+#if 1
 /* EMMC50_PAD_DS_TUNE mask */
 #define MSDC_EMMC50_PAD_DS_TUNE_DLYSEL  (0x1 << 0)
 #define MSDC_EMMC50_PAD_DS_TUNE_DLY2SEL (0x1 << 1)
@@ -1338,6 +1339,11 @@ struct msdc_host {
 #endif
 	struct work_struct			work_tune; /* new thread tune */
 	struct mmc_request			*mrq_tune; /* backup host->mrq */
+	/* for AUTOK used */
+	int tuning_in_progress;
+	int is_autok_done;
+	int autok_error;
+	int tune_latch_ck_cnt;
 };
 
 struct tag_msdc_hw_para {
