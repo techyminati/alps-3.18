@@ -101,7 +101,6 @@ static void _ovl2mem_path_unlock(const char *caller)
 
 int ovl2mem_get_info(void *info)
 {
-	/* /DISPFUNC(); */
 	disp_session_info *dispif_info = (disp_session_info *) info;
 
 	memset((void *)dispif_info, 0, sizeof(disp_session_info));
@@ -338,7 +337,7 @@ int ovl2mem_input_config(ovl2mem_in_config *input)
 	int i = 0;
 	disp_ddp_path_config *data_config;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_ovl2mem_path_lock(__func__);
 
 	/* all dirty should be cleared in dpmgr_path_get_last_config() */
@@ -458,7 +457,7 @@ int ovl2mem_trigger(int blocking, void *callback, unsigned int userdata)
 {
 	int ret = -1;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	if (pgc->need_trigger_path == 0) {
 		DISPMSG("ovl2mem_trigger do not trigger\n");
@@ -499,7 +498,7 @@ void ovl2mem_wait_done(void)
 	    1)
 		return;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	while ((atomic_read(&g_trigger_ticket) -
 		atomic_read(&g_release_ticket)) > 1) {
@@ -523,7 +522,7 @@ int ovl2mem_deinit(void)
 {
 	int ret = -1;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	_ovl2mem_path_lock(__func__);
 

@@ -401,7 +401,7 @@ static DSI_STATUS DSI_SetBypassRack(DISP_MODULE_ENUM module, cmdqRecHandle cmdq,
 DSI_STATUS DSI_DisableClk(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 {
 #if 0
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++)
 		DSI_OUTREGBIT(cmdq, struct DSI_COM_CTRL_REG, DSI_REG[i]->DSI_COM_CTRL, DSI_EN, 0);
 #endif
@@ -1713,7 +1713,7 @@ void DSI_PHY_clk_switch(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, int on)
 DSI_STATUS DSI_EnableClk(DISP_MODULE_ENUM module, cmdqRecHandle cmdq)
 {
 #if 0
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	int i = 0;
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++)
@@ -2056,7 +2056,7 @@ void DSI_set_cmdq_V2(DISP_MODULE_ENUM module, cmdqRecHandle cmdq, unsigned cmd, 
 	unsigned long goto_addr, mask_para, set_para;
 	DSI_T0_INS t0;
 	DSI_T2_INS t2;
-	/* DISPFUNC(); */
+
 	for (d = DSI_MODULE_BEGIN(module); d <= DSI_MODULE_END(module); d++) {
 		if (0 != DSI_REG[d]->DSI_MODE_CTRL.MODE) {	/* not in cmd mode */
 			struct DSI_VM_CMD_CON_REG vm_cmdq;
@@ -2761,7 +2761,7 @@ int ddp_dsi_init(DISP_MODULE_ENUM module, void *cmdq)
 	DSI_STATUS ret = DSI_STATUS_OK;
 	int i = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	/* DSI_OUTREG32(cmdq, 0xf0000048, 0x80000000); */
 	/* DSI_OUTREG32(cmdq, MMSYS_CONFIG_BASE+0x108, 0xffffffff); */
 	/* DSI_OUTREG32(cmdq, MMSYS_CONFIG_BASE+0x118, 0xffffffff); */
@@ -3080,7 +3080,7 @@ int ddp_dsi_stop(DISP_MODULE_ENUM module, void *cmdq_handle)
 	int i = 0;
 	unsigned int tmp = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	/* ths caller should call wait_event_or_idle for frame stop event then. */
 	/* DSI_SetMode(module, cmdq_handle, CMD_MODE); */
 
@@ -3373,7 +3373,7 @@ int ddp_dsi_power_on(DISP_MODULE_ENUM module, void *cmdq_handle)
 {
 	int ret = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	/* DSI_DumpRegisters(module,1); */
 	if (!s_isDsiPowerOn) {
@@ -3439,7 +3439,7 @@ int ddp_dsi_power_off(DISP_MODULE_ENUM module, void *cmdq_handle)
 	int ret = 0;
 	unsigned int value = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	/* DSI_DumpRegisters(module,1); */
 
 	if (s_isDsiPowerOn) {
@@ -3496,7 +3496,6 @@ int ddp_dsi_is_busy(DISP_MODULE_ENUM module)
 	int i = 0;
 	int busy = 0;
 	struct DSI_INT_STATUS_REG status;
-	/* DISPFUNC(); */
 
 	for (i = DSI_MODULE_BEGIN(module); i <= DSI_MODULE_END(module); i++) {
 		status = DSI_REG[i]->DSI_INTSTA;

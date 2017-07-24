@@ -1907,7 +1907,6 @@ static int _convert_disp_input_to_rdma(RDMA_CONFIG_STRUCT *dst,
 int _trigger_display_interface(int blocking, void *callback,
 			       unsigned int userdata)
 {
-	/* DISPFUNC(); */
 	if (_should_wait_path_idle())
 		dpmgr_wait_event_timeout(pgc->dpmgr_handle,
 					 DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
@@ -2488,7 +2487,6 @@ int primary_display_esd_recovery(void)
 	DISP_STATUS ret = DISP_STATUS_OK;
 	LCM_PARAMS *lcm_param = NULL;
 
-	/* DISPFUNC(); */
 	dprec_logger_start(DPREC_LOGGER_ESD_RECOVERY, 0, 0);
 	MMProfileLogEx(ddp_mmp_get_events()->esd_recovery_t, MMProfileFlagStart,
 		       0, 0);
@@ -3352,8 +3350,6 @@ int primary_display_release_fence_fake(void)
 	unsigned int session_id = MAKE_DISP_SESSION(DISP_SESSION_PRIMARY, 0);
 	int i = 0;
 
-	/* DISPFUNC(); */
-
 	for (i = 0; i < PRIMARY_DISPLAY_SESSION_LAYER_COUNT; i++) {
 		if (i == primary_display_get_option("ASSERT_LAYER")
 		    && is_DAL_Enabled()) {
@@ -3847,7 +3843,7 @@ int primary_display_start(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_lock(__func__);
 	dpmgr_path_start(pgc->dpmgr_handle, CMDQ_DISABLE);
 
@@ -3867,7 +3863,7 @@ int primary_display_stop(void)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_lock(__func__);
 
 	if (dpmgr_path_is_busy(pgc->dpmgr_handle)) {
@@ -4645,7 +4641,7 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 
 void primary_display_idlemgr_leave_idle(int need_lock)
 {
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	if (primary_display_is_video_mode())
 		spm_enable_sodi(0);
 
@@ -6293,7 +6289,7 @@ int Panel_Master_dsi_config_entry(const char *name, void *config_value)
 	LCM_DRIVER *pLcm_drv = NULL;
 	int esd_check_backup = 0;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 
 	pLcm_drv = DISP_GetLcmDrv();
 	esd_check_backup = atomic_read(&esd_check_task_wakeup);
@@ -6374,7 +6370,7 @@ int primary_display_switch_dst_mode(int mode)
 #ifdef DISP_SWITCH_DST_MODE
 	void *lcm_cmd = NULL;
 
-	DISPFUNC();
+	DISPMSG("[DISP] %s\n", __func__);
 	_primary_path_switch_dst_lock();
 	disp_sw_mutex_lock(&(pgc->capture_lock));
 	if (pgc->plcm->params->type != LCM_TYPE_DSI) {
@@ -6496,7 +6492,6 @@ int primary_display_cmdq_set_reg(unsigned int addr, unsigned int val)
  */
 int primary_display_switch_esd_mode(int mode)
 {
-	/* DISPFUNC(); */
 	int ret = 0;
 
 	if (pgc->plcm->params->dsi.customization_esd_check_enable != 0)

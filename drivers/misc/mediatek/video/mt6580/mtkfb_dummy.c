@@ -251,7 +251,7 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 
 	struct mtkfb_device *fbdev = (struct mtkfb_device *)fbi->par;
 
-	/* DISPFUNC(); */
+	DISPMSG("[DISP] %s\n", __func__);
 
 	DISPMSG(
 	"mtkfb_check_var, xres=%u, yres=%u, xres_virtual=%u, yres_virtual=%u, xoffset=%u, yoffset=%u, bits_per_pixel=%u)\n",
