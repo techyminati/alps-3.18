@@ -144,14 +144,9 @@ mtk-msdc.0 {
 		reg = <0 0x10003000 0 0x1000>;
 	};
 
-	syscfg_pctl_a: syscfg_pctl_a@10211000 {
-		compatible = "mediatek,mt6580-pctl-a-syscfg", "syscon";
-		reg = <0x10211000 0x1000>;
-	};
-
 	pio: pinctrl@10005000 {
-		compatible = "mediatek,mt6580-pinctrl";
-		reg = <0x10005000 0x1000>;
+		compatible = "mediatek,mt6570-pinctrl";
+		reg = <0x0 0x10005000 0x0 0x1000>;
 		mediatek,pctl-regmap = <&syscfg_pctl_a>;
 		pins-are-numbered;
 		gpio-controller;
@@ -365,6 +360,11 @@ mtk-msdc.0 {
 		reg = <0 0x10210000 0 0x1000>;
 	};
 
+	syscfg_pctl_a: syscfg_pctl_a@10211000 {
+		compatible = "mediatek,mt6570-pctl-a-syscfg", "syscon";
+		reg = <0x0 0x10211000 0x0 0x1000>;
+	};
+
 	ufozip@11010000 {
 		compatible = "mediatek,ufozip";
 		reg = <0 0x11010000 0 0x1000>;
@@ -442,21 +442,7 @@ mtk-msdc.0 {
 		reg = <0 0x11008000 0 0x1000>;
 		interrupts = <GIC_SPI 36 IRQ_TYPE_LEVEL_LOW>;
 	};
-		syscfg_pctl_a: syscfg_pctl_a@0x10005000 {
-			compatible = "mediatek,mt6580-pctl-a-syscfg", "syscon";
-			reg = <0x10211000 0x1000>;
-			status = "disabled";
-		};
 
-		pio: pinctrl@0x10005000 {
-			compatible = "mediatek,mt6570-pinctrl";
-			reg = <0x10005000 0x1000>;
-			mediatek,pctl-regmap = <&syscfg_pctl_a>;
-			pins-are-numbered;
-			gpio-controller;
-			status = "disabled";
-			#gpio-cells = <2>;
-		};
 	i2c0@11009000 {
 		compatible = "mediatek,mt6570-i2c";
 		cell-index = <0>;
