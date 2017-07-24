@@ -571,9 +571,9 @@ void mtkfb_process_dbg_opt(const char *opt)
 		}
 	} else if (0 == strncmp(opt, "mobile:", 7)) {
 		if (0 == strncmp(opt + 7, "on", 2))
-			gMobilelog = 1;
+			g_mobilelog = 1;
 		else if (0 == strncmp(opt + 7, "off", 3))
-			gMobilelog = 0;
+			g_mobilelog = 0;
 	} else if (0 == strncmp(opt, "diagnose", 8)) {
 		primary_display_diagnose();
 		return;
