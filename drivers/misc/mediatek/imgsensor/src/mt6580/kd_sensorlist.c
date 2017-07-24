@@ -479,14 +479,14 @@ int iMultiReadReg(u16 a_u2Addr, u8 *a_puBuff, u16 i2cId, u8 number)
 		/*  */
 		i4RetValue = i2c_master_send(g_pstI2Cclient, puReadCmd, 2);
 		if (i4RetValue != 2) {
-			PK_ERR("[CAMERA SENSOR] I2C send failed, addr = 0x%x, data = 0x%x !!\n",
+			PK_DBG("[CAMERA SENSOR] I2C send failed, addr = 0x%x, data = 0x%x !!\n",
 			       a_u2Addr, *a_puBuff);
 			return -1;
 		}
 		/*  */
 		i4RetValue = i2c_master_recv(g_pstI2Cclient, (char *)a_puBuff, number);
 		if (i4RetValue != 1) {
-			PK_ERR("[CAMERA SENSOR] I2C read failed!!\n");
+			PK_DBG("[CAMERA SENSOR] I2C read failed!!\n");
 			return -1;
 		}
 	} else {
@@ -496,14 +496,14 @@ int iMultiReadReg(u16 a_u2Addr, u8 *a_puBuff, u16 i2cId, u8 number)
 		/*  */
 		i4RetValue = i2c_master_send(g_pstI2Cclient2, puReadCmd, 2);
 		if (i4RetValue != 2) {
-			PK_ERR("[CAMERA SENSOR] I2C send failed, addr = 0x%x, data = 0x%x !!\n",
+			PK_DBG("[CAMERA SENSOR] I2C send failed, addr = 0x%x, data = 0x%x !!\n",
 			       a_u2Addr, *a_puBuff);
 			return -1;
 		}
 		/*  */
 		i4RetValue = i2c_master_recv(g_pstI2Cclient2, (char *)a_puBuff, number);
 		if (i4RetValue != 1) {
-			PK_ERR("[CAMERA SENSOR] I2C read failed!!\n");
+			PK_DBG("[CAMERA SENSOR] I2C read failed!!\n");
 			return -1;
 		}
 	}

@@ -1276,7 +1276,8 @@ Sleep(60);//delay 2 frame for stable data for calibration
 
 UINT32 GC0310GetSensorID(UINT32 *sensorID)
 {
-    int  retry = 3;
+
+	int retry = 2;
     // check if sensor ID correct
     do {
         *sensorID=((GC0310_read_cmos_sensor(0xf0)<< 8)|GC0310_read_cmos_sensor(0xf1));
