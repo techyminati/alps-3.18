@@ -449,7 +449,6 @@ static int autok_send_tune_cmd(struct msdc_host *host, unsigned int opcode,
 	unsigned long write_tmo = 0;
 	unsigned int left = 0;
 	unsigned int fifo_have = 0;
-	unsigned int fifo_1k_cnt = 0;
 	unsigned int i = 0;
 	int ret = E_RESULT_PASS;
 
@@ -4410,8 +4409,6 @@ int hs200_execute_tuning(struct msdc_host *host, u8 *res)
 	u8 autok_tune_res[TUNING_PARAM_COUNT];
 	unsigned int i = 0;
 	unsigned int value = 0;
-
-	static int ckgen_debug;
 
 	do_gettimeofday(&tm_s);
 	int_en = sdr_read32(MSDC_INTEN);
