@@ -879,13 +879,13 @@ static int larb_clock_all_off(void)
 	return 0;
 }
 
-static void smi_common_clock_on(void)
+void smi_common_clock_on(void)
 {
 	enable_clock(MT_CG_DISP0_SMI_COMMON, "smi_common");
 	/* m4uHw_set_field_by_mask(0, 0xf4000108, 0x1, 0x1); */
 }
 
-static void smi_common_clock_off(void)
+void smi_common_clock_off(void)
 {
 	disable_clock(MT_CG_DISP0_SMI_COMMON, "smi_common");
 	/* m4uHw_set_field_by_mask(0, 0xf4000108, 0x1, 0x0); */

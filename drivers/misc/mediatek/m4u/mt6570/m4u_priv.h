@@ -31,11 +31,11 @@
 #include "m4u_hw.h"
 
 
-/* #define M4U_FPGAPORTING */
+#ifdef CONFIG_FPGA_EARLY_PORTING
+#define M4U_FPGAPORTING
+#endif
 /* #define M4U_PROFILE */
 /* #define M4U_4GBDRAM */
-
-#define aee_kernel_exception_api(...)
 
 #define M4U_DVT 0
 
@@ -88,7 +88,7 @@ extern void show_pte(struct mm_struct *mm, unsigned long addr);
 #define disable_clock(...)
 #define smp_inner_dcache_flush_all(...)
 #define register_larb_monitor(...)
-#if 1
+#if 0
 #define aee_kernel_exception(...)
 #define aee_kernel_warning_api(...)
 #endif
