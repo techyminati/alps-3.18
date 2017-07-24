@@ -4044,6 +4044,7 @@ void slp_check_pm_mtcmos_pll(void)
 	struct cg_clk *clk;
 	int i, j;
 	int skip;
+	int cg_from, cg_to;
 
 
 	slp_chk_mtcmos_pll_stat = 1;
@@ -4062,14 +4063,24 @@ void slp_check_pm_mtcmos_pll(void)
 				/* aee_kernel_warning("Suspend Warning","%s is on", subsyss[i].name); */
 				slp_chk_mtcmos_pll_stat = -1;
 				pr_warn("suspend warning: %s is on!!!\n", syss[i].name);
-				for (j = CG_UPLL_FROM; j < CG_AUDIO_TO; j++) {
+				if (i == SYS_DIS) {
+					cg_from = CG_MMSYS0_FROM;
+					cg_to = CG_MMSYS0_TO;
+				} else if (i == SYS_IMG) {
+					cg_from = CG_IMGSYS_FROM;
+					cg_to = CG_IMGSYS_TO;
+				} else {
+					cg_from = CG_MFGSYS_FROM;
+					cg_to = CG_MFGSYS_TO;
+				}
+				for (j = cg_from; j <= cg_to; j++) {
 					clk = id_to_clk(j);
 					if (!clk || !clk->grp || !clk->ops->check_validity(clk))
 						continue;
 					skip = (clk->cnt == 0) && (clk->state == 0);
 					if (skip)
 						continue;
-					pr_warn(" [%s]state=%u, cnt=%u\n", clk->name, clk->state, clk->cnt);
+					pr_warn(" [%s]sta=%u, cnt=%u\n", clk->name, clk->state, clk->cnt);
 				}
 			}
 		}
