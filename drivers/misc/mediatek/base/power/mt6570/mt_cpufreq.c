@@ -1438,7 +1438,7 @@ static enum mt_cpu_dvfs_id _get_cpu_dvfs_id(unsigned int cpu_id)
 /* Power Table */
 static void _power_calculation(struct mt_cpu_dvfs *p, int oppidx, int ncpu)
 {
-#define CA7_REF_POWER	670	/* mW  */
+#define CA7_REF_POWER	334	/* mW  */
 #define CA7_REF_FREQ	1300000	/* KHz */
 #define CA7_REF_VOLT	115000	/* mV  */
 	int p_dynamic = 0, p_leakage = 0, ref_freq, ref_volt;
