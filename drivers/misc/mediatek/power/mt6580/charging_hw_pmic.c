@@ -226,16 +226,19 @@ static unsigned int charging_hw_init(void *data)
 static unsigned int charging_dump_register(void *data)
 {
 	unsigned int status = STATUS_OK;
-
-	unsigned int reg_val = 0;
 	unsigned int i = 0;
 
-	for (i = MT6350_CHR_CON0; i <= MT6350_CHR_CON29; i += 2) {
-		reg_val = upmu_get_reg_value(i);
-		battery_log(BAT_LOG_CRTI, "[0x%x]=0x%x,", i, reg_val);
+	if (Enable_BATDRV_LOG >= BAT_LOG_FULL) {
+		for (i = MT6350_CHR_CON0; i <= MT6350_CHR_CON29; i += 10) {
+			battery_log(BAT_LOG_CRTI,
+				    "[0x%x]=0x%x,[0x%x]=0x%x,[0x%x]=0x%x,[0x%x]=0x%x,[0x%x]=0x%x\n",
+				    i, upmu_get_reg_value(i),
+				    i + 2, upmu_get_reg_value(i + 2),
+				    i + 4, upmu_get_reg_value(i + 4),
+				    i + 6, upmu_get_reg_value(i + 6),
+				    i + 8, upmu_get_reg_value(i + 8));
+		}
 	}
-
-	battery_log(BAT_LOG_CRTI, "\n");
 
 	return status;
 }
@@ -261,9 +264,6 @@ static unsigned int charging_enable(void *data)
 		pmic_set_register_value(PMIC_RG_PCHR_FLAG_EN, 1);	/* enable debug falg output */
 
 		pmic_set_register_value(PMIC_RG_CHR_EN, 1);	/* CHR_EN */
-
-		if (Enable_BATDRV_LOG == BAT_LOG_FULL)
-			charging_dump_register(NULL);
 	} else {
 		pmic_set_register_value(PMIC_RG_CHRWDT_INT_EN, 0);	/* CHRWDT_INT_EN */
 		pmic_set_register_value(PMIC_RG_CHRWDT_EN, 0);	/* CHRWDT_EN */
