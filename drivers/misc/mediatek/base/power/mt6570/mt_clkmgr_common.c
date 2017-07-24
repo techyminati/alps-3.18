@@ -37,9 +37,6 @@ EXPORT_SYMBOL(enable_clock);
 int disable_clock(enum cg_clk_id id, char *name)
 {
 	int err = 0;
-	pr_debug("%s[%d]: disable by %s\n", __func__, id, name);
-
-	return 0;
 
 	err = mt_disable_clock(id, name);
 
