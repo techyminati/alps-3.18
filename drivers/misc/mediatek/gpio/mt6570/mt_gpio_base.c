@@ -173,7 +173,8 @@ int mt_set_gpio_pull_select_base(unsigned long pin, unsigned long select)
 		}
 		spin_unlock_irqrestore(&mtk_gpio_lock, flags);
 	} else {
-		if (((pin >= 41) && (pin < 58)) || (pin == 64) || (pin == 65) || (pin == 67)
+		if (((pin >= 9) && (pin < 12)) || ((pin >= 14) && (pin < 21)) ||
+			((pin >= 41) && (pin < 58)) || (pin == 64) || (pin == 65) || (pin == 67)
 		    || (pin == 69)) {
 			if (select == GPIO_PULL_DOWN)
 				GPIO_SET_BITS((1L << (PULL_offset[pin].offset)),
@@ -208,7 +209,8 @@ int mt_get_gpio_pull_select_base(unsigned long pin)
 		return (((data & (1L << (PU_offset[pin].offset))) != 0) ? 1 : 0);
 	}
 
-	if (((pin >= 41) && (pin < 58)) || (pin == 64) || (pin == 65) || (pin == 67)
+	if (((pin >= 9) && (pin < 12)) || ((pin >= 14) && (pin < 21)) ||
+		((pin >= 41) && (pin < 58)) || (pin == 64) || (pin == 65) || (pin == 67)
 	    || (pin == 69)) {
 		data = GPIO_RD32(PULL_addr[pin].addr);
 
