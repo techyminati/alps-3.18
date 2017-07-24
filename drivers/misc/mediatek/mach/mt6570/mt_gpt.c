@@ -658,7 +658,7 @@ static void clkevt_handler(unsigned long data)
 
 static inline void setup_clkevt(u32 freq)
 {
-	unsigned int cmp;
+	unsigned int cmp[2];
 	struct clock_event_device *evt = &gpt_clockevent;
 	struct gpt_device *dev = id_to_dev(GPT_CLKEVT_ID);
 
@@ -670,8 +670,8 @@ static inline void setup_clkevt(u32 freq)
 	setup_gpt_dev_locked(dev, GPT_REPEAT, GPT_CLK_SRC_SYS, GPT_CLK_DIV_1,
 			     freq / HZ, clkevt_handler, GPT_ISR);
 
-	__gpt_get_cmp(dev, &cmp);
-	pr_alert("GPT1_CMP = %d, HZ = %d\n", cmp, HZ);
+	__gpt_get_cmp(dev, cmp);
+	pr_alert("GPT1_CMP = %d, HZ = %d\n", cmp[0], HZ);
 
 	clockevents_register_device(evt);
 }
