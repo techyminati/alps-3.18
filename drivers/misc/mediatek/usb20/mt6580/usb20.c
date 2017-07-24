@@ -298,7 +298,7 @@ void mt_usb_connect(void)
 		DBG(0, "!mtk_musb\n");
 	}
 #ifdef CONFIG_MTK_UART_USB_SWITCH
-	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power || (usb_port_mode_temp == 1))
+	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power)
 		return;
 #else
 	if (!mtk_musb || !mtk_musb->is_ready || mtk_musb->is_host || mtk_musb->power)
@@ -630,7 +630,7 @@ static void uart_usb_switch_dump_register(void)
 	DBG(0, "[MUSB]addr: 0x1A, value: %x\n", USBPHY_READ8(0x1A));
 #endif
 	usb_enable_clock(false);
-	DBG(0, "[MUSB]addr: 0x110020B0 (UART0), value: %x\n\n", DRV_Reg8(ap_uart0_base + 0xB0));
+	/* DBG(0, "[MUSB]addr: 0x110020B0 (UART0), value: %x\n\n", DRV_Reg8(ap_uart0_base + 0xB0)); */
 }
 
 static ssize_t mt_usb_show_portmode(struct device *dev, struct device_attribute *attr, char *buf)
@@ -663,7 +663,7 @@ static ssize_t mt_usb_store_portmode(struct device *dev, struct device_attribute
 		DBG(0, "dev is null!!\n");
 		return count;
 	/* } else if (1 == sscanf(buf, "%d", &portmode)) { */
-	} else if (kstrtol(buf, 10, &portmode) == 0) {
+	} else if (kstrtol(buf, 10, (long *)&portmode) == 0) {
 		DBG(0, "\nUSB Port mode: current => %d (port_mode), change to => %d (portmode)\n",
 		    port_mode, portmode);
 		if (portmode >= PORT_MODE_MAX)
@@ -720,7 +720,7 @@ static ssize_t mt_usb_store_tx(struct device *dev, struct device_attribute *attr
 		DBG(0, "dev is null!!\n");
 		return count;
 	/* } else if (1 == sscanf(buf, "%d", &val)) { */
-	} else if (kstrtol(buf, 10, &val) == 0) {
+	} else if (kstrtol(buf, 10, (long *)&val) == 0) {
 		DBG(0, "\n Write TX : %d\n", val);
 
 #ifdef FPGA_PLATFORM

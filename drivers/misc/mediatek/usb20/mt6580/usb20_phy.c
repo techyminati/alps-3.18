@@ -278,8 +278,7 @@ bool usb_phy_check_in_uart_mode(void)
 	usb_enable_clock(false);
 
 	if ((usb_port_mode == 0x5C) ||
-		(usb_port_mode == 0x5E) || (usb_port_mode_temp == 1)) {
-		usb_port_mode_temp = 1;
+		(usb_port_mode == 0x5E)) {
 		return true;
 	} else
 		return false;
@@ -316,13 +315,13 @@ void usb_phy_switch_to_uart(void)
 	/* mtk_uart_usb_rx_sel(1, 1); */
 
 	/* GPIO Selection set UART#1 */
-	/*DRV_WriteReg32(GPIO_BASE_1 + 0x118, 0x02); */	/* set */
+	/* DRV_WriteReg32(GPIO_BASE + 0x118, 0x02); */
 }
 
 
 void usb_phy_switch_to_usb(void)
 {
-	/* DRV_WriteReg32(GPIO_BASE_1 + 0x11C, 0x02); */	/* clear */
+	/* DRV_WriteReg32(GPIO_BASE + 0x11C, 0x02); */	/* clear */
 	usb_enable_clock(true);
 	udelay(50);
 	/* clear force_uart_en */
@@ -332,9 +331,6 @@ void usb_phy_switch_to_usb(void)
 	/* disable the USB clock turned on in usb_phy_poweron() */
 	usb_enable_clock(false);
 
-	usb_port_mode_temp = 0;
-
-	DBG(0, "usb port value in usb function:%d\n", usb_port_mode_temp);
 }
 #endif
 
