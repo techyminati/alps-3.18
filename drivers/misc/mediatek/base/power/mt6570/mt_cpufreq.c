@@ -1070,7 +1070,7 @@ unsigned int ckdiv1_mask = _BITMASK_(4:0);
 		return;
 
 	/* cpufreq_ver("cur_khz = %d, ckdiv1_val = 0x%x\n", cur_khz, ckdiv1_val); */
-#if 0
+
 	if (((cur_khz < CPUFREQ_BOUNDARY_FOR_FHCTL) && (target_khz > CPUFREQ_BOUNDARY_FOR_FHCTL))
 	    || ((target_khz < CPUFREQ_BOUNDARY_FOR_FHCTL)
 		&& (cur_khz > CPUFREQ_BOUNDARY_FOR_FHCTL))) {
@@ -1080,9 +1080,6 @@ unsigned int ckdiv1_mask = _BITMASK_(4:0);
 
 	is_fhctl_used = ((target_khz >= CPUFREQ_BOUNDARY_FOR_FHCTL)
 			 && (cur_khz >= CPUFREQ_BOUNDARY_FOR_FHCTL)) ? 1 : 0;
-#else
-	is_fhctl_used = 0;
-#endif
 
 	cpufreq_ver("@%s():%d, cur_khz = %d, target_khz = %d, is_fhctl_used = %d\n",
 		    __func__, __LINE__, cur_khz, target_khz, is_fhctl_used);
@@ -1090,24 +1087,6 @@ unsigned int ckdiv1_mask = _BITMASK_(4:0);
 	if (!is_fhctl_used) {
 		/* set ca7_clkdiv1_sel */
 		switch (target_khz) {
-#if 1
-		case CPU_DVFS_FREQ0:
-			dds = _cpu_dds_calc(CPU_DVFS_FREQ0);	/* 1001 */
-			sel = 8;	/* 4/4 */
-			break;
-		case CPU_DVFS_FREQ1:
-			dds = _cpu_dds_calc(CPU_DVFS_FREQ1);	/* 1001 */
-			sel = 8;	/* 4/4 */
-			break;
-		case CPU_DVFS_FREQ2:
-			dds = _cpu_dds_calc(CPU_DVFS_FREQ2);	/* 1001 */
-			sel = 8;	/* 4/4 */
-			break;
-		case CPU_DVFS_FREQ3:
-			dds = _cpu_dds_calc(CPU_DVFS_FREQ3);	/* 1001 */
-			sel = 8;	/* 4/4 */
-			break;
-#endif
 		case CPU_DVFS_FREQ4:
 			dds = _cpu_dds_calc(CPU_DVFS_FREQ4);	/* 1001 */
 			sel = 8;	/* 4/4 */
@@ -1170,10 +1149,7 @@ BUG_ON(dds & _BITMASK_(26:24));/* should not use posdiv */
 #if !defined(__KERNEL__) && defined(MTKDRV_FREQHOP)
 		fhdrv_dvt_dvfs_enable(ARMCA7PLL_ID, dds);
 #else				/* __KERNEL__ */
-/* #ifndef CPUDVFS_WORKAROUND_FOR_GIT FIX ME */
-#if 0
 		mt_dfs_armpll(FH_ARMCA7_PLLID, dds);
-#endif
 #endif				/* ! __KERNEL__ */
 	}
 
