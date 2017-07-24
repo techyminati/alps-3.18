@@ -9,6 +9,7 @@
 #include <dt-bindings/interrupt-controller/arm-gic.h>
 #include <dt-bindings/interrupt-controller/irq.h>
 #include <dt-bindings/mmc/mt6570-msdc.h>
+#include "mt6570-pinfunc.h"
 
 / {
 	model = "MT6570";
