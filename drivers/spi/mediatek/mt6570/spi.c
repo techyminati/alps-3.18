@@ -648,11 +648,12 @@ static int mt_spi_next_xfer(struct mt_spi_t *ms, struct spi_message *msg)
 		for (i = 0; i < cnt; i++) {
 			if (xfer->tx_buf == NULL)
 				spi_writel(ms, SPI_TX_DATA_REG, 0);
-			else
+			else {
 				spi_writel(ms, SPI_TX_DATA_REG, *((u32 *) xfer->tx_buf + i));
-			SPI_INFO(&msg->spi->dev, "tx_buf data is:%x\n",
+				SPI_INFO(&msg->spi->dev, "tx_buf data is:%x\n",
 				 *((u32 *) xfer->tx_buf + i));
-			SPI_INFO(&msg->spi->dev, "tx_buf addr is:%p\n", (u32 *) xfer->tx_buf + i);
+				SPI_INFO(&msg->spi->dev, "tx_buf addr is:%p\n", (u32 *) xfer->tx_buf + i);
+			}
 		}
 	}
 	/* Using DMA to send data */
