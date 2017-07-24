@@ -25,15 +25,13 @@
 #include <linux/wakelock.h>
 #include <linux/time.h>
 #include <linux/kthread.h>
-
+#include <mach/mt_spm_mtcmos.h>
+#include <mach/mt_clkmgr.h>
 #include <mt-plat/sync_write.h>
 #include "mt_sleep.h"
 #include "mt_spm.h"
 #include "mt_spm_sleep.h"
 #include "mt_spm_idle.h"
-/* #include "mt_spm_mtcmos.h" */
-/* #include "mt_clkmgr.h" */
-
 #include <mt-plat/mt_gpio.h>
 /*
 #include <mach/battery_common.h>

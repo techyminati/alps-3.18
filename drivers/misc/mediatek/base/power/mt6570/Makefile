@@ -27,8 +27,8 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/lcm/inc/
 endif
 
 obj-y += mt_spm_mtcmos.o
-#obj-y += mt_clkmgr_common.o
-#obj-y += mt_clkmgr.o
+obj-y += mt_clkmgr_common.o
+obj-y += mt_clkmgr.o
 #obj-y += mt_golden_setting.o
 #obj-y += mt_clkbuf_ctl.o
 #obj-y += mt_pm_init.o
