@@ -419,11 +419,11 @@ mtk-msdc.0 {
 		interrupts = <GIC_SPI 46 IRQ_TYPE_LEVEL_LOW>;
 	};
 
-	auxadc@11003000 {
-		compatible = "mediatek,auxadc";
-		reg = <0 0x11003000 0 0x1000>;
-		interrupts = <GIC_SPI 35 IRQ_TYPE_EDGE_FALLING>;
-	};
+	auxadc: adc_hw@11003000 {
+			compatible = "mediatek,mt6735-auxadc";
+			reg = <0x11003000 0x1000>;
+			interrupts = <GIC_SPI 35 IRQ_TYPE_EDGE_FALLING>;
+		};
 
 	fhctl@11004000 {
 		compatible = "mediatek,fhctl";
