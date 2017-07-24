@@ -276,7 +276,7 @@ void set_usb_rdy(void)
 {
 	DBG(0, "set usb_rdy, wake up bat\n");
 	usb_rdy = 1;
-#ifndef CONFIG_FPGA_EARLY_PORTING
+#ifndef CONFIG_MTK_SMART_BATTERY
 	wake_up_bat();
 #endif
 }
@@ -394,8 +394,7 @@ bool usb_cable_connected(void)
 #endif
 #endif
 
-/* #ifdef CONFIG_POWER_EXT */
-	/* if (mt_get_charger_type() */
+#ifdef CONFIG_MTK_SMART_BATTERY
 	 if ((mt_get_charger_type() == STANDARD_HOST) || (mt_get_charger_type() == CHARGING_HOST)
 /* #else */
 /* if (upmu_is_chr_det() */
@@ -405,6 +404,9 @@ bool usb_cable_connected(void)
 	} else {
 		return false;
 	}
+#else
+		return true;
+#endif
 
 #endif /* end FPGA_PLATFORM */
 }
