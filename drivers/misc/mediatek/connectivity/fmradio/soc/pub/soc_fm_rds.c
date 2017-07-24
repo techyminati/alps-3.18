@@ -17,7 +17,7 @@
 #include "fm_interface.h"
 #include "fm_stdlib.h"
 #include "fm_rds.h"
-#include "mt6580_fm_reg.h"
+#include "soc_fm_reg.h"
 #include "fm_cmd.h"
 
 static bool bRDS_FirstIn; /* false */

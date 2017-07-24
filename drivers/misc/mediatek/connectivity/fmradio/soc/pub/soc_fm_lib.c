@@ -29,17 +29,17 @@
 #include "fm_config.h"
 #include "fm_cmd.h"
 
-#include "mt6580_fm_reg.h"
-#include "mt6580_fm_lib.h"
+#include "soc_fm_reg.h"
+#include "soc_fm_lib.h"
 
 /* #include "mach/mt_gpio.h" */
 
 static struct fm_patch_tbl mt6580_patch_tbl[5] = {
-	{FM_ROM_V1, "mt6580_fm_v1_patch.bin", "mt6580_fm_v1_coeff.bin", NULL, NULL},
-	{FM_ROM_V2, "mt6580_fm_v2_patch.bin", "mt6580_fm_v2_coeff.bin", NULL, NULL},
-	{FM_ROM_V3, "mt6580_fm_v3_patch.bin", "mt6580_fm_v3_coeff.bin", NULL, NULL},
-	{FM_ROM_V4, "mt6580_fm_v4_patch.bin", "mt6580_fm_v4_coeff.bin", NULL, NULL},
-	{FM_ROM_V5, "mt6580_fm_v5_patch.bin", "mt6580_fm_v5_coeff.bin", NULL, NULL}
+	{FM_ROM_V1, "soc_fm_v1_patch.bin", "soc_fm_v1_coeff.bin", NULL, NULL},
+	{FM_ROM_V2, "soc_fm_v2_patch.bin", "soc_fm_v2_coeff.bin", NULL, NULL},
+	{FM_ROM_V3, "soc_fm_v3_patch.bin", "soc_fm_v3_coeff.bin", NULL, NULL},
+	{FM_ROM_V4, "soc_fm_v4_patch.bin", "soc_fm_v4_coeff.bin", NULL, NULL},
+	{FM_ROM_V5, "soc_fm_v5_patch.bin", "soc_fm_v5_coeff.bin", NULL, NULL}
 };
 
 static struct fm_hw_info mt6580_hw_info = {
