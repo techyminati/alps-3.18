@@ -76,6 +76,8 @@
 #include <linux/time.h>
 #include <linux/wakelock.h>
 #include <linux/writeback.h>
+#include <linux/notifier.h>
+#include <linux/fb.h>
 /* #include <linux/xlog.h> TBD */
 
 /* mach */
@@ -422,35 +424,44 @@ static ssize_t show_pmic_access(struct device *dev, struct device_attribute *att
 }
 
 static ssize_t store_pmic_access(struct device *dev, struct device_attribute *attr, const char *buf,
-				 size_t size)
+		size_t size)
 {
+
 	int ret = 0;
+	char *pvalue = NULL, *addr, *val;
 	unsigned int reg_value = 0;
 	unsigned int reg_address = 0;
 
-	PMICLOG("[store_pmic_access]\n");
+	pr_err("[store_pmic_access]\n");
 	if (buf != NULL && size != 0) {
-		PMICLOG("[store_pmic_access] buf is %s\n", buf);
-		/*reg_address = simple_strtoul(buf, &pvalue, 16); */
-		ret = kstrtoul(buf, 16, (unsigned long *)&reg_address);
+		pr_err("[store_pmic_access] buf is %s\n", buf);
+		/*reg_address = simple_strtoul(buf, &pvalue, 16);*/
+
+		pvalue = (char *)buf;
+		if (size > 5) {
+			addr = strsep(&pvalue, " ");
+			ret = kstrtou32(addr, 16, (unsigned int *)&reg_address);
+		} else
+			ret = kstrtou32(pvalue, 16, (unsigned int *)&reg_address);
 
 		if (size > 5) {
-			/*reg_value = simple_strtoul((pvalue + 1), NULL, 16); */
-			buf = buf + 1;
-			ret = kstrtoul(buf, 16, (unsigned long *)&reg_value);
+			/*reg_value = simple_strtoul((pvalue + 1), NULL, 16);*/
+			/*pvalue = (char *)buf + 1;*/
+			val =  strsep(&pvalue, " ");
+			ret = kstrtou32(val, 16, (unsigned int *)&reg_value);
 
-			PMICLOG("[store_pmic_access] write PMU reg 0x%x with value 0x%x !\n",
-				reg_address, reg_value);
+			pr_err("[store_pmic_access] write PMU reg 0x%x with value 0x%x !\n",
+					reg_address, reg_value);
 			ret = pmic_config_interface(reg_address, reg_value, 0xFFFF, 0x0);
 		} else {
 			ret = pmic_read_interface(reg_address, &g_reg_value, 0xFFFF, 0x0);
-			PMICLOG("[store_pmic_access] read PMU reg 0x%x with value 0x%x !\n",
-				reg_address, g_reg_value);
-			PMICLOG
-			    ("[store_pmic_access] Please use \"cat pmic_access\" to get value\r\n");
+			pr_err("[store_pmic_access] read PMU reg 0x%x with value 0x%x !\n",
+					reg_address, g_reg_value);
+			pr_err("[store_pmic_access] use \"cat pmic_access\" to get value(decimal)\r\n");
 		}
 	}
 	return size;
+
 }
 
 static DEVICE_ATTR(pmic_access, 0664, show_pmic_access, store_pmic_access);	/* 664 */
@@ -3918,6 +3929,66 @@ int get_battery_plug_out_status(void)
 	return g_plug_out_status;
 }
 
+static void pmic_early_suspend(void)
+{
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 0);
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 1);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 1);
+}
+
+static void pmic_late_resume(void)
+{
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 0);
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 0);
+}
+
+static int pmic_fb_notifier_callback(struct notifier_block *self, unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	int blank;
+
+	/* skip if it's not a blank event */
+	if (event != FB_EVENT_BLANK)
+		return 0;
+
+	if (evdata == NULL)
+		return 0;
+	if (evdata->data == NULL)
+		return 0;
+
+	blank = *(int *)evdata->data;
+
+	switch (blank) {
+	/* LCM ON */
+	case FB_BLANK_UNBLANK:
+		pmic_late_resume();
+		break;
+	/* LCM OFF */
+	case FB_BLANK_POWERDOWN:
+		pmic_early_suspend();
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
+static struct notifier_block pmic_fb_notifier = {
+	.notifier_call = pmic_fb_notifier_callback,
+};
+
 static int pmic_mt_probe(struct platform_device *dev)
 {
 	int ret_device_file = 0, i;
@@ -4050,6 +4121,10 @@ static int pmic_mt_probe(struct platform_device *dev)
 	PMICLOG("[PMIC] device_create_file for EM : done.\n");
 
 	/* pwrkey_sw_workaround_init(); */
+	if (fb_register_client(&pmic_fb_notifier)) {
+		PMICLOG("register FB client failed!\n");
+		return 0;
+	}
 	return 0;
 }
 
@@ -4090,7 +4165,30 @@ static int pmic_mt_suspend(struct platform_device *dev, pm_message_t state)
 		MT6350_INT_CON2, upmu_get_reg_value(MT6350_INT_CON2)
 	    );
 #endif
-
+#if 1
+	/*upmu_set_rg_vref18_enb(1);*/
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 1);
+	/*upmu_set_rg_adc_deci_gdly(1);*/
+	pmic_set_register_value(PMIC_RG_ADC_DECI_GDLY, 1);
+	/*upmu_set_rg_clksq_en_aux(1);*/
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	/*upmu_set_rg_aud26m_div4_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_sel_hw_mode(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 1);
+	/*upmu_set_rg_auxadc_sdm_ck_hw_mode(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 1);
+	/*upmu_set_rg_auxadc_sdm_ck_sel(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_wake_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 0);
+	PMICLOG("MT pmic driver suspend henry %x %x %x!!\n",
+		pmic_get_register_value(PMIC_RG_VREF18_ENB),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN));
+#endif
 	return 0;
 }
 
@@ -4138,7 +4236,28 @@ static int pmic_mt_resume(struct platform_device *dev)
 		MT6350_INT_CON2, upmu_get_reg_value(MT6350_INT_CON2)
 	    );
 #endif
-
+#if 1
+	/*upmu_set_rg_vref18_enb(0);*/
+	pmic_set_register_value(PMIC_RG_VREF18_ENB, 0);
+	/*upmu_set_rg_clksq_en_aux(1);*/
+	pmic_set_register_value(PMIC_RG_CLKSQ_EN_AUX, 1);
+	/*upmu_set_rg_aud26m_div4_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUD26M_DIV4_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_sel_hw_mode(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_hw_mode(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_HW_MODE, 1);
+	/*upmu_set_rg_auxadc_sdm_ck_sel(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_SEL, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_pdn(0);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_PDN, 0);
+	/*upmu_set_rg_auxadc_sdm_ck_wake_pdn(1);*/
+	pmic_set_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN, 1);
+#endif
+	PMICLOG("MT pmic driver resume henry %x %x %x!!\n",
+		pmic_get_register_value(PMIC_RG_VREF18_ENB),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_SEL_HW_MODE),
+		pmic_get_register_value(PMIC_RG_AUXADC_SDM_CK_WAKE_PDN));
 	return 0;
 }
 
