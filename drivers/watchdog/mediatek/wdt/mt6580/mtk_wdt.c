@@ -165,8 +165,6 @@ void mtk_wdt_mode_config(bool dual_mode_en, bool irq, bool ext_en, bool ext_pol,
 	mt_reg_sync_writel(tmp, MTK_WDT_MODE);
 	/* dual_mode(1); //always dual mode */
 	/* mdelay(100); */
-	pr_debug(" mtk_wdt_mode_config  mode value=%x, tmp:%x,pid=%d\n", __raw_readl(MTK_WDT_MODE),
-		 tmp, current->pid);
 
 	spin_unlock(&rgu_reg_operation_spinlock);
 }
@@ -403,15 +401,6 @@ int mtk_wdt_request_mode_set(int mark_bit, WD_REQ_MODE mode)
 
 void mtk_wdt_cpu_callback(struct task_struct *wk_tsk, unsigned long action, int hotcpu, int kicker_init)
 {
-	switch (action) {
-	case CPU_ONLINE:
-	case CPU_ONLINE_FROZEN:
-		if (1 == kicker_init)
-			pr_debug("[mtk_wdt_cpu_callback]bind kicker thread[%d] to cpu[%d]\n", wk_tsk->pid, hotcpu);
-		break;
-	default:
-		break;
-	}
 }
 EXPORT_SYMBOL(mtk_wdt_cpu_callback);
 
@@ -697,7 +686,7 @@ void mtk_wd_suspend(void)
 	mtk_wdt_restart(WD_TYPE_NORMAL);
 
 	/*aee_sram_printk("[WDT] suspend\n"); */
-	pr_debug("[WDT] suspend\n");
+	/*pr_debug("[WDT] suspend\n"); */
 }
 
 void mtk_wd_resume(void)
@@ -710,7 +699,7 @@ void mtk_wd_resume(void)
 	}
 
 	/*aee_sram_printk("[WDT] resume(%d)\n", g_wdt_enable); */
-	pr_debug("[WDT] resume(%d)\n", g_wdt_enable);
+	/*pr_debug("[WDT] resume(%d)\n", g_wdt_enable); */
 }
 
 
