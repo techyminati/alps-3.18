@@ -336,7 +336,7 @@ void upmu_set_reg_value(unsigned int reg, unsigned int reg_val)
   *********************************************************/
 void mt6350_dump_register(void)
 {
-	unsigned char i = 0;
+	unsigned int i = 0;
 
 	PMICLOG("dump PMIC 6350 register\n");
 
