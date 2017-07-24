@@ -8903,11 +8903,12 @@ int msdc_of_parse(struct mmc_host *mmc)
 	if (of_find_property(np, "bootable", &len))
 		host->hw->boot = 1;
 
-	/*get cd_level*/
-	of_property_read_u8(np, "cd_level", (u8 *)&host->hw->cd_level);
-
-	/*get cd_gpio*/
-	of_property_read_u32_index(np, "cd-gpios", 1, &cd_gpio);
+	/* get cd_gpio and cd_level */
+	if (of_property_read_u32_index(np, "cd-gpios", 1, &cd_gpio) == 0) {
+		if (of_property_read_u8(np, "cd_level", (u8 *)&host->hw->cd_level))
+			pr_err("[msdc%d] cd_level isn't found in device tree\n",
+				host->id);
+	}
 
 	msdc_get_rigister_settings(host);
 	msdc_get_pinctl_settings(host);
