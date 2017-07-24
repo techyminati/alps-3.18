@@ -1536,6 +1536,11 @@ int _ioctl_wait_vsync(unsigned long arg)
 	if (session_info)
 		dprec_done(&session_info->event_waitvsync, 0, 0);
 
+	if (copy_to_user(argp, &vsync_config, sizeof(vsync_config))) {
+		DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
+		return -EFAULT;
+	}
+
 	return ret;
 }
 

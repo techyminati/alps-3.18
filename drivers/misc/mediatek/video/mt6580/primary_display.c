@@ -3392,6 +3392,7 @@ int primary_display_wait_for_vsync(void *config)
 {
 	disp_session_vsync_config *c = (disp_session_vsync_config *) config;
 	int ret = 0;
+	unsigned long long ts = 0ULL;
 	/* kick idle manager here to ensure sodi is disabled when screen update begin(not 100% ensure) */
 	primary_display_idlemgr_kick((char *)__func__, 1);
 
@@ -3428,7 +3429,7 @@ int primary_display_wait_for_vsync(void *config)
 		g_skip = 0;
 	}
 
-	ret = dpmgr_wait_event(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC);
+	ret = dpmgr_wait_event_ts(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC, &ts);
 	if (ret == -2) {
 		DISPMSG("vsync for primary display path not enabled yet\n");
 		return -1;
@@ -3439,11 +3440,11 @@ int primary_display_wait_for_vsync(void *config)
 	if (pgc->vsync_drop) {
 		/* ret = dpmgr_wait_event_timeout(pgc->dpmgr_handle, DISP_PATH_EVENT_IF_VSYNC, HZ/10); */
 		ret =
-		    dpmgr_wait_event(pgc->dpmgr_handle,
-				     DISP_PATH_EVENT_IF_VSYNC);
+		    dpmgr_wait_event_ts(pgc->dpmgr_handle,
+				     DISP_PATH_EVENT_IF_VSYNC, &ts);
 	}
 	DISPDBG("vsync signaled\n");
-	c->vsync_ts = get_current_time_us();
+	c->vsync_ts = ts;
 	c->vsync_cnt++;
 
 	return ret;
