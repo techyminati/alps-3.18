@@ -39,6 +39,7 @@
 #include <mt-plat/mt_io.h>
 #include <mach/mtk_ccci_helper.h>
 #include <mach/emi_mpu.h>
+#include <primary_display.h>
 
 #define ENABLE_EMI_CHKER
 #define ENABLE_EMI_WATCH_POINT
@@ -632,6 +633,10 @@ static int mpu_check_violation(void)
 						     0);
 		}
 #endif
+
+		if (!strncmp(master_name, "disp", 4))
+			primary_display_diagnose();
+
 		aee_kernel_exception("EMI MPU",
 				     "%sEMI_MPUS = 0x%x,EMI_MPUT = 0x%x\n%s%s\n",
 				     "EMI MPU violation.\n",
