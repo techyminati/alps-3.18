@@ -1,3 +1,15 @@
+/*
+ * Copyright (C) 2017 MediaTek Inc.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ */
 /*****************************************************************************
  *
  * Filename:
@@ -144,7 +156,7 @@ static imgsensor_info_struct imgsensor_info = {
     .sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_B,//sensor output first pixel color
     .mclk = 24,//mclk value, suggest 24 or 26 for 24Mhz or 26Mhz
     .mipi_lane_num = SENSOR_MIPI_2_LANE,//mipi lane num
-    .i2c_addr_table = {0x6c,0x20,0xff},	//0x6c for F5V04D£¬0x20 for D5V13H 
+	.i2c_addr_table = {0x6c, 0x20, 0xff}, /* 0x6c for F5V04DÂ£Â¬0x20 for D5V13H */
     .i2c_speed = 300,
 };
 
