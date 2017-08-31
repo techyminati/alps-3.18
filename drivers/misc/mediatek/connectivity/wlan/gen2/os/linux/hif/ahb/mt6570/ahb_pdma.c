@@ -90,6 +90,12 @@
 #define GDMA_DBG(_fmt, ...)
 #endif /* GDMA_DEBUG_SUP */
 
+#ifdef PDMA_DEBUG_SUP
+#define PDMA_DBG pr_debug
+#else
+#define PDMA_DBG(_fmt, ...)
+#endif /* PDMA_DEBUG_SUP */
+
 /* set DMA mask bits */
 #define DMA_MASK_BITS     33
 
