@@ -212,7 +212,7 @@ static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream
 
 	if (GetMemoryPathEnable(Soc_Aud_Digital_Block_MEM_VUL) == true) {
 #ifdef AUDIO_64BYTE_ALIGN
-		HW_Cur_ReadIdx = Align64ByteSize(Afe_Get_Reg(AFE_VUL_CUR));
+		HW_Cur_ReadIdx = Afe_Get_Reg(AFE_VUL_CUR);
 #else
 		HW_Cur_ReadIdx = Afe_Get_Reg(AFE_VUL_CUR);
 #endif
@@ -443,7 +443,7 @@ static int mtk_capture_pcm_copy(struct snd_pcm_substream *substream,
 	PRINTK_AUD_UL1("mtk_capture_pcm_copy pos = %lucount = %lu\n ", pos, count);
 	/* get total bytes to copy */
 #ifdef AUDIO_64BYTE_ALIGN
-	count = Align64ByteSize(audio_frame_to_bytes(substream, count));
+	count = audio_frame_to_bytes(substream, count);
 #else
 	count = audio_frame_to_bytes(substream, count);
 #endif
