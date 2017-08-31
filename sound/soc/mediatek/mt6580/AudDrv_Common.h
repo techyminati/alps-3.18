@@ -124,7 +124,7 @@ struct AFE_DL_ISR_COPY_T {
 	uint32_t u4BufferSize;
 	uint32_t u4BufferSizeMax;
 
-	uint32_t u4IsrConsumeSize;
+	int32_t u4IsrConsumeSize;
 };
 
 #endif
