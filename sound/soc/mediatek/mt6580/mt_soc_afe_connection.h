@@ -49,6 +49,6 @@
 /*****************************************************************************
  *                E X T E R N A L   R E F E R E N C E
  *****************************************************************************/
-bool SetConnectionState(uint32 ConnectionState, uint32 Input, uint32 Output);
+bool SetConnectionState(unsigned int ConnectionState, unsigned int Input, unsigned int Output);
 
 #endif

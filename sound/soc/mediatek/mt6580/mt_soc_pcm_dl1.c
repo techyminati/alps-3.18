@@ -119,7 +119,7 @@ static unsigned int if_config1, if_config2, if_config3, if_config4, if_config5,
 #endif
 #endif
 
-static AFE_MEM_CONTROL_T *pMemControl;
+static struct AFE_MEM_CONTROL_T *pMemControl;
 static int mPlaybackSramState;
 static struct snd_dma_buffer *Dl1_Playback_dma_buf;
 
@@ -184,11 +184,11 @@ static int mtk_pcm_dl1_stop(struct snd_pcm_substream *substream)
 
 static snd_pcm_uframes_t mtk_pcm_pointer(struct snd_pcm_substream *substream)
 {
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
-	kal_uint32 Frameidx = 0;
-	kal_int32 Afe_consumed_bytes = 0;
-	AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
+	uint32_t Frameidx = 0;
+	int32_t Afe_consumed_bytes = 0;
+	struct AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
 	/* struct snd_pcm_runtime *runtime = substream->runtime; */
 	PRINTK_AUD_DL1(" %s Afe_Block->u4DMAReadIdx = 0x%x\n", __func__, Afe_Block->u4DMAReadIdx);
 
@@ -236,7 +236,7 @@ static snd_pcm_uframes_t mtk_pcm_pointer(struct snd_pcm_substream *substream)
 static void SetDL1Buffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	AFE_BLOCK_T *pblock = &pMemControl->rBlock;
+	struct AFE_BLOCK_T *pblock = &pMemControl->rBlock;
 
 	pblock->pucPhysBufAddr = runtime->dma_addr;
 	pblock->pucVirtBufAddr = runtime->dma_area;
@@ -481,7 +481,7 @@ static int mtk_pcm_copy(struct snd_pcm_substream *substream,
 			int channel, snd_pcm_uframes_t pos,
 			void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_BLOCK_T *Afe_Block = NULL;
+	struct AFE_BLOCK_T *Afe_Block = NULL;
 	int copy_size = 0, Afe_WriteIdx_tmp;
 	unsigned long flags;
 	/* struct snd_pcm_runtime *runtime = substream->runtime; */
@@ -557,7 +557,7 @@ static int mtk_pcm_copy(struct snd_pcm_substream *substream,
 			     Afe_Block->u4DataRemained, (int)count);
 
 		} else {	/* copy twice */
-			kal_uint32 size_1 = 0, size_2 = 0;
+			uint32_t size_1 = 0, size_2 = 0;
 #ifdef AUDIO_64BYTE_ALIGN	/* no need to do 64byte align */
 			size_1 = Align64ByteSize((Afe_Block->u4BufferSize - Afe_WriteIdx_tmp));
 			size_2 = Align64ByteSize((copy_size - size_1));

@@ -416,10 +416,12 @@ static bool CheckBitsandReg(short regaddr, char bits)
 	return true;
 }
 
-bool SetConnectionState(uint32 ConnectionState, uint32 Input, uint32 Output)
+bool SetConnectionState(unsigned int ConnectionState, unsigned int Input, unsigned int Output)
 {
+	/*
 	pr_warn("SetinputConnection ConnectionState = %d Input = %d Output = %d\n",
 	       ConnectionState, Input, Output);
+	*/
 	if ((mConnectionTable[Input][Output]) < 0) {
 		pr_warn("no connection mpConnectionTable[%d][%d] = %d\n", Input, Output,
 		       mConnectionTable[Input][Output]);

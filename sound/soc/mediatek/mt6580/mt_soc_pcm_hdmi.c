@@ -62,7 +62,7 @@
 
 /* information about */
 
-static AFE_MEM_CONTROL_T *pMemControl;
+static struct AFE_MEM_CONTROL_T *pMemControl;
 static bool fake_buffer = 1;
 
 struct snd_dma_buffer *HDMI_dma_buf = NULL;
@@ -101,11 +101,11 @@ static int mtk_afe_hdmi_probe(struct snd_soc_platform *platform);
 #define USE_PERIODS_MIN     512
 #define USE_PERIODS_MAX     16384
 
-static kal_int32 Previous_Hw_cur;
+static int32_t Previous_Hw_cur;
 
 #ifdef _TDM_8CH_SGEN_TEST
 
-static uint32 table_sgen_golden_values[64] = {
+static unsigned int table_sgen_golden_values[64] = {
 	0x0FE50FE5, 0x285E1C44, 0x3F4A285E, 0x53C73414,
 	0x650C3F4A, 0x726F49E3, 0x7B6C53C7, 0x7FAB5CDC,
 	0x7F02650C, 0x79776C43, 0x6F42726F, 0x60C67781,
@@ -126,7 +126,7 @@ static uint32 table_sgen_golden_values[64] = {
 
 
 
-static uint32 table_sgen_4ch_golden_values[128] = {
+static unsigned int table_sgen_4ch_golden_values[128] = {
 	/* step   2              1              4              3 */
 	/* ch2       ch1            ch4          ch3 */
 	0x0FE50FE5, 0x0FE50FE5,
@@ -196,7 +196,7 @@ static uint32 table_sgen_4ch_golden_values[128] = {
 };
 
 
-static uint32 table_sgen_8ch_golden_values[] = {
+static unsigned int table_sgen_8ch_golden_values[] = {
 	0x0FE50000, 0x0FE50FE5, 0x0FE50FE5, 0x0FE50FE5,
 	0x285E0000, 0x3F4A3414, 0x285E1C44, 0x3F4A3414,
 	0x3F4A0000, 0x650C53C7, 0x3F4A285E, 0x650C53C7,
@@ -269,8 +269,8 @@ static void copysinewavetohdmi(unsigned int channels)
 {
 	unsigned char *Bufferaddr = HDMI_dma_buf->area;
 	int Hhdmi_Buffer_length = HDMI_dma_buf->bytes;
-	uint32 arraybytes = 0;
-	uint32 *SinewaveArr = NULL;
+	unsigned int arraybytes = 0;
+	unsigned int *SinewaveArr = NULL;
 	int i = 0;
 
 	if (channels == 2) {
@@ -351,11 +351,11 @@ static int Audio_hdmi_SideGen_Set(struct snd_kcontrol *kcontrol,
 	mHdmi_sidegen_control = ucontrol->value.integer.value[0];
 
 	if (mHdmi_sidegen_control) {
-		uint32 samplerate = 44100;
-		uint32 Channels = 2;
-		uint32 HDMIchaanel = 8;
-		uint32 Tdm_Lrck = 0;
-		uint32 MclkDiv = 0;
+		unsigned int samplerate = 44100;
+		unsigned int Channels = 2;
+		unsigned int HDMIchaanel = 8;
+		unsigned int Tdm_Lrck = 0;
+		unsigned int MclkDiv = 0;
 
 		AudDrv_Clk_On();
 		SetHDMIAddress();
@@ -463,7 +463,7 @@ static struct snd_soc_pcm_runtime *pruntimehdmi;
 
 static int mtk_pcm_hdmi_stop(struct snd_pcm_substream *substream)
 {
-	AFE_BLOCK_T *Afe_Block = &(pMemControl->rBlock);
+	struct AFE_BLOCK_T *Afe_Block = &(pMemControl->rBlock);
 
 	pr_warn("mtk_pcm_hdmi_stop\n");
 
@@ -496,10 +496,10 @@ static int mtk_pcm_hdmi_stop(struct snd_pcm_substream *substream)
 static snd_pcm_uframes_t mtk_pcm_hdmi_pointer(struct snd_pcm_substream
 					      *substream)
 {
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
 	snd_pcm_uframes_t return_frame;
-	AFE_BLOCK_T *Afe_Block = &(pMemControl->rBlock);
+	struct AFE_BLOCK_T *Afe_Block = &(pMemControl->rBlock);
 
 	PRINTK_AUD_HDMI("mtk_pcm_hdmi_pointer u4DMAReadIdx=%x\n", Afe_Block->u4DMAReadIdx);
 
@@ -528,10 +528,10 @@ static snd_pcm_uframes_t mtk_pcm_hdmi_pointer(struct snd_pcm_substream
 static void SetHDMIBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 
-	/* kal_uint32 volatile u4tmpMrg1; */
+	/* uint32_t u4tmpMrg1; */
 
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	AFE_BLOCK_T *pblock = &(pMemControl->rBlock);
+	struct AFE_BLOCK_T *pblock = &(pMemControl->rBlock);
 
 	pblock->pucPhysBufAddr = runtime->dma_addr;
 	pblock->pucVirtBufAddr = runtime->dma_area;
@@ -689,9 +689,9 @@ static int mtk_pcm_hdmi_close(struct snd_pcm_substream *substream)
 static int mtk_pcm_hdmi_prepare(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	uint32 Tdm_Lrck = 0;
-	uint32 MclkDiv = 0;
-	AFE_BLOCK_T *Afe_Block = &(pMemControl->rBlock);
+	unsigned int Tdm_Lrck = 0;
+	unsigned int MclkDiv = 0;
+	struct AFE_BLOCK_T *Afe_Block = &(pMemControl->rBlock);
 
 	PRINTK_AUD_HDMI
 	    ("mtk_pcm_hdmi_prepare format =%d, rate = %d  channels = %d period_size = %lu\n",
@@ -793,13 +793,13 @@ static int mtk_pcm_hdmi_prepare(struct snd_pcm_substream *substream)
 static int mtk_pcm_hdmi_start(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	kal_uint32 volatile u4RegValue;
+	uint32_t u4RegValue;
 #if 0				/* not support */
-	kal_uint32 volatile u4tmpValue;
-	kal_uint32 volatile u4tmpValue1;
-	kal_uint32 volatile u4tmpValue2;
+	uint32_t u4tmpValue;
+	uint32_t u4tmpValue1;
+	uint32_t u4tmpValue2;
 #endif
-	/* uint32 u32AudioI2S = 0; */
+	/* unsigned int u32AudioI2S = 0; */
 
 	SetMemifSubStream(Soc_Aud_Digital_Block_MEM_HDMI, substream);
 
@@ -930,7 +930,7 @@ static int mtk_pcm_hdmi_copy(struct snd_pcm_substream *substream,
 			     int channel, snd_pcm_uframes_t pos,
 			     void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_BLOCK_T *Afe_Block = NULL;
+	struct AFE_BLOCK_T *Afe_Block = NULL;
 	int copy_size = 0, Afe_WriteIdx_tmp;
 	unsigned long flags;
 	char *data_w_ptr = (char *)dst;
@@ -945,7 +945,7 @@ static int mtk_pcm_hdmi_copy(struct snd_pcm_substream *substream,
 
 	PRINTK_AUD_HDMI
 	    ("[mtk_pcm_hdmi_copy] count = %d WriteIdx=%x, ReadIdx=%x, DataRemained=%x\n",
-	     (kal_uint32) count, Afe_Block->u4WriteIdx, Afe_Block->u4DMAReadIdx,
+	     (uint32_t) count, Afe_Block->u4WriteIdx, Afe_Block->u4DMAReadIdx,
 	     Afe_Block->u4DataRemained);
 
 	if (Afe_Block->u4BufferSize == 0) {
@@ -1003,7 +1003,7 @@ static int mtk_pcm_hdmi_copy(struct snd_pcm_substream *substream,
 			     Afe_Block->u4DataRemained);
 
 		} else {	/* copy twice */
-			kal_uint32 size_1 = 0, size_2 = 0;
+			uint32_t size_1 = 0, size_2 = 0;
 
 			size_1 = Afe_Block->u4BufferSize - Afe_WriteIdx_tmp;
 			size_2 = copy_size - size_1;

@@ -65,42 +65,35 @@
 
 #define DL_ABNORMAL_CONTROL_MAX (5)
 
-typedef	uint8_t kal_uint8;
-typedef	int8_t kal_int8;
-typedef	uint32_t kal_uint32;
-typedef	int32_t kal_int32;
-typedef	uint64_t kal_uint64;
-typedef	int64_t kal_int64;
+struct AFE_BLOCK_T {
+	uint32_t pucPhysBufAddr;
+	uint8_t *pucVirtBufAddr;
+	int32_t u4BufferSize;
+	int32_t u4DataRemained;
+	uint32_t u4SampleNumMask;	/* sample number mask */
+	uint32_t u4SamplesPerInt;	/* number of samples to play before interrupting */
+	int32_t u4WriteIdx;	/* Previous Write Index. */
+	int32_t u4DMAReadIdx;	/* Previous DMA Read Index. */
+	uint32_t u4MaxCopySize;
+	uint32_t u4fsyncflag;
+	uint32_t uResetFlag;
+};
 
-typedef struct {
-	kal_uint32 pucPhysBufAddr;
-	kal_uint8 *pucVirtBufAddr;
-	kal_int32 u4BufferSize;
-	kal_int32 u4DataRemained;
-	kal_uint32 u4SampleNumMask;	/* sample number mask */
-	kal_uint32 u4SamplesPerInt;	/* number of samples to play before interrupting */
-	kal_int32 u4WriteIdx;	/* Previous Write Index. */
-	kal_int32 u4DMAReadIdx;	/* Previous DMA Read Index. */
-	kal_uint32 u4MaxCopySize;
-	kal_uint32 u4fsyncflag;
-	kal_uint32 uResetFlag;
-} AFE_BLOCK_T;
-
-typedef struct substreamList {
+struct substreamList {
 	struct snd_pcm_substream *substream;
-	volatile kal_uint32 u4MaxCopySize;
+	uint32_t u4MaxCopySize;
 	struct substreamList *next;
-} substreamList;
+};
 
 
-typedef struct {
+struct AFE_MEM_CONTROL_T {
 	struct file *flip;
-	substreamList *substreamL;
-	AFE_BLOCK_T rBlock;
-	kal_uint32 MemIfNum;
+	struct substreamList *substreamL;
+	struct AFE_BLOCK_T rBlock;
+	uint32_t MemIfNum;
 	bool interruptTrigger;
 	spinlock_t substream_lock;
-} AFE_MEM_CONTROL_T;
+};
 
 struct pcm_afe_info {
 	struct AFE_BLOCK_T *mAfeBlock;
@@ -108,31 +101,30 @@ struct pcm_afe_info {
 };
 
 
-typedef struct {
-	kal_int32 u4BufferSize[DL_ABNORMAL_CONTROL_MAX];
-	kal_int32 u4DataRemained[DL_ABNORMAL_CONTROL_MAX];
-	kal_int32 u4WriteIdx[DL_ABNORMAL_CONTROL_MAX];          /* Previous Write Index. */
-	kal_int32 u4DMAReadIdx[DL_ABNORMAL_CONTROL_MAX];        /* Previous DMA Read Index. */
-	kal_int32 u4ConsumedBytes[DL_ABNORMAL_CONTROL_MAX];
-	kal_int32 u4HwMemoryIndex[DL_ABNORMAL_CONTROL_MAX];
-	kal_int32 pucPhysBufAddr[DL_ABNORMAL_CONTROL_MAX];
-	kal_int32 u4UnderflowCnt;
-	kal_uint32 MemIfNum[DL_ABNORMAL_CONTROL_MAX];
+struct AFE_DL_ABNORMAL_CONTROL_T {
+	int32_t u4BufferSize[DL_ABNORMAL_CONTROL_MAX];
+	int32_t u4DataRemained[DL_ABNORMAL_CONTROL_MAX];
+	int32_t u4WriteIdx[DL_ABNORMAL_CONTROL_MAX];          /* Previous Write Index. */
+	int32_t u4DMAReadIdx[DL_ABNORMAL_CONTROL_MAX];        /* Previous DMA Read Index. */
+	int32_t u4ConsumedBytes[DL_ABNORMAL_CONTROL_MAX];
+	int32_t u4HwMemoryIndex[DL_ABNORMAL_CONTROL_MAX];
+	int32_t pucPhysBufAddr[DL_ABNORMAL_CONTROL_MAX];
+	int32_t u4UnderflowCnt;
+	uint32_t MemIfNum[DL_ABNORMAL_CONTROL_MAX];
 	unsigned long long IrqLastTimeNs[DL_ABNORMAL_CONTROL_MAX];
 	unsigned long long IrqCurrentTimeNs[DL_ABNORMAL_CONTROL_MAX];
 	unsigned long long IrqIntervalNs[DL_ABNORMAL_CONTROL_MAX];
-	kal_uint32 IrqIntervalLimitMs[DL_ABNORMAL_CONTROL_MAX];
+	uint32_t IrqIntervalLimitMs[DL_ABNORMAL_CONTROL_MAX];
 	bool IrqDelayCnt;
+};
 
-} AFE_DL_ABNORMAL_CONTROL_T;
+struct AFE_DL_ISR_COPY_T {
+	int8_t *pBufferBase;
+	int8_t *pBufferIndx;
+	uint32_t u4BufferSize;
+	uint32_t u4BufferSizeMax;
 
-typedef struct {
-	kal_int8 *pBufferBase;
-	kal_int8 *pBufferIndx;
-	kal_uint32 u4BufferSize;
-	kal_uint32 u4BufferSizeMax;
-
-	kal_uint32 u4IsrConsumeSize;
-} AFE_DL_ISR_COPY_T;
+	uint32_t u4IsrConsumeSize;
+};
 
 #endif

@@ -217,7 +217,7 @@ static struct page *mtk_uldlloopback_page(struct snd_pcm_substream *substream, u
 	return virt_to_page(dummy_page[substream->stream]);	/* the same page */
 }
 
-static AudioDigtalI2S mAudioDigitalI2S;
+static struct AudioDigtalI2S mAudioDigitalI2S;
 static void ConfigAdcI2S(struct snd_pcm_substream *substream)
 {
 	mAudioDigitalI2S.mLR_SWAP = Soc_Aud_LR_SWAP_NO_SWAP;
@@ -234,10 +234,10 @@ static void ConfigAdcI2S(struct snd_pcm_substream *substream)
 static int mtk_uldlloopback_pcm_prepare(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	/* uint32 eSamplingRate = SampleRateTransform(runtime->rate);
-	uint32 dVoiceModeSelect = 0;
-	uint32 Audio_I2S_Dac = 0; */
-	uint32 u32AudioI2S = 0;
+	/* unsigned int eSamplingRate = SampleRateTransform(runtime->rate);
+	unsigned int dVoiceModeSelect = 0;
+	unsigned int Audio_I2S_Dac = 0; */
+	unsigned int u32AudioI2S = 0;
 
 	/*SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC, true);
 	SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_IN_ADC, true);*/

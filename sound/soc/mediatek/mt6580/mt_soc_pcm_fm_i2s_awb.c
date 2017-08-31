@@ -59,7 +59,7 @@
 #include "mt_soc_pcm_common.h"
 
 /* information about */
-static AFE_MEM_CONTROL_T *FM_I2S_AWB_Control_context;
+static struct AFE_MEM_CONTROL_T *FM_I2S_AWB_Control_context;
 static struct snd_dma_buffer *Awb_Capture_dma_buf;
 
 static DEFINE_SPINLOCK(auddrv_AWBInCtl_lock);
@@ -113,7 +113,7 @@ static void StopAudioFMI2SAWBHardware(struct snd_pcm_substream *substream)
 
 static void StartAudioFMI2SAWBHardware(struct snd_pcm_substream *substream)
 {
-	AudioDigtalI2S m2ndI2SInAttribute;
+	struct AudioDigtalI2S m2ndI2SInAttribute;
 
 	pr_warn("StartAudioFMI2SAWBHardware\n");
 
@@ -187,8 +187,8 @@ static int mtk_fm_i2s_awb_alsa_stop(struct snd_pcm_substream *substream)
 static snd_pcm_uframes_t mtk_awb_pcm_pointer(struct snd_pcm_substream
 					     *substream)
 {
-	kal_uint32 Frameidx = 0;
-	AFE_BLOCK_T *Awb_Block = &(FM_I2S_AWB_Control_context->rBlock);
+	uint32_t Frameidx = 0;
+	struct AFE_BLOCK_T *Awb_Block = &(FM_I2S_AWB_Control_context->rBlock);
 
 	PRINTK_AUD_AWB("mtk_awb_pcm_pointer Awb_Block->u4WriteIdx;= 0x%x\n",
 		       Awb_Block->u4WriteIdx);
@@ -208,7 +208,7 @@ static snd_pcm_uframes_t mtk_awb_pcm_pointer(struct snd_pcm_substream
 
 static void SetAWBBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
-	AFE_BLOCK_T *pblock = &FM_I2S_AWB_Control_context->rBlock;
+	struct AFE_BLOCK_T *pblock = &FM_I2S_AWB_Control_context->rBlock;
 	struct snd_pcm_runtime *runtime = substream->runtime;
 
 	pr_warn("SetAWBBuffer\n");
@@ -252,7 +252,7 @@ static int mtk_mgrrx_awb_pcm_hw_params(struct snd_pcm_substream *substream,
 		ret =  snd_pcm_lib_malloc_pages(substream, params_buffer_bytes(hw_params));
 	}
 	pr_warn("mtk_mgrrx_awb_pcm_hw_params dma_bytes = %zu dma_area = %p dma_addr = 0x%x\n",
-	       runtime->dma_bytes, runtime->dma_area, (uint32)runtime->dma_addr);
+	       runtime->dma_bytes, runtime->dma_area, (unsigned int)runtime->dma_addr);
 
 	pr_warn("runtime->hw.buffer_bytes_max = 0x%zu\n", runtime->hw.buffer_bytes_max);
 	SetAWBBuffer(substream, hw_params);
@@ -360,8 +360,8 @@ static int mtk_fm_i2s_awb_pcm_copy(struct snd_pcm_substream *substream,
 				   int channel, snd_pcm_uframes_t pos,
 				   void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_MEM_CONTROL_T *pAWB_MEM_ConTrol = NULL;
-	AFE_BLOCK_T *Awb_Block = NULL;
+	struct AFE_MEM_CONTROL_T *pAWB_MEM_ConTrol = NULL;
+	struct AFE_BLOCK_T *Awb_Block = NULL;
 	char *Read_Data_Ptr = (char *)dst;
 	ssize_t DMA_Read_Ptr = 0, read_size = 0, read_count = 0;
 	unsigned long flags;
@@ -448,8 +448,8 @@ static int mtk_fm_i2s_awb_pcm_copy(struct snd_pcm_substream *substream,
 	}
 
 	else {
-		uint32 size_1 = Awb_Block->u4BufferSize - DMA_Read_Ptr;
-		uint32 size_2 = read_size - size_1;
+		unsigned int size_1 = Awb_Block->u4BufferSize - DMA_Read_Ptr;
+		unsigned int size_2 = read_size - size_1;
 
 		if (DMA_Read_Ptr != Awb_Block->u4DMAReadIdx) {
 

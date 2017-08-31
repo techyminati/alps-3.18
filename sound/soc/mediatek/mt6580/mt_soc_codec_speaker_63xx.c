@@ -72,11 +72,9 @@
 
 void Speaker_ClassD_Open(void)
 {
-	/* kal_uint32 i, SPKTrimReg = 0; */
-	uint32 retyrcount = 10;
-	uint32 WaitforReady = 0;
-
-	pr_warn("%s\n", __func__);
+	/* uint32_t i, SPKTrimReg = 0; */
+	unsigned int retyrcount = 10;
+	unsigned int WaitforReady = 0;
 
 	Ana_Set_Reg(SPK_CON2, 0x0214, 0xffff);	/* enable classAB OC function */
 	/* Ana_Set_Reg(SPK_CON9, 0x0400, 0xffff); // Set Spk 6dB gain */
@@ -93,8 +91,8 @@ void Speaker_ClassD_Open(void)
 		WaitforReady = Ana_Get_Reg(SPK_CON1);
 		WaitforReady = (WaitforReady & 0x8000);
 		retyrcount--;
-		pr_warn("%s, SpkTrim Stage 0.5 SPK_CON1 %x %d\n", __func__, WaitforReady,
-		       retyrcount);
+		/*pr_warn("%s, SpkTrim Stage 0.5 SPK_CON1 %x %d\n", __func__, WaitforReady,
+		       retyrcount);*/
 	} while ((WaitforReady == 0) && (retyrcount > 0));
 	pr_warn("%s, SpkTrim Stage 1 SPK_CON1 %x\n", __func__, Ana_Get_Reg(SPK_CON1));
 
@@ -102,7 +100,7 @@ void Speaker_ClassD_Open(void)
 	Ana_Set_Reg(SPK_CON9, 0x0000, 0x0018);	/* Set Spk 6dB gain. VCM fast. */
 	Ana_Set_Reg(SPK_CON0, 0x3001, 0xffff);	/* enable SPK AMP with 0dB gain, select Class D. enable Amp. */
 
-	pr_warn("%s, SpkTrim Stage 2 SPK_CON1 %x\n", __func__, Ana_Get_Reg(SPK_CON1));
+	/*pr_warn("%s, SpkTrim Stage 2 SPK_CON1 %x\n", __func__, Ana_Get_Reg(SPK_CON1));*/
 
 }
 
@@ -116,11 +114,9 @@ void Speaker_ClassD_close(void)
 
 void Speaker_ClassAB_Open(void)
 {
-	/* kal_uint32 i, SPKTrimReg = 0; */
-	uint32 retyrcount = 10;
-	uint32 WaitforReady = 0;
-
-	pr_warn("%s\n", __func__);
+	/* uint32_t i, SPKTrimReg = 0; */
+	unsigned int retyrcount = 10;
+	unsigned int WaitforReady = 0;
 
 	Ana_Set_Reg(SPK_CON2, 0x0214, 0xffff);	/* enable classAB OC function */
 	/* Ana_Set_Reg(SPK_CON9, 0x0400, 0xffff); // Set Spk 6dB gain */
@@ -137,8 +133,8 @@ void Speaker_ClassAB_Open(void)
 		WaitforReady = Ana_Get_Reg(SPK_CON1);
 		WaitforReady = (WaitforReady & 0x8000);
 		retyrcount--;
-		pr_warn("%s, SpkTrim Stage 0.5 SPK_CON1 %x %d\n", __func__, WaitforReady,
-		       retyrcount);
+		/*pr_warn("%s, SpkTrim Stage 0.5 SPK_CON1 %x %d\n", __func__, WaitforReady,
+		       retyrcount);*/
 	} while ((WaitforReady == 0) && (retyrcount > 0));
 	pr_warn("%s, SpkTrim Stage 1 SPK_CON1 %x\n", __func__, Ana_Get_Reg(SPK_CON1));
 
@@ -146,7 +142,7 @@ void Speaker_ClassAB_Open(void)
 	Ana_Set_Reg(SPK_CON0, 0x3004, 0xffff);
 	Ana_Set_Reg(SPK_CON9, 0x0000, 0x0018);	/* Set Spk 6dB gain. VCM fast. */
 	Ana_Set_Reg(SPK_CON0, 0x3005, 0xffff);	/* enable SPK AMP with 0dB gain, select Class AB. enable Amp. */
-	pr_warn("%s, SpkTrim Stage 2 SPK_CON1 %x\n", __func__, Ana_Get_Reg(SPK_CON1));
+	/*pr_warn("%s, SpkTrim Stage 2 SPK_CON1 %x\n", __func__, Ana_Get_Reg(SPK_CON1));*/
 
 }
 

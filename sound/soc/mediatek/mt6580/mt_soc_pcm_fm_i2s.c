@@ -70,7 +70,7 @@ static int mtk_pcm_fm_i2s_close(struct snd_pcm_substream *substream);
 static int mtk_asoc_pcm_fm_i2s_new(struct snd_soc_pcm_runtime *rtd);
 static int mtk_afe_fm_i2s_probe(struct snd_soc_platform *platform);
 
-static uint32 mfm_i2s_Volume = 0x10000;
+static unsigned int mfm_i2s_Volume = 0x10000;
 static bool mPrepareDone;
 
 static int Audio_fm_i2s_Volume_Get(struct snd_kcontrol *kcontrol,
@@ -147,7 +147,7 @@ static int mtk_pcm_fm_i2s_stop(struct snd_pcm_substream *substream)
 	return 0;
 }
 
-static kal_int32 Previous_Hw_cur;
+static int32_t Previous_Hw_cur;
 static snd_pcm_uframes_t mtk_pcm_fm_i2s_pointer(struct snd_pcm_substream
 						*substream)
 {
@@ -258,7 +258,7 @@ static int mtk_pcm_fm_i2s_close(struct snd_pcm_substream *substream)
 
 static int mtk_pcm_fm_i2s_prepare(struct snd_pcm_substream *substream)
 {
-	AudioDigtalI2S m2ndI2SInAttribute;
+	struct AudioDigtalI2S m2ndI2SInAttribute;
 
 	struct snd_pcm_runtime *runtime = substream->runtime;
 

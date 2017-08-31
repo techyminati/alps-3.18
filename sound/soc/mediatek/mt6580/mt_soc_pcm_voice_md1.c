@@ -71,7 +71,7 @@ static int mtk_soc_voice_new(struct snd_soc_pcm_runtime *rtd);
 static int mtk_voice_platform_probe(struct snd_soc_platform *platform);
 
 static bool Voice_Status;
-static AudioDigtalI2S mAudioDigitalI2S;
+static struct AudioDigtalI2S mAudioDigitalI2S;
 
 bool get_voice_status(void)
 {
@@ -79,7 +79,7 @@ bool get_voice_status(void)
 }
 EXPORT_SYMBOL(get_voice_status);
 
-static AudioDigitalPCM Voice1Pcm = {
+static struct AudioDigitalPCM Voice1Pcm = {
 	.mTxLchRepeatSel = Soc_Aud_TX_LCH_RPT_TX_LCH_NO_REPEAT,
 	.mVbt16kModeSel = Soc_Aud_VBT_16K_MODE_VBT_16K_MODE_DISABLE,
 	.mExtModemSel = Soc_Aud_EXT_MODEM_MODEM_2_USE_INTERNAL_MODEM,

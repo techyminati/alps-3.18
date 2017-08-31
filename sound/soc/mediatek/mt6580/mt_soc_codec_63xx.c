@@ -97,8 +97,8 @@ static void Voice_Amp_Change(bool enable);
 static void Speaker_Amp_Change(bool enable);
 static bool TurnOnVOWADcPowerACC(int MicType, bool enable);
 
-static mt6350_Codec_Data_Priv *mCodec_data;
-static uint32 mBlockSampleRate[AUDIO_ANALOG_DEVICE_INOUT_MAX] = { 48000, 48000, 48000 };
+static struct mt6350_Codec_Data_Priv *mCodec_data;
+static unsigned int mBlockSampleRate[AUDIO_ANALOG_DEVICE_INOUT_MAX] = { 48000, 48000, 48000 };
 
 static DEFINE_MUTEX(Ana_Ctrl_Mutex);
 static DEFINE_MUTEX(Ana_buf_Ctrl_Mutex);
@@ -122,7 +122,7 @@ static int mHpLeftDcCalibration;
 static int mHpRightDcCalibration;
 
 #ifdef RAINIER_NEED_CHECK
-static uint32 RG_AUDHPLTRIM_VAUDP15, RG_AUDHPRTRIM_VAUDP15, RG_AUDHPLFINETRIM_VAUDP15,
+static unsigned int RG_AUDHPLTRIM_VAUDP15, RG_AUDHPRTRIM_VAUDP15, RG_AUDHPLFINETRIM_VAUDP15,
 	RG_AUDHPRFINETRIM_VAUDP15, RG_AUDHPLTRIM_VAUDP15_SPKHP, RG_AUDHPRTRIM_VAUDP15_SPKHP,
 	RG_AUDHPLFINETRIM_VAUDP15_SPKHP, RG_AUDHPRFINETRIM_VAUDP15_SPKHP;
 #endif
@@ -147,7 +147,7 @@ static bool mIsVOWOn;
 static bool mIsExtSPKUse;
 
 /* VOW using */
-typedef enum {
+enum AUDIO_VOW_MIC_TYPE {
 	AUDIO_VOW_MIC_TYPE_Handset_AMIC = 0,
 	AUDIO_VOW_MIC_TYPE_Headset_MIC,
 	AUDIO_VOW_MIC_TYPE_Handset_DMIC,	/* 1P6 */
@@ -156,7 +156,7 @@ typedef enum {
 	AUDIO_VOW_MIC_TYPE_Headset_MIC_DCC,
 	AUDIO_VOW_MIC_TYPE_Handset_AMIC_DCCECM,	/* DCC ECM, dual differential */
 	AUDIO_VOW_MIC_TYPE_Headset_MIC_DCCECM	/* DCC ECM, signal differential */
-} AUDIO_VOW_MIC_TYPE;
+};
 
 static int mAudio_VOW_Mic_type = AUDIO_VOW_MIC_TYPE_Handset_AMIC;
 static void Audio_Amp_Change(int channels, bool enable);
@@ -267,17 +267,15 @@ void SetAnalogSuspend(bool bEnable)
 static int audck_buf_Count;
 void audckbufEnable(bool enable)
 {
-	pr_warn("audckbufEnable audck_buf_Count = %d enable = %d\n", audck_buf_Count, enable);
+	PRINTK_AUDDRV("audckbufEnable audck_buf_Count = %d enable = %d\n", audck_buf_Count, enable);
 	mutex_lock(&Ana_buf_Ctrl_Mutex);
 	if (enable) {
 		if (audck_buf_Count == 0) {
 #ifdef CONFIG_FPGA_EARLY_PORTING
 			pr_warn("fpga bypass clk_buf_ctrl(CLK_BUF_AUDIO,true)\n");
 #else
-			pr_warn("+clk_buf_ctrl(CLK_BUF_AUDIO,true)\n");
 			/* system 26M clk from RF */
 			clk_buf_ctrl(CLK_BUF_AUDIO, true);
-			pr_warn("-clk_buf_ctrl(CLK_BUF_AUDIO,true)\n");
 #endif
 		}
 		audck_buf_Count++;
@@ -287,9 +285,7 @@ void audckbufEnable(bool enable)
 #ifdef CONFIG_FPGA_EARLY_PORTING
 			pr_warn("fpga bypass clk_buf_ctrl(CLK_BUF_AUDIO,false)\n");
 #else
-			pr_warn("+clk_buf_ctrl(CLK_BUF_AUDIO,false)\n");
 			clk_buf_ctrl(CLK_BUF_AUDIO, false);
-			pr_warn("-clk_buf_ctrl(CLK_BUF_AUDIO,false)\n");
 #endif
 		}
 		if (audck_buf_Count < 0) {
@@ -309,7 +305,7 @@ static void ClsqEnable(bool enable)
 static int TopCkCount;
 static void Topck_Enable(bool enable)
 {
-	pr_warn("Topck_Enable enable = %d TopCkCount = %d\n", enable, TopCkCount);
+	PRINTK_AUDDRV("Topck_Enable enable = %d TopCkCount = %d\n", enable, TopCkCount);
 
 	mutex_lock(&Ana_Clk_Mutex);
 	if (enable == true) {
@@ -340,7 +336,7 @@ static void NvregEnable(bool enable)
 }
 static void TopCtlChangeTrigger(void)
 {
-	uint32 top_ctrl_status_now = Ana_Get_Reg(ABB_AFE_CON11);
+	unsigned int top_ctrl_status_now = Ana_Get_Reg(ABB_AFE_CON11);
 
 	Ana_Set_Reg(ABB_AFE_CON11, ((top_ctrl_status_now & 0x0001) ? 0 : 1) << 8, 0x0100);
 }
@@ -353,7 +349,7 @@ static void DCChangeTrigger(void)
 	/* return NO_ERROR; */
 }
 
-/* extern kal_uint32 upmu_get_reg_value(kal_uint32 reg); */
+/* extern uint32_t upmu_get_reg_value(uint32_t reg); */
 
 void Auddrv_Read_Efuse_HPOffset(void)
 {
@@ -429,7 +425,6 @@ void Auddrv_Read_Efuse_HPOffset(void)
 #else
 	pr_debug("Auddrv_Read_Efuse_HPOffset not support\n");
 #endif
-	pr_debug("Auddrv_Read_Efuse_HPOffset(-)\n");
 }
 EXPORT_SYMBOL(Auddrv_Read_Efuse_HPOffset);
 
@@ -437,9 +432,8 @@ EXPORT_SYMBOL(Auddrv_Read_Efuse_HPOffset);
 static void Apply_Speaker_Gain(void)
 {
 	int index = Speaker_pga_gain;
-	uint32 currentIdx, i;
+	unsigned int currentIdx, i;
 
-	pr_warn("%s Speaker_pga_gain= %d\n", __func__, Speaker_pga_gain);
 
 	if (index > 11)
 		index = 11;
@@ -448,7 +442,8 @@ static void Apply_Speaker_Gain(void)
 		index = 1;	/* min to 0dB */
 
 	currentIdx = (Ana_Get_Reg(SPK_CON9) >> 8) & 0xF;
-	pr_warn("%s(), index = %d, currentIdx=%d\n", __func__, index, currentIdx);
+	pr_warn("%s(), Speaker_pga_gain = %d, index = %d, currentIdx=%d\n",
+		__func__, Speaker_pga_gain, index, currentIdx);
 
 	if (index > currentIdx) {
 		for (i = (currentIdx + 1); i <= index; i++) {
@@ -463,7 +458,7 @@ static void Apply_Speaker_Gain(void)
 			mdelay(3);
 		}
 	}
-	pr_warn("%s--\n", __func__);
+	/*pr_warn("%s--\n", __func__);*/
 }
 #else
 static void Apply_Speaker_Gain(void)
@@ -539,7 +534,7 @@ void OpenAnalogTrimHardware(bool enable)
 
 void setHpDcCalibrationGain(unsigned int type, int gain_value)
 {
-	uint32 index = 7;
+	unsigned int index = 7;
 
 	pr_warn("%s ,type=%d, gain_value = %d\n", __func__, type, gain_value);
 	/* this will base on hw spec. */
@@ -736,11 +731,11 @@ static void SetDCcoupleNP(int MicBias, int mode)
 }
 #endif
 
-uint32 GetULFrequency(uint32 frequency)
+unsigned int GetULFrequency(unsigned int frequency)
 {
-	uint32 Reg_value = 0;
+	unsigned int Reg_value = 0;
 
-	pr_warn("%s frequency =%d\n", __func__, frequency);
+	/*pr_warn("%s frequency =%d\n", __func__, frequency);*/
 	switch (frequency) {
 	case 8000:
 	case 16000:
@@ -756,11 +751,11 @@ uint32 GetULFrequency(uint32 frequency)
 	return Reg_value;
 }
 
-uint32 GetDLFrequency(uint32 frequency)
+unsigned int GetDLFrequency(unsigned int frequency)
 {
-	uint32 Reg_value = 0;
+	unsigned int Reg_value = 0;
 
-	pr_warn("%s frequency =%d\n", __func__, frequency);
+	/*pr_warn("%s frequency =%d\n", __func__, frequency);*/
 	switch (frequency) {
 	case 8000:
 		Reg_value = 0;
@@ -796,7 +791,7 @@ uint32 GetDLFrequency(uint32 frequency)
 }
 
 
-uint32 ULSampleRateTransform(uint32 SampleRate)
+unsigned int ULSampleRateTransform(unsigned int SampleRate)
 {
 	switch (SampleRate) {
 	case 8000:
@@ -1085,9 +1080,9 @@ static struct snd_soc_dai_driver mtk_6350_dai_codecs[] = {
 };
 
 
-uint32 GetDLNewIFFrequency(unsigned int frequency)
+unsigned int GetDLNewIFFrequency(unsigned int frequency)
 {
-	uint32 Reg_value = 0;
+	unsigned int Reg_value = 0;
 	/* printk("AudioPlatformDevice ApplyDLNewIFFrequency ApplyDLNewIFFrequency = %d", frequency); */
 	switch (frequency) {
 	case 8000:
@@ -1123,9 +1118,9 @@ uint32 GetDLNewIFFrequency(unsigned int frequency)
 	return Reg_value;
 }
 
-uint32 GetULNewIFFrequency(unsigned int frequency)
+unsigned int GetULNewIFFrequency(unsigned int frequency)
 {
-	uint32 Reg_value = 0;
+	unsigned int Reg_value = 0;
 
 	switch (frequency) {
 	case 8000:
@@ -1139,13 +1134,13 @@ uint32 GetULNewIFFrequency(unsigned int frequency)
 	default:
 		pr_warn("GetULNewIFFrequency with frequency = %d", frequency);
 	}
-	pr_warn("GetULNewIFFrequency Reg_value = %d", Reg_value);
+	/*pr_warn("GetULNewIFFrequency Reg_value = %d", Reg_value);*/
 	return Reg_value;
 }
 
 static void TurnOnDacPower(void)
 {
-	uint32 dlFreq;
+	unsigned int dlFreq;
 
 	pr_warn("TurnOnDacPower\n");
 	audckbufEnable(true);
@@ -1172,6 +1167,7 @@ static void TurnOnDacPower(void)
 	TopCtlChangeTrigger();
 	Ana_Set_Reg(ABB_AFE_CON0, 0x0001, 0x0001);	/* DL turn on enable */
 
+	Ana_Set_Reg(GPIO_DINV1, 0x0080, 0x0080);	/* MT6570/MT6580 need mtkif rx inverse */
 #if 0				/* todo */
 	/* Ana_Set_Reg(ABB_AFE_TOP_CON0 , 0x0000 , 0xffff); //set DL in normal path, not from sine gen table */
 #endif
@@ -1241,7 +1237,6 @@ static void HeadsetVolumeSet(void)
 	int index = mCodec_data->mAudio_Ana_Volume[AUDIO_ANALOG_VOLUME_HPOUTL];
 	int index2 = 7;
 
-	pr_warn("%s(), Lindex = %d\n", __func__, index);
 
 	/* gain[] = {-5, -3, -1, 1, 3, 5, 7, 9}; */
 
@@ -1250,7 +1245,9 @@ static void HeadsetVolumeSet(void)
 
 	index2 -= index;
 
-	pr_warn("%s(), Lindex = %d, Lindex2 = %d\n", __func__, index, index2);
+	pr_warn("%s(), L input value = %d, Lindex = %d, Lindex2 = %d, R input value = %d\n",
+		__func__, mCodec_data->mAudio_Ana_Volume[AUDIO_ANALOG_VOLUME_HPOUTL],
+		index, index2, mCodec_data->mAudio_Ana_Volume[AUDIO_ANALOG_VOLUME_HPOUTR]);
 
 	Ana_Set_Reg(AUDTOP_CON5, index2 << 12, 0x00007000);
 
@@ -1470,8 +1467,8 @@ static void SetVoiceAmpVolume(void)
 
 static void Voice_Amp_Change(bool enable)
 {
-	uint16 i = 3;
-	uint16 rReg = 0;
+	unsigned short i = 3;
+	unsigned short rReg = 0;
 
 	if (enable) {
 		pr_warn("%s\n", __func__);
@@ -1496,7 +1493,7 @@ static void Voice_Amp_Change(bool enable)
 		}
 	} else {
 		pr_warn("Voice_Amp_Change turn off\n");
-		/* uint16 i; */
+		/* unsigned short i; */
 		i = (Ana_Get_Reg(AUDTOP_CON7) & 0xf0) >> 4;
 		i = (i < 4) ? 4 : i;
 		i = (i > 16) ? 16 : i;
@@ -1552,7 +1549,7 @@ static int Voice_Amp_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_valu
 
 static void Speaker_Amp_Change(bool enable)
 {
-	uint16 i = 0;
+	unsigned short i = 0;
 
 	if (enable) {
 		if (GetDLStatus() == false) {
@@ -1612,8 +1609,8 @@ static void Speaker_Amp_Change(bool enable)
 #endif
 
 			{	/* Add speaker ramp function */
-				uint32 index;
-				uint32 currentIdx;
+				unsigned int index;
+				unsigned int currentIdx;
 
 				index = 4;
 				currentIdx = (Ana_Get_Reg(SPK_CON9) >> 8) & 0xF;
@@ -1960,13 +1957,12 @@ static int Ext_Speaker_Use_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_ele
 
 static void Headset_Speaker_Amp_Change(bool enable)
 {
-	pr_warn("%s()\n", __func__);
 	if (enable) {
 		if (GetDLStatus() == false) {
 			/* TurnOnDacPower if no DL active */
 			TurnOnDacPower();
 		}
-		pr_warn("turn on Speaker_Amp_Change\n");
+		pr_warn("turn on Headset_Speaker_Amp_Change\n");
 
 		/* DC compensation setting */
 		pr_warn("%s, mHpRightDcCalibration [%d] mHpLeftDcCalibration [%d]", __func__,
@@ -2471,7 +2467,7 @@ static int Headset_PGAR_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_v
 	return 0;
 }
 
-static uint32 mHp_Impedance = 32;
+static unsigned int mHp_Impedance = 32;
 
 static int Audio_Hp_Impedance_Get(struct snd_kcontrol *kcontrol,
 				  struct snd_ctl_elem_value *ucontrol)
@@ -2559,7 +2555,7 @@ void SetMicPGAGain(void)
 
 	/* set mic1 PGA gain */
 	index = mCodec_data->mAudio_Ana_Volume[AUDIO_ANALOG_VOLUME_MICAMP1];
-	pr_warn("%s(),mic1 index=%d,index2=%d\n", __func__, index, index2);
+	/*pr_warn("%s(),mic1 index=%d,index2=%d\n", __func__, index, index2);*/
 	if (index > index2)
 		index = index2;
 
@@ -2569,7 +2565,7 @@ void SetMicPGAGain(void)
 
 	/* set mic2 PGA gain */
 	index = mCodec_data->mAudio_Ana_Volume[AUDIO_ANALOG_VOLUME_MICAMP2];
-	pr_warn("%s(),mic2 index=%d,index2=%d\n", __func__, index, index2);
+	/*pr_warn("%s(),mic2 index=%d,index2=%d\n", __func__, index, index2);*/
 	if (index > index2)
 		index = index2;
 
@@ -2607,7 +2603,7 @@ static bool TurnOnADcPowerACC(int ADCType, bool enable)
 	pr_warn("%s, ADCType=%d, enable=%x,AdcStatus=%x ,DLStatus=%x\n", __func__, ADCType, enable,
 	       GetAdcStatus(), GetDLStatus());
 	if (enable) {
-		uint32 SampleRate_VUL1 = mBlockSampleRate[AUDIO_ANALOG_DEVICE_IN_ADC];
+		unsigned int SampleRate_VUL1 = mBlockSampleRate[AUDIO_ANALOG_DEVICE_IN_ADC];
 
 		if (GetAdcStatus() == false) {
 			audckbufEnable(true);
@@ -2715,7 +2711,7 @@ static bool TurnOnADcPowerDmic(int ADCType, bool enable)
 	       GetAdcStatus());
 
 	if (enable) {
-		uint32 SampleRate_VUL1 = mBlockSampleRate[AUDIO_ANALOG_DEVICE_IN_ADC];
+		unsigned int SampleRate_VUL1 = mBlockSampleRate[AUDIO_ANALOG_DEVICE_IN_ADC];
 
 		if (GetAdcStatus() == false) {
 			audckbufEnable(true);
@@ -3139,7 +3135,6 @@ static int Audio_PGA1_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_val
 	int index = 0;
 	int index2 = 5;
 
-	pr_warn("%s()\n", __func__);
 	if (ucontrol->value.enumerated.item[0] > ARRAY_SIZE(ADC_UL_PGA_GAIN)) {
 		pr_debug("return -EINVAL\n");
 		return -EINVAL;
@@ -3176,7 +3171,6 @@ static int Audio_PGA2_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_val
 	int index = 0;
 	int index2 = 5;
 
-	pr_warn("%s()\n", __func__);
 	if (ucontrol->value.enumerated.item[0] > ARRAY_SIZE(ADC_UL_PGA_GAIN)) {
 		pr_warn("return -EINVAL\n");
 		return -EINVAL;
@@ -3261,7 +3255,6 @@ static int Audio_MicSource2_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_el
 		return -EINVAL;
 	}
 	index = ucontrol->value.integer.value[0];
-	pr_warn("%s() index = %d done\n", __func__, index);
 	mCodec_data->mAudio_Ana_Mux[AUDIO_MICSOURCE_MUX_IN_2] = ucontrol->value.integer.value[0];
 
 	return 0;
@@ -3703,8 +3696,8 @@ static int Voice_Call_DAC_DAC_HS_Set(struct snd_kcontrol *kcontrol,
 
 static const char * const Pmic_Test_function[] = { "Off", "On" };
 static const char * const Pmic_LPBK_function[] = { "Off", "LPBK3" };
-static int32 Pmic_Loopback_Type;
-static int32 TurnOn_ULDL_16K_Type;
+static int Pmic_Loopback_Type;
+static int TurnOn_ULDL_16K_Type;
 
 static int Pmic_Loopback_Get(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
 {
@@ -3755,9 +3748,9 @@ static int TurnOn_ULDL_16K_Get(struct snd_kcontrol *kcontrol, struct snd_ctl_ele
 
 static int TurnOn_ULDL_16K_Set(struct snd_kcontrol *kcontrol, struct snd_ctl_elem_value *ucontrol)
 {
-	uint32 top_ctrl_status_now;
-	uint16 rReg = 0;
-	uint16 i = 3;
+	unsigned int top_ctrl_status_now;
+	unsigned short rReg = 0;
+	unsigned short i = 3;
 
 	pr_debug("%s()\n", __func__);
 
@@ -3999,14 +3992,14 @@ static int mt6350_codec_probe(struct snd_soc_codec *codec)
 				   ARRAY_SIZE(Audio_snd_auxadc_controls));
 
 	/* here to set  private data */
-	mCodec_data = kzalloc(sizeof(mt6350_Codec_Data_Priv), GFP_KERNEL);
+	mCodec_data = kzalloc(sizeof(struct mt6350_Codec_Data_Priv), GFP_KERNEL);
 	if (!mCodec_data) {
 		/*pr_warn("Failed to allocate private data\n");*/
 		return -ENOMEM;
 	}
 	snd_soc_codec_set_drvdata(codec, mCodec_data);
 
-	memset((void *)mCodec_data, 0, sizeof(mt6350_Codec_Data_Priv));
+	memset((void *)mCodec_data, 0, sizeof(struct mt6350_Codec_Data_Priv));
 	mt6350_codec_init_reg(codec);
 	InitCodecDefault();
 	mInitCodec = true;

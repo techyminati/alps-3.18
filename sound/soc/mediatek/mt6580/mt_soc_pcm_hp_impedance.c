@@ -71,7 +71,7 @@
 #include <cust_battery_meter.h> */
 #include <linux/dma-mapping.h>
 
-static AFE_MEM_CONTROL_T *pHp_impedance_MemControl;
+static struct AFE_MEM_CONTROL_T *pHp_impedance_MemControl;
 static const int DCoffsetDefault = 1500;	/* 95: 1622 */
 static const int DCoffsetVariance = 2;	/* 95: 90  // 5% */
 
@@ -129,7 +129,7 @@ static snd_pcm_uframes_t mtk_pcm_hp_impedance_pointer(struct snd_pcm_substream
 static void SetDL1Buffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	AFE_BLOCK_T *pblock = &pHp_impedance_MemControl->rBlock;
+	struct AFE_BLOCK_T *pblock = &pHp_impedance_MemControl->rBlock;
 
 	pblock->pucPhysBufAddr = runtime->dma_addr;
 	pblock->pucVirtBufAddr = runtime->dma_area;
@@ -375,7 +375,7 @@ static int Audio_HP_ImpeDance_Set(struct snd_kcontrol *kcontrol,
 		for (value = 0; value < 10000; value += 200) {
 			unsigned short temp = value;
 			static unsigned short dcoffset;
-			volatile unsigned short *Sramdata;
+			unsigned short *Sramdata;
 			int i = 0;
 
 			pr_warn("set sram to dc value = %d\n", temp);
@@ -444,7 +444,7 @@ static unsigned short Phase2Check(unsigned short adcvalue, unsigned int adcoffse
 		return AUDIO_HP_IMPEDANCE32;
 }
 
-static void FillDatatoDlmemory(volatile unsigned int *memorypointer,
+static void FillDatatoDlmemory(unsigned int *memorypointer,
 			       unsigned int fillsize, unsigned short value)
 {
 	int addr = 0;

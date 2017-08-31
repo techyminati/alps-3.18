@@ -60,7 +60,7 @@ static DEFINE_SPINLOCK(afe_set_reg_lock);
 /*****************************************************************************
  *                         FUNCTION IMPLEMENTATION
  *****************************************************************************/
-static bool CheckOffset(uint32 offset)
+static bool CheckOffset(unsigned int offset)
 {
 	if (offset > AFE_MAXLENGTH)
 		return false;
@@ -118,12 +118,12 @@ void *Get_Afe_SramCaptureBase_Pointer()
 
 	return (void *)CaptureSramPointer;
 }
-void Afe_Set_Reg(uint32 offset, uint32 value, uint32 mask)
+void Afe_Set_Reg(unsigned int offset, unsigned int value, unsigned int mask)
 {
 	/* extern void *AFE_BASE_ADDRESS; */
-	volatile long address;
-	volatile uint32 *AFE_Register;
-	volatile uint32 val_tmp;
+	long address;
+	unsigned int *AFE_Register;
+	unsigned int val_tmp;
 	unsigned long flags = 0;
 
 	if (CheckOffset(offset) == false)
@@ -136,7 +136,7 @@ void Afe_Set_Reg(uint32 offset, uint32 value, uint32 mask)
 	address = (long)(AFE_BASE + offset);
 #endif
 
-	AFE_Register = (volatile uint32 *)address;
+	AFE_Register = (unsigned int *)address;
 
 	/* PRINTK_AFE_REG("Afe_Set_Reg offset=%x, value=%x, mask=%x\n",offset,value,mask); */
 	spin_lock_irqsave(&afe_set_reg_lock, flags);
@@ -148,11 +148,11 @@ void Afe_Set_Reg(uint32 offset, uint32 value, uint32 mask)
 }
 EXPORT_SYMBOL(Afe_Set_Reg);
 
-uint32 Afe_Get_Reg(uint32 offset)
+unsigned int Afe_Get_Reg(unsigned int offset)
 {
 	/* extern void *AFE_BASE_ADDRESS; */
-	volatile long address;
-	volatile uint32 *value;
+	long address;
+	unsigned int *value;
 
 	if (CheckOffset(offset) == false)
 		return 0xffffffff;
@@ -164,7 +164,7 @@ uint32 Afe_Get_Reg(uint32 offset)
 	address = (long)(AFE_BASE + offset);
 #endif
 
-	value = (volatile uint32 *)(address);
+	value = (unsigned int *)(address);
 	/* PRINTK_AFE_REG("Afe_Get_Reg offset=%x address = %x value = 0x%x\n",offset,address,*value); */
 	return *value;
 }

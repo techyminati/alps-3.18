@@ -95,7 +95,7 @@ unsigned long audio_bytes_to_frame(struct snd_pcm_substream *substream, unsigned
 	return count;
 }
 
-unsigned long mtk_local_audio_copy_from_user(bool IsSRAM, kal_uint8 *dst, char *src, int len)
+unsigned long mtk_local_audio_copy_from_user(bool IsSRAM, uint8_t *dst, char *src, int len)
 {
 	unsigned long value;
 
@@ -135,7 +135,7 @@ unsigned long mtk_local_audio_copy_from_user(bool IsSRAM, kal_uint8 *dst, char *
 	return 0;
 }
 
-unsigned long mtk_local_audio_copy_to_user(bool IsSRAM, kal_uint8 *dst, char *src, int len)
+unsigned long mtk_local_audio_copy_to_user(bool IsSRAM, uint8_t *dst, char *src, int len)
 {
 	if (IsSRAM) {
 		/* PRINTK_AUDDRV("mtk_local_audio_copy_to_user SRAM = %d\n", len); */

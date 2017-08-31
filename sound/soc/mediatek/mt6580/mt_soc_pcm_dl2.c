@@ -60,11 +60,11 @@
 #include <linux/ftrace.h>
 
 
-static AFE_MEM_CONTROL_T *pMemControl;
+static struct AFE_MEM_CONTROL_T *pMemControl;
 static int mPlaybackSramState;
 static struct snd_dma_buffer *Dl2_Playback_dma_buf;
 
-static uint32 UnderflowTime;
+static unsigned int UnderflowTime;
 
 static bool StartCheckTime;
 static unsigned long PrevTime;
@@ -72,7 +72,7 @@ static unsigned long NowTime;
 
 #ifdef AUDIO_DL2_ISR_COPY_SUPPORT
 static const int ISRCopyMaxSize = 256*2*4;     /* 256 frames, stereo, 32bit */
-static AFE_DL_ISR_COPY_T ISRCopyBuffer = {0};
+static struct AFE_DL_ISR_COPY_T ISRCopyBuffer = {0};
 #endif
 
 static int dataTransfer(void *dest, const void *src, uint32_t size);
@@ -135,7 +135,7 @@ static int mtk_pcm_dl2_stop(struct snd_pcm_substream *substream)
 
 	StartCheckTime = false;
 	if (unlikely(get_LowLatencyDebug())) {
-		AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
+		struct AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
 
 		if (Afe_Block->u4DataRemained < 0) {
 			pr_warn("%s, dl2 underflow\n", __func__);
@@ -160,11 +160,11 @@ static int mtk_pcm_dl2_stop(struct snd_pcm_substream *substream)
 
 static snd_pcm_uframes_t mtk_pcm_dl2_pointer(struct snd_pcm_substream *substream)
 {
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
-	kal_uint32 Frameidx = 0;
-	kal_int32 Afe_consumed_bytes = 0;
-	AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
+	uint32_t Frameidx = 0;
+	int32_t Afe_consumed_bytes = 0;
+	struct AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
 	unsigned long flags;
 
 	/* struct snd_pcm_runtime *runtime = substream->runtime; */
@@ -225,7 +225,7 @@ static snd_pcm_uframes_t mtk_pcm_dl2_pointer(struct snd_pcm_substream *substream
 static void SetDL2Buffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	AFE_BLOCK_T *pblock = &pMemControl->rBlock;
+	struct AFE_BLOCK_T *pblock = &pMemControl->rBlock;
 
 	pblock->pucPhysBufAddr = runtime->dma_addr;
 	pblock->pucVirtBufAddr = runtime->dma_area;
@@ -473,7 +473,7 @@ static int mtk_pcm_dl2_trigger(struct snd_pcm_substream *substream, int cmd)
 	return -EINVAL;
 }
 
-static int mtk_pcm_dl2_copy_(void __user *dst, snd_pcm_uframes_t *size, AFE_BLOCK_T *Afe_Block, bool bCopy)
+static int mtk_pcm_dl2_copy_(void __user *dst, snd_pcm_uframes_t *size, struct AFE_BLOCK_T *Afe_Block, bool bCopy)
 {
 	int copy_size = 0, Afe_WriteIdx_tmp;
 	unsigned long flags;
@@ -543,7 +543,7 @@ static int mtk_pcm_dl2_copy_(void __user *dst, snd_pcm_uframes_t *size, AFE_BLOC
 				Afe_Block->u4DataRemained, Afe_Block->u4DMAReadIdx, Afe_Block->u4WriteIdx);
 
 		} else {	/* copy twice */
-			kal_uint32 size_1 = 0, size_2 = 0;
+			uint32_t size_1 = 0, size_2 = 0;
 #ifdef AUDIO_64BYTE_ALIGN	/* no need to do 64byte align */
 			size_1 = Align64ByteSize((Afe_Block->u4BufferSize - Afe_WriteIdx_tmp));
 			size_2 = Align64ByteSize((copy_size - size_1));
@@ -617,8 +617,8 @@ static int dataTransfer(void *dest, const void *src, uint32_t size)
 void mtk_dl2_copy2buffer(const void *addr, uint32_t size)
 {
 	bool again = false;
-	static kal_int8 *recordDst;
-	static kal_int8 *recordScr;
+	static int8_t *recordDst;
+	static int8_t *recordScr;
 	static uint32_t recordSize;
 
 
@@ -676,7 +676,7 @@ exit:
 
 void mtk_dl2_copy_l(void)
 {
-	AFE_BLOCK_T Afe_Block = pMemControl->rBlock;
+	struct AFE_BLOCK_T Afe_Block = pMemControl->rBlock;
 	snd_pcm_uframes_t count = ISRCopyBuffer.u4BufferSize;
 
 	if (unlikely(!ISRCopyBuffer.u4BufferSize || !ISRCopyBuffer.pBufferIndx))
@@ -696,7 +696,7 @@ static int mtk_pcm_dl2_copy(struct snd_pcm_substream *substream,
 			int channel, snd_pcm_uframes_t pos,
 			void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
+	struct AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
 	int remainCount = 0;
 	int ret = 0;
 
@@ -786,7 +786,7 @@ static int mtk_pcm_dl2_copy(struct snd_pcm_substream *substream,
 			int channel, snd_pcm_uframes_t pos,
 			void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
+	struct AFE_BLOCK_T *Afe_Block = &pMemControl->rBlock;
 
 	PRINTK_AUD_DL2("mtk_pcm_dl2_copy pos = %lu count = %lu\n", pos, count);
 	/* get total bytes to copy */

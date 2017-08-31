@@ -59,7 +59,7 @@
 #include "mt_soc_digital_type.h"
 #include "mt_soc_pcm_common.h"
 
-static AFE_MEM_CONTROL_T *pdl1btMemControl;
+static struct AFE_MEM_CONTROL_T *pdl1btMemControl;
 
 static DEFINE_SPINLOCK(auddrv_DL1BTCtl_lock);
 
@@ -119,13 +119,13 @@ static int mtk_pcm_dl1Bt_stop(struct snd_pcm_substream *substream)
 static snd_pcm_uframes_t mtk_dl1bt_pcm_pointer(struct snd_pcm_substream
 					       *substream)
 {
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
-	kal_uint32 Frameidx = 0;
-	kal_int32 Afe_consumed_bytes = 0;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
+	uint32_t Frameidx = 0;
+	int32_t Afe_consumed_bytes = 0;
 	unsigned long flags;
 
-	AFE_BLOCK_T *Afe_Block = &pdl1btMemControl->rBlock;
+	struct AFE_BLOCK_T *Afe_Block = &pdl1btMemControl->rBlock;
 	/* struct snd_pcm_runtime *runtime = substream->runtime; */
 	PRINTK_AUD_DL1(" %s Afe_Block->u4DMAReadIdx = 0x%x\n", __func__, Afe_Block->u4DMAReadIdx);
 
@@ -275,7 +275,7 @@ static int mtk_dl1bt_pcm_prepare(struct snd_pcm_substream *substream)
 
 static bool SetVoipDAIBTAttribute(int sample_rate)
 {
-	AudioDigitalDAIBT daibt_attribute;
+	struct AudioDigitalDAIBT daibt_attribute;
 
 	memset_io((void *)&daibt_attribute, 0, sizeof(daibt_attribute));
 
@@ -369,7 +369,7 @@ static int mtk_pcm_dl1bt_copy(struct snd_pcm_substream *substream,
 			      int channel, snd_pcm_uframes_t pos,
 			      void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_BLOCK_T *Afe_Block = NULL;
+	struct AFE_BLOCK_T *Afe_Block = NULL;
 	unsigned long flags;
 	char *data_w_ptr = (char *)dst;
 	int copy_size = 0, Afe_WriteIdx_tmp;
@@ -445,7 +445,7 @@ static int mtk_pcm_dl1bt_copy(struct snd_pcm_substream *substream,
 				       Afe_Block->u4DMAReadIdx, Afe_Block->u4DataRemained, count);
 
 		} else {	/* copy twice */
-			kal_uint32 size_1 = 0, size_2 = 0;
+			uint32_t size_1 = 0, size_2 = 0;
 #ifdef AUDIO_64BYTE_ALIGN
 			size_1 = Align64ByteSize((Afe_Block->u4BufferSize - Afe_WriteIdx_tmp));
 			size_2 = Align64ByteSize((copy_size - size_1));

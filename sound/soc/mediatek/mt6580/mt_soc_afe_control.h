@@ -68,53 +68,53 @@
 
 bool InitAfeControl(void);
 bool ResetAfeControl(void);
-bool Register_Aud_Irq(void *dev, uint32 afe_irq_number);
+bool Register_Aud_Irq(void *dev, unsigned int afe_irq_number);
 void Auddrv_Reg_map(void);
 
-bool SetSampleRate(uint32 Aud_block, uint32 SampleRate);
-bool SetChannels(uint32 Memory_Interface, uint32 channel);
+bool SetSampleRate(unsigned int Aud_block, unsigned int SampleRate);
+bool SetChannels(unsigned int Memory_Interface, unsigned int channel);
 /*
 DO NOT USER DIRECTLY, use irq manager
-bool SetIrqMcuCounter(uint32 Irqmode, uint32 Counter);
-bool SetIrqEnable(uint32 Irqmode, bool bEnable);
-bool SetIrqMcuSampleRate(uint32 Irqmode, uint32 SampleRate);
+bool SetIrqMcuCounter(unsigned int Irqmode, unsigned int Counter);
+bool SetIrqEnable(unsigned int Irqmode, bool bEnable);
+bool SetIrqMcuSampleRate(unsigned int Irqmode, unsigned int SampleRate);
 */
-bool SetConnection(uint32 ConnectionState, uint32 Input, uint32 Output);
-bool SetMemoryPathEnable(uint32 Aud_block, bool bEnable);
-bool GetMemoryPathEnable(uint32 Aud_block);
+bool SetConnection(unsigned int ConnectionState, unsigned int Input, unsigned int Output);
+bool SetMemoryPathEnable(unsigned int Aud_block, bool bEnable);
+bool GetMemoryPathEnable(unsigned int Aud_block);
 bool SetI2SDacEnable(bool bEnable);
 bool GetI2SDacEnable(void);
 void EnableAfe(bool bEnable);
 bool Set2ndI2SOutAttribute(uint32_t sampleRate);
-bool Set2ndI2SOut(AudioDigtalI2S *DigtalI2S);
+bool Set2ndI2SOut(struct AudioDigtalI2S *DigtalI2S);
 bool Set2ndI2SOutEnable(bool benable);
-bool SetI2SAdcIn(AudioDigtalI2S *DigtalI2S);
-bool Set2ndI2SAdcIn(AudioDigtalI2S *DigtalI2S);
-bool SetDLSrc2(uint32 SampleRate);
+bool SetI2SAdcIn(struct AudioDigtalI2S *DigtalI2S);
+bool Set2ndI2SAdcIn(struct AudioDigtalI2S *DigtalI2S);
+bool SetDLSrc2(unsigned int SampleRate);
 void SetULSrcEnable(bool bEnable);
 void SetADDAEnable(bool bEnable);
 
 bool GetMrgI2SEnable(void);
 bool SetMrgI2SEnable(bool bEnable, unsigned int sampleRate);
-bool SetDaiBt(AudioDigitalDAIBT *mAudioDaiBt);
+bool SetDaiBt(struct AudioDigitalDAIBT *mAudioDaiBt);
 bool SetDaiBtEnable(bool bEanble);
 
 bool SetI2SAdcEnable(bool bEnable);
 bool Set2ndI2SAdcEnable(bool bEnable);
-bool SetI2SDacOut(uint32 SampleRate, bool Lowgitter, bool I2SWLen);
-bool SetHwDigitalGainMode(uint32 GainType, uint32 SampleRate, uint32 SamplePerStep);
+bool SetI2SDacOut(unsigned int SampleRate, bool Lowgitter, bool I2SWLen);
+bool SetHwDigitalGainMode(unsigned int GainType, unsigned int SampleRate, unsigned int SamplePerStep);
 bool SetHwDigitalGainEnable(int GainType, bool Enable);
-bool SetHwDigitalGain(uint32 Gain, int GainType);
+bool SetHwDigitalGain(unsigned int Gain, int GainType);
 
-bool SetMemDuplicateWrite(uint32 InterfaceType, int dupwrite);
-bool EnableSideGenHw(uint32 connection, bool direction, bool Enable);
-bool SetSideGenSampleRate(uint32 SampleRate);
+bool SetMemDuplicateWrite(unsigned int InterfaceType, int dupwrite);
+bool EnableSideGenHw(unsigned int connection, bool direction, bool Enable);
+bool SetSideGenSampleRate(unsigned int SampleRate);
 bool CleanPreDistortion(void);
 bool EnableSideToneFilter(bool stf_on);
 bool SetModemPcmEnable(int modem_index, bool modem_pcm_on);
-bool SetModemPcmConfig(int modem_index, AudioDigitalPCM p_modem_pcm_attribute);
+bool SetModemPcmConfig(int modem_index, struct AudioDigitalPCM p_modem_pcm_attribute);
 
-bool Set2ndI2SIn(AudioDigtalI2S *mDigitalI2S);
+bool Set2ndI2SIn(struct AudioDigtalI2S *mDigitalI2S);
 bool Set2ndI2SInConfig(unsigned int sampleRate, bool bIsSlaveMode);
 bool Set2ndI2SInEnable(bool bEnable);
 
@@ -123,47 +123,47 @@ bool SetI2SASRCEnable(bool bEnable);
 
 bool checkDllinkMEMIfStatus(void);
 bool checkUplinkMEMIfStatus(void);
-bool SetMemIfFetchFormatPerSample(uint32 InterfaceType, uint32 eFetchFormat);
-bool SetoutputConnectionFormat(uint32 ConnectionFormat, uint32 Output);
+bool SetMemIfFetchFormatPerSample(unsigned int InterfaceType, unsigned int eFetchFormat);
+bool SetoutputConnectionFormat(unsigned int ConnectionFormat, unsigned int Output);
 
-bool SetHDMIApLL(uint32 ApllSource);
-uint32 GetHDMIApLLSource(void);
+bool SetHDMIApLL(unsigned int ApllSource);
+unsigned int GetHDMIApLLSource(void);
 bool SetHDMIMCLK(void);
 bool SetHDMIBCLK(void);
-bool SetHDMIdatalength(uint32 length);
-bool SetHDMIsamplerate(uint32 samplerate);
-bool SetHDMIConnection(uint32 ConnectionState, uint32 Input, uint32 Output);
-bool SetHDMIChannels(uint32 Channels);
+bool SetHDMIdatalength(unsigned int length);
+bool SetHDMIsamplerate(unsigned int samplerate);
+bool SetHDMIConnection(unsigned int ConnectionState, unsigned int Input, unsigned int Output);
+bool SetHDMIChannels(unsigned int Channels);
 bool SetHDMIEnable(bool bEnable);
 
-bool SetTDMLrckWidth(uint32 cycles);
-bool SetTDMbckcycle(uint32 cycles);
-bool SetTDMChannelsSdata(uint32 channels);
+bool SetTDMLrckWidth(unsigned int cycles);
+bool SetTDMbckcycle(unsigned int cycles);
+bool SetTDMChannelsSdata(unsigned int channels);
 
 /* Soc_Aud_I2S_WLEN_WLEN_16BITS or Soc_Aud_I2S_WLEN_WLEN_32BITS */
 
-bool SetTDMDatalength(uint32 length);
-bool SetTDMI2Smode(uint32 mode);
+bool SetTDMDatalength(unsigned int length);
+bool SetTDMI2Smode(unsigned int mode);
 bool SetTDMLrckInverse(bool enable);
 bool SetTDMBckInverse(bool enable);
 bool SetTDMEnable(bool enable);
 
-uint32 SampleRateTransform(uint32 SampleRate);
-uint32 SGENSampleRateTransform(uint32 SampleRate);
+unsigned int SampleRateTransform(unsigned int SampleRate);
+unsigned int SGENSampleRateTransform(unsigned int SampleRate);
 
 /* APLL , low jitter mode setting */
-uint32 SetCLkMclk(uint32 I2snum, uint32 SampleRate);
-void EnableI2SDivPower(uint32 Diveder_name, bool bEnable);
+unsigned int SetCLkMclk(unsigned int I2snum, unsigned int SampleRate);
+void EnableI2SDivPower(unsigned int Diveder_name, bool bEnable);
 void EnableApll1(bool bEnable);
 void EnableApll2(bool bEnable);
-void SetCLkBclk(uint32 MckDiv, uint32 SampleRate, uint32 Channels, uint32 Wlength);
+void SetCLkBclk(unsigned int MckDiv, unsigned int SampleRate, unsigned int Channels, unsigned int Wlength);
 
 int AudDrv_Allocate_mem_Buffer(struct device *pDev,
-			       Soc_Aud_Digital_Block MemBlock, uint32 Buffer_length);
-AFE_MEM_CONTROL_T *Get_Mem_ControlT(Soc_Aud_Digital_Block MemBlock);
-bool SetMemifSubStream(Soc_Aud_Digital_Block MemBlock, struct snd_pcm_substream *substream);
-bool RemoveMemifSubStream(Soc_Aud_Digital_Block MemBlock, struct snd_pcm_substream *substream);
-bool ClearMemBlock(Soc_Aud_Digital_Block MemBlock);
+			       enum Soc_Aud_Digital_Block MemBlock, unsigned int Buffer_length);
+struct AFE_MEM_CONTROL_T *Get_Mem_ControlT(enum Soc_Aud_Digital_Block MemBlock);
+bool SetMemifSubStream(enum Soc_Aud_Digital_Block MemBlock, struct snd_pcm_substream *substream);
+bool RemoveMemifSubStream(enum Soc_Aud_Digital_Block MemBlock, struct snd_pcm_substream *substream);
+bool ClearMemBlock(enum Soc_Aud_Digital_Block MemBlock);
 
 /* interrupt handler */
 
@@ -181,15 +181,15 @@ void Auddrv_AWB_Interrupt_Handler(void);
 void Auddrv_DAI_Interrupt_Handler(void);
 void Auddrv_HDMI_Interrupt_Handler(void);
 void Auddrv_UL2_Interrupt_Handler(void);
-void Clear_Mem_CopySize(Soc_Aud_Digital_Block MemBlock);
-kal_uint32 Get_Mem_CopySizeByStream(Soc_Aud_Digital_Block MemBlock,
+void Clear_Mem_CopySize(enum Soc_Aud_Digital_Block MemBlock);
+uint32_t Get_Mem_CopySizeByStream(enum Soc_Aud_Digital_Block MemBlock,
 				    struct snd_pcm_substream *substream);
-kal_uint32 Get_Mem_MaxCopySize(Soc_Aud_Digital_Block MemBlock);
-void Set_Mem_CopySizeByStream(Soc_Aud_Digital_Block MemBlock,
-			      struct snd_pcm_substream *substream, uint32 size);
+uint32_t Get_Mem_MaxCopySize(enum Soc_Aud_Digital_Block MemBlock);
+void Set_Mem_CopySizeByStream(enum Soc_Aud_Digital_Block MemBlock,
+			      struct snd_pcm_substream *substream, unsigned int size);
 
-struct snd_dma_buffer *Get_Mem_Buffer(Soc_Aud_Digital_Block MemBlock);
-int AudDrv_Allocate_DL1_Buffer(struct device *pDev, kal_uint32 Afe_Buf_Length);
+struct snd_dma_buffer *Get_Mem_Buffer(enum Soc_Aud_Digital_Block MemBlock);
+int AudDrv_Allocate_DL1_Buffer(struct device *pDev, uint32_t Afe_Buf_Length);
 
 
 bool BackUp_Audio_Register(void);
@@ -245,6 +245,6 @@ int irq_update_user(const void *_user,
 
 /* low latency debug */
 int get_LowLatencyDebug(void);
-void set_LowLatencyDebug(uint32 bFlag);
+void set_LowLatencyDebug(unsigned int bFlag);
 
 #endif

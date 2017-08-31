@@ -66,6 +66,7 @@
  *                  R E G I S T E R       D E F I N I T I O N
  *****************************************************************************/
 #define PMIC_REG_BASE                    (0x0000)
+#define PMIC_GPIO_BASE			 (0xc000)
 /* 6323 pmic reg */
 /* ---------------digital pmic  register define ------------------------------------------- */
 #define ABB_AFE_CON0             (PMIC_REG_BASE+0x4000 + 0x0000)
@@ -133,9 +134,10 @@
 #define AUDTOP_CON9                 (PMIC_REG_BASE + 0x712)
 
 /* ---------------analog pmic  register define end --------------------------------------- */
+#define GPIO_DINV1		    (PMIC_GPIO_BASE + 0x0060)
 
-void Ana_Set_Reg(uint32 offset, uint32 value, uint32 mask);
-uint32 Ana_Get_Reg(uint32 offset);
+void Ana_Set_Reg(unsigned int offset, unsigned int value, unsigned int mask);
+unsigned int Ana_Get_Reg(unsigned int offset);
 
 /* for debug usage */
 void Ana_Log_Print(void);

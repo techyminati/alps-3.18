@@ -107,9 +107,9 @@
 /* #include <asm/mach-types.h> */
 
 /* information about */
-AFE_MEM_CONTROL_T *TDM_VUL_Control_context;
+struct AFE_MEM_CONTROL_T *TDM_VUL_Control_context;
 static struct snd_dma_buffer *Capture_dma_buf;
-static AudioDigtalI2S *mAudioDigitalI2S;
+static struct AudioDigtalI2S *mAudioDigitalI2S;
 static DEFINE_SPINLOCK(auddrv_ULInCtl_lock);
 
 /*
@@ -244,7 +244,7 @@ static int mtk_capture_pcm_prepare(struct snd_pcm_substream *substream)
 
 static int mtk_capture_alsa_stop(struct snd_pcm_substream *substream)
 {
-	AFE_BLOCK_T *Vul_Block = &(TDM_VUL_Control_context->rBlock);
+	struct AFE_BLOCK_T *Vul_Block = &(TDM_VUL_Control_context->rBlock);
 
 	pr_debug("mtk_capture_alsa_stop\n");
 	StopAudioCaptureHardware(substream);
@@ -255,16 +255,16 @@ static int mtk_capture_alsa_stop(struct snd_pcm_substream *substream)
 	return 0;
 }
 
-static kal_int32 Previous_Hw_cur;
+static int32_t Previous_Hw_cur;
 static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream
 						 *substream)
 {
 #if 0
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
 #endif
 	snd_pcm_uframes_t return_frames;
-	AFE_BLOCK_T *Awb_Block = &(TDM_VUL_Control_context->rBlock);
+	struct AFE_BLOCK_T *Awb_Block = &(TDM_VUL_Control_context->rBlock);
 
 	PRINTK_AUD_UL1("mtk_capture_pcm_pointer Awb_Block->u4WriteIdx;= 0x%x\n",
 		       Awb_Block->u4WriteIdx);
@@ -295,7 +295,7 @@ static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream
 static void SetVULBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	AFE_BLOCK_T *pblock = &TDM_VUL_Control_context->rBlock;
+	struct AFE_BLOCK_T *pblock = &TDM_VUL_Control_context->rBlock;
 
 	pr_debug("SetVULBuffer\n");
 	pblock->pucPhysBufAddr = runtime->dma_addr;
@@ -454,8 +454,8 @@ static int mtk_capture_pcm_copy(struct snd_pcm_substream *substream,
 				void __user *dst, snd_pcm_uframes_t count)
 {
 
-	AFE_MEM_CONTROL_T *pVUL_MEM_ConTrol = NULL;
-	AFE_BLOCK_T *Vul_Block = NULL;
+	struct AFE_MEM_CONTROL_T *pVUL_MEM_ConTrol = NULL;
+	struct AFE_BLOCK_T *Vul_Block = NULL;
 	char *Read_Data_Ptr = (char *)dst;
 	ssize_t DMA_Read_Ptr = 0, read_size = 0, read_count = 0;
 	unsigned long flags;
@@ -538,8 +538,8 @@ static int mtk_capture_pcm_copy(struct snd_pcm_substream *substream,
 	}
 
 	else {
-		uint32 size_1 = Vul_Block->u4BufferSize - DMA_Read_Ptr;
-		uint32 size_2 = read_size - size_1;
+		unsigned int size_1 = Vul_Block->u4BufferSize - DMA_Read_Ptr;
+		unsigned int size_2 = read_size - size_1;
 
 		if (DMA_Read_Ptr != Vul_Block->u4DMAReadIdx) {
 
@@ -683,7 +683,7 @@ static int mtk_afe_capture_probe(struct snd_soc_platform *platform)
 	   Capture_dma_buf->bytes = UL1_MAX_BUFFER_SIZE;
 	   }
 	 */
-	mAudioDigitalI2S = kzalloc(sizeof(AudioDigtalI2S), GFP_KERNEL);
+	mAudioDigitalI2S = kzalloc(sizeof(struct AudioDigtalI2S), GFP_KERNEL);
 	return 0;
 }
 

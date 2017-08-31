@@ -60,7 +60,7 @@
 #include "mt_soc_pcm_common.h"
 
 static DEFINE_SPINLOCK(auddrv_I2S0_lock);
-static AFE_MEM_CONTROL_T *pI2s0MemControl;
+static struct AFE_MEM_CONTROL_T *pI2s0MemControl;
 
 static struct device *mDev;
 
@@ -95,9 +95,9 @@ static int Audio_i2s0_SideGen_Get(struct snd_kcontrol *kcontrol,
 static int Audio_i2s0_SideGen_Set(struct snd_kcontrol *kcontrol,
 				  struct snd_ctl_elem_value *ucontrol)
 {
-	uint32 u32AudioI2S = 0;
-	uint32 samplerate = 0;
-	uint32 Audio_I2S_Dac;
+	unsigned int u32AudioI2S = 0;
+	unsigned int samplerate = 0;
+	unsigned int Audio_I2S_Dac;
 
 	AudDrv_Clk_On();
 
@@ -262,7 +262,7 @@ static struct snd_pcm_hardware mtk_i2s0_hardware = {
 
 static int mtk_pcm_i2s0_stop(struct snd_pcm_substream *substream)
 {
-	AFE_BLOCK_T *Afe_Block = &(pI2s0MemControl->rBlock);
+	struct AFE_BLOCK_T *Afe_Block = &(pI2s0MemControl->rBlock);
 
 	pr_warn("mtk_pcm_i2s0_stop\n");
 	irq_remove_user(substream, Soc_Aud_IRQ_MCU_MODE_IRQ1_MCU_MODE);
@@ -290,11 +290,11 @@ static int mtk_pcm_i2s0_stop(struct snd_pcm_substream *substream)
 static snd_pcm_uframes_t mtk_pcm_i2s0_pointer(struct snd_pcm_substream
 					      *substream)
 {
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
-	kal_uint32 Frameidx = 0;
-	kal_int32 Afe_consumed_bytes = 0;
-	AFE_BLOCK_T *Afe_Block = &pI2s0MemControl->rBlock;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
+	uint32_t Frameidx = 0;
+	int32_t Afe_consumed_bytes = 0;
+	struct AFE_BLOCK_T *Afe_Block = &pI2s0MemControl->rBlock;
 	/* struct snd_pcm_runtime *runtime = substream->runtime; */
 	PRINTK_AUD_DL1(" %s Afe_Block->u4DMAReadIdx = 0x%x\n", __func__, Afe_Block->u4DMAReadIdx);
 
@@ -454,7 +454,7 @@ static int mtk_pcm_i2s0_prepare(struct snd_pcm_substream *substream)
 static int mtk_pcm_i2s0_start(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	uint32 u32AudioI2S = 0;
+	unsigned int u32AudioI2S = 0;
 
 	AudDrv_Clk_On();
 	SetMemifSubStream(Soc_Aud_Digital_Block_MEM_DL1, substream);
@@ -523,7 +523,7 @@ static int mtk_pcm_i2s0_copy(struct snd_pcm_substream *substream,
 			     int channel, snd_pcm_uframes_t pos,
 			     void __user *dst, snd_pcm_uframes_t count)
 {
-	AFE_BLOCK_T *Afe_Block = NULL;
+	struct AFE_BLOCK_T *Afe_Block = NULL;
 	int copy_size = 0, Afe_WriteIdx_tmp;
 	unsigned long flags;
 	char *data_w_ptr = (char *)dst;
@@ -599,7 +599,7 @@ static int mtk_pcm_i2s0_copy(struct snd_pcm_substream *substream,
 			     Afe_Block->u4DataRemained, (unsigned int)count);
 
 		} else {	/* copy twice */
-			kal_uint32 size_1 = 0, size_2 = 0;
+			uint32_t size_1 = 0, size_2 = 0;
 #ifdef AUDIO_64BYTE_ALIGN
 			size_1 = Align64ByteSize((Afe_Block->u4BufferSize - Afe_WriteIdx_tmp));
 			size_2 = Align64ByteSize((copy_size - size_1));

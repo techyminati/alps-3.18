@@ -237,6 +237,7 @@ static ssize_t mt_soc_ana_debug_read(struct file *file, char __user *buf, size_t
 	n += scnprintf(buffer + n, size - n, "AUDTOP_CON7  = 0x%x\n", Ana_Get_Reg(AUDTOP_CON7));
 	n += scnprintf(buffer + n, size - n, "AUDTOP_CON8  = 0x%x\n", Ana_Get_Reg(AUDTOP_CON8));
 	n += scnprintf(buffer + n, size - n, "AUDTOP_CON9  = 0x%x\n", Ana_Get_Reg(AUDTOP_CON9));
+	n += scnprintf(buffer + n, size - n, "GPIO_DINV1  = 0x%x\n", Ana_Get_Reg(GPIO_DINV1));
 
 	pr_warn("mt_soc_ana_debug_read len = %d\n", n);
 

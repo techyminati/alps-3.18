@@ -171,6 +171,8 @@ void AudDrv_Clk_On(void)
 		PRINTK_AUD_CLK("AudDrv_Clk_On, not in PM_MANAGER_API\n");
 		Afe_Set_Reg(AUDIO_TOP_CON0, 0x60004000, 0x60004000);
 #endif
+		/*MT6580/MT6570 need rxif clk inv*/
+		Afe_Set_Reg(AFE_ADDA_NEWIF_CFG0, 0x08000000, 0x08000000);
 	}
 	Aud_AFE_Clk_cntr++;
 	spin_unlock_irqrestore(&auddrv_Clk_lock, flags);

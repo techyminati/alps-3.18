@@ -71,7 +71,7 @@ static int mtk_pcm_mrgrx_close(struct snd_pcm_substream *substream);
 static int mtk_asoc_pcm_mrgrx_new(struct snd_soc_pcm_runtime *rtd);
 static int mtk_afe_mrgrx_probe(struct snd_soc_platform *platform);
 
-static uint32 mmrgrx_Volume = 0x10000;
+static unsigned int mmrgrx_Volume = 0x10000;
 static bool mPrepareDone;
 
 static int Audio_mrgrx_Volume_Get(struct snd_kcontrol *kcontrol,
@@ -149,7 +149,7 @@ static int mtk_pcm_mrgrx_stop(struct snd_pcm_substream *substream)
 	return 0;
 }
 
-static kal_int32 Previous_Hw_cur;
+static int32_t Previous_Hw_cur;
 static snd_pcm_uframes_t mtk_pcm_mrgrx_pointer(struct snd_pcm_substream
 					       *substream)
 {

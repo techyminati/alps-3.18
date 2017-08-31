@@ -83,7 +83,7 @@ static int mtk_voice_md2_platform_probe(struct snd_soc_platform *platform);
 #define USE_PERIODS_MAX     2048
 
 static bool voice_md2_Status;
-static AudioDigtalI2S mAudioDigitalI2S;
+static struct AudioDigtalI2S mAudioDigitalI2S;
 
 bool get_voice_md2_status(void)
 {
@@ -91,7 +91,7 @@ bool get_voice_md2_status(void)
 }
 EXPORT_SYMBOL(get_voice_md2_status);
 /* internal md 2 bring up */
-static AudioDigitalPCM Voice2IntPcm = {
+static struct AudioDigitalPCM Voice2IntPcm = {
 	.mBclkOutInv = false,
 	.mTxLchRepeatSel = Soc_Aud_TX_LCH_RPT_TX_LCH_NO_REPEAT,
 	.mVbt16kModeSel = Soc_Aud_VBT_16K_MODE_VBT_16K_MODE_DISABLE,

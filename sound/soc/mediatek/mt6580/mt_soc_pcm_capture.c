@@ -61,9 +61,9 @@
 /* #define CAPTURE_FORCE_USE_DRAM //foruse DRAM for record */
 
 /* information about */
-AFE_MEM_CONTROL_T *VUL_Control_context;
+struct AFE_MEM_CONTROL_T *VUL_Control_context;
 static struct snd_dma_buffer *Capture_dma_buf;
-static AudioDigtalI2S *mAudioDigitalI2S;
+static struct AudioDigtalI2S *mAudioDigitalI2S;
 static bool mCaptureUseSram;
 static DEFINE_SPINLOCK(auddrv_ULInCtl_lock);
 
@@ -186,7 +186,7 @@ static int mtk_capture_pcm_prepare(struct snd_pcm_substream *substream)
 
 static int mtk_capture_alsa_stop(struct snd_pcm_substream *substream)
 {
-	/* AFE_BLOCK_T *Vul_Block = &(VUL_Control_context->rBlock); */
+	/* struct AFE_BLOCK_T *Vul_Block = &(VUL_Control_context->rBlock); */
 	pr_warn("mtk_capture_alsa_stop\n");
 	StopAudioCaptureHardware(substream);
 	RemoveMemifSubStream(Soc_Aud_Digital_Block_MEM_VUL, substream);
@@ -196,13 +196,13 @@ static int mtk_capture_alsa_stop(struct snd_pcm_substream *substream)
 static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream
 						 *substream)
 {
-	kal_int32 HW_memory_index = 0;
-	kal_int32 HW_Cur_ReadIdx = 0;
-	/* kal_uint32 Frameidx = 0; */
-	kal_int32 Hw_Get_bytes = 0;
+	int32_t HW_memory_index = 0;
+	int32_t HW_Cur_ReadIdx = 0;
+	/* uint32_t Frameidx = 0; */
+	int32_t Hw_Get_bytes = 0;
 	bool bIsOverflow = false;
 	unsigned long flags;
-	AFE_BLOCK_T *UL1_Block = &(VUL_Control_context->rBlock);
+	struct AFE_BLOCK_T *UL1_Block = &(VUL_Control_context->rBlock);
 
 	Auddrv_UL1_Spinlock_lock();
 	spin_lock_irqsave(&VUL_Control_context->substream_lock, flags);
@@ -264,9 +264,8 @@ static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream
 static void SetVULBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_params *hw_params)
 {
 	struct snd_pcm_runtime *runtime = substream->runtime;
-	AFE_BLOCK_T *pblock = &VUL_Control_context->rBlock;
+	struct AFE_BLOCK_T *pblock = &VUL_Control_context->rBlock;
 
-	pr_warn("SetVULBuffer\n");
 	pblock->pucPhysBufAddr = runtime->dma_addr;
 	pblock->pucVirtBufAddr = runtime->dma_area;
 	pblock->u4BufferSize = runtime->dma_bytes;
@@ -276,8 +275,8 @@ static void SetVULBuffer(struct snd_pcm_substream *substream, struct snd_pcm_hw_
 	pblock->u4DataRemained = 0;
 	pblock->u4fsyncflag = false;
 	pblock->uResetFlag = true;
-	pr_warn("u4BufferSize = %d pucVirtBufAddr = %p pucPhysBufAddr = 0x%x\n",
-	       pblock->u4BufferSize, pblock->pucVirtBufAddr, pblock->pucPhysBufAddr);
+	/*pr_warn("u4BufferSize = %d pucVirtBufAddr = %p pucPhysBufAddr = 0x%x\n",
+	       pblock->u4BufferSize, pblock->pucVirtBufAddr, pblock->pucPhysBufAddr);*/
 	/* set dram address top hardware */
 	Afe_Set_Reg(AFE_VUL_BASE, pblock->pucPhysBufAddr, 0xffffffff);
 	Afe_Set_Reg(AFE_VUL_END, pblock->pucPhysBufAddr + (pblock->u4BufferSize - 1), 0xffffffff);
@@ -291,22 +290,20 @@ static int mtk_capture_pcm_hw_params(struct snd_pcm_substream *substream,
 	struct snd_dma_buffer *dma_buf = &substream->dma_buffer;
 	int ret = 0;
 
-	pr_warn("mtk_capture_pcm_hw_params\n");
-
 	dma_buf->dev.type = SNDRV_DMA_TYPE_DEV;
 	dma_buf->dev.dev = substream->pcm->card->dev;
 	dma_buf->private_data = NULL;
 
 	if (mCaptureUseSram == true) {
 		runtime->dma_bytes = params_buffer_bytes(hw_params);
-		pr_warn("mtk_capture_pcm_hw_params mCaptureUseSram dma_bytes = %zu\n",
-		       runtime->dma_bytes);
+		/*pr_warn("mtk_capture_pcm_hw_params mCaptureUseSram dma_bytes = %zu\n",
+		       runtime->dma_bytes);*/
 		substream->runtime->dma_area = (unsigned char *)Get_Afe_SramBase_Pointer();
 		substream->runtime->dma_addr = Get_Afe_Sram_Phys_Addr();
 	} else if (Capture_dma_buf->area) {
-		pr_warn
+		/*pr_warn
 		    ("Capture_dma_buf = %p Capture_dma_buf->area = %p apture_dma_buf->addr = 0x%lx\n",
-		     Capture_dma_buf, Capture_dma_buf->area, (long)Capture_dma_buf->addr);
+		     Capture_dma_buf, Capture_dma_buf->area, (long)Capture_dma_buf->addr);*/
 		runtime->dma_bytes = params_buffer_bytes(hw_params);
 		runtime->dma_area = Capture_dma_buf->area;
 		runtime->dma_addr = Capture_dma_buf->addr;
@@ -317,9 +314,9 @@ static int mtk_capture_pcm_hw_params(struct snd_pcm_substream *substream,
 
 	SetVULBuffer(substream, hw_params);
 
-	pr_warn("mtk_capture_pcm_hw_params dma_bytes = %zu dma_area = %p dma_addr = 0x%lx\n",
-	       substream->runtime->dma_bytes, substream->runtime->dma_area,
-	       (long)substream->runtime->dma_addr);
+	pr_debug("%s, dma_bytes = %zu dma_area = %p dma_addr = 0x%lx",
+		 __func__, substream->runtime->dma_bytes, substream->runtime->dma_area,
+		 (long)substream->runtime->dma_addr);
 	return ret;
 }
 
@@ -383,7 +380,6 @@ static int mtk_capture_pcm_open(struct snd_pcm_substream *substream)
 	if (mCaptureUseSram == false)
 		AudDrv_Emi_Clk_On();
 
-	pr_warn("mtk_capture_pcm_open return\n");
 	return 0;
 }
 
@@ -411,7 +407,6 @@ static int mtk_capture_alsa_start(struct snd_pcm_substream *substream)
 
 static int mtk_capture_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 {
-	pr_warn("mtk_capture_pcm_trigger cmd = %d\n", cmd);
 
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
@@ -438,8 +433,8 @@ static int mtk_capture_pcm_copy(struct snd_pcm_substream *substream,
 				void __user *dst, snd_pcm_uframes_t count)
 {
 
-	AFE_MEM_CONTROL_T *pVUL_MEM_ConTrol = NULL;
-	AFE_BLOCK_T *Vul_Block = NULL;
+	struct AFE_MEM_CONTROL_T *pVUL_MEM_ConTrol = NULL;
+	struct AFE_BLOCK_T *Vul_Block = NULL;
 	char *Read_Data_Ptr = (char *)dst;
 	ssize_t DMA_Read_Ptr = 0, read_size = 0, read_count = 0;
 	/* struct snd_pcm_runtime *runtime = substream->runtime; */
@@ -529,8 +524,8 @@ static int mtk_capture_pcm_copy(struct snd_pcm_substream *substream,
 	}
 
 	else {
-		uint32 size_1 = Vul_Block->u4BufferSize - DMA_Read_Ptr;
-		uint32 size_2 = read_size - size_1;
+		unsigned int size_1 = Vul_Block->u4BufferSize - DMA_Read_Ptr;
+		unsigned int size_2 = read_size - size_1;
 
 		if (DMA_Read_Ptr != Vul_Block->u4DMAReadIdx) {
 
@@ -660,7 +655,7 @@ static int mtk_afe_capture_probe(struct snd_soc_platform *platform)
 	AudDrv_Allocate_mem_Buffer(platform->dev, Soc_Aud_Digital_Block_MEM_VUL,
 				   UL1_MAX_BUFFER_SIZE);
 	Capture_dma_buf = Get_Mem_Buffer(Soc_Aud_Digital_Block_MEM_VUL);
-	mAudioDigitalI2S = kzalloc(sizeof(AudioDigtalI2S), GFP_KERNEL);
+	mAudioDigitalI2S = kzalloc(sizeof(struct AudioDigtalI2S), GFP_KERNEL);
 	return 0;
 }
 
