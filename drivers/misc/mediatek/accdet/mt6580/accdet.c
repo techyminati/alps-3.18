@@ -557,7 +557,11 @@ static void multi_key_detection(int current_status)
 
 	if (0 == current_status) {
 		cali_voltage = PMIC_IMM_GetOneChannelValue(MULTIKEY_ADC_CHANNEL, 1, 1);
-		/*ACCDET_DEBUG("[Accdet]adc cali_voltage1 = %d mV\n", cali_voltage);*/
+		if (cali_voltage < 0) {
+			ACCDET_DEBUG("[Accdet]read auxadc cali_vol:%d adjust to 0\n", cali_voltage);
+			cali_voltage = 0;
+		}
+		ACCDET_DEBUG("[Accdet]adc cali_voltage = %d mV\n", cali_voltage);
 #ifdef CONFIG_FOUR_KEY_HEADSET
 		if (cali_voltage < 100) {
 			IMM_GetOneChannelValue(g_FourKey_ADC_channel, data, &adc_raw);
