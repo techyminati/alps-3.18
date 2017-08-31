@@ -5458,6 +5458,7 @@ EXIT:
 static MINT32 ISP_release(struct inode *pInode, struct file *pFile)
 {
 	ISP_USER_INFO_STRUCT *pUserInfo;
+	MUINT32 reg_val = 0;
 
 	LOG_DBG("+,UserCount(%d)", g_IspInfo.UserCount);
 
@@ -5484,6 +5485,12 @@ static MINT32 ISP_release(struct inode *pInode, struct file *pFile)
 
 	LOG_DBG("Curr UserCount(%d), (process, pid, tgid)=(%s, %d, %d), last user",
 		g_IspInfo.UserCount, current->comm, current->pid, current->tgid);
+
+	/* Close VF when ISP_release */
+	/* reason of close vf is to make sure camera can serve regular after previous abnormal exit */
+	reg_val = ISP_RD32((void *)ISP_REG_ADDR_TG_VF_CON);
+	reg_val &= 0xfffffffE;/* close Vfinder */
+	ISP_WR32(ISP_REG_ADDR_TG_VF_CON, reg_val);
 
 	/* Disable clock. */
 	ISP_EnableClock(MFALSE, 1);
