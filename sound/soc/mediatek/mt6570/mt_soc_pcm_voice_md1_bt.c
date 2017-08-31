@@ -393,7 +393,7 @@ static int mtk_voice_bt_pm_ops_resume(struct device *device)
 	if (b_modem1_speech_on == true || b_modem2_speech_on == true) {
 #ifndef CONFIG_FPGA_EARLY_PORTING
 		/* mainpll */
-		clkmux_sel(MT_CLKMUX_AUD_HF_26M_SEL, MT_CG_SYS_TEMP, "AUDIO ");
+		clkmux_sel(MT_CLKMUX_AUD_HF_26M_SEL, MT_CG_SYS_33M, "AUDIO ");
 		clkmux_sel(MT_CLKMUX_AUD_INTBUS_SEL, MT_CG_MPLL_D12, "AUDIO ");
 		return 0;
 #endif
