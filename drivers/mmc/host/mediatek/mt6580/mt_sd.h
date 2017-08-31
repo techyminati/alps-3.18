@@ -1308,6 +1308,7 @@ struct msdc_host {
 	u32 sw_timeout;
 	u32 power_cycle;	/* power cycle done in tuning flow */
 	bool power_cycle_enable;	/*Enable power cycle */
+	u8 power_cycle_cnt;
 	u32 continuous_fail_request_count;
 	u32 sd_30_busy;
 	bool tune;
