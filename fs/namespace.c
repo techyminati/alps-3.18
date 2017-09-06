@@ -2175,7 +2175,7 @@ static int do_remount(struct path *path, int flags, int mnt_flags,
 	else if (!capable(CAP_SYS_ADMIN))
 		err = -EPERM;
 	else {
-		err = do_remount_sb(sb, flags, data, 0);
+		err = do_remount_sb2(path->mnt, sb, flags, data, 0);
 		namespace_lock();
 		lock_mount_hash();
 		propagate_remount(mnt);
