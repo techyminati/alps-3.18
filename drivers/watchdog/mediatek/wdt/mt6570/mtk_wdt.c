@@ -401,20 +401,6 @@ int mtk_wdt_request_mode_set(int mark_bit, WD_REQ_MODE mode)
 	return res;
 }
 
-void mtk_wdt_cpu_callback(struct task_struct *wk_tsk, unsigned long action, int hotcpu, int kicker_init)
-{
-	switch (action) {
-	case CPU_ONLINE:
-	case CPU_ONLINE_FROZEN:
-		if (1 == kicker_init)
-			pr_debug("[mtk_wdt_cpu_callback]bind kicker thread[%d] to cpu[%d]\n", wk_tsk->pid, hotcpu);
-		break;
-	default:
-		break;
-	}
-}
-EXPORT_SYMBOL(mtk_wdt_cpu_callback);
-
 #else
 /* ------------------------------------------------------------------------------------------------- */
 /* Dummy functions */
