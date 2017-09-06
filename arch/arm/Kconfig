@@ -992,6 +992,7 @@ config ARCH_MT6570
 	select MTK_POWER_GS
 	select MTK_SYS_CIRQ
 	select MTK_DRAMC
+	select CPU_IDLE
 	help
 	  This enable support for MediaTek MT6570.
 
