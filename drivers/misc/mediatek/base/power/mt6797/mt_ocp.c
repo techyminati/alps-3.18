@@ -635,10 +635,10 @@ if (GET_BITS_VAL_OCP(0:0, Temp) == 1) {
 		*Leakage = 127999;
 
 
-if (ocp_opt.ocp_cluster2_enable == 0)
-	goto Label;
-if ((cpu_online(8) == 0) && (cpu_online(9) == 0))
-	goto Label;
+	if (ocp_opt.ocp_cluster2_enable == 0)
+		goto Label;
+	if ((cpu_online(8) == 0) && (cpu_online(9) == 0))
+		goto Label;
 
 	/* CapTotAct:  Q8.12 -> integer  */
 	spin_lock(&reset_lock);
@@ -761,8 +761,8 @@ if (ocp_read_field(OCPAPBSTATUS01, 0:0) == 1)
 else
 	*CapMAFAct = 0x0;
 
-	if (HW_API_DEBUG_ON)
-		ocp_info("ocp: big CapMAFAct=%d\n",  *CapMAFAct);
+if (HW_API_DEBUG_ON)
+	ocp_info("ocp: big CapMAFAct=%d\n",  *CapMAFAct);
 
 return 0;
 }
@@ -2823,11 +2823,11 @@ if (Reg_Debug_on) {
 	for (i = 0; i < 524 ; i += 4)
 		seq_printf(m, "Addr: 0x%x = %x\n", (MP0_OCP_IRQSTATE + i), ocp_read(MP0_OCP_IRQSTATE + i));
 
-		seq_printf(m, "Addr: 0x102217FC = %x\n", ocp_read(MP0_OCP_GENERAL_CTRL));
-		seq_printf(m, "Addr: 0x10221250 = %x\n", ocp_read(MP0_OCP_DBG_ACT_L));
-		seq_printf(m, "Addr: 0x10221254 = %x\n", ocp_read(MP0_OCP_DBG_ACT_H));
-		seq_printf(m, "Addr: 0x10221260 = %x\n", ocp_read(MP0_OCP_DBG_LKG_L));
-		seq_printf(m, "Addr: 0x10221264 = %x\n", ocp_read(MP0_OCP_DBG_LKG_H));
+	seq_printf(m, "Addr: 0x102217FC = %x\n", ocp_read(MP0_OCP_GENERAL_CTRL));
+	seq_printf(m, "Addr: 0x10221250 = %x\n", ocp_read(MP0_OCP_DBG_ACT_L));
+	seq_printf(m, "Addr: 0x10221254 = %x\n", ocp_read(MP0_OCP_DBG_ACT_H));
+	seq_printf(m, "Addr: 0x10221260 = %x\n", ocp_read(MP0_OCP_DBG_LKG_L));
+	seq_printf(m, "Addr: 0x10221264 = %x\n", ocp_read(MP0_OCP_DBG_LKG_H));
 }
 return 0;
 }
@@ -2972,11 +2972,11 @@ if (Reg_Debug_on) {
 	for (i = 0; i < 524; i += 4)
 		seq_printf(m, "Addr: 0x%x = %x\n", (MP1_OCP_IRQSTATE + i), ocp_read(MP1_OCP_IRQSTATE + i));
 
-		seq_printf(m, "Addr: 0x102237FC = %x\n", ocp_read(MP1_OCP_GENERAL_CTRL));
-		seq_printf(m, "Addr: 0x10223250 = %x\n", ocp_read(MP1_OCP_DBG_ACT_L));
-		seq_printf(m, "Addr: 0x10223254 = %x\n", ocp_read(MP1_OCP_DBG_ACT_H));
-		seq_printf(m, "Addr: 0x10223260 = %x\n", ocp_read(MP1_OCP_DBG_LKG_L));
-		seq_printf(m, "Addr: 0x10223264 = %x\n", ocp_read(MP1_OCP_DBG_LKG_H));
+	seq_printf(m, "Addr: 0x102237FC = %x\n", ocp_read(MP1_OCP_GENERAL_CTRL));
+	seq_printf(m, "Addr: 0x10223250 = %x\n", ocp_read(MP1_OCP_DBG_ACT_L));
+	seq_printf(m, "Addr: 0x10223254 = %x\n", ocp_read(MP1_OCP_DBG_ACT_H));
+	seq_printf(m, "Addr: 0x10223260 = %x\n", ocp_read(MP1_OCP_DBG_LKG_L));
+	seq_printf(m, "Addr: 0x10223264 = %x\n", ocp_read(MP1_OCP_DBG_LKG_H));
 }
 
 return 0;
