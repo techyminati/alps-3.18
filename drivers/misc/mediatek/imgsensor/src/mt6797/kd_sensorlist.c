@@ -3723,8 +3723,9 @@ bool _hwPowerOn(PowerType type, int powerVolt)
 	reg = regMain2VCAMD;
     } else if (type == MAIN2_DOVDD) {
 	reg = regMain2VCAMIO;
-    }else
-    	return ret;
+	} else {
+		return ret;
+	}
 
 	if (!IS_ERR(reg)) {
 		if (regulator_set_voltage(reg , powerVolt, powerVolt) != 0) {
