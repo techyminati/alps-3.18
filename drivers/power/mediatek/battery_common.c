@@ -86,6 +86,7 @@
 #include <mach/mt_battery_meter.h>
 #include <mach/mt_charging.h>
 #include <mach/mt_pmic.h>
+#include <mach/mt_pmic_wrap.h>
 
 #include "mtk_pep_intf.h"
 #include "mtk_pep20_intf.h"
@@ -3596,6 +3597,20 @@ void hv_sw_mode(void)
 		battery_log(BAT_LOG_CRTI,
 			    "[PMIC_BIAS_GEN_EN & PMIC_BIAS_GEN_EN_SEL] be writen 0xa=0x%x\n",
 			    upmu_get_reg_value(0x000a));
+
+		pr_info("HWCID:0x%x\n", pmic_get_register_value(PMIC_HWCID));
+		pr_info("VCORE1_CON9:0x%x\n", upmu_get_reg_value(0x0612));
+		pr_info("DEW_DIO_EN:0x%x\n", upmu_get_reg_value(0x02d4));
+		pr_info("DEW_READ_TEST:0x%x\n", upmu_get_reg_value(0x02d6));
+		pmic_config_interface(0x2d8, 0x1234, 0xffff, 0);
+		pr_info("DEW_WRITE_TEST:0x%x\n", upmu_get_reg_value(0x02d8));
+		pr_info("INT_STATUS0:0x%x\n", upmu_get_reg_value(0x02C4));
+		pr_info("INT_STATUS0:0x%x\n", upmu_get_reg_value(0x02C4));
+		pmic_config_interface(0x2d8, 0xabcd, 0xffff, 0);
+		pr_info("DEW_WRITE_TEST:0x%x\n", upmu_get_reg_value(0x02d8));
+
+		pwrap_dump_ap_register();
+
 		BUG_ON(1);
 	}
 
