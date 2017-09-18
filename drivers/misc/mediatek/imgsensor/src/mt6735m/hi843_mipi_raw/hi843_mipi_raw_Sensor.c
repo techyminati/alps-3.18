@@ -38,6 +38,7 @@
 
 #define Hi843B_MaxGain 16
 //#define Hi843B_I2C_BURST // If  open, you can use "i2c burst mode".
+#define HI843B_OTP_FUNCTION
 
 static DEFINE_SPINLOCK(imgsensor_drv_lock);
 
@@ -141,7 +142,7 @@ static imgsensor_info_struct imgsensor_info = {
 	.sensor_interface_type = SENSOR_INTERFACE_TYPE_MIPI,
     .mipi_sensor_type = MIPI_OPHY_NCSI2, //0,MIPI_OPHY_NCSI2;  1,MIPI_OPHY_CSI2
     .mipi_settle_delay_mode = 1,//0,MIPI_SETTLEDELAY_AUTO; 1,MIPI_SETTLEDELAY_MANNUAL
-	.sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_Gr,
+	.sensor_output_dataformat = SENSOR_OUTPUT_FORMAT_RAW_Gb,
 	.mclk = 24,
 	.mipi_lane_num = SENSOR_MIPI_4_LANE,
 	.i2c_addr_table = {0x40,0xC0,0xff},
@@ -150,7 +151,7 @@ static imgsensor_info_struct imgsensor_info = {
 
 
 static imgsensor_struct imgsensor = {
-	.mirror = IMAGE_V_MIRROR,				//mirrorflip information
+	.mirror = IMAGE_H_MIRROR,				//mirrorflip information
 	.sensor_mode = IMGSENSOR_MODE_INIT, //IMGSENSOR_MODE enum value,record current sensor mode,such as: INIT, Preview, Capture, Video,High Speed Video, Slim Video
 	.shutter = 0x0100,					//current shutter
 	.gain = 0xe0,						//current gain
@@ -212,7 +213,7 @@ static void Hi843B_write_burst_mode(struct Hynix_Sensor_reg table[])
         {
             continue;
         }
-        kdSetI2CSpeed(400);
+        kdSetI2CSpeed(360);
         iBurstWriteReg(Hynix_i2c_buf , buf_count, imgsensor.i2c_write_id);
 
 		if (err)
@@ -240,16 +241,25 @@ static kal_uint16 read_cmos_sensor(kal_uint32 addr)
 	kal_uint16 get_byte=0;
 	char pu_send_cmd[2] = {(char)(addr >> 8), (char)(addr & 0xFF) };
 
-    kdSetI2CSpeed(400);
+    kdSetI2CSpeed(360);
+
 	iReadRegI2C(pu_send_cmd, 2, (u8*)&get_byte, 1, imgsensor.i2c_write_id);
 
 	return get_byte;
 }
 
+#ifdef HI843B_OTP_FUNCTION
+static void HI843B_OTP_write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
+{
+	char pu_send_cmd[3] = {(char)(addr >> 8), (char)(addr & 0xFF),(char)(para & 0xFF)};
+    kdSetI2CSpeed(360);
+	iWriteRegI2C(pu_send_cmd, 3, imgsensor.i2c_write_id);
+}
+#endif
 static void write_cmos_sensor(kal_uint32 addr, kal_uint32 para)
 {
 	char pu_send_cmd[4] = {(char)(addr >> 8), (char)(addr & 0xFF), (char)(para >> 8),(char)(para & 0xFF)};
-    kdSetI2CSpeed(400);
+    kdSetI2CSpeed(360);
 	iWriteRegI2C(pu_send_cmd, 4, imgsensor.i2c_write_id);
 }
 
@@ -272,7 +282,7 @@ static kal_uint32 return_sensor_id(void)
 }
 static void set_max_framerate(UINT16 framerate,kal_bool min_framelength_en)
 {
-//	kal_int16 dummy_line;
+
 	kal_uint32 frame_length = imgsensor.frame_length;
 	//unsigned long flags;
 
@@ -302,11 +312,10 @@ static void set_max_framerate(UINT16 framerate,kal_bool min_framelength_en)
 static void write_shutter(kal_uint16 shutter)
 {
 
-
 	kal_uint16 realtime_fps = 0;
 
-	LOG_INF("write_shutter");
 
+	LOG_INF("write_shutter");
 	/* 0x3500, 0x3501, 0x3502 will increase VBLANK to get exposure larger than frame exposure */
 	/* AE doesn't update sensor gain at capture mode, thus extra exposure lines must be updated here. */
 
@@ -375,6 +384,7 @@ static void write_shutter(kal_uint16 shutter)
 static void set_shutter(kal_uint16 shutter)
 {
 	unsigned long flags;
+
 	LOG_INF("set_shutter");
 	spin_lock_irqsave(&imgsensor_drv_lock, flags);
 	imgsensor.shutter = shutter;
@@ -512,6 +522,244 @@ static void set_mirror_flip(kal_uint8 image_mirror)
 
 }
 
+#ifdef HI843B_OTP_FUNCTION
+struct HI843B_otp_struct
+{
+	int Base_Info_Flag;	//bit[7]:info, bit[6]:wb
+	int module_integrator_id;
+	int AF_Flag;
+	int prodyction_year;
+	int production_month;
+	int production_day;
+	int sensor_id;
+	int lens_id;
+	int vcm_id;
+	int Driver_ic_id;
+	int F_num_id;
+	int WB_FLAG;
+	int wb_data[30];
+	int AF_FLAG;
+	int af_data[5];
+	int VCM_start;
+         int VCM_end;
+	int infocheck;
+	int wbcheck;
+	int afcheck;
+};
+int hi843b_otp_read_flag = 0;
+struct HI843B_otp_struct HI843B_otp;
+void HI843B_OTPSetting(void)
+{
+	LOG_INF("HI843BOTPSetting begin:\n ");
+	HI843B_OTP_write_cmos_sensor(0x0A02, 0x01); //fast sleep On
+	HI843B_OTP_write_cmos_sensor(0x0a00, 0x00); //sleep On
+	mDELAY(10);
+	HI843B_OTP_write_cmos_sensor(0x0F02, 0x00); //pll disable
+	HI843B_OTP_write_cmos_sensor(0x071A, 0x01); //CP TRI_H
+	HI843B_OTP_write_cmos_sensor(0x071B, 0x09); //IPGM TRIM_H
+	HI843B_OTP_write_cmos_sensor(0x0D04, 0x01); //Fsync Output enable
+	HI843B_OTP_write_cmos_sensor(0x0D00, 0x07); //Fsync Output Drivability
+	HI843B_OTP_write_cmos_sensor(0x003E, 0x10); //OTP R/W
+	HI843B_OTP_write_cmos_sensor(0x0a00, 0x01); //sleep off
+	LOG_INF("HI843BOTPSetting exit :\n ");
+}
+static kal_uint16 OTP_read_cmos_sensor(kal_uint16 otp_addr)
+{
+    kal_uint16 data;
+    HI843B_OTP_write_cmos_sensor(0x70a, (otp_addr & 0xFF00) >> 8 ); //start address H
+    HI843B_OTP_write_cmos_sensor(0x70b, otp_addr & 0xFF); //start address L
+    HI843B_OTP_write_cmos_sensor(0x702, 0x01); //single read
+    data = read_cmos_sensor(0x708); //OTP data read
+	return data;
+}
+static int HI843B_otp_read(void)
+{
+	int i = 0, addr = 0, wb_start_addr = 0 ,af_atart_addr = 0;
+	int  checksum = 0 ; //wb_data[28];
+	LOG_INF("HI843B HI843B_otp_read \n");
+
+//module info
+	HI843B_otp.Base_Info_Flag = OTP_read_cmos_sensor(0x0201);
+	if (HI843B_otp.Base_Info_Flag == 0x01)	//Base Info Group1 valid
+		addr = 0x0202;
+	else if (HI843B_otp.Base_Info_Flag == 0x13)	//Base Info Group2 valid
+		addr = 0x0213;
+	else if (HI843B_otp.Base_Info_Flag == 0x37)	//Base Info Group3 valid
+		addr = 0x0224;
+	else
+		addr = 0;
+LOG_INF("HI843B addr = 0x%x \n", addr);
+	if (addr == 0) {
+		HI843B_otp.module_integrator_id = 0;
+		HI843B_otp.AF_Flag = 0;
+		HI843B_otp.prodyction_year = 0;
+		HI843B_otp.production_month = 0;
+		HI843B_otp.production_day = 0;
+		HI843B_otp.sensor_id = 0;
+		HI843B_otp.lens_id = 0;
+		HI843B_otp.vcm_id = 0;
+		HI843B_otp.Driver_ic_id = 0;
+		HI843B_otp.F_num_id = 0;
+		HI843B_otp.infocheck = 0;
+		HI843B_otp.wbcheck = 0;
+	} else {
+		HI843B_otp.module_integrator_id = OTP_read_cmos_sensor(addr);
+		HI843B_otp.AF_Flag = OTP_read_cmos_sensor(addr + 1);
+		HI843B_otp.prodyction_year = OTP_read_cmos_sensor(addr + 2);
+		HI843B_otp.production_month = OTP_read_cmos_sensor(addr + 3);
+		HI843B_otp.production_day = OTP_read_cmos_sensor(addr + 4);
+		HI843B_otp.sensor_id = OTP_read_cmos_sensor(addr + 5);
+		HI843B_otp.lens_id = OTP_read_cmos_sensor(addr + 6);
+		HI843B_otp.vcm_id = OTP_read_cmos_sensor(addr + 7);
+		HI843B_otp.Driver_ic_id = OTP_read_cmos_sensor(addr + 8);
+		HI843B_otp.F_num_id = OTP_read_cmos_sensor(addr + 9);
+		HI843B_otp.infocheck = OTP_read_cmos_sensor(addr + 13);
+		HI843B_otp.wbcheck = OTP_read_cmos_sensor(addr + 15);
+	}
+	checksum = (HI843B_otp.module_integrator_id + HI843B_otp.AF_Flag + HI843B_otp.prodyction_year + HI843B_otp.production_month + HI843B_otp.production_day + HI843B_otp.sensor_id + HI843B_otp.lens_id + HI843B_otp.vcm_id + HI843B_otp.Driver_ic_id + HI843B_otp.F_num_id) % 0xFF + 1;
+if (checksum == HI843B_otp.infocheck)
+		{
+		LOG_INF("HI843B_Sensor: Module information checksum PASS\n ");
+		}
+	else
+		{
+		LOG_INF("HI843B_Sensor: Module information checksum Fail\n ");
+		}
+LOG_INF("HI843B module_integrator_id = 0x%x, AF_Flag = 0x%x, prodyction_year = 0x%x, production_month = 0x%x, production_day = 0x%x, sensor_id = 0x%x, lens_id = 0x%x, infocheck = 0x%x \n",\
+		HI843B_otp.module_integrator_id,HI843B_otp.AF_Flag, HI843B_otp.prodyction_year, HI843B_otp.production_month, HI843B_otp.production_day, HI843B_otp.sensor_id, HI843B_otp.lens_id, HI843B_otp.infocheck);
+
+//WB info
+	HI843B_otp.WB_FLAG = OTP_read_cmos_sensor(0x0C5F);
+	if (HI843B_otp.WB_FLAG == 0x01)
+		wb_start_addr = 0x0C60;
+	else if (HI843B_otp.WB_FLAG == 0x13)
+		wb_start_addr = 0x0C7E;
+	else if (HI843B_otp.WB_FLAG == 0x37)
+		wb_start_addr = 0x0C9C;
+	else
+		LOG_INF("HI843B WB data invalid \n");
+LOG_INF("HI843B WB_FLAG = 0x%x \n", HI843B_otp.WB_FLAG);
+LOG_INF("HI843B wb_start_addr = 0x%x \n", wb_start_addr);
+	if (wb_start_addr != 0) {
+		HI843B_OTP_write_cmos_sensor(0x70a, (wb_start_addr >> 8) & 0xff);	//start addr H
+		HI843B_OTP_write_cmos_sensor(0x70b, wb_start_addr & 0xff);	//start addr L
+		HI843B_OTP_write_cmos_sensor(0x702, 0x01);	//single mode
+		for (i = 0; i < 6; i++) {
+			HI843B_otp.wb_data[i] = read_cmos_sensor(0x708);	//otp data read
+			LOG_INF("HI843 wb_data[%d] = 0x%x  ", i, HI843B_otp.wb_data[i]);
+		}
+	}
+
+//AF info
+	HI843B_otp.AF_FLAG= OTP_read_cmos_sensor(0x0CBA);
+	if (HI843B_otp.AF_FLAG == 0x01)	//Base Info Group1 valid
+		af_atart_addr = 0x0CBB;
+	else if (HI843B_otp.AF_FLAG == 0x13) //Base Info Group2 valid
+		af_atart_addr = 0x0CC0;
+	else if (HI843B_otp.AF_FLAG == 0x37) //Base Info Group3 valid
+		af_atart_addr = 0x0CC5;
+	else
+		af_atart_addr = 0;
+	LOG_INF("HI843B AF_FLAG = 0x%x \n", HI843B_otp.AF_FLAG);
+	LOG_INF("HI843B af_start_addr = 0x%x \n", af_atart_addr);
+	if (af_atart_addr != 0) {
+		HI843B_OTP_write_cmos_sensor(0x70a, (af_atart_addr >> 8) & 0xff);	//start addr H
+		HI843B_OTP_write_cmos_sensor(0x70b, af_atart_addr & 0xff);	//start addr L
+		HI843B_OTP_write_cmos_sensor(0x702, 0x01);	//single mode
+		for (i = 0; i < 5; i++) {
+			HI843B_otp.af_data[i] = read_cmos_sensor(0x708);	//otp data read
+			LOG_INF("HI843 af_data[%d] = 0x%x  ", i, HI843B_otp.af_data[i]);
+		}
+	}
+	if(af_atart_addr != 0)
+   {
+     HI843B_otp.VCM_start = (HI843B_otp.af_data[0] << 8) | (HI843B_otp.af_data[1]) ;
+     HI843B_otp.VCM_end = (HI843B_otp.af_data[2] << 8) | (HI843B_otp.af_data[3]);
+     HI843B_otp.afcheck = HI843B_otp.af_data[4];
+   }
+   else
+   {
+     HI843B_otp.VCM_start = 0;
+     HI843B_otp.VCM_end = 0;
+     HI843B_otp.afcheck = 0;
+    }
+	checksum = (HI843B_otp.af_data[0] + HI843B_otp.af_data[1] + HI843B_otp.af_data[2] + HI843B_otp.af_data[3]) % 0xFF + 1 ;
+	LOG_INF("HI843B_otp_apply: AF checksum = 0x%x,HI843B_otp.afcheck= 0x%x\n ",checksum,HI843B_otp.afcheck);
+	if (checksum == HI843B_otp.afcheck)
+		{
+		LOG_INF("HI843B_Sensor: AF checksum PASS\n ");
+		}
+	else
+		{
+		LOG_INF("HI843B_Sensor: AF checksum Fail\n ");
+		}
+	return HI843B_otp.WB_FLAG;
+}
+static int HI843B_otp_apply(void)
+{
+	int checksum = 0 ;
+	int R_gain = 1, G_gain = 1, B_gain = 1;
+	int RG_ratio_unit = 0;
+	int BG_ratio_unit = 0;
+	int RG_ratio_golden = 0x15C; //module house provide
+	int BG_ratio_golden = 0x140; //module house provide
+	LOG_INF("HI843B HI843B_otp_apply \n");
+	RG_ratio_unit = (HI843B_otp.wb_data[0] << 8) | (HI843B_otp.wb_data[1] & 0x03FF);
+	BG_ratio_unit = (HI843B_otp.wb_data[2] << 8) | (HI843B_otp.wb_data[3] & 0x03FF);
+	checksum = (HI843B_otp.wb_data[0] + HI843B_otp.wb_data[1] + HI843B_otp.wb_data[2] + HI843B_otp.wb_data[3] + HI843B_otp.wb_data[4] + HI843B_otp.wb_data[5] ) % 0xFF + 1;
+if (checksum == HI843B_otp.wbcheck)
+		{
+		LOG_INF("HI843B_Sensor: WB checksum PASS\n ");
+		}
+else
+		{
+		LOG_INF("HI843B_Sensor: WB checksum Fail\n ");
+		}
+LOG_INF("HI843B RG_ratio_unit = 0x%x, BG_ratio_unit = 0x%x, RG_ratio_golden = 0x%x, BG_ratio_golden = 0x%x, HI843B_otp.wbcheck = 0x%x,checksum =0x%x \n",\
+		RG_ratio_unit, BG_ratio_unit, RG_ratio_golden, BG_ratio_golden, HI843B_otp.wbcheck,checksum);
+
+	R_gain = (0x200 * RG_ratio_golden / RG_ratio_unit);
+	B_gain = (0x200 * BG_ratio_golden / BG_ratio_unit);
+	G_gain = 0x200;
+	if (R_gain < B_gain) {
+		if(R_gain < 0x200) {
+			B_gain =0x200 *  B_gain / R_gain;
+			G_gain =0x200 *  G_gain / R_gain;
+			R_gain = 0x200;
+		}
+	} else {
+		if (B_gain < 0x200) {
+			R_gain = 0x200 * R_gain / B_gain;
+			G_gain = 0x200 * G_gain / B_gain;
+			B_gain = 0x200;
+		}
+	}
+	HI843B_OTP_write_cmos_sensor(0x0a00, 0x00); //sleep On
+	mdelay(100);
+    HI843B_OTP_write_cmos_sensor(0x003f, 0x00); //OTP mode off
+    HI843B_OTP_write_cmos_sensor(0x0a00, 0x01); //sleep Off
+LOG_INF("HI843B Before apply otp G_gain = 0x%x, R_gain = 0x%x, B_gain = 0x%x \n",\
+	(read_cmos_sensor(0x0508) << 8) | (read_cmos_sensor(0x0509) & 0xFFFF), (read_cmos_sensor(0x050c) << 8) | (read_cmos_sensor(0x050d) & 0xFFFF), (read_cmos_sensor(0x050e) << 8) | (read_cmos_sensor(0x050f) & 0xFFFF));
+	HI843B_OTP_write_cmos_sensor(0x0508, (G_gain) >> 8);
+	HI843B_OTP_write_cmos_sensor(0x0509, (G_gain) & 0xFFFF);
+	HI843B_OTP_write_cmos_sensor(0x050a, (G_gain) >> 8);
+	HI843B_OTP_write_cmos_sensor(0x050b, (G_gain) & 0xFFFF);
+	HI843B_OTP_write_cmos_sensor(0x050c, (R_gain) >> 8);
+	HI843B_OTP_write_cmos_sensor(0x050d, (R_gain) & 0xFFFF);
+	HI843B_OTP_write_cmos_sensor(0x050e, (B_gain) >> 8);
+	HI843B_OTP_write_cmos_sensor(0x050f, (B_gain) & 0xFFFF);
+LOG_INF("HI843B after apply otp G_gain = 0x%x, R_gain = 0x%x, B_gain = 0x%x \n",\
+	(read_cmos_sensor(0x0508) << 8) | (read_cmos_sensor(0x0509) & 0xFFFF), (read_cmos_sensor(0x050c) << 8) | (read_cmos_sensor(0x050d) & 0xFFFF), (read_cmos_sensor(0x050e) << 8) | (read_cmos_sensor(0x050f) & 0xFFFF));
+	return HI843B_otp.WB_FLAG;
+}
+static void HI843B_otp_cali(void)
+{
+	LOG_INF("HI843B otp_cali hi843b_otp_read_flag = 0x%d\n",hi843b_otp_read_flag);
+		HI843B_OTPSetting();
+        HI843B_otp_read();
+        hi843b_otp_read_flag = 1;
+}
+#endif
 /*************************************************************************
 * FUNCTION
 *	night_mode
@@ -4702,8 +4950,8 @@ write_cmos_sensor(0x0b26, 0x0001);
 write_cmos_sensor(0x0b28, 0x0807);
 
 write_cmos_sensor(0x000c, 0x0122);
-write_cmos_sensor(0x0012, 0x000c);
-write_cmos_sensor(0x0018, 0x0cd3);
+write_cmos_sensor(0x0012, 0x000a); //0x000c);
+write_cmos_sensor(0x0018, 0x0cd5); //0x0cd3);
 write_cmos_sensor(0x001e, 0x1111);
 write_cmos_sensor(0x000a, 0x17c0);
 write_cmos_sensor(0x0034, 0x0700);
@@ -4727,7 +4975,7 @@ write_cmos_sensor(0x0004, 0x0624);
 write_cmos_sensor(0x0057, 0x0000);
 write_cmos_sensor(0x0002, 0x0000);
 write_cmos_sensor(0x0a02, 0x0100);
-write_cmos_sensor(0x0a04, 0x016a);
+write_cmos_sensor(0x0a04, 0x017a);
 
 write_cmos_sensor(0x0036, 0x0050);
 write_cmos_sensor(0x0038, 0x5000);
@@ -4801,7 +5049,7 @@ write_cmos_sensor(0x0004, 0x09dc);
 write_cmos_sensor(0x0057, 0x0000);
 write_cmos_sensor(0x0002, 0x0000);
 write_cmos_sensor(0x0a02, 0x0100);
-write_cmos_sensor(0x0a04, 0x014a);
+write_cmos_sensor(0x0a04, 0x015a);
 write_cmos_sensor(0x0036, 0x0070);
 write_cmos_sensor(0x0038, 0x7000);
 write_cmos_sensor(0x004e, 0x7070);
@@ -4878,7 +5126,7 @@ write_cmos_sensor(0x0004, 0x0271);
 write_cmos_sensor(0x0057, 0x0000);
 write_cmos_sensor(0x0002, 0x0000);
 write_cmos_sensor(0x0a02, 0x0100);
-write_cmos_sensor(0x0a04, 0x016a);
+write_cmos_sensor(0x0a04, 0x017a);
 
 write_cmos_sensor(0x0036, 0x0070);
 write_cmos_sensor(0x0038, 0x7000);
@@ -4952,7 +5200,7 @@ write_cmos_sensor(0x0004, 0x0344);
 write_cmos_sensor(0x0057, 0x0000);
 write_cmos_sensor(0x0002, 0x0000);
 write_cmos_sensor(0x0a02, 0x0100);
-write_cmos_sensor(0x0a04, 0x0168);
+write_cmos_sensor(0x0a04, 0x0178);
 write_cmos_sensor(0x0036, 0x0070);
 write_cmos_sensor(0x0038, 0x7000);
 write_cmos_sensor(0x004e, 0x7070);
@@ -4989,13 +5237,15 @@ write_cmos_sensor(0x0a00, 0x0100); //stream on
 * GLOBALS AFFECTED
 *
 *************************************************************************/
+//extern int back_camera_find_success;
+//extern bool camera_back_probe_ok;//bit2
+
 static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
 {
-
 	kal_uint8 i = 0;
 	kal_uint8 retry = 2;
-    LOG_INF("[get_imgsensor_id] ");
 
+    LOG_INF("[get_imgsensor_id] ");
 	while (imgsensor_info.i2c_addr_table[i] != 0xff) {
 			spin_lock(&imgsensor_drv_lock);
 			imgsensor.i2c_write_id = imgsensor_info.i2c_addr_table[i];
@@ -5007,6 +5257,9 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
 
 				if (*sensor_id == imgsensor_info.sensor_id) {
 					LOG_INF("i2c write id  : 0x%x, sensor id: 0x%x\n", imgsensor.i2c_write_id,*sensor_id);
+                                          //  back_camera_find_success=2;
+                                           // camera_back_probe_ok=1;
+
 					return ERROR_NONE;
 				}
 				LOG_INF("get_imgsensor_id Read sensor id fail, i2c write id: 0x%x,sensor id: 0x%x\n", imgsensor.i2c_write_id,*sensor_id);
@@ -5042,6 +5295,7 @@ static kal_uint32 get_imgsensor_id(UINT32 *sensor_id)
 *************************************************************************/
 static kal_uint32 open(void)
 {
+
 	kal_uint8 i = 0;
 	kal_uint8 retry = 2;
 	kal_uint16 sensor_id = 0;
@@ -5080,7 +5334,15 @@ static kal_uint32 open(void)
 #else
     sensor_init();
 #endif
-
+#ifdef HI843B_OTP_FUNCTION
+LOG_INF("hi843b_otp_read_flag = 0x%d\n",hi843b_otp_read_flag);
+if(hi843b_otp_read_flag == 0)
+{
+	HI843B_otp_cali();
+}
+	HI843B_OTPSetting();
+	HI843B_otp_apply();
+#endif
 	spin_lock(&imgsensor_drv_lock);
 
 	imgsensor.autoflicker_en= KAL_FALSE;
@@ -5197,7 +5459,7 @@ static kal_uint32 capture(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	else //PIP capture: 24fps for less than 13M, 20fps for 16M,15fps for 20M
     {
 		if (imgsensor.current_fps != imgsensor_info.cap1.max_framerate)
-			LOG_INF("Warning: current_fps %d fps is not support, so use cap1's setting: %d fps!\n", imgsensor.current_fps, imgsensor_info.cap1.max_framerate/10);
+			LOG_INF("Warning: current_fps %d fps is not support, so use cap1's setting: %d fps!\n",imgsensor.current_fps, imgsensor_info.cap1.max_framerate/10);
 		imgsensor.pclk = imgsensor_info.cap1.pclk;
 		imgsensor.line_length = imgsensor_info.cap1.linelength;
 		imgsensor.frame_length = imgsensor_info.cap1.framelength;
@@ -5587,12 +5849,14 @@ static kal_uint32 set_test_pattern_mode(kal_bool enable)
 {
 
     UINT16 enable_TP = 0;
+
 	LOG_INF("enable: %d", enable);
 	enable_TP = ((read_cmos_sensor(0x0A04) << 8) | read_cmos_sensor(0x0A05));
 
 	if (enable) {
 		  LOG_INF("enter color bar");
         enable_TP |= 0x0001;
+		enable_TP &= 0xFFE7;
 		write_cmos_sensor(0x0a04, enable_TP);
 		write_cmos_sensor(0x020a, 0x0200);
 	} else {
