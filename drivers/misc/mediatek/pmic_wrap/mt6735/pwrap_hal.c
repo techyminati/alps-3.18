@@ -42,6 +42,7 @@ static void __iomem *topckgen_base;
 static void __iomem *infracfg_ao_base;
 #endif
 static struct mt_pmic_wrap_driver *mt_wrp;
+static u32 pwrap_read_test(void);
 
 static spinlock_t	wrp_lock = __SPIN_LOCK_UNLOCKED(lock);
 /* spinlock_t	wrp_lock = __SPIN_LOCK_UNLOCKED(lock); */
@@ -205,7 +206,7 @@ static s32 mt_pwrap_store_hal(const char *buf, size_t count)
 /*---------------------------------------------------------------------------*/
 #else
 /*-pwrap debug--------------------------------------------------------------------------*/
-static inline void pwrap_dump_ap_register(void)
+void pwrap_dump_ap_register(void)
 {
 	u32 i = 0;
 
@@ -236,6 +237,8 @@ static inline void pwrap_dump_ap_register(void)
 	}
 	PWRAPREG("infra clock1 0x10000048 =0x%x\n", WRAP_RD32(infracfg_ao_base+0x48));
 	PWRAPREG("infra clock2 0x10210080 =0x%x\n", WRAP_RD32(topckgen_base+0x80));
+
+	pwrap_read_test();
 	#endif
 }
 static inline void pwrap_dump_pmic_register(void)
@@ -1412,6 +1415,8 @@ static u32 pwrap_read_test(void)
 		return E_PWR_READ_TEST_FAIL;
 	}
 #endif
+	PWRAPREG("Read Test,rdata=0x%x, exp=0x5aa5,return_value=0x%x\n", rdata, return_value);
+
 	return 0;
 }
 static u32 pwrap_write_test(void)
