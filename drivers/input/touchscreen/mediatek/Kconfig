@@ -51,10 +51,10 @@ config TOUCHSCREEN_MTK_GT9XXTB_HN_NEW
 	bool "GT9XXTB hotknot new driver for Mediatek package"
 	default n
 	help
-		This is new driver for goodix GT9XX series touch screen.
-		This driver upgrade FW with request_firmware method.
-		Say Y here if you use gt9xx series new touch driver.
-		If unsure, say N.
+	  This is new driver for goodix GT9XX series touch screen.
+	  This driver upgrade FW with request_firmware method.
+	  Say Y here if you use gt9xx series new touch driver.
+	  If unsure, say N.
 
 source "drivers/input/touchscreen/mediatek/gt9xxtb_hn_new/Kconfig"
 
@@ -103,7 +103,6 @@ config TOUCHSCREEN_MTK_GT9XX_HOTKNOT_SCP
 	default n
 	help
 	  Say Y here if you have GT9XX_HOTKNOT_SCP touch panel.
-
 	  If unsure, say N.
 
 	  To compile this dirver as a module, choose M here: the
@@ -116,7 +115,6 @@ config TOUCHSCREEN_MTK_FT5X0X
 	default n
 	help
 	  Say Y here if you have FT5X0X touch panel.
-
 	  If unsure, say N.
 
 	  To compile this dirver as a module, choose M here: the
@@ -124,9 +122,30 @@ config TOUCHSCREEN_MTK_FT5X0X
 
 source "drivers/input/touchscreen/mediatek/ft5x0x/Kconfig"
 
+
+config TOUCHSCREEN_MTK_FT6336S
+	bool "FT633S for Mediatek package"
+	default n
+	help
+	  Say Y here if you have FT6336S touch panel.
+	  If unsure, say N.
+
+	  To compile this dirver as a module, choose M here: the
+	  module will be called.
+
+config TOUCHSCREEN_MTK_MSG2238A
+	bool "MSG2238A for Mediatek package"
+	default n
+	help
+	  Say Y here if you have MSG2238A touch panel.
+	  If unsure, say N.
+
+	  To compile this dirver as a module, choose M here: the
+	  module will be called.
+
 config TOUCHSCREEN_MTK_SYNAPTICS_3320_50
 	bool "Synaptics 5.0inch for Mediatek package"
-    default n
+	default n
 
 config TOUCHSCREEN_UNIFIED_DRIVER_4
 	bool "LGE Unified driver Ver4.0"
