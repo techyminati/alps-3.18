@@ -53,10 +53,12 @@
 
 #define  SIOCSTXQSTATE          (SIOCDEVPRIVATE + 0)  /* stop/start tx queue */
 #define  SIOCCCMNICFG           (SIOCDEVPRIVATE + 1)  /* configure ccmni/md remapping */
+#define  SIOCFWDFILTER          (SIOCDEVPRIVATE + 2)  /* forward filter for ccmni tx packet */
 
-#define  CCMNI_TX_PRINT_F	(0x1 << 0)
+#define  CCMNI_TX_PRINT_F       (0x1 << 0)
 
-typedef struct ccmni_ctl_block ccmni_ctl_block_t;
+#define  CCMNI_FLT_NUM          32
+
 
 struct ccmni_ch {
 	int		   rx;
@@ -65,6 +67,33 @@ struct ccmni_ch {
 	int		   tx_ack;
 	int		   dl_ack;
 	int		   multiq;
+};
+
+enum {
+	CCMNI_FLT_ADD    = 1,
+	CCMNI_FLT_DEL    = 2,
+	CCMNI_FLT_FLUSH  = 3,
+};
+
+struct ccmni_fwd_filter {
+	u16 ver;                        /* ipv4 or ipv6*/
+	u8 s_pref;                      /* mask number for source ip address */
+	u8 d_pref;                      /* mask number for dest ip address */
+	union {
+		struct {
+			u32 saddr;      /* source ip address */
+			u32 daddr;      /* dest ip address */
+		} ipv4;
+		struct {
+			u32 saddr[4];
+			u32 daddr[4];
+		} ipv6;
+	};
+};
+
+struct ccmni_flt_act {
+	u32 action;
+	struct ccmni_fwd_filter flt;
 };
 
 struct ccmni_instance {
@@ -88,6 +117,8 @@ struct ccmni_instance {
 	unsigned int       tx_full_cnt[2];
 	unsigned int       tx_irq_cnt[2];
 	unsigned int       rx_gro_cnt;
+	unsigned int       flt_cnt;
+	struct ccmni_fwd_filter flt_tbl[CCMNI_FLT_NUM];
 	void               *priv_data;
 };
 
