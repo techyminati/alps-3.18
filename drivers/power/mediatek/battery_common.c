@@ -92,6 +92,9 @@
 
 #include "mtk_pep_intf.h"
 #include "mtk_pep20_intf.h"
+#if defined(CONFIG_ONTIM_POWER_DRIVER)
+#include <mach/mt_charging_sel_intf.h>
+#endif
 
 #if defined(CONFIG_MTK_PUMP_EXPRESS_SUPPORT) || defined(CONFIG_MTK_PUMP_EXPRESS_PLUS_SUPPORT)
 #ifndef PUMP_EXPRESS_SERIES
@@ -263,7 +266,9 @@ static int suspend_discharging = -1;
 #if !defined(CONFIG_POWER_EXT)
 static int is_uisoc_ever_100 = KAL_FALSE;
 #endif
-
+#if defined(CONFIG_ONTIM_POWER_DRIVER)
+kal_bool chargin_hw_init_done = KAL_FALSE;
+#endif
 /* ////////////////////////////////////////////////////////////////////////////// */
 /* FOR ANDROID BATTERY SERVICE */
 /* ////////////////////////////////////////////////////////////////////////////// */
@@ -398,10 +403,25 @@ kal_bool upmu_is_chr_det(void)
 #if !defined(CONFIG_POWER_EXT)
 	unsigned int tmp32;
 #endif
+#if defined(CONFIG_ONTIM_POWER_DRIVER)
+	int idx = 0;
 
+	if (battery_charging_control == NULL) {
+		for (idx = 0; idx < sizeof(charger_candidate_func)/sizeof(struct charger_candidate_table); idx++) {
+			if (charger_candidate_func[idx].exist_fun() == 0) {
+				battery_log(BAT_LOG_CRTI, "charger %s found\n", charger_candidate_func[idx].name);
+				battery_charging_control = charger_candidate_func[idx].chr_ctrl_intf;
+				break;
+			}
+		}
+
+		if (battery_charging_control == NULL)
+			battery_log(BAT_LOG_CRTI, "can't find any charger driver\n");
+	}
+#else
 	if (battery_charging_control == NULL)
 		battery_charging_control = chr_control_interface;
-
+#endif
 #if defined(CONFIG_POWER_EXT)
 	/* return KAL_TRUE; */
 	return get_charger_detect_status();
@@ -3795,7 +3815,25 @@ void battery_kthread_hrtimer_init(void)
 
 static void get_charging_control(void)
 {
+#if defined(CONFIG_ONTIM_POWER_DRIVER)
+	int idx = 0;
+
+	if (battery_charging_control == NULL) {
+		for (idx = 0; idx < sizeof(charger_candidate_func)/sizeof(struct charger_candidate_table); idx++) {
+			if (charger_candidate_func[idx].exist_fun() == 0) {
+					battery_log(BAT_LOG_CRTI, "charger %s found\n",
+						charger_candidate_func[idx].name);
+				battery_charging_control = charger_candidate_func[idx].chr_ctrl_intf;
+				break;
+			}
+		}
+
+		if (battery_charging_control == NULL)
+			battery_log(BAT_LOG_CRTI, "can't find any charger driver\n");
+	}
+#else
 	battery_charging_control = chr_control_interface;
+#endif
 }
 
 #if defined(CONFIG_MTK_DUAL_INPUT_CHARGER_SUPPORT)
