@@ -1117,6 +1117,10 @@ static void createWirelessDevice(void)
 	prWiphy->max_sched_scan_ie_len	= CFG_CFG80211_IE_BUF_LEN;
 
 	prWiphy->interface_modes	= BIT(NL80211_IFTYPE_STATION) | BIT(NL80211_IFTYPE_ADHOC);
+
+	prWiphy->iface_combinations = p_mtk_sta_iface_combos;
+	prWiphy->n_iface_combinations = mtk_sta_iface_combos_num;
+
 	prWiphy->bands[IEEE80211_BAND_2GHZ] = &mtk_band_2ghz;
 	/* always assign 5Ghz bands here, if the chip is not support 5Ghz,
 		bands[IEEE80211_BAND_5GHZ] will be assign to NULL */

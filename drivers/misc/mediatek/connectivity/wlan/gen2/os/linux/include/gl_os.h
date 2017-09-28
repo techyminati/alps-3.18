@@ -206,6 +206,8 @@
 #endif
 
 extern BOOLEAN fgIsBusAccessFailed;
+extern const struct ieee80211_iface_combination *p_mtk_sta_iface_combos;
+extern const INT_32 mtk_sta_iface_combos_num;
 
 /*******************************************************************************
 *                              C O N S T A N T S

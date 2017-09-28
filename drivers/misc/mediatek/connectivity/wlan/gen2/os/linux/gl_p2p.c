@@ -184,6 +184,17 @@ static const struct ieee80211_iface_limit mtk_p2p_iface_limits[] = {
 	},
 };
 
+static const struct ieee80211_iface_combination mtk_sta_iface_combos[] = {
+	{
+		.max_interfaces = 2,
+		.num_different_channels = 2,
+		.n_limits = 1,
+		.limits = mtk_p2p_iface_limits
+	}
+};
+const struct ieee80211_iface_combination *p_mtk_sta_iface_combos = mtk_sta_iface_combos;
+const INT_32 mtk_sta_iface_combos_num = ARRAY_SIZE(mtk_sta_iface_combos);
+
 static const struct ieee80211_iface_combination mtk_p2p_iface_combos[] = {
 	{
 		.max_interfaces = 2,
