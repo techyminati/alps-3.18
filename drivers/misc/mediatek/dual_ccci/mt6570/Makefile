@@ -27,6 +27,7 @@ ccci_plat-y +=src/ccci_settings.o
 
 ccflags-y  += -I$(srctree)/drivers/misc/mediatek/dual_ccci/include
 ccflags-y  += -I$(CCCI_CORE_DRIVER_DIR)/include -I$(srctree)/$(obj)/include
+ccflags-y  +=  $(call cc-option,-Wno-error=date-time)
 
 clean-files += $(patsubst $(obj)/%,%,$(wildcard *.o)\
 	 $(wildcard .*cmd) $(wildcard *~))
