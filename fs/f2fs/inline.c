@@ -47,18 +47,6 @@ void read_inline_data(struct page *page, struct page *ipage)
 {
 	void *src_addr, *dst_addr;
 
-	if (trace_android_fs_dataread_start_enabled()) {
-		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
-
-		path = android_fstrace_get_pathname(pathbuf,
-						    MAX_TRACE_PATHBUF_LEN,
-						    page->mapping->host);
-		trace_android_fs_dataread_start(page->mapping->host,
-						page_offset(page),
-						PAGE_SIZE, current->pid,
-						path, current->comm);
-	}
-
 	if (PageUptodate(page))
 		return;
 
@@ -100,9 +88,11 @@ int f2fs_read_inline_data(struct inode *inode, struct page *page)
 	if (trace_android_fs_dataread_start_enabled()) {
 		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
 
-		path = android_fstrace_get_pathname(pathbuf, sizeof(pathbuf),
-						    inode);
-		trace_android_fs_dataread_start(inode, page_offset(page),
+		path = android_fstrace_get_pathname(pathbuf,
+						    MAX_TRACE_PATHBUF_LEN,
+						    page->mapping->host);
+		trace_android_fs_dataread_start(page->mapping->host,
+						page_offset(page),
 						PAGE_SIZE, current->pid,
 						path, current->comm);
 	}
@@ -117,8 +107,6 @@ int f2fs_read_inline_data(struct inode *inode, struct page *page)
 
 	if (!f2fs_has_inline_data(inode)) {
 		f2fs_put_page(ipage, 1);
-		trace_android_fs_dataread_end(inode, page_offset(page),
-					      PAGE_SIZE);
 		return -EAGAIN;
 	}
 
@@ -129,9 +117,10 @@ int f2fs_read_inline_data(struct inode *inode, struct page *page)
 
 	if (!PageUptodate(page))
 		SetPageUptodate(page);
+
 	f2fs_put_page(ipage, 1);
-	trace_android_fs_dataread_end(inode, page_offset(page),
-				      PAGE_SIZE);
+
+	trace_android_fs_dataread_end(inode, page_offset(page), PAGE_SIZE);
 	unlock_page(page);
 	return 0;
 }

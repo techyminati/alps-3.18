@@ -118,6 +118,7 @@ static DEFINE_SPINLOCK(managed_page_count_lock);
 
 unsigned long totalram_pages __read_mostly;
 unsigned long totalreserve_pages __read_mostly;
+unsigned long totalcma_pages __read_mostly;
 /*
  * When calculating the number of globally allowed dirty pages, there
  * is a certain number of per-zone reserves that should not be
@@ -1137,13 +1138,13 @@ int move_freepages(struct zone *zone,
 #endif
 
 	for (page = start_page; page <= end_page;) {
-		/* Make sure we are not inadvertently changing nodes */
-		VM_BUG_ON_PAGE(page_to_nid(page) != zone_to_nid(zone), page);
-
 		if (!pfn_valid_within(page_to_pfn(page))) {
 			page++;
 			continue;
 		}
+
+		/* Make sure we are not inadvertently changing nodes */
+		VM_BUG_ON_PAGE(page_to_nid(page) != zone_to_nid(zone), page);
 
 		if (!PageBuddy(page)) {
 			page++;
@@ -5730,8 +5731,8 @@ unsigned long free_reserved_area(void *start, void *end, int poison, char *s)
 	}
 
 	if (pages && s)
-		pr_info("Freeing %s memory: %ldK (%p - %p)\n",
-			s, pages << (PAGE_SHIFT - 10), start, end);
+		pr_info("Freeing %s memory: %ldK\n",
+			s, pages << (PAGE_SHIFT - 10));
 
 	return pages;
 }
@@ -5785,7 +5786,7 @@ void __init mem_init_print_info(const char *str)
 
 	printk("Memory: %luK/%luK available "
 	       "(%luK kernel code, %luK rwdata, %luK rodata, "
-	       "%luK init, %luK bss, %luK reserved"
+	       "%luK init, %luK bss, %luK reserved, %luK cma-reserved"
 #ifdef	CONFIG_HIGHMEM
 	       ", %luK highmem"
 #endif
@@ -5793,7 +5794,8 @@ void __init mem_init_print_info(const char *str)
 	       nr_free_pages() << (PAGE_SHIFT-10), physpages << (PAGE_SHIFT-10),
 	       codesize >> 10, datasize >> 10, rosize >> 10,
 	       (init_data_size + init_code_size) >> 10, bss_size >> 10,
-	       (physpages - totalram_pages) << (PAGE_SHIFT-10),
+	       (physpages - totalram_pages - totalcma_pages) << (PAGE_SHIFT-10),
+	       totalcma_pages << (PAGE_SHIFT-10),
 #ifdef	CONFIG_HIGHMEM
 	       totalhigh_pages << (PAGE_SHIFT-10),
 #endif
@@ -6716,7 +6718,7 @@ int alloc_contig_range(unsigned long start, unsigned long end,
 
 	/* Make sure the range is really isolated. */
 	if (test_pages_isolated(outer_start, end, false)) {
-		pr_info("%s: [%lx, %lx) PFNs busy\n",
+		pr_info_ratelimited("%s: [%lx, %lx) PFNs busy\n",
 			__func__, outer_start, end);
 		ret = -EBUSY;
 		goto done;

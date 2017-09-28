@@ -1010,7 +1010,7 @@ binder_select_thread_ilocked(struct binder_proc *proc)
 {
 	struct binder_thread *thread;
 
-	BUG_ON(!spin_is_locked(&proc->inner_lock));
+	assert_spin_locked(&proc->inner_lock);
 	thread = list_first_entry_or_null(&proc->waiting_threads,
 					  struct binder_thread,
 					  waiting_thread_node);
@@ -1041,7 +1041,7 @@ static void binder_wakeup_thread_ilocked(struct binder_proc *proc,
 					 struct binder_thread *thread,
 					 bool sync)
 {
-	BUG_ON(!spin_is_locked(&proc->inner_lock));
+	assert_spin_locked(&proc->inner_lock);
 
 	if (thread) {
 		if (sync)
@@ -1220,7 +1220,7 @@ static struct binder_node *binder_get_node_ilocked(struct binder_proc *proc,
 	struct rb_node *n = proc->nodes.rb_node;
 	struct binder_node *node;
 
-	BUG_ON(!spin_is_locked(&proc->inner_lock));
+	assert_spin_locked(&proc->inner_lock);
 
 	while (n) {
 		node = rb_entry(n, struct binder_node, rb_node);
@@ -1266,7 +1266,8 @@ static struct binder_node *binder_init_node_ilocked(
 	__u32 flags = fp ? fp->flags : 0;
 	s8 priority;
 
-	BUG_ON(!spin_is_locked(&proc->inner_lock));
+	assert_spin_locked(&proc->inner_lock);
+
 	while (*p) {
 
 		parent = *p;
@@ -1345,9 +1346,9 @@ static int binder_inc_node_nilocked(struct binder_node *node, int strong,
 {
 	struct binder_proc *proc = node->proc;
 
-	BUG_ON(!spin_is_locked(&node->lock));
+	assert_spin_locked(&node->lock);
 	if (proc)
-		BUG_ON(!spin_is_locked(&proc->inner_lock));
+		assert_spin_locked(&proc->inner_lock);
 	if (strong) {
 		if (internal) {
 			if (target_list == NULL &&
@@ -1399,9 +1400,9 @@ static bool binder_dec_node_nilocked(struct binder_node *node,
 {
 	struct binder_proc *proc = node->proc;
 
-	BUG_ON(!spin_is_locked(&node->lock));
+	assert_spin_locked(&node->lock);
 	if (proc)
-		BUG_ON(!spin_is_locked(&proc->inner_lock));
+		assert_spin_locked(&proc->inner_lock);
 	if (strong) {
 		if (internal)
 			node->internal_strong_refs--;
@@ -1925,7 +1926,7 @@ static void binder_pop_transaction_ilocked(struct binder_thread *target_thread,
 					   struct binder_transaction *t)
 {
 	BUG_ON(!target_thread);
-	BUG_ON(!spin_is_locked(&target_thread->proc->inner_lock));
+	assert_spin_locked(&target_thread->proc->inner_lock);
 	BUG_ON(target_thread->transaction_stack != t);
 	BUG_ON(target_thread->transaction_stack->from != target_thread);
 	target_thread->transaction_stack =
@@ -3517,11 +3518,13 @@ static int binder_thread_write(struct binder_proc *proc,
 				BUG_ON(buf_node->proc != proc);
 				w = binder_dequeue_work_head_ilocked(
 						&buf_node->async_todo);
-				if (!w)
+				if (!w) {
 					buf_node->has_async_transaction = 0;
-				else
+				} else {
 					binder_enqueue_work_ilocked(
-							w, &thread->todo);
+							w, &proc->todo);
+					binder_wakeup_proc_ilocked(proc);
+				}
 				binder_node_inner_unlock(buf_node);
 			}
 			trace_binder_transaction_buffer_release(buffer);
@@ -3665,22 +3668,12 @@ static int binder_thread_write(struct binder_proc *proc,
 				ref->death = death;
 				if (ref->node->proc == NULL) {
 					ref->death->work.type = BINDER_WORK_DEAD_BINDER;
-					if (thread->looper &
-					    (BINDER_LOOPER_STATE_REGISTERED |
-					     BINDER_LOOPER_STATE_ENTERED))
-						binder_enqueue_work(
-							proc,
-							&ref->death->work,
-							&thread->todo);
-					else {
-						binder_inner_proc_lock(proc);
-						binder_enqueue_work_ilocked(
-							&ref->death->work,
-							&proc->todo);
-						binder_wakeup_proc_ilocked(
-							proc);
-						binder_inner_proc_unlock(proc);
-					}
+
+					binder_inner_proc_lock(proc);
+					binder_enqueue_work_ilocked(
+						&ref->death->work, &proc->todo);
+					binder_wakeup_proc_ilocked(proc);
+					binder_inner_proc_unlock(proc);
 				}
 			} else {
 				if (ref->death == NULL) {
@@ -3795,12 +3788,6 @@ static void binder_stat_br(struct binder_proc *proc,
 		atomic_inc(&proc->stats.br[_IOC_NR(cmd)]);
 		atomic_inc(&thread->stats.br[_IOC_NR(cmd)]);
 	}
-}
-
-static int binder_has_thread_work(struct binder_thread *thread)
-{
-	return !binder_worklist_empty(thread->proc, &thread->todo) ||
-		thread->looper_need_return;
 }
 
 static int binder_put_node_cmd(struct binder_proc *proc,
@@ -4433,12 +4420,9 @@ static unsigned int binder_poll(struct file *filp,
 
 	binder_inner_proc_unlock(thread->proc);
 
-	if (binder_has_work(thread, wait_for_proc_work))
-		return POLLIN;
-
 	poll_wait(filp, &thread->wait, wait);
 
-	if (binder_has_thread_work(thread))
+	if (binder_has_work(thread, wait_for_proc_work))
 		return POLLIN;
 
 	return 0;
@@ -4591,6 +4575,8 @@ static long binder_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 
 	/*pr_info("binder_ioctl: %d:%d %x %lx\n",
 			proc->pid, current->pid, cmd, arg);*/
+
+	binder_selftest_alloc(&proc->alloc);
 
 	trace_binder_ioctl(cmd, arg);
 
@@ -5068,7 +5054,6 @@ static void print_binder_transaction_ilocked(struct seq_file *m,
 	struct binder_proc *to_proc;
 	struct binder_buffer *buffer = t->buffer;
 
-	WARN_ON(!spin_is_locked(&proc->inner_lock));
 	spin_lock(&t->lock);
 	to_proc = t->to_proc;
 	seq_printf(m,
@@ -5157,7 +5142,6 @@ static void print_binder_thread_ilocked(struct seq_file *m,
 	size_t start_pos = m->count;
 	size_t header_pos;
 
-	WARN_ON(!spin_is_locked(&thread->proc->inner_lock));
 	seq_printf(m, "  thread %d: l %02x need_return %d tr %d\n",
 			thread->pid, thread->looper,
 			thread->looper_need_return,
@@ -5194,10 +5178,6 @@ static void print_binder_node_nilocked(struct seq_file *m,
 	struct binder_work *w;
 	int count;
 
-	WARN_ON(!spin_is_locked(&node->lock));
-	if (node->proc)
-		WARN_ON(!spin_is_locked(&node->proc->inner_lock));
-
 	count = 0;
 	hlist_for_each_entry(ref, &node->refs, node_entry)
 		count++;
@@ -5224,7 +5204,6 @@ static void print_binder_node_nilocked(struct seq_file *m,
 static void print_binder_ref_olocked(struct seq_file *m,
 				     struct binder_ref *ref)
 {
-	WARN_ON(!spin_is_locked(&ref->proc->outer_lock));
 	binder_node_lock(ref->node);
 	seq_printf(m, "  ref %d: desc %d %snode %d s %d w %d d %pK\n",
 		   ref->data.debug_id, ref->data.desc,
@@ -5444,6 +5423,8 @@ static void print_binder_proc_stats(struct seq_file *m,
 	count = binder_alloc_get_allocated_count(&proc->alloc);
 	seq_printf(m, "  buffers: %d\n", count);
 
+	binder_alloc_print_pages(m, &proc->alloc);
+
 	count = 0;
 	binder_inner_proc_lock(proc);
 	list_for_each_entry(w, &proc->todo, entry) {
@@ -5639,6 +5620,8 @@ static int __init binder_init(void)
 	char *device_name, *device_names;
 	struct binder_device *device;
 	struct hlist_node *tmp;
+
+	binder_alloc_shrinker_init();
 
 	atomic_set(&binder_transaction_log.cur, ~0U);
 	atomic_set(&binder_transaction_log_failed.cur, ~0U);
