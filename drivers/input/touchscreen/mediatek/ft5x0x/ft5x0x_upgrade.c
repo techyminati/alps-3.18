@@ -595,10 +595,10 @@ static enum UPGRADE_ERR_TYPE tpd_fw_upgrade(struct i2c_client *client, unsigned 
 	for (i = 0; i < 12; i++) {
 		/* temp = 0x7FF4 + i; */
 
-	   if (IS_FT5436_NEW_BOOTLOADER)
-		temp = 0x7FF4 + i;
-	   else
-		temp = 0x6FF4 + i;
+		if (IS_FT5436_NEW_BOOTLOADER)
+			temp = 0x7FF4 + i;
+		else
+			temp = 0x6FF4 + i;
 
 
 		packet_buf[2] = (unsigned char)(temp >> 8);
