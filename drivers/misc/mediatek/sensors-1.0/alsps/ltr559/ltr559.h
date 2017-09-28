@@ -106,6 +106,5 @@
  * For IRQ numbers used, see /proc/interrupts.
  */
 #define GPIO_INT_NO	32
-extern bool proximity_probe_ok;/*bit4*/
 
 #endif

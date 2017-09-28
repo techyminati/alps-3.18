@@ -2152,8 +2152,6 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	    obj->early_drv.suspend = ltr559_early_suspend,
 	    obj->early_drv.resume = ltr559_late_resume, register_early_suspend(&obj->early_drv);
 #endif
-
-	proximity_probe_ok = 1;	/* add by liuwei */
 	APS_LOG("%s: OK\n", __func__);
 	ltr559_init_flag = 1;
 	return 0;
