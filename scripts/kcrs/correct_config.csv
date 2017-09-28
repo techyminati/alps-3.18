@@ -520,7 +520,7 @@ CONFIG_MTK_MD_SBP_CUSTOM_VALUE,PROJECT,yanbin.ren,,O,O,O,X,,O,O,X,O,O,
 CONFIG_MTK_MD1_SUPPORT,PROJECT,yanbin.ren,,X,O,O,O,,O,O,5,O,O,
 CONFIG_MTK_MD2_SBP_CUSTOM_VALUE,PLATFORM,yanbin.ren,,X,X,X,X,X,X,X,X,X,X,X
 CONFIG_MTK_MD3_SUPPORT,PROJECT,yanbin.ren,,X,O,O,O,,O,O,2,O,O,
-CONFIG_MTK_MEMCFG,USER,chinwen.chang,,X,X,X,X,X,X,X,X,X,X,X
+CONFIG_MTK_MEMCFG,COMMON,yun.hsiang,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_MTK_MEMORY_LOWPOWER,PROJECT,Miles.Chen,Specific hardware,X,X,X,X,,O,X,X,X,X,
 CONFIG_MTK_MET,COMMON,chengchang.wu,6755 32 bits not ready,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_MTK_MET_PLF,COMMON,chengchang.wu,6755 32 bits not ready,y,y,y,y,y,y,y,y,y,y,y
