@@ -32,6 +32,11 @@
 #include "mt_hotplug_strategy.h"
 #include "mt_cpufreq.h"
 
+#ifdef CONFIG_TRACING
+#include <linux/kallsyms.h>
+#include <linux/ftrace_event.h>
+#endif
+
 #define TAG "[boost_controller]"
 
 #define MAX(a, b) (((a) > (b)) ? (a) : (b))
@@ -75,6 +80,33 @@ out:
 
 	return NULL;
 }
+
+#ifdef CONFIG_TRACING
+
+static unsigned long __read_mostly tracing_mark_write_addr;
+static inline void __mt_update_tracing_mark_write_addr(void)
+{
+	if (unlikely(0 == tracing_mark_write_addr))
+		tracing_mark_write_addr = kallsyms_lookup_name("tracing_mark_write");
+}
+
+static inline void lhd_kernel_trace_begin(char *name, int min, int max)
+{
+	__mt_update_tracing_mark_write_addr();
+	preempt_disable();
+	event_trace_printk(tracing_mark_write_addr, "B|%d|%s|%d|%d\n", current->tgid, name, min, max);
+	preempt_enable();
+}
+
+static inline void lhd_kernel_trace_end(void)
+{
+	__mt_update_tracing_mark_write_addr();
+	preempt_disable();
+	event_trace_printk(tracing_mark_write_addr, "E\n");
+	preempt_enable();
+}
+
+#endif
 
 /*************************************************************************************/
 int update_userlimit_cpu_core(int kicker, int num_cluster, struct ppm_limit_data *core_limit)
@@ -121,8 +153,15 @@ int update_userlimit_cpu_core(int kicker, int num_cluster, struct ppm_limit_data
 	legacy_debug(log_enable, TAG"current_core_min %d current_core_max %d\n",
 		 current_core.min, current_core.max);
 
+#ifdef CONFIG_TRACING
+	lhd_kernel_trace_begin("current_core", current_core.min, current_core.max);
+#endif
 	hps_set_cpu_num_base(BASE_PERF_SERV, current_core.min == -1 ? 1 : current_core.min, 0);
 	hps_set_cpu_num_limit(LIMIT_POWER_SERV, current_core.max == -1 ? nr_cpu : current_core.max, 0);
+
+#ifdef CONFIG_TRACING
+	lhd_kernel_trace_end();
+#endif
 
 ret_update:
 	mutex_unlock(&boost_core);
@@ -177,8 +216,16 @@ int update_userlimit_cpu_freq(int kicker, int num_cluster, struct ppm_limit_data
 	legacy_debug(log_enable, TAG"freq_min %d freq_max %d\n",
 		current_freq.min, current_freq.max);
 
+#ifdef CONFIG_TRACING
+	lhd_kernel_trace_begin("current_freq", current_freq.min, current_freq.max);
+#endif
+
 	mt_cpufreq_set_min_freq(MT_CPU_DVFS_LITTLE, current_freq.min == -1 ? 0 : current_freq.min);
 	mt_cpufreq_set_max_freq(MT_CPU_DVFS_LITTLE, current_freq.max == -1 ? 0 : current_freq.max);
+
+#ifdef CONFIG_TRACING
+	lhd_kernel_trace_end();
+#endif
 
 ret_update:
 	mutex_unlock(&boost_freq);
