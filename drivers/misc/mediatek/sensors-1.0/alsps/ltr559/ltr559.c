@@ -220,10 +220,10 @@ static unsigned int als_value[C_CUST_ALS_LEVEL] = { 0 };
 
 #include <linux/rtc.h>
 static int current_color_ratio;
-static int ltr559_prox_set_noice(int noice);
+//static int ltr559_prox_set_noice(int noice);
 
 /* +add by hzb for ontim debug */
-#if 1
+#if 0
 #include <ontim/ontim_dev_dgb.h>
 static char ltr559_prox_version[] = "ltr559_mtk_1.0";
 static char ltr559_prox_vendor_name[20] = "LITE-ON-ltr559";
@@ -284,6 +284,7 @@ static int ltr559_i2c_write_reg(u8 regnum, u8 value)
 }
 
 /*----------------------------------------------------------------------------*/
+#if 0
 static int ltr559_prox_set_noice(int noice)
 {
 	if ((noice > -1) && (noice < 1600))
@@ -293,7 +294,7 @@ static int ltr559_prox_set_noice(int noice)
 	APS_LOG("%s: noice = %d; Set noice to %d\n", __func__, noice, ps_cali.noice);
 	return 0;
 }
-
+#endif
 #if 1				/* def GN_MTK_BSP_PS_DYNAMIC_CALI */
 static ssize_t ltr559_dynamic_calibrate(void)
 {
@@ -2009,8 +2010,10 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	struct ps_control_path ps_ctl = { 0 };
 	struct ps_data_path ps_data = { 0 };
 /* +add by hzb for ontim debug */
+#if 0
 	if (CHECK_THIS_DEV_DEBUG_AREADY_EXIT() == 0)
 		return -EIO;
+#endif
 /* -add by hzb for ontim debug */
 
 	name = "mediatek,ltr559";
@@ -2168,10 +2171,12 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 #endif
 
 /* +add by hzb for ontim debug */
+#if 0
 	REGISTER_AND_INIT_ONTIM_DEBUG_FOR_THIS_DEV();
+#endif
 /* -add by hzb for ontim debug */
 
-	proximity_probe_ok = 1;	/* add by liuwei */
+	//proximity_probe_ok = 1;	/* add by liuwei */
 	APS_LOG("%s: OK\n", __func__);
 	ltr559_init_flag = 1;
 	return 0;
