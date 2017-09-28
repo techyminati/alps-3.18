@@ -840,6 +840,10 @@ LCM_DRIVER *lcm_driver_list[] = {
 	&r63417_fhd_dsi_cmd_truly_nt50358_qhd_lcm_drv,
 #endif
 
+#if defined(R63417_FHD_DSI_CMD_TRULY_NT50358_FWVGA)
+	&r63417_fhd_dsi_cmd_truly_nt50358_fwvga_lcm_drv,
+#endif
+
 #if defined(R63417_FHD_DSI_VDO_TRULY_NT50358)
 	&r63417_fhd_dsi_vdo_truly_nt50358_lcm_drv,
 #endif
@@ -1070,6 +1074,10 @@ unsigned char lcm_name_list[][128] = {
 
 #if defined(R63417_FHD_DSI_CMD_TRULY_NT50358_QHD)
 	"r63417_fhd_dsi_cmd_truly_nt50358_qhd_drv",
+#endif
+
+#if defined(R63417_FHD_DSI_CMD_TRULY_NT50358_FWVGA)
+	"r63417_fhd_dsi_cmd_truly_nt50358_fwvga_drv",
 #endif
 
 #if defined(R63417_FHD_DSI_VDO_TRULY_NT50358)
