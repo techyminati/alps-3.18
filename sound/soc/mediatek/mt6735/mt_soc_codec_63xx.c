@@ -99,6 +99,10 @@
 #include "AudDrv_Gpio.h"
 #include "mt_soc_codec_63xx.h"
 
+#include <mt-plat/mt_gpio.h>
+#include "mach/gpio_const.h"
+#define GPIO_AUDIO_SEL         (GPIO4 | 0x80000000)
+#define GPIO_AUDIO_SEL_M_GPIO   GPIO_MODE_00
 
 /* #define AW8736_MODE_CTRL // AW8736 PA output power mode control */
 
@@ -2048,6 +2052,20 @@ static void Ext_Speaker_Amp_Change(bool enable)
 #endif /*CONFIG_MTK_LEGACY*/
 		msleep(SPK_WARM_UP_TIME);
 #endif
+#if 1	/* for gobo y33 */
+		mt_set_gpio_mode(GPIO_AUDIO_SEL, GPIO_AUDIO_SEL_M_GPIO);
+		mt_set_gpio_dir(GPIO_AUDIO_SEL, GPIO_DIR_OUT);
+		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
+		udelay(2);
+		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
+		udelay(2);
+		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
+		udelay(2);
+		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
+		udelay(2);
+		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
+		mdelay(50);
+#endif
 		pr_debug("Ext_Speaker_Amp_Change ON-\n");
 	} else {
 		pr_debug("Ext_Speaker_Amp_Change OFF+\n");
@@ -2066,6 +2084,11 @@ static void Ext_Speaker_Amp_Change(bool enable)
 		AudDrv_GPIO_EXTAMP2_Select(false);
 #endif
 		udelay(500);
+#endif
+#if 1	/* for gobo y33 */
+		mt_set_gpio_mode(GPIO_AUDIO_SEL, GPIO_AUDIO_SEL_M_GPIO);
+		mt_set_gpio_dir(GPIO_AUDIO_SEL, GPIO_DIR_OUT);
+		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
 #endif
 		pr_debug("Ext_Speaker_Amp_Change OFF-\n");
 	}
