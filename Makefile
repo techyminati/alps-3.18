@@ -405,6 +405,11 @@ KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -Wno-format-security \
 		   -std=gnu89
 
+ifeq ($(findstring aarch64-linux-gnu-6.3.1, $(CROSS_COMPILE)), aarch64-linux-gnu-6.3.1)
+KBUILD_CFLAGS   += -Wno-error=misleading-indentation \
+		   -Wno-error=bool-compare
+endif
+
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
