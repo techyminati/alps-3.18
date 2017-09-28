@@ -2517,7 +2517,7 @@ static ssize_t stk3x1x_show_recv(struct device_driver *ddri, char *buf)
 static ssize_t stk3x1x_store_recv(struct device_driver *ddri, const char *buf, size_t count)
 {
 	int addr;
-	u8 dat;
+	u8 dat = 0;
 
 	if (!stk3x1x_obj) {
 		APS_ERR("stk3x1x_obj is null!!\n");
