@@ -377,6 +377,9 @@ void rdma_set_ultra_l(unsigned int idx, unsigned int bpp, void *handle, golden_s
 	is_wrot_sram = rdma_golden_setting->is_wrot_sram;
 	fifo_mode = rdma_golden_setting->fifo_mode;
 
+	if (idx == 1)
+		is_wrot_sram = 0;
+
 	if (idx == 0) {
 		if (fifo_mode == 0) {
 #if 0
