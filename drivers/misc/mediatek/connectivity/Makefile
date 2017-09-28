@@ -54,30 +54,28 @@ endif
         MINI_PLATFORM_VER = OPR2
     endif
 
+    # gen3 still uses built-in module
+    ifneq ($(filter "MT6630",$(CONFIG_MTK_COMBO_CHIP)),)
+        TARGET_PLATFORM_VERSION = A
+    endif
+    # gen3 still uses built-in module
+    ifneq ($(filter "CONSYS_6797" "CONSYS_6759" "CONSYS_6758",$(CONFIG_MTK_COMBO_CHIP)),)
+        TARGET_PLATFORM_VERSION = A
+    endif
+    # gen4 also needs built-in module
+    ifneq ($(filter "MT6632",$(CONFIG_MTK_COMBO_CHIP)),)
+        TARGET_PLATFORM_VERSION = A
+    endif
+
     # compare $(PLATFORM_VERSION)>=$(MINI_PLATFORM_VER)
     ifeq ($(MINI_PLATFORM_VER), $(word 1, $(sort $(MINI_PLATFORM_VER) $(TARGET_PLATFORM_VERSION))))
         # Do Nothing, move to standalone repo
         $(warning Android($(TARGET_PLATFORM_VERSION) >= $(MINI_PLATFORM_VER)) ignore build-in)
-        # gen3 still uses built-in module
-        ifneq ($(filter "MT6630",$(CONFIG_MTK_COMBO_CHIP)),)
-            obj-$(CONFIG_MTK_COMBO_WIFI) += wlan/
-        endif
-
-        # gen3 still uses built-in module
-        ifneq ($(filter "CONSYS_6797" "CONSYS_6759" "CONSYS_6758",$(CONFIG_MTK_COMBO_CHIP)),)
-            obj-$(CONFIG_MTK_COMBO_WIFI) += wlan/
-        # gen2 can ignores built-in module and uses (.ko) file
-        else ifneq ($(filter "CONSYS_%",$(CONFIG_MTK_COMBO_CHIP)),)
-            obj-y += common/connectivity_build_in_adapter.o
-        endif
-
-        # gen4 also needs built-in module
-        ifneq ($(filter "MT6632",$(CONFIG_MTK_COMBO_CHIP)),)
-            obj-$(CONFIG_MTK_COMBO_WIFI) += wlan/
-        endif
+        obj-y += common/connectivity_build_in_adapter.o
     else
         $(warning Android($(TARGET_PLATFORM_VERSION) < $(MINI_PLATFORM_VER)) do build-in)
         obj-$(CONFIG_MTK_FMRADIO) += fmradio/
+        obj-$(CONFIG_MTK_COMBO_WIFI) += wlan/
     endif
 
 # Otherwise we were called directly from the command line;
