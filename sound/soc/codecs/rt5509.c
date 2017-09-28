@@ -2245,6 +2245,19 @@ out_remove_dummy:
 	return rt5509_dummy_codec_unregister(&client->dev);
 }
 
+static void rt5509_i2c_shutdown(struct i2c_client *client)
+{
+	struct rt5509_chip *chip = i2c_get_clientdata(client);
+	struct snd_soc_dapm_context *dapm = NULL;
+
+	dev_dbg(&client->dev, "%s\n", __func__);
+	if (chip && chip->codec) {
+		dapm = &chip->codec->dapm;
+		snd_soc_dapm_disable_pin(dapm, "Speaker");
+		snd_soc_dapm_sync(dapm);
+	}
+}
+
 #ifdef CONFIG_PM
 static int rt5509_i2c_suspend(struct device *dev)
 {
@@ -2312,6 +2325,7 @@ static struct i2c_driver rt5509_i2c_driver = {
 	},
 	.probe = rt5509_i2c_probe,
 	.remove = rt5509_i2c_remove,
+	.shutdown = rt5509_i2c_shutdown,
 	.id_table = rt5509_i2c_id,
 };
 
