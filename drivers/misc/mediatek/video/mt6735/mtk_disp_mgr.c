@@ -1512,6 +1512,7 @@ static int set_primary_buffer(disp_session_input_config *input)
 	}
 #ifdef CONFIG_ALL_IN_TRIGGER_STAGE
 	captured_session_input[DISP_SESSION_PRIMARY - 1].session_id = input->session_id;
+	captured_session_input[DISP_SESSION_PRIMARY - 1].ccorr_config = input->ccorr_config;
 #endif
 	DISPPR_FENCE("%s\n", fence_msg_buf);
 	mutex_unlock(&session_config_mutex);

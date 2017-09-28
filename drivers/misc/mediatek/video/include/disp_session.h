@@ -267,11 +267,18 @@ typedef struct disp_output_config_t {
 	unsigned int frm_sequence;
 } disp_output_config;
 
+struct disp_ccorr_config {
+	bool is_dirty;
+	int mode;
+	int color_matrix[16];
+};
+
 typedef struct disp_session_input_config_t {
 	DISP_SESSION_USER setter;
 	unsigned int session_id;
 	unsigned int config_layer_num;
 	disp_input_config config[MAX_OVL_CONFIG];
+	struct disp_ccorr_config ccorr_config;
 } disp_session_input_config;
 
 typedef struct disp_session_output_config_t {

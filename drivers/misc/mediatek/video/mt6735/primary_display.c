@@ -80,6 +80,7 @@
 #include "mmdvfs_mgr.h"
 #include "mt_smi.h"
 #include <mach/mt_freqhopping.h>
+#include "ddp_gamma.h"
 
 typedef void (*fence_release_callback) (unsigned int data);
 unsigned int is_hwc_enabled = 0;
@@ -7089,6 +7090,7 @@ static int _primary_display_config_input_multiple(disp_session_input_config *ses
 	int ret = 0;
 	disp_path_handle disp_handle;
 	cmdqRecHandle cmdq_handle;
+	struct disp_ccorr_config m_ccorr_config = session_input->ccorr_config;
 
 	if (gTriggerDispMode > 0)
 		return 0;
@@ -7121,6 +7123,12 @@ static int _primary_display_config_input_multiple(disp_session_input_config *ses
 	else
 		_config_rdma_input(session_input, disp_handle);
 
+	/* set ccorr matrix */
+	if (m_ccorr_config.is_dirty) {
+		disp_ccorr_set_color_matrix(cmdq_handle,
+					    m_ccorr_config.color_matrix,
+					    m_ccorr_config.mode);
+	}
 done:
 	if (lock)
 		_primary_path_unlock(__func__);
