@@ -48,6 +48,7 @@
 #include <linux/stacktrace.h>
 #include "ccmni.h"
 #include "ccci_debug.h"
+#include <mt-plat/met_drv.h>
 
 
 struct ccmni_ctl_block *ccmni_ctl_blk[MAX_MD_NUM];
@@ -284,6 +285,11 @@ static int ccmni_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	struct ccmni_ctl_block *ctlb = ccmni_ctl_blk[ccmni->md_id];
 	unsigned int is_ack = 0;
 
+#if defined(CCMNI_MET_DEBUG)
+	char tag_name[32] = { '\0' };
+	unsigned int tag_id = 0;
+#endif
+
 	if (ccmni_forward_rx(ccmni, skb) == NETDEV_TX_OK)
 		return NETDEV_TX_OK;
 
@@ -325,6 +331,19 @@ static int ccmni_start_xmit(struct sk_buff *skb, struct net_device *dev)
 			      ccmni->index, dev->stats.tx_packets, is_ack, ccmni->tx_busy_cnt[is_ack]);
 	}
 	ccmni->tx_busy_cnt[is_ack] = 0;
+
+#if defined(CCMNI_MET_DEBUG)
+	if (ccmni->tx_met_time == 0) {
+		ccmni->tx_met_time = jiffies;
+		ccmni->tx_met_bytes = dev->stats.tx_bytes;
+	} else if (time_after_eq(jiffies, ccmni->tx_met_time + msecs_to_jiffies(MET_LOG_TIMER))) {
+		snprintf(tag_name, 32, "%s_tx_bytes", dev->name);
+		tag_id = CCMNI_TX_MET_ID + ccmni->index;
+		met_tag_oneshot(tag_id, tag_name, (dev->stats.tx_bytes - ccmni->tx_met_bytes));
+		ccmni->tx_met_bytes = dev->stats.tx_bytes;
+		ccmni->tx_met_time = jiffies;
+	}
+#endif
 
 	return NETDEV_TX_OK;
 
@@ -698,6 +717,11 @@ static int ccmni_init(int md_id, struct ccmni_ccci_ops *ccci_info)
 		goto alloc_mem_fail;
 	}
 
+#if defined(CCMNI_MET_DEBUG)
+	if (met_tag_init() != 0)
+		CCMNI_INF_MSG(md_id, "ccmni_init:met tag init fail\n");
+#endif
+
 	ccmni_ctl_blk[md_id] = ctlb;
 	memcpy(ctlb->ccci_ops, ccci_info, sizeof(struct ccmni_ccci_ops));
 
@@ -845,6 +869,10 @@ static int ccmni_rx_callback(int md_id, int ccmni_idx, struct sk_buff *skb, void
 #if defined(CCCI_SKB_TRACE)
 	struct iphdr *iph;
 #endif
+#if defined(CCMNI_MET_DEBUG)
+	char tag_name[32] = { '\0' };
+	unsigned int tag_id = 0;
+#endif
 
 
 	if (unlikely(ctlb == NULL || ctlb->ccci_ops == NULL)) {
@@ -879,6 +907,7 @@ static int ccmni_rx_callback(int md_id, int ccmni_idx, struct sk_buff *skb, void
 	ctlb->net_rx_delay[0] = dev->stats.rx_bytes + skb_len;
 	ctlb->net_rx_delay[1] = dev->stats.tx_bytes;
 #endif
+
 	if (likely(ctlb->ccci_ops->md_ability & MODEM_CAP_NAPI)) {
 #ifdef ENABLE_NAPI_GRO
 		napi_gro_receive(ccmni->napi, skb);
@@ -901,6 +930,19 @@ static int ccmni_rx_callback(int md_id, int ccmni_idx, struct sk_buff *skb, void
 	}
 	dev->stats.rx_packets++;
 	dev->stats.rx_bytes += skb_len;
+
+#if defined(CCMNI_MET_DEBUG)
+	if (ccmni->rx_met_time == 0) {
+		ccmni->rx_met_time = jiffies;
+		ccmni->rx_met_bytes = dev->stats.rx_bytes;
+	} else if (time_after_eq(jiffies, ccmni->rx_met_time + msecs_to_jiffies(MET_LOG_TIMER))) {
+		snprintf(tag_name, 32, "%s_rx_bytes", dev->name);
+		tag_id = CCMNI_RX_MET_ID + ccmni_idx;
+		met_tag_oneshot(tag_id, tag_name, (dev->stats.rx_bytes - ccmni->rx_met_bytes));
+		ccmni->rx_met_bytes = dev->stats.rx_bytes;
+		ccmni->rx_met_time = jiffies;
+	}
+#endif
 
 	wake_lock_timeout(&ctlb->ccmni_wakelock, HZ);
 

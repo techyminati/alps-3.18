@@ -119,6 +119,12 @@ struct ccmni_instance {
 	unsigned int       rx_gro_cnt;
 	unsigned int       flt_cnt;
 	struct ccmni_fwd_filter flt_tbl[CCMNI_FLT_NUM];
+#if defined(CCMNI_MET_DEBUG)
+	unsigned long      rx_met_time;
+	unsigned long      tx_met_time;
+	unsigned long      rx_met_bytes;
+	unsigned long      tx_met_bytes;
+#endif
 	void               *priv_data;
 };
 
