@@ -8233,11 +8233,13 @@ static irqreturn_t msdc_irq(int irq, void *dev_id)
 #if (MSDC_DATA1_INT == 1)
 	if ((host->hw->flags & MSDC_SDIO_IRQ) && (intsts & MSDC_INT_XFER_COMPL))
 		goto done;
-	else
+	else {
 #endif
 		if (inten & MSDC_INT_XFER_COMPL)
 			goto done;
-
+#if (MSDC_DATA1_INT == 1)
+	}
+#endif
 		if (intsts & datsts) {
 			/* do basic reset, or stop command will sdc_busy */
 			if (intsts & MSDC_INT_DATTMO)
