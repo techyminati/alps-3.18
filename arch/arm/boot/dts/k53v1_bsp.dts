@@ -10,17 +10,30 @@
 #endif
 #include <dt-bindings/lcm/r63417_fhd_dsi_cmd_truly_nt50358.dtsi>
 
-&bus {
-	compatible = "simple-bus";
-	#address-cells = <1>;
-	#size-cells = <1>;
-	ranges = <0 0 0 0xffffffff>;
+&reserved_memory {
+	#address-cells = <2>;
+	#size-cells = <2>;
+	ranges;
 
-	MTKFB@5e200000 {
-		compatible = "mediatek,MTKFB";
-		reg = <0x7F000000 0x1000000>;
+	reserve-memory-ccci_md3 {
+		compatible = "mediatek,reserve-memory-ccci_md3";
+		no-map;
+		size = <0 0x00b00000>;
+		alignment = <0 0x2000000>;
+		alloc-ranges = <0 0x40000000 0 0xc0000000>;
 	};
+};
 
+&bus {
+		compatible = "simple-bus";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0 0 0 0xffffffff>;
+
+		MTKFB@5e200000 {
+			compatible = "mediatek,MTKFB";
+			reg = <0x7F000000 0x1000000>;
+		};
 };
 
 &odm {
@@ -420,6 +433,18 @@
 		status = "okay";
 };
 
+&mmc3 {
+		clk_src = /bits/ 8 <MSDC30_CLKSRC_200MHZ>;
+		bus-width = <4>;
+		max-frequency = <50000000>;
+		cap-sd-highspeed;
+		sd-uhs-sdr12;
+		sd-uhs-sdr25;
+		sd-uhs-sdr50;
+		host_function = /bits/ 8 <MSDC_SDIO>;
+		non-removable;
+		status = "okay";
+};
 &pio {
 	mmc0_pins_default: mmc0@default {
 			pins_cmd {
@@ -672,6 +697,7 @@
 };
 /* USB GPIO Kernal Standardization end */
 
+
 /* LCM GPIO Kernal Standardization start */
 &pio {
 	lcm_mode_default: lcm_mode_default {
@@ -746,5 +772,6 @@
 	status = "okay";
 };
 /* LCM GPIO Kernal Standardization end */
-#include <k53v1/cust.dtsi>
+
+#include <k53v1_bsp/cust.dtsi>
 /*End of this file, DO NOT ADD ANYTHING HERE*/
