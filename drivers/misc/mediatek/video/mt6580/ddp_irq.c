@@ -17,6 +17,7 @@
 #include <linux/spinlock.h>
 #include <linux/kthread.h>
 #include <linux/timer.h>
+#include <linux/ratelimit.h>
 
 /* #include <mach/mt_irq.h> */
 #include "ddp_reg.h"
@@ -49,6 +50,7 @@ unsigned long long rdma_end_time[2] = { 0 };
 
 static DDP_IRQ_CALLBACK irq_module_callback_table[DISP_MODULE_NUM][DISP_MAX_IRQ_CALLBACK];
 static DDP_IRQ_CALLBACK irq_callback_table[DISP_MAX_IRQ_CALLBACK];
+static DEFINE_RATELIMIT_STATE(ratelimit, 1 * HZ, 1);
 
 atomic_t ESDCheck_byCPU = ATOMIC_INIT(0);
 int disp_register_irq_callback(DDP_IRQ_CALLBACK cb)
@@ -292,7 +294,7 @@ irqreturn_t disp_irq_handler(int irq, void *dev_id)
 				       cnt_wdma_underflow[index]++);
 				disp_irq_log_module |= 1 << module;
 			}
-			if (reg_val & (1 << 2))
+			if ((reg_val & (1 << 2)) && __ratelimit(&ratelimit))
 				DISPMSG("IRQ: WDMA%d FIFO full!\n", index);
 
 			/* clear intr */

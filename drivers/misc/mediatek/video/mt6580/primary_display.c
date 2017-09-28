@@ -5181,6 +5181,8 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited
 #endif
 		eint_flag++;
 #endif
+		if (eint_flag == 0)
+			eint_flag++;
 		/* 2.register eint */
 		node =
 		    of_find_compatible_node(NULL, NULL,
