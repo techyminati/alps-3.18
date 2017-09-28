@@ -41,6 +41,11 @@ endif
         TARGET_PLATFORM_VERSION = A
     endif
 
+    ifeq ($(TARGET_PLATFORM_VERSION),OPR1)
+        # force build-in
+        MINI_PLATFORM_VER = OPR2
+    endif
+
     # compare $(PLATFORM_VERSION)>=$(MINI_PLATFORM_VER)
     ifeq ($(MINI_PLATFORM_VER), $(word 1, $(sort $(MINI_PLATFORM_VER) $(TARGET_PLATFORM_VERSION))))
         # Do Nothing, move to standalone repo
