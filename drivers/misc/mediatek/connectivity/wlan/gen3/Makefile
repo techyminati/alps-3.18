@@ -76,6 +76,12 @@ endif
 ccflags-y += -I$(src)/include -I$(src)/include/nic -I$(src)/include/mgmt
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/base/power/include
 
+ifeq ($(CONFIG_MTK_TC1_FEATURE), y)
+    ccflags-y += -DCFG_TC1_FEATURE=1
+else
+    ccflags-y += -DCFG_TC1_FEATURE=0
+endif
+
 MODULE_NAME := wlan_gen3
 obj-$(CONFIG_MTK_COMBO_WIFI) += $(MODULE_NAME).o
 #obj-y += $(MODULE_NAME).o
