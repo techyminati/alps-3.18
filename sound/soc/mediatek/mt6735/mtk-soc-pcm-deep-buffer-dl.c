@@ -73,7 +73,6 @@ static int CLEAR_BUFFER_SIZE;
 static AFE_MEM_CONTROL_T *pMemControl;
 static struct snd_dma_buffer *deep_buffer_dl_dma_buf;
 static int mPlaybackSramState;
-static bool mPlaybackUseSram;
 
 
 /*
@@ -208,11 +207,18 @@ static int mtk_deep_buffer_dl_hw_params(struct snd_pcm_substream *substream,
 {
 	int ret = 0;
 
-	/* runtime->dma_bytes has to be set manually to allow mmap */
 	substream->runtime->dma_bytes = params_buffer_bytes(hw_params);
-	substream->runtime->dma_area = deep_buffer_dl_dma_buf->area;
-	substream->runtime->dma_addr = deep_buffer_dl_dma_buf->addr;
-	set_deep_buffer_data_buffer(substream, hw_params);
+	if (mPlaybackSramState == SRAM_STATE_PLAYBACKFULL) {
+		/* substream->runtime->dma_bytes = AFE_INTERNAL_SRAM_SIZE; */
+		substream->runtime->dma_area = (unsigned char *)Get_Afe_SramBase_Pointer();
+		substream->runtime->dma_addr = AFE_INTERNAL_SRAM_PHY_BASE;
+		AudDrv_Allocate_DL2_Buffer(mDev, substream->runtime->dma_bytes);
+	} else {
+		substream->runtime->dma_bytes = params_buffer_bytes(hw_params);
+		substream->runtime->dma_area = deep_buffer_dl_dma_buf->area;
+		substream->runtime->dma_addr = deep_buffer_dl_dma_buf->addr;
+		set_deep_buffer_data_buffer(substream, hw_params);
+	}
 
 	pr_debug("dma_bytes = %zu dma_area = %p dma_addr = 0x%lx\n",
 		 substream->runtime->dma_bytes, substream->runtime->dma_area,
@@ -245,8 +251,10 @@ static int mtk_deep_buffer_dl_close(struct snd_pcm_substream *substream)
 
 		/* stop DAC output */
 		SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC, false);
-		if (GetI2SDacEnable() == false)
+		if (GetI2SDacEnable() == false) {
+			SetI2SADDAEnable(false);
 			SetI2SDacEnable(false);
+		}
 
 		RemoveMemifSubStream(Soc_Aud_Digital_Block_MEM_DL2, substream);
 
@@ -275,9 +283,16 @@ static int mtk_deep_buffer_dl_open(struct snd_pcm_substream *substream)
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	int ret = 0;
 
-	mtk_deep_buffer_dl_hardware.buffer_bytes_max = GetPLaybackDramSize();
-	mPlaybackSramState = SRAM_STATE_PLAYBACKDRAM;
-	mPlaybackUseSram = false;
+	AfeControlSramLock();
+	if (GetSramState() == SRAM_STATE_FREE) {
+		mtk_deep_buffer_dl_hardware.buffer_bytes_max = GetPLaybackSramFullSize();
+		mPlaybackSramState = SRAM_STATE_PLAYBACKFULL;
+		SetSramState(mPlaybackSramState);
+	} else {
+		mtk_deep_buffer_dl_hardware.buffer_bytes_max = GetPLaybackDramSize();
+		mPlaybackSramState = SRAM_STATE_PLAYBACKDRAM;
+	}
+	AfeControlSramUnLock();
 	if (mPlaybackSramState == SRAM_STATE_PLAYBACKDRAM)
 		AudDrv_Emi_Clk_On();
 
@@ -348,6 +363,7 @@ static int mtk_deep_buffer_dl_prepare(struct snd_pcm_substream *substream)
 			SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC, true);
 			SetI2SDacOut(substream->runtime->rate, 0, mI2SWLen);
 			SetI2SDacEnable(true);
+			SetI2SADDAEnable(true);
 		} else {
 			SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC, true);
 		}

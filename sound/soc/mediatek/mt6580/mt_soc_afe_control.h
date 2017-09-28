@@ -190,6 +190,7 @@ void Set_Mem_CopySizeByStream(enum Soc_Aud_Digital_Block MemBlock,
 
 struct snd_dma_buffer *Get_Mem_Buffer(enum Soc_Aud_Digital_Block MemBlock);
 int AudDrv_Allocate_DL1_Buffer(struct device *pDev, uint32_t Afe_Buf_Length);
+int AudDrv_Allocate_DL2_Buffer(struct device *pDev, uint32_t Afe_Buf_Length);
 
 
 bool BackUp_Audio_Register(void);
