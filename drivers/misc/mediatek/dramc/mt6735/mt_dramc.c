@@ -937,7 +937,7 @@ int dram_fh_steps_freq(unsigned int step)
 		return -1;
 	}
 #else
-	pr_warn("DRAM FH steps not define\n");
+	#error "DRAM FH steps not defined"
 #endif
 
 	return freq;

@@ -476,30 +476,10 @@ DRIVER_ATTR(ddr_type, 0644, ddr_type_show, ddr_type_store);
 
 static ssize_t con_sce_show(struct device_driver *driver, char *buf)
 {
-	char *ptr = buf;
-	int i = 0;
-
-	if (cur_con_sce >= NR_CON_SCE) {
-		ptr += sprintf(ptr, "none\n");
-		return strlen(buf);
-	}
-	else
-		ptr += sprintf(ptr, "current scenario: %s\n",
-		con_sce_str[cur_con_sce]);
+	if (cur_con_sce >= NR_CON_SCE)
+		return sprintf(buf, "none\n");
 
 #if 1
-	ptr += sprintf(ptr, "%s\n", con_sce_str[cur_con_sce]);
-	ptr += sprintf(ptr, "EMI_ARBA = 0x%x\n", readl(IOMEM(EMI_ARBA)));
-	ptr += sprintf(ptr, "EMI_ARBB = 0x%x\n", readl(IOMEM(EMI_ARBB)));
-	ptr += sprintf(ptr, "EMI_ARBC = 0x%x\n", readl(IOMEM(EMI_ARBC)));
-	ptr += sprintf(ptr, "EMI_ARBD = 0x%x\n", readl(IOMEM(EMI_ARBD)));
-	ptr += sprintf(ptr, "EMI_ARBE = 0x%x\n", readl(IOMEM(EMI_ARBE)));
-	ptr += sprintf(ptr, "EMI_ARBF = 0x%x\n", readl(IOMEM(EMI_ARBF)));
-	ptr += sprintf(ptr, "EMI_ARBG = 0x%x\n", readl(IOMEM(EMI_ARBG_2ND)));
-	for (i = 0; i < NR_CON_SCE; i++)
-		ptr += sprintf(ptr, "%s = 0x%x\n", con_sce_str[i],
-		ctrl_tbl[i].ref_cnt);
-
 	pr_debug("[EMI BWL] EMI_ARBA = 0x%x\n", readl(IOMEM(EMI_ARBA)));
 	pr_debug("[EMI BWL] EMI_ARBB = 0x%x\n", readl(IOMEM(EMI_ARBB)));
 	pr_debug("[EMI BWL] EMI_ARBC = 0x%x\n", readl(IOMEM(EMI_ARBC)));
@@ -509,7 +489,7 @@ static ssize_t con_sce_show(struct device_driver *driver, char *buf)
 	pr_debug("[EMI BWL] EMI_ARBG = 0x%x\n", readl(IOMEM(EMI_ARBG_2ND)));
 #endif
 
-	return strlen(buf);
+	return sprintf(buf, "current scenario: %s\n", con_sce_str[cur_con_sce]);
 }
 
 /*
