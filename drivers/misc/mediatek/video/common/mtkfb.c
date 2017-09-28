@@ -35,6 +35,7 @@
 #include <mt-plat/dma.h>
 #include <linux/compat.h>
 #include <linux/dma-mapping.h>
+#include <linux/string.h>
 #if defined(COMMON_DISP_LOG)
 #include "disp_log.h"
 #include "disp_debug.h"
@@ -1857,12 +1858,14 @@ static int __parse_tag_videolfb(struct device_node *node)
 {
 	struct tag_videolfb *videolfb_tag = NULL;
 	unsigned long size = 0;
+	int ret;
 
 	videolfb_tag = (struct tag_videolfb *)of_get_property(node, "atag,videolfb", (int *)&size);
 	if (videolfb_tag) {
-		strncpy(mtkfb_lcm_name, videolfb_tag->lcmname, sizeof(mtkfb_lcm_name) - 1);
-		mtkfb_lcm_name[sizeof(mtkfb_lcm_name) - 1] = '\0';
-		mtkfb_lcm_name[strlen(videolfb_tag->lcmname)] = '\0';
+		ret = strscpy(mtkfb_lcm_name, videolfb_tag->lcmname,
+			sizeof(mtkfb_lcm_name));
+		if (ret < 0)
+			return -EINVAL;
 
 		lcd_fps = videolfb_tag->fps;
 		if (0 == lcd_fps)
