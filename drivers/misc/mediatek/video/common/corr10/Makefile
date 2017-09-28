@@ -31,7 +31,7 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/videox/mt6
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/mt6735/
 endif
 
-ifneq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735" "mt6755"))
+ifneq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735" "mt6755" "mt6797"))
 ccflags-y += -DCCORR_TRANSITION
 endif
 

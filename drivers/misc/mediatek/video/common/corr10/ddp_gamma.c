@@ -32,6 +32,7 @@
 #if defined(CONFIG_ARCH_MT6755) || defined(CONFIG_ARCH_MT6797) || defined(CONFIG_ARCH_MT6757)
 #include <disp_helper.h>
 #endif
+#include <primary_display.h>
 
 /* To enable debug log: */
 /* # echo corr_dbg:1 > /sys/kernel/debug/dispsys */
@@ -517,7 +518,7 @@ static int disp_ccorr_wait_irq(unsigned long timeout)
 
 static int disp_ccorr_exit_idle(int need_kick)
 {
-#if defined(CONFIG_MACH_MT6755)
+#if defined(CONFIG_ARCH_MT6755) || defined(CONFIG_ARCH_MT6797)
 	if (need_kick == 1)
 		if (disp_helper_get_option(DISP_OPT_IDLEMGR_ENTER_ULPS))
 			primary_display_idlemgr_kick(__func__, 1);
