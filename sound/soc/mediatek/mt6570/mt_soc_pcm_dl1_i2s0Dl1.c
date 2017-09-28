@@ -327,13 +327,16 @@ static int mtk_pcm_I2S0dl1_open(struct snd_pcm_substream *substream)
 	int ret = 0;
 	struct snd_pcm_runtime *runtime = substream->runtime;
 
+	pI2S0dl1MemControl = Get_Mem_ControlT(Soc_Aud_Digital_Block_MEM_DL1);
+
 	AfeControlSramLock();
-	if (GetSramState() == SRAM_STATE_FREE) {
+	if (GetSramState() == SRAM_STATE_FREE && !pI2S0dl1MemControl->mAssignDRAM) {
 		mtk_I2S0dl1_hardware.buffer_bytes_max = GetPLaybackSramFullSize();
 		mPlaybackSramState = SRAM_STATE_PLAYBACKFULL;
 		SetSramState(mPlaybackSramState);
 		mPlaybackUseSram = true;
 	} else {
+		pr_debug("%s(), use DRAM\n", __func__);
 		mtk_I2S0dl1_hardware.buffer_bytes_max = GetPLaybackDramSize();
 		mPlaybackSramState = SRAM_STATE_PLAYBACKDRAM;
 		mPlaybackUseSram = false;
@@ -352,7 +355,7 @@ static int mtk_pcm_I2S0dl1_open(struct snd_pcm_substream *substream)
 	AudDrv_Clk_On();
 	memcpy((void *)(&(runtime->hw)), (void *)&mtk_I2S0dl1_hardware,
 	       sizeof(struct snd_pcm_hardware));
-	pI2S0dl1MemControl = Get_Mem_ControlT(Soc_Aud_Digital_Block_MEM_DL1);
+
 
 	ret = snd_pcm_hw_constraint_list(runtime, 0, SNDRV_PCM_HW_PARAM_RATE,
 					 &constraints_sample_rates);

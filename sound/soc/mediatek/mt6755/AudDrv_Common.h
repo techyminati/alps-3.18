@@ -108,6 +108,7 @@ typedef struct {
 	void (*offloadCbk)(void *stream);
 	void *offloadstream;
 	bool mWaitForIRQ;
+	bool mAssignDRAM;
 } AFE_MEM_CONTROL_T;
 
 struct pcm_afe_info {

@@ -93,6 +93,7 @@ struct AFE_MEM_CONTROL_T {
 	uint32_t MemIfNum;
 	bool interruptTrigger;
 	spinlock_t substream_lock;
+	bool mAssignDRAM;
 };
 
 struct pcm_afe_info {

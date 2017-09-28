@@ -282,6 +282,7 @@ static int mtk_pcm_I2S0dl1_hw_params(struct snd_pcm_substream *substream,
 
 	substream->runtime->dma_bytes = params_buffer_bytes(hw_params);
 	if (substream->runtime->dma_bytes <= GetPLaybackSramFullSize() &&
+	    !pI2S0dl1MemControl->mAssignDRAM &&
 	    AllocateAudioSram(&substream->runtime->dma_addr,
 			      &substream->runtime->dma_area,
 			      substream->runtime->dma_bytes,
@@ -290,6 +291,7 @@ static int mtk_pcm_I2S0dl1_hw_params(struct snd_pcm_substream *substream,
 			substream->runtime->dma_addr, substream->runtime->dma_area);
 		SetHighAddr(Soc_Aud_Digital_Block_MEM_DL1, false);
 	} else {
+		pr_debug("%s(), use DRAM\n", __func__);
 		substream->runtime->dma_area = Dl1I2S0_Playback_dma_buf.area;
 		substream->runtime->dma_addr = Dl1I2S0_Playback_dma_buf.addr;
 		SetHighAddr(Soc_Aud_Digital_Block_MEM_DL1, true);

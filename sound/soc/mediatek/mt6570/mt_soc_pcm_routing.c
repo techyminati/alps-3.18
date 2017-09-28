@@ -663,6 +663,28 @@ static int Audio_LowLatencyDebug_Set(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static int Audio_AssignDRAM_Get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s()\n", __func__);
+	ucontrol->value.integer.value[0] = 0;
+	return 0;
+}
+
+static int Audio_AssignDRAM_Set(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	uint32 value = ucontrol->value.integer.value[0];
+
+	pr_debug("%s(), meminterface %d\n", __func__, value);
+	if (value < Soc_Aud_Digital_Block_NUM_OF_MEM_INTERFACE) {
+		struct AFE_MEM_CONTROL_T *pMemControl = Get_Mem_ControlT(value);
+
+		pMemControl->mAssignDRAM = true;
+	}
+	return 0;
+}
+
 /* static struct snd_dma_buffer *Dl1_Playback_dma_buf  = NULL; */
 
 static void GetAudioTrimOffset(int channels)
@@ -823,6 +845,8 @@ static const struct snd_kcontrol_new Audio_snd_routing_controls[] = {
 #endif
 	SOC_SINGLE_EXT("Audio_LowLatency_Debug", SND_SOC_NOPM, 0, 0x20000, 0,
 	Audio_LowLatencyDebug_Get, Audio_LowLatencyDebug_Set),
+	SOC_SINGLE_EXT("Audio_Assign_DRAM", SND_SOC_NOPM, 0, 0x20000, 0,
+	Audio_AssignDRAM_Get, Audio_AssignDRAM_Set),
 };
 
 
