@@ -4095,7 +4095,6 @@ static MINT32 ISP_MARK_IRQ(ISP_WAIT_IRQ_STRUCT_FRMB irqinfo)
 	int idx;
 	unsigned long long time_sec;
 	unsigned long time_usec;
-	MINT32 Ret = 0;
 
 
 	switch (irqinfo.UserInfo.Type) {
@@ -4106,17 +4105,15 @@ static MINT32 ISP_MARK_IRQ(ISP_WAIT_IRQ_STRUCT_FRMB irqinfo)
 
 	if ((irqinfo.UserInfo.UserKey >= IRQ_USER_NUM_MAX)
 		|| (irqinfo.UserInfo.UserKey < 1)) {
-		LOG_ERR("invalid userKey(%d), max(%d)", irqinfo.UserInfo.UserKey,
+		LOG_DBG("invalid userKey(%d), max(%d)", irqinfo.UserInfo.UserKey,
 			IRQ_USER_NUM_MAX);
-		Ret = -EFAULT;
-		return Ret;
+		return -EFAULT;
 	}
 	if ((irqinfo.UserInfo.Type >= ISP_IRQ_TYPE_AMOUNT_FRMB)
 		|| (irqinfo.UserInfo.Type < 0)) {
-		LOG_ERR("invalid type(%d), max(%d)", irqinfo.UserInfo.Type,
+		LOG_DBG("invalid type(%d), max(%d)", irqinfo.UserInfo.Type,
 			ISP_IRQ_TYPE_AMOUNT_FRMB);
-		Ret = -EFAULT;
-		return Ret;
+		return -EFAULT;
 	}
 
 	/* 1. enable marked flag */
@@ -4147,7 +4144,7 @@ static MINT32 ISP_MARK_IRQ(ISP_WAIT_IRQ_STRUCT_FRMB irqinfo)
 	LOG_DBG("MARK key/type/sts (%d/%d/0x%x), t(%d us)", irqinfo.UserInfo.UserKey,
 		irqinfo.UserInfo.Type, irqinfo.UserInfo.Status, (int)(time_usec));
 
-	return Ret;
+	return 0;
 }
 
 

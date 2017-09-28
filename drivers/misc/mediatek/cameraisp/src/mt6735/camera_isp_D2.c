@@ -2325,6 +2325,7 @@ static MINT32 ISP_WriteReg(ISP_REG_IO_STRUCT *pRegIo)
 	/* MUINT8 *pData = NULL; */
 	ISP_REG_STRUCT *pData = NULL;
 
+	/* The maximum number of Count equals to PAGE_SIZE*/
 	if (pRegIo->Count > (PAGE_SIZE/sizeof(MUINT32))) {
 		LOG_ERR("pRegIo->Count error");
 		Ret = -EFAULT;
@@ -3727,7 +3728,7 @@ static MINT32 ISP_WaitIrq(ISP_WAIT_IRQ_STRUCT WaitIrq)
 	}
 #endif
 	if ((WaitIrq.Type >= ISP_IRQ_TYPE_AMOUNT) || (WaitIrq.Type < 0)) {
-		Ret = -EFAULT;
+		Ret = -EINVAL;
 		LOG_ERR("invalid type(%d)", WaitIrq.Type);
 		goto EXIT;
 	}
