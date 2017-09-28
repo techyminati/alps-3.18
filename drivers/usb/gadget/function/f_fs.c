@@ -711,7 +711,7 @@ static ssize_t ffs_epfile_io(struct file *file, struct ffs_io_data *io_data)
 	struct ffs_epfile *epfile = file->private_data;
 	struct ffs_ep *ep;
 	char *data = NULL;
-	ssize_t ret, data_len = -EINVAL;
+	ssize_t ret, data_len = -EINVAL, original_len = -EINVAL;
 	int halt;
 
 	pr_debug("%s: len %lld, read %d\n", __func__, (u64)io_data->len, io_data->read);
@@ -773,7 +773,6 @@ static ssize_t ffs_epfile_io(struct file *file, struct ffs_io_data *io_data)
 		 * if we _do_ wait above, the epfile->ffs->gadget might be NULL
 		 * before the waiting completes, so do not assign to 'gadget' earlier
 		 */
-		struct usb_gadget *gadget = epfile->ffs->gadget;
 
 		spin_lock_irq(&epfile->ffs->eps_lock);
 		/* In the meantime, endpoint got disabled or changed. */
@@ -785,9 +784,9 @@ static ssize_t ffs_epfile_io(struct file *file, struct ffs_io_data *io_data)
 		 * Controller may require buffer size to be aligned to
 		 * maxpacketsize of an out endpoint.
 		 */
-		data_len = io_data->read ?
-			   usb_ep_align_maybe(gadget, ep->ep, io_data->len) :
-			   io_data->len;
+		original_len = data_len = io_data->len;
+		if (io_data->read)
+			data_len = round_up(data_len, (size_t)ep->ep->desc->wMaxPacketSize);
 		spin_unlock_irq(&epfile->ffs->eps_lock);
 
 #if defined(CONFIG_64BIT) && defined(CONFIG_MTK_LM_MODE)
@@ -940,6 +939,10 @@ static ssize_t ffs_epfile_io(struct file *file, struct ffs_io_data *io_data)
 				spin_unlock_irq(&epfile->ffs->eps_lock);
 
 				if (io_data->read && ret > 0) {
+					if (unlikely(ret > original_len))
+						pr_err("%s(), ret<%d>, original_len<%d>\n",
+								__func__, (int)ret, (int)original_len);
+
 					ret = min_t(size_t, ret, io_data->len);
 
 					if (unlikely(copy_to_user(io_data->buf,
