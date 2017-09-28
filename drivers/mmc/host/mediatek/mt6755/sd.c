@@ -269,6 +269,9 @@ int msdc_rsp[] = {
 #define pr_reg(OFFSET, VAL)     \
 	pr_err("%d R[%x]=0x%.8x", id, OFFSET, VAL)
 
+static void msdc_init_hw(struct msdc_host *host);
+static void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios);
+
 static u16 msdc_offsets[] = {
 	OFFSET_MSDC_CFG,
 	OFFSET_MSDC_IOCON,
@@ -1226,10 +1229,19 @@ static void msdc_card_reset(struct mmc_host *mmc)
 	*/
 	struct msdc_host *host = mmc_priv(mmc);
 
-	msdc_pin_reset(host, MSDC_PIN_PULL_DOWN, 1);
-	udelay(2);
-	msdc_pin_reset(host, MSDC_PIN_PULL_UP, 1);
-	usleep_range(200, 500);
+	/* Attention: reset will clear WP status */
+	if (mmc->caps & MMC_CAP_HW_RESET) {
+		msdc_pin_reset(host, MSDC_PIN_PULL_DOWN, 1);
+		udelay(2);
+		msdc_pin_reset(host, MSDC_PIN_PULL_UP, 1);
+		usleep_range(200, 500);
+	}
+
+	mmc->ios.timing = MMC_TIMING_LEGACY;
+	mmc->ios.clock = 260000;
+	msdc_ops_set_ios(mmc, &mmc->ios);
+
+	msdc_init_hw(host);
 }
 
 static void msdc_set_power_mode(struct msdc_host *host, u8 mode)
@@ -4655,6 +4667,7 @@ static void msdc_async_tune(struct work_struct *work)
 int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 {
 	struct msdc_host *host = mmc_priv(mmc);
+	int ret = 0;
 
 	host->legacy_tuning_in_progress = true;
 	/*host->async_tuning_in_progress = true;*/
@@ -4687,18 +4700,18 @@ int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 		if (mmc->ios.timing == MMC_TIMING_MMC_HS200) {
 			if (opcode == MMC_SEND_STATUS) {
 				pr_err("[AUTOK]eMMC HS200 Tune CMD only\n");
-				hs200_execute_tuning_cmd(host, NULL);
+				ret = hs200_execute_tuning_cmd(host, NULL);
 			} else {
 				pr_err("[AUTOK]eMMC HS200 Tune\n");
-				hs200_execute_tuning(host, NULL);
+				ret = hs200_execute_tuning(host, NULL);
 			}
 		} else if (mmc->ios.timing == MMC_TIMING_MMC_HS400) {
 			if (opcode == MMC_SEND_STATUS) {
 				pr_err("[AUTOK]eMMC HS400 Tune CMD only\n");
-				hs400_execute_tuning_cmd(host, NULL);
+				ret = hs400_execute_tuning_cmd(host, NULL);
 			} else {
 				pr_err("[AUTOK]eMMC HS400 Tune\n");
-				hs400_execute_tuning(host, NULL);
+				ret = hs400_execute_tuning(host, NULL);
 			}
 		}
 	} else if (host->hw->host_function == MSDC_SDIO) {
@@ -4785,7 +4798,8 @@ int msdc_execute_tuning(struct mmc_host *mmc, u32 opcode)
 
 	msdc_gate_clock(host, 1);
 
-	return 0;
+	/* return error to reset emmc when timeout occurs during autok */
+	return ret;
 }
 
 static void msdc_ops_request(struct mmc_host *mmc, struct mmc_request *mrq)
