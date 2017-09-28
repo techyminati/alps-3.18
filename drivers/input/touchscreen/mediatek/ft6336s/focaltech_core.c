@@ -328,8 +328,8 @@ extern void mt_eint_registration(unsigned int eint_num, unsigned int flow, void 
 
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(3, 18, 19))
 static const struct of_device_id ft6336s_dt_match[] = {
-        {.compatible = "mediatek,cap_touch"},
-        {},
+	{.compatible = "mediatek,cap_touch1"},
+	{},
 };
 MODULE_DEVICE_TABLE(of, ft6336s_dt_match);
 #endif
@@ -2053,7 +2053,6 @@ static int tpd_irq_registration(void)
         node = of_find_matching_node(node, touch_of_match);
         if (node) {
                 of_property_read_u32_array(node, "debounce", ints, ARRAY_SIZE(ints));
-                gpio_set_debounce(ints[0], ints[1]);
 
                 touch_irq = irq_of_parse_and_map(node, 0);
                 ret =request_irq(touch_irq, (irq_handler_t) tpd_eint_interrupt_handler, IRQF_TRIGGER_FALLING,"TOUCH_PANEL-eint", NULL);
