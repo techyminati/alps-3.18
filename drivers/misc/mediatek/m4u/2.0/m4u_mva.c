@@ -120,7 +120,7 @@ void *mva_get_priv_ext(unsigned int mva)
 	unsigned long irq_flags;
 
 	index = MVAGRAPH_INDEX(mva);
-	if (index == 0 || index > MVA_MAX_BLOCK_NR) {
+	if (index <= 0 || index > MVA_MAX_BLOCK_NR) {
 		M4UMSG("mvaGraph index is 0. mva=0x%x\n", mva);
 		return NULL;
 	}
