@@ -634,6 +634,14 @@ s32 gt1x_reset_guitar(void)
 		GTP_GPIO_AS_INT(GTP_INT_PORT);
 	}
 
+	/* hotknot is default on, disable it after reset to save power */
+#ifdef CONFIG_GTP_HOTKNOT
+	if (!hotknot_enabled)
+		gt1x_send_cmd(GTP_CMD_HN_EXIT_SLAVE, 0);
+#else
+	gt1x_send_cmd(GTP_CMD_HN_EXIT_SLAVE, 0);
+#endif
+
 #ifdef CONFIG_GTP_ESD_PROTECT
 	ret = gt1x_init_ext_watchdog();
 #else
