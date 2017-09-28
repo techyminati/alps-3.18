@@ -69,6 +69,8 @@
 
 #define CFG_WMT_COREDUMP_ENABLE 0
 
+#define CFG_WMT_CRYSTAL_TIMING_SET (0)
+
 #define CFG_WMT_MULTI_PATCH (1)
 
 #if CFG_WMT_LTE_COEX_HANDLING
@@ -310,9 +312,10 @@ static UINT8 WMT_SET_MCUIRQ_REG_EVT[] = { 0x02, 0x08, 0x04, 0x00	/*length */
 static UINT8 WMT_SET_CRYSTAL_TRIMING_CMD[] = { 0x01, 0x12, 0x02, 0x00, 0x01, 0x00 };
 static UINT8 WMT_SET_CRYSTAL_TRIMING_EVT[] = { 0x02, 0x12, 0x02, 0x00, 0x01, 0x00 };
 
+#if CFG_WMT_CRYSTAL_TIMING_SET
 static UINT8 WMT_GET_CRYSTAL_TRIMING_CMD[] = { 0x01, 0x12, 0x02, 0x00, 0x00, 0x00 };
 static UINT8 WMT_GET_CRYSTAL_TRIMING_EVT[] = { 0x02, 0x12, 0x02, 0x00, 0x00, 0x00 };
-
+#endif
 
 
 #if CFG_WMT_FILTER_MODE_SETTING
@@ -379,12 +382,12 @@ static struct init_script set_crystal_timing_script[] = {
 	INIT_CMD(WMT_SET_CRYSTAL_TRIMING_CMD, WMT_SET_CRYSTAL_TRIMING_EVT,
 		 "set crystal trim value"),
 };
-
+#if CFG_WMT_CRYSTAL_TIMING_SET
 static struct init_script get_crystal_timing_script[] = {
 	INIT_CMD(WMT_GET_CRYSTAL_TRIMING_CMD, WMT_GET_CRYSTAL_TRIMING_EVT,
 		 "get crystal trim value"),
 };
-
+#endif
 
 static struct init_script init_table_4[] = {
 	INIT_CMD(WMT_SET_STP_CMD, WMT_SET_STP_EVT, "set stp"),
@@ -537,8 +540,9 @@ static INT32 mt6630_patch_dwn(VOID);
 static INT32 mt6630_co_clock_ctrl(WMT_CO_CLOCK on);
 static WMT_CO_CLOCK mt6630_co_clock_get(VOID);
 
+#if CFG_WMT_CRYSTAL_TIMING_SET
 static INT32 mt6630_crystal_triming_set(VOID);
-
+#endif
 
 static MTK_WCN_BOOL mt6630_quick_sleep_flag_get(VOID);
 
@@ -765,7 +769,10 @@ static INT32 mt6630_sw_init(P_WMT_HIF_CONF pWmtHifConf)
 	}
 	WMT_DBG_FUNC("init_coex ok\n");
 
+#if CFG_WMT_CRYSTAL_TIMING_SET
 	mt6630_crystal_triming_set();
+#endif
+
 #if MT6630_BRINGUP
 	WMT_INFO_FUNC("Bring up period, skip sdio driving settings\n");
 #else
@@ -1374,6 +1381,7 @@ static INT32 mt6630_set_sdio_driving(void)
 }
 #endif
 
+#if CFG_WMT_CRYSTAL_TIMING_SET
 static INT32 mt6630_crystal_triming_set(VOID)
 {
 	INT32 iRet = 0;
@@ -1522,7 +1530,7 @@ static INT32 mt6630_crystal_triming_set(VOID)
 done:
 	return iRet;
 }
-
+#endif
 
 #if CFG_WMT_MULTI_PATCH
 static INT32 mt6630_patch_info_prepare(VOID)
