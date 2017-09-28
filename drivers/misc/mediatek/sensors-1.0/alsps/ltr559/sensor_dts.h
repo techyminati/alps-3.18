@@ -20,7 +20,7 @@
 #define SENSOR_ERR(fmt, args...)	pr_err(SENSOR_TAG fmt, ##args)
 #define SENSOR_LOG(fmt, args...)	pr_debug(SENSOR_TAG fmt, ##args)
 
-struct alsps_hw *get_alsps_dts_func_ltr559(const char *name, struct alsps_hw *hw)
+int get_alsps_dts_func_ltr559(struct device_node *node,  struct alsps_hw *hw)
 {
 	int i, ret;
 	u32 i2c_num[] = { 0 };
@@ -36,13 +36,10 @@ struct alsps_hw *get_alsps_dts_func_ltr559(const char *name, struct alsps_hw *hw
 	u32 is_batch_supported_ps[] = { 0 };
 	u32 is_batch_supported_als[] = { 0 };
 	u32 get_val[] = { 0 };	/* add by hzb */
-	struct device_node *node = NULL;
+
 
 	SENSOR_LOG("Device Tree get alsps info!\n");
-	if (name == NULL)
-		return NULL;
 
-	node = of_find_compatible_node(NULL, NULL, name);
 	if (node) {
 		ret = of_property_read_u32_array(node, "i2c_num", i2c_num, ARRAY_SIZE(i2c_num));
 		if (ret == 0)
@@ -142,8 +139,8 @@ struct alsps_hw *get_alsps_dts_func_ltr559(const char *name, struct alsps_hw *hw
 			hw->is_batch_supported_als = is_batch_supported_als[0];
 	} else {
 		SENSOR_ERR("Device Tree: can not find alsps node!. Go to use old cust info\n");
-		return NULL;
+		return -1;
 	}
-	return hw;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(get_alsps_dts_func_ltr559);

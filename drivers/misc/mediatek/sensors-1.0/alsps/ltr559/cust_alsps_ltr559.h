@@ -67,6 +67,6 @@ struct alsps_hw {
 	bool is_batch_supported_als;
 };
 
-struct alsps_hw *get_alsps_dts_func_ltr559(const char *, struct alsps_hw *);
+int get_alsps_dts_func_ltr559(struct device_node *node,  struct alsps_hw *hw);
 
 #endif

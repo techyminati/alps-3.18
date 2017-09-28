@@ -103,6 +103,10 @@ static int ltr559_i2c_resume(struct i2c_client *client);
 static int ltr559_init_device(void);
 
 static int ltr559_ps_enable(int gainrange);
+
+static int als_flush(void);
+static int ps_flush(void);
+
 static int dynamic_calibrate;
 
 static int ps_trigger_high = 800;
@@ -137,7 +141,7 @@ struct ltr559_i2c_addr {	/*define a series of i2c slave address */
 /*----------------------------------------------------------------------------*/
 
 struct ltr559_priv {
-	struct alsps_hw *hw;
+	struct alsps_hw hw;
 	struct i2c_client *client;
 	struct work_struct eint_work;
 	struct mutex lock;
@@ -184,10 +188,10 @@ struct ltr559_priv {
 	struct device_node *irq_node;
 	int irq;
 #endif
+	bool als_flush;
+	bool ps_flush;
 
 };
-
-static struct alsps_hw ltr559_hw;
 
 struct PS_CALI_DATA_STRUCT {
 	int noice;
@@ -220,21 +224,6 @@ static unsigned int als_value[C_CUST_ALS_LEVEL] = { 0 };
 
 #include <linux/rtc.h>
 static int current_color_ratio;
-//static int ltr559_prox_set_noice(int noice);
-
-/* +add by hzb for ontim debug */
-#if 0
-#include <ontim/ontim_dev_dgb.h>
-static char ltr559_prox_version[] = "ltr559_mtk_1.0";
-static char ltr559_prox_vendor_name[20] = "LITE-ON-ltr559";
-DEV_ATTR_DECLARE(als_prox)
-DEV_ATTR_DEFINE("version", ltr559_prox_version)
-DEV_ATTR_DEFINE("vendor", ltr559_prox_vendor_name)
-DEV_ATTR_EXEC_DEFINE("set_ps_noice", &ltr559_prox_set_noice)
-DEV_ATTR_DECLARE_END;
-ONTIM_DEBUG_DECLARE_AND_INIT(als_prox, als_prox, 8);
-#endif
-/* -add by hzb for ontim debug */
 
 /*
  * #########
@@ -283,18 +272,6 @@ static int ltr559_i2c_write_reg(u8 regnum, u8 value)
 		return 0;
 }
 
-/*----------------------------------------------------------------------------*/
-#if 0
-static int ltr559_prox_set_noice(int noice)
-{
-	if ((noice > -1) && (noice < 1600))
-		ps_cali.noice = noice;
-	else
-		ps_cali.noice = -1;
-	APS_LOG("%s: noice = %d; Set noice to %d\n", __func__, noice, ps_cali.noice);
-	return 0;
-}
-#endif
 #if 1				/* def GN_MTK_BSP_PS_DYNAMIC_CALI */
 static ssize_t ltr559_dynamic_calibrate(void)
 {
@@ -410,16 +387,10 @@ static ssize_t ltr559_show_status(struct device_driver *ddri, char *buf)
 	}
 
 	mutex_lock(&Ltr559_lock);
-	if (ltr559_obj->hw) {
 
 		len += snprintf(buf + len, PAGE_SIZE - len, "CUST: %d, (%d %d)\n",
-				ltr559_obj->hw->i2c_num, ltr559_obj->hw->power_id,
-				ltr559_obj->hw->power_vol);
-
-	} else {
-		len += snprintf(buf + len, PAGE_SIZE - len, "CUST: NULL\n");
-	}
-
+				ltr559_obj->hw.i2c_num, ltr559_obj->hw.power_id,
+				ltr559_obj->hw.power_vol);
 
 	len +=
 	    snprintf(buf + len, PAGE_SIZE - len, "MISC: %d %d\n",
@@ -662,7 +633,7 @@ static int ltr559_ps_enable(int gainrange)
 		ltr559_dynamic_calibrate();
 
 	/*for interrupt work mode support  */
-	if (0 == obj->hw->polling_mode_ps) {
+	if (0 == obj->hw.polling_mode_ps) {
 		ltr559_ps_set_thres();
 		databuf[0] = LTR559_INTERRUPT;
 		databuf[1] = 0x01;
@@ -950,8 +921,6 @@ void ltr559_eint_func(void)
 /*----------------------------------------------------------------------------*/
 /*for interrupt work mode support -- by liaoxl.lenovo 12.08.2011*/
 
-static struct platform_device *alspsPltFmDev;
-
 #if defined(CONFIG_OF)
 static irqreturn_t ltr559_eint_handler(int irq, void *desc)
 {
@@ -965,7 +934,6 @@ static irqreturn_t ltr559_eint_handler(int irq, void *desc)
 
 int ltr559_setup_eint(struct i2c_client *client)
 {
-	struct ltr559_priv *obj;
 #if defined(CONFIG_OF)
 	int ret;
 	struct pinctrl *pinctrl;
@@ -973,15 +941,11 @@ int ltr559_setup_eint(struct i2c_client *client)
 	struct pinctrl_state *pins_cfg;
 #endif
 
-	obj = (struct ltr559_priv *)i2c_get_clientdata(client);
-
-	ltr559_obj = obj;
 #if defined(CONFIG_OF)
 	/* u32 ints[2] = {0, 0}; */
 
-	alspsPltFmDev = get_alsps_platformdev();
 /* gpio setting */
-	pinctrl = devm_pinctrl_get(&alspsPltFmDev->dev);
+	pinctrl = devm_pinctrl_get(&client->dev);
 	if (IS_ERR(pinctrl)) {
 		ret = PTR_ERR(pinctrl);
 		APS_ERR("Cannot find alsps pinctrl!\n");
@@ -1236,7 +1200,7 @@ static int ltr559_devinit(void)
 	}
 
 	/*for interrupt work mode support */
-	if (0 == obj->hw->polling_mode_ps) {
+	if (0 == obj->hw.polling_mode_ps) {
 		APS_LOG("eint enable");
 		ltr559_ps_set_thres();
 
@@ -1336,7 +1300,7 @@ static int ltr559_get_als_value(struct ltr559_priv *obj, u16 als)
 				current_color_temp, current_tp);
 		}
 		return lum;
-		/* return obj->hw->als_value[idx]; */
+		/* return obj->hw.als_value[idx]; */
 	} else {
 		APS_ERR("ALS error: %05d => %05d (-1)\n", als, als_value[idx]);
 		return -1;
@@ -1716,7 +1680,7 @@ int ltr559_als_operate(void *self, uint32_t command, void *buff_in, int size_in,
 /*----------------------------------------------------------------------------*/
 static int ltr559_i2c_detect(struct i2c_client *client, struct i2c_board_info *info)
 {
-	strcpy(info->type, LTR559_DEV_NAME);
+	strlcpy(info->type, LTR559_DEV_NAME, sizeof(info->type));
 	return 0;
 }
 
@@ -1739,7 +1703,13 @@ static int als_enable_nodata(int en)
 
 	mutex_lock(&Ltr559_lock);
 	APS_LOG("ltr559_obj als enable value = %d\n", en);
-
+	if (ltr559_obj->als_flush) {
+		if (en) {
+			APS_LOG("is not flush, will call als_flush in als_enable_nodata\n");
+			als_flush();
+		} else
+			ltr559_obj->als_flush = false;
+	}
 #ifdef CUSTOM_KERNEL_SENSORHUB
 	if (atomic_read(&ltr559_obj->init_done)) {
 		req.activate_req.sensorType = ID_LIGHT;
@@ -1862,7 +1832,13 @@ static int ps_enable_nodata(int en)
 
 	mutex_lock(&Ltr559_lock);
 	APS_LOG("ltr559_obj ps enable value = %d\n", en);
-
+	if (ltr559_obj->ps_flush) {
+		if (en) {
+			APS_LOG("is not flush, will call ps_flush in als_enable_nodata\n");
+			ps_flush();
+		} else
+			ltr559_obj->ps_flush = false;
+	}
 #ifdef CUSTOM_KERNEL_SENSORHUB
 	if (atomic_read(&ltr559_obj->init_done)) {
 		req.activate_req.sensorType = ID_PROXIMITY;
@@ -1975,7 +1951,16 @@ static int als_batch(int flag, int64_t samplingPeriodNs, int64_t maxBatchReportL
 
 static int als_flush(void)
 {
-	return als_flush_report();
+	int err = 0;
+	/*Only flush after sensor was enabled*/
+	if (!test_bit(CMC_BIT_ALS, &ltr559_obj->enable)) {
+		ltr559_obj->als_flush = true;
+		return 0;
+	}
+	err = als_flush_report();
+	if (err >= 0)
+		ltr559_obj->als_flush = false;
+	return err;
 }
 
 static int ps_batch(int flag, int64_t samplingPeriodNs, int64_t maxBatchReportLatencyNs)
@@ -1991,15 +1976,22 @@ static int ps_batch(int flag, int64_t samplingPeriodNs, int64_t maxBatchReportLa
 
 static int ps_flush(void)
 {
-	return ps_flush_report();
+	int err = 0;
+	/*Only flash after sensor was enabled*/
+	if (!test_bit(CMC_BIT_PS, &ltr559_obj->enable)) {
+		ltr559_obj->ps_flush = true;
+		return 0;
+	}
+	err = ps_flush_report();
+	if (err >= 0)
+		ltr559_obj->ps_flush = false;
+	return err;
 }
 
 /*----------------------------------------------------------------------------*/
 static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
 	struct ltr559_priv *obj;
-	struct alsps_hw *hw;
-	const char *name;
 #ifdef USE_HWMSEN
 	struct hwmsen_object obj_ps, obj_als;
 #endif
@@ -2009,28 +2001,19 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	struct als_data_path als_data = { 0 };
 	struct ps_control_path ps_ctl = { 0 };
 	struct ps_data_path ps_data = { 0 };
-/* +add by hzb for ontim debug */
-#if 0
-	if (CHECK_THIS_DEV_DEBUG_AREADY_EXIT() == 0)
-		return -EIO;
-#endif
-/* -add by hzb for ontim debug */
 
-	name = "mediatek,ltr559";
-	hw = get_alsps_dts_func_ltr559(name, &ltr559_hw);
-	if (!hw)
-		APS_ERR("get dts info fail\n");
 	obj = kzalloc(sizeof(*obj), GFP_KERNEL);
 
 	if (!obj) {
 		err = -ENOMEM;
 		goto exit;
 	}
-	memset(obj, 0, sizeof(*obj));
+	err = get_alsps_dts_func_ltr559(client->dev.of_node, &obj->hw);
+	if (err < 0) {
+		APS_ERR("get dts info fail\n");
+		goto exit_init_failed;
+	}
 	ltr559_obj = obj;
-
-	obj->hw = &ltr559_hw;
-	ltr559_get_addr(obj->hw, &obj->addr);
 
 	INIT_WORK(&obj->eint_work, ltr559_eint_work);
 	obj->client = client;
@@ -2043,30 +2026,30 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	atomic_set(&obj->ps_deb_end, 0);
 	atomic_set(&obj->ps_mask, 0);
 	atomic_set(&obj->als_suspend, 0);
-	atomic_set(&obj->ps_thd_val_high, obj->hw->ps_threshold_high);
-	atomic_set(&obj->ps_thd_val_low, obj->hw->ps_threshold_low);
+	atomic_set(&obj->ps_thd_val_high, obj->hw.ps_threshold_high);
+	atomic_set(&obj->ps_thd_val_low, obj->hw.ps_threshold_low);
 	/* atomic_set(&obj->als_cmd_val, 0xDF); */
 	/* atomic_set(&obj->ps_cmd_val,  0xC1); */
-	atomic_set(&obj->ps_thd_val, obj->hw->ps_threshold);
+	atomic_set(&obj->ps_thd_val, obj->hw.ps_threshold);
 	obj->enable = 0;
 	obj->pending_intr = 0;
 	memset(als_level, 0, sizeof(als_level));
-	/* obj->als_level_num = sizeof(obj->hw->als_level)/sizeof(obj->hw->als_level[0]); */
-	/* obj->als_value_num = sizeof(obj->hw->als_value)/sizeof(obj->hw->als_value[0]); */
+	/* obj->als_level_num = sizeof(obj->hw.als_level)/sizeof(obj->hw.als_level[0]); */
+	/* obj->als_value_num = sizeof(obj->hw.als_value)/sizeof(obj->hw.als_value[0]); */
 	/* (1/Gain)*(400/Tine), this value is fix after init ATIME and CONTROL register value */
 	obj->als_modulus = (400 * 100) / (16 * 150);
 	/* (400)/16*2.72 here is amplify *100 */
-	BUG_ON(sizeof(als_level) != sizeof(obj->hw->als_level));
-	memcpy(als_level, obj->hw->als_level, sizeof(als_level));
-	BUG_ON(sizeof(als_value) != sizeof(obj->hw->als_value));
-	memcpy(als_value, obj->hw->als_value, sizeof(als_value));
+	BUG_ON(sizeof(als_level) != sizeof(obj->hw.als_level));
+	memcpy(als_level, obj->hw.als_level, sizeof(als_level));
+	BUG_ON(sizeof(als_value) != sizeof(obj->hw.als_value));
+	memcpy(als_value, obj->hw.als_value, sizeof(als_value));
 	atomic_set(&obj->i2c_retry, 3);
 	set_bit(CMC_BIT_ALS, &obj->enable);
 	set_bit(CMC_BIT_PS, &obj->enable);
 
 	APS_LOG("ltr559_devinit() start...!\n");
 	ltr559_i2c_client = client;
-	obj->irq_node = of_find_compatible_node(NULL, NULL, "mediatek, als-eint");
+	obj->irq_node = client->dev.of_node;
 	err = ltr559_devinit();
 	if (err)
 		goto exit_init_failed;
@@ -2082,7 +2065,7 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 #ifdef USE_HWMSEN
 	obj_ps.self = ltr559_obj;
 	/*for interrupt work mode support -- by liaoxl.lenovo 12.08.2011 */
-	if (1 == obj->hw->polling_mode_ps)
+	if (1 == obj->hw.polling_mode_ps)
 		obj_ps.polling = 1;
 	else
 		obj_ps.polling = 0;
@@ -2113,7 +2096,7 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	als_ctl.flush = als_flush;
 	als_ctl.is_report_input_direct = false;
 #ifdef CUSTOM_KERNEL_SENSORHUB
-	als_ctl.is_support_batch = obj->hw->is_batch_supported_als;
+	als_ctl.is_support_batch = obj->hw.is_batch_supported_als;
 #else
 	als_ctl.is_support_batch = false;
 #endif
@@ -2140,7 +2123,7 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	ps_ctl.flush = ps_flush;
 	ps_ctl.is_report_input_direct = false;
 #ifdef CUSTOM_KERNEL_SENSORHUB
-	ps_ctl.is_support_batch = obj->hw->is_batch_supported_ps;
+	ps_ctl.is_support_batch = obj->hw.is_batch_supported_ps;
 #else
 	ps_ctl.is_support_batch = false;
 #endif
@@ -2170,13 +2153,7 @@ static int ltr559_i2c_probe(struct i2c_client *client, const struct i2c_device_i
 	    obj->early_drv.resume = ltr559_late_resume, register_early_suspend(&obj->early_drv);
 #endif
 
-/* +add by hzb for ontim debug */
-#if 0
-	REGISTER_AND_INIT_ONTIM_DEBUG_FOR_THIS_DEV();
-#endif
-/* -add by hzb for ontim debug */
-
-	//proximity_probe_ok = 1;	/* add by liuwei */
+	proximity_probe_ok = 1;	/* add by liuwei */
 	APS_LOG("%s: OK\n", __func__);
 	ltr559_init_flag = 1;
 	return 0;
@@ -2189,6 +2166,8 @@ exit_init_failed:
 
 exit:
 	ltr559_i2c_client = NULL;
+	obj = NULL;
+	ltr559_obj = NULL;
 	APS_ERR("%s: err = %d\n", __func__, err);
 	ltr559_init_flag = -1;
 	return err;
