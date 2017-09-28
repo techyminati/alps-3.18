@@ -79,12 +79,12 @@ static int last_offset = 0;
 static bool s5k2x8_selective_read_eeprom(kal_uint16 addr, BYTE* data)
 {
 	char pu_send_cmd[2] = {(char)(addr >> 8) , (char)(addr & 0xFF) };
-    if(addr > MAX_OFFSET)
-        return false;
+	if (addr > MAX_OFFSET)
+		return false;
 
 	if(iReadRegI2C(pu_send_cmd, 2, (u8*)data, 1, EEPROM_WRITE_ID)<0)
 		return false;
-    return true;
+	return true;
 }
 
 

@@ -469,19 +469,19 @@ static void hdr_write_shutter(kal_uint16 le, kal_uint16 se)
 
     //SET LE/SE ration
     //iRation = (((LE + SE/2)/SE) >> 1 ) << 1 ;
-    iRation = ((10 * le / se) + 5) / 10;
-    if(iRation < 2)
-        iRation = 1;
-    else if(iRation < 4)
-        iRation = 2;
-    else if(iRation < 8)
-        iRation = 4;
-    else if(iRation < 16)
-        iRation = 8;
-    else if(iRation < 32)
-        iRation = 16;
-    else
-        iRation = 1;
+	iRation = ((10 * le / se) + 5) / 10;
+	if (iRation < 2)
+		iRation = 1;
+	else if (iRation < 4)
+		iRation = 2;
+	else if (iRation < 8)
+		iRation = 4;
+	else if (iRation < 16)
+		iRation = 8;
+	else if (iRation < 32)
+		iRation = 16;
+	else
+		iRation = 1;
 
 	/*set ration for auto */
 	iRation = 0x100 * iRation;
