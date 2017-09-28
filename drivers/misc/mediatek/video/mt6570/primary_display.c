@@ -1152,7 +1152,13 @@ static int _DL_switch_to_DC_fast(void)
 
 	disp_ddp_path_config *data_config_dl = NULL;
 	disp_ddp_path_config *data_config_dc = NULL;
-	unsigned int mva = pgc->dc_buf[pgc->dc_buf_id];
+	unsigned int mva = 0;
+
+	mva = pgc->dc_buf[pgc->dc_buf_id];
+	if (mva == 0) {
+		DISPERR("%s, dc buffer does not exist\n", __func__);
+		return -1;
+	}
 
 	wdma_config.dstAddress = mva;
 
@@ -1672,6 +1678,30 @@ static int init_decouple_buffers(void)
 	decouple_wdma_config.alpha = 0xFF;
 	decouple_wdma_config.dstPitch =
 	    width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
+
+	/* When enable the gmo option, only use one buf */
+	if (disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE)) {
+		decouple_buffer_info[0] = allocat_decouple_buffer(buffer_size);
+		if (decouple_buffer_info[0] != NULL)
+			pgc->dc_buf[0] = decouple_buffer_info[0]->mva;
+		else
+			DISPERR("gmo alloc buf fail!\n");
+
+		for (i = 1; i < DISP_INTERNAL_BUFFER_COUNT; i++) {	/* INTERNAL Buf 3 frames */
+			decouple_buffer_info[i] = decouple_buffer_info[0];
+			pgc->dc_buf[i] = pgc->dc_buf[0];
+		}
+		DISPMSG("%s alloc gmo bufs done\n", __func__);
+	} else {
+		for (i = 0; i < DISP_INTERNAL_BUFFER_COUNT; i++) {	/* INTERNAL Buf 3 frames */
+			decouple_buffer_info[i] = allocat_decouple_buffer(buffer_size);
+			if (decouple_buffer_info[i] != NULL)
+				pgc->dc_buf[i] = decouple_buffer_info[i]->mva;
+			else
+				DISPERR("alloc buf fail!\n");
+		}
+		DISPMSG("%s alloc %d bufs done\n", __func__, DISP_INTERNAL_BUFFER_COUNT);
+	}
 
 	return 0;
 }

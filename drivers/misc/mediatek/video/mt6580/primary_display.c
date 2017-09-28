@@ -1276,12 +1276,6 @@ static int init_decouple_buffers(void)
 
 	int buffer_size = width * height * bpp / 8;
 
-	for (i = 0; i < DISP_INTERNAL_BUFFER_COUNT; i++) {
-		decouple_buffer_info[i] = allocate_decouple_buffer(buffer_size);
-		if (decouple_buffer_info[i] != NULL)
-			pgc->dc_buf[i] = decouple_buffer_info[i]->mva;
-	}
-
 	/*initialize rdma config */
 	decouple_rdma_config.height = height;
 	decouple_rdma_config.width = width;
@@ -1302,64 +1296,31 @@ static int init_decouple_buffers(void)
 	decouple_wdma_config.alpha = 0xFF;
 	decouple_wdma_config.dstPitch =
 	    width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
+	/* When enable the gmo option, only use one buf */
+	if (disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE)) {
+		decouple_buffer_info[0] = allocat_decouple_buffer(buffer_size);
+		if (decouple_buffer_info[0] != NULL)
+			pgc->dc_buf[0] = decouple_buffer_info[0]->mva;
+		else
+			DISPERR("gmo alloc buf fail!\n");
 
-	return 0;
-}
-
-static int decouple_path_allocate_buffer(void)
-{
-	int height = primary_display_get_height();
-	int width = disp_helper_get_option(DISP_HELPER_OPTION_FAKE_LCM_WIDTH);
-	int bpp = primary_display_get_bpp();
-
-	int buffer_size = width * height * bpp / 8;
-
-	gmo_decouple_buffer_info = allocate_decouple_buffer(buffer_size);
-	if (gmo_decouple_buffer_info != NULL)
-		/* for (i = 0; i < DISP_INTERNAL_BUFFER_COUNT; i++) */
-			pgc->dc_buf[0] = gmo_decouple_buffer_info->mva;
-	else {
-		DISPERR("Fatal Fail: _allocate_decouple_path_buffer fail\n");
-		return -1;
+		for (i = 1; i < DISP_INTERNAL_BUFFER_COUNT; i++) {	/* INTERNAL Buf 3 frames */
+			decouple_buffer_info[i] = decouple_buffer_info[0];
+			pgc->dc_buf[i] = pgc->dc_buf[0];
+		}
+		DISPMSG("%s alloc gmo bufs done\n", __func__);
+	} else {
+		for (i = 0; i < DISP_INTERNAL_BUFFER_COUNT; i++) {	/* INTERNAL Buf 3 frames */
+			decouple_buffer_info[i] = allocat_decouple_buffer(buffer_size);
+			if (decouple_buffer_info[i] != NULL)
+				pgc->dc_buf[i] = decouple_buffer_info[i]->mva;
+			else
+				DISPERR("alloc buf fail!\n");
+		}
+		DISPMSG("%s alloc %d bufs done\n", __func__, DISP_INTERNAL_BUFFER_COUNT);
 	}
-	pr_debug("_allocate_dc_buffer mva 0x%x\n", gmo_decouple_buffer_info->mva);
-	/*initialize rdma config */
-	decouple_rdma_config.height = height;
-	decouple_rdma_config.width = width;
-	decouple_rdma_config.idx = 0;
-	decouple_rdma_config.inputFormat = eRGB888;
-	decouple_rdma_config.pitch = width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
-
-	/*initialize wdma config */
-	decouple_wdma_config.srcHeight = height;
-	decouple_wdma_config.srcWidth = width;
-	decouple_wdma_config.clipX = 0;
-	decouple_wdma_config.clipY = 0;
-	decouple_wdma_config.clipHeight = height;
-	decouple_wdma_config.clipWidth = width;
-	decouple_wdma_config.outputFormat = eRGB888;
-	decouple_wdma_config.useSpecifiedAlpha = 1;
-	decouple_wdma_config.alpha = 0xFF;
-	decouple_wdma_config.dstPitch = width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
-
 	return 0;
 }
-
-static int decouple_path_release_buffer(void)
-{
-	if (gmo_decouple_buffer_info != NULL) {
-		ion_free(gmo_decouple_buffer_info->client, gmo_decouple_buffer_info->handle);
-		ion_client_destroy(gmo_decouple_buffer_info->client);
-		kfree(gmo_decouple_buffer_info);
-		gmo_decouple_buffer_info = NULL;
-		DISPDBG("_release_dc_buffer\n");
-	}
-
-	return 0;
-}
-
-
-
 
 int decouple_shorter_path = 0;
 static int _DL_switch_to_DC_fast(void)
@@ -1379,6 +1340,10 @@ static int _DL_switch_to_DC_fast(void)
 	} else {
 		mva = pgc->dc_buf[pgc->dc_buf_id];
 		DISPDBG("dl_to_dc, mva=0x%x is dc_buf[]\n", mva);
+		if (mva == 0) {
+			DISPERR("%s, dc buffer does not exist\n", __func__);
+			return -1;
+		}
 	}
 	wdma_config.dstAddress = mva;
 
@@ -1628,10 +1593,6 @@ static int _DC_switch_to_DL_fast(void)
 				  (old_scenario << 16) | new_scenario);
 	modify_path_power_off_callback((old_scenario << 16) | new_scenario);
 
-	/* release output buffer */
-	if (disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE))
-		decouple_path_release_buffer();
-
 	_cmdq_reset_config_handle();
 
 	_cmdq_handle_clear_dirty(pgc->cmdq_handle_config);
@@ -1774,8 +1735,7 @@ static int _build_path_direct_link(void)
 
 #ifndef MTKFB_NO_M4U
 	config_display_m4u_port();
-	if (!disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE))
-		init_decouple_buffers();
+	init_decouple_buffers();
 #endif
 
 	dpmgr_set_lcm_utils(pgc->dpmgr_handle, pgc->plcm->drv);
@@ -3649,8 +3609,6 @@ int __primary_display_switch_mode(int sess_mode, unsigned int session,
 			       sess_mode);
 	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
 		   && sess_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE) {
-		if (disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE))
-			decouple_path_allocate_buffer();
 		/* dl to dc mirror  mirror */
 		DISPMSG("primary display DL_switch_to_DC_Mirror_fast\n");
 		DL_switch_to_DC_fast(sw_only);
@@ -4757,9 +4715,6 @@ void primary_display_idlemgr_enter_idle(int need_lock)
 	if (primary_display_is_video_mode() &&
 	    pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE &&
 	    disp_helper_get_option(DISP_HELPER_OPTION_IDLEMGR_SWTCH_DECOUPLE)) {
-		if (disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE))
-			decouple_path_allocate_buffer();
-
 		/* this is sodi global switch option */
 		__primary_display_switch_mode(DISP_SESSION_DECOUPLE_MODE,
 					      pgc->session_id, need_lock);
