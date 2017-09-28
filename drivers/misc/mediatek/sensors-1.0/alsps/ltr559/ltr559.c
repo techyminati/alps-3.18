@@ -1229,8 +1229,10 @@ static int ltr559_devinit(void)
 	}
 	/* end-wisky-lxh */
 	res = ltr559_check_and_clear_intr(client);
-	if (res)
-		APS_ERR("check/clear intr: %d\n", res);
+	if (res < 0) {
+		APS_ERR("check/clear intr fail: %d\n", res);
+		return res;
+	}
 	res = 0;
 
 EXIT_ERR:
