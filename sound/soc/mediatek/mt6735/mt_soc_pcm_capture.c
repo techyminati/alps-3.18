@@ -261,6 +261,7 @@ static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream *subst
 			pr_warn("%s buffer overflow u4DMAReadIdx:%x, u4WriteIdx:%x, DataRemained:%x, BufferSize:%x\n",
 			       __func__, UL1_Block->u4DMAReadIdx, UL1_Block->u4WriteIdx,
 			       UL1_Block->u4DataRemained, UL1_Block->u4BufferSize);
+			AUDIO_AEE("mtk_capture_pcm_pointer : buffer overflow\n");
 		}
 
 		PRINTK_AUD_UL1("[Auddrv] mtk_capture_pcm_pointer =0x%x HW_memory_index = 0x%x\n",
