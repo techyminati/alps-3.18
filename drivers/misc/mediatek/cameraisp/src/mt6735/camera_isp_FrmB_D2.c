@@ -2278,7 +2278,7 @@ static long ISP_Buf_CTRL_FUNC_FRMB(unsigned long Param)
 					iBuf = p1_fbc[rt_dma].Bits.RCNT - 1;	/* RCNT = [1,2,3,...] */
 #endif
 					for (i = 0; i < deque_buf.count; i++) {
-						MUINT32 out;
+						MUINT32 out = _PASS1;
 
 						deque_buf.data[i].memID =
 						    pstRTBuf_FrmB->ring_buf[rt_dma].data[iBuf +
@@ -2443,7 +2443,6 @@ static long ISP_Buf_CTRL_FUNC_FRMB(unsigned long Param)
 
 #endif
 
-						DMA_TRANS(rt_dma, out);
 						bBufFilled = MTRUE;
 					/**/	if (pstRTBuf_FrmB->ring_buf[rt_dma].data[iBuf + i].
 						    bFilled != ISP_RTBC_BUF_FILLED) {
