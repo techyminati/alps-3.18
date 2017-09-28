@@ -31,7 +31,6 @@ endif
     obj-$(CONFIG_MTK_COMBO_BT) += bt/
     obj-$(CONFIG_MTK_COMBO_WIFI) += wlan/
     obj-$(CONFIG_MTK_COMBO_GPS) += gps/
-    obj-$(CONFIG_MTK_COMBO_ANT) += ant/
 
     # MINI PLATFORM VERSION = Android O
     MINI_PLATFORM_VER = O
