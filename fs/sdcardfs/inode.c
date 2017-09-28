@@ -775,8 +775,6 @@ static int sdcardfs_setattr(struct vfsmount *mnt, struct dentry *dentry, struct 
 		}
 		truncate_setsize(inode, ia->ia_size);
 	}
-	if (current->mm)
-		up_write(&current->mm->mmap_sem);
 
 	/*
 	 * mode change is for clearing setuid/setgid bits. Allow lower fs
