@@ -45,12 +45,6 @@ static int hps_sanitize_var(unsigned int *hpsvar, unsigned int newv)
 	} else if (hpsvar == &hps_ctxt.suspend_enabled) {
 		if (newv >= 0 && newv <= 1)
 			rc = 0;
-	} else if (hpsvar == &hps_ctxt.cur_dump_enabled) {
-		if (newv >= 0 && newv <= 1)
-			rc = 0;
-	} else if (hpsvar == &hps_ctxt.stats_dump_enabled) {
-		if (newv >= 0 && newv <= 1)
-			rc = 0;
 	} else if (hpsvar == &hps_ctxt.up_threshold) {
 		if (newv > 0)
 			rc = 0;
@@ -81,10 +75,6 @@ static int hps_sanitize_var(unsigned int *hpsvar, unsigned int newv)
 			rc = 0;
 	} else if (hpsvar == &hps_ctxt.tlp_times) {
 		if (newv > 0 && newv <= (unsigned int)MAX_TLP_TIMES)
-			rc = 0;
-	} else if (hpsvar == &hps_ctxt.power_mode) {
-		/* NOTE: what is the accepted range? */
-		if (newv > 0)
 			rc = 0;
 	} else {
 		hps_warn("Unknown hps procfs node\n");
