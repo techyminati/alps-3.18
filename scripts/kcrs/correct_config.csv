@@ -933,7 +933,6 @@ CONFIG_TARGET_COPY_OUT_ODM,PROJECT,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_TASK_IO_ACCOUNTING,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_TASKSTATS,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_TASK_XACCT,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
-CONFIG_MT_BOOT_TIME_CPU_BOOST,PLATFORM,,,N,y,y,y,N,y,y,y,N,N,N
 CONFIG_MMC_BLOCK_IO_LOG,USER;PROJECT,perry.hsu,,O,O,O,O,O,O,O,O,O,O,O
 CONFIG_F2FS_FS,PLATFORM,,android go feature,X,X,y,X,X,X,X,X,X,X,X
 CONFIG_F2FS_FS_SECURITY,PLATFORM,,android go feature,X,X,y,X,X,X,X,X,X,X,X
