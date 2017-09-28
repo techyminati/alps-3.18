@@ -173,9 +173,8 @@ static const struct ieee80211_txrx_stypes
 
 static const struct ieee80211_iface_limit mtk_p2p_iface_limits[] = {
 	{
-		.max = 1,
-		.types = BIT(NL80211_IFTYPE_STATION) |
-			BIT(NL80211_IFTYPE_AP)
+		.max = 3,
+		.types = BIT(NL80211_IFTYPE_STATION)
 	},
 	{
 		.max = 1,
@@ -186,7 +185,7 @@ static const struct ieee80211_iface_limit mtk_p2p_iface_limits[] = {
 
 static const struct ieee80211_iface_combination mtk_sta_iface_combos[] = {
 	{
-		.max_interfaces = 2,
+		.max_interfaces = 3,
 		.num_different_channels = 2,
 		.n_limits = 1,
 		.limits = mtk_p2p_iface_limits
