@@ -1479,6 +1479,11 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
 				return -EFAULT;
 			}
 
+			if (rTempMem.u4MemSize == 0) {
+				MODULE_MFV_LOGE("[ERROR] Not allow to free zero MemSize\n");
+				return -EFAULT;
+			}
+
 			mutex_lock(&NonCacheMemoryListLock);
 			for (u4I = 0; u4I < VCODEC_MULTIPLE_INSTANCE_NUM_x_10; u4I++) {
 				if ((grNonCacheMemoryList[u4I].ulKVA == (VAL_ULONG_T) rTempMem.u4ReservedSize)
