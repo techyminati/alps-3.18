@@ -3221,7 +3221,7 @@ static ssize_t stk_recv_store(struct device *dev, struct device_attribute *attr,
 			      size_t size)
 {
 	int addr;
-	u8 dat;
+	u8 dat = 0;
 
 	if (!stk3x1x_obj) {
 		APS_ERR("stk3x1x_obj is null!!\n");
