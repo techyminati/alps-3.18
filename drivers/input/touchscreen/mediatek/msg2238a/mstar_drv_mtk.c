@@ -255,8 +255,6 @@ static struct i2c_driver tpd_i2c_driver = {
 static int tpd_local_init(void)
 {  
 	int retval;
-    TPD_DMESG("TPD init device driver (Built %s @ %s)\n", __DATE__, __TIME__);
-    printk(KERN_ERR"TPD init device driver (Built %s @ %s)\n", __DATE__, __TIME__);
 /*
     // Software reset mode will be treated as normal boot
     boot_mode = get_boot_mode();
@@ -290,7 +288,7 @@ static int tpd_local_init(void)
 #ifdef CONFIG_TP_HAVE_KEY
 #ifdef CONFIG_ENABLE_REPORT_KEY_WITH_COORDINATE     
     // initialize tpd button data
-    tpd_button_setting(3, (void *)g_TpVirtualKey, g_TpVirtualKeyDimLocal); //MAX_KEY_NUM
+	tpd_button_setting(3, (void *)g_TpVirtualKey, (void *)g_TpVirtualKeyDimLocal); /*MAX_KEY_NUM*/
 #endif //CONFIG_ENABLE_REPORT_KEY_WITH_COORDINATE  
 #endif //CONFIG_TP_HAVE_KEY  
 

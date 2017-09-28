@@ -2216,14 +2216,13 @@ int  fts_8606_ctpm_fw_write_pram(struct i2c_client * client, u8* pbt_buf, u32 dw
 				if(pCheckBuffer)
 					kfree(pCheckBuffer);
 
-					pCheckBuffer = NULL;
+				pCheckBuffer = NULL;
 				return -EIO;
 			}
 		}
-		if(pCheckBuffer)
-					kfree(pCheckBuffer);
+		kfree(pCheckBuffer);
 
-					pCheckBuffer = NULL;
+		pCheckBuffer = NULL;
 		//COMM_FLASH_FT5422_Upgrade_StartApp(bOldProtocol, iCommMode);		//Reset
 		FTS_DBG("read out checksum successful\n");
 		
@@ -2798,14 +2797,13 @@ int  fts_8716_ctpm_fw_write_pram(struct i2c_client * client, u8* pbt_buf, u32 dw
 				if(pCheckBuffer)
 					kfree(pCheckBuffer);
 
-					pCheckBuffer = NULL;
+				pCheckBuffer = NULL;
 				return -EIO;
 			}
 		}
-		if(pCheckBuffer)
-					kfree(pCheckBuffer);
+		kfree(pCheckBuffer);
 
-					pCheckBuffer = NULL;
+		pCheckBuffer = NULL;
 		//COMM_FLASH_FT5422_Upgrade_StartApp(bOldProtocol, iCommMode);		//Reset
 		FTS_DBG("read out checksum successful\n");
 		

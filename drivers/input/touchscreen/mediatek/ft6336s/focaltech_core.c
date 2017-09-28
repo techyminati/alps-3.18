@@ -2471,7 +2471,6 @@ static int tpd_irq_registration(void)
 ***********************************************************************/
  static int tpd_local_init(void)
  {
-  	TPD_DMESG("Focaltech fts I2C Touchscreen Driver (Built %s @ %s)\n", __DATE__, __TIME__);
    	if(i2c_add_driver(&tpd_i2c_driver)!=0)
    	{
         	TPD_DMESG("fts unable to add i2c driver.\n");
