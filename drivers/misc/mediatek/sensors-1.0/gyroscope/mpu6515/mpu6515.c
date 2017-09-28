@@ -1592,12 +1592,13 @@ static int mpu6515_resume(struct i2c_client *client)
 	struct mpu6515_i2c_data *obj = i2c_get_clientdata(client);
 	int err;
 
-	GYRO_FUN();
-
 	if (obj == NULL) {
 		GYRO_PR_ERR("null pointer!!\n");
 		return -EINVAL;
 	}
+
+	if (atomic_read(&obj->trace) & GYRO_TRC_INFO)
+		GYRO_FUN();
 
 	MPU6515_SetPWR_MGMT_2(client, enable_status);
 #ifndef CUSTOM_KERNEL_SENSORHUB
