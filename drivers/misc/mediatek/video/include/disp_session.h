@@ -315,6 +315,9 @@ struct disp_frame_cfg_t {
 	void *prev_present_fence_struct;
 	EXTD_TRIGGER_MODE tigger_mode;
 	DISP_SESSION_USER user;
+
+	/* ccorr config */
+	struct disp_ccorr_config ccorr_config;
 };
 
 typedef struct disp_session_info_t {
