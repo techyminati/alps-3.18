@@ -18,6 +18,7 @@
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/m4u/$(MTK_PLATFORM)/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/cmdq/v2/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/cmdq/v2/$(MTK_PLATFORM)/
+ccflags-y += $(call cc-option,-Wno-error=maybe-uninitialized)
 
 ifneq ($(CONFIG_ARM64), y)
 # For arm32
