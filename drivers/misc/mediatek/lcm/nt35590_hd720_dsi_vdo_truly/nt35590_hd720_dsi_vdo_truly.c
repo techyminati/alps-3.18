@@ -21,6 +21,7 @@
  *****************************************************************************/
 #define FRAME_WIDTH  (720)
 #define FRAME_HEIGHT (1280)
+#define LCM_DENSITY	(320)
 #define LCM_ID_NT35590 (0x90)
 
 #ifndef TRUE
@@ -71,6 +72,7 @@ static void lcm_get_params(LCM_PARAMS *params)
 
 	params->width = FRAME_WIDTH;
 	params->height = FRAME_HEIGHT;
+	params->density = LCM_DENSITY;
 
 #if (LCM_DSI_CMD_MODE)
 	params->dsi.mode = CMD_MODE;

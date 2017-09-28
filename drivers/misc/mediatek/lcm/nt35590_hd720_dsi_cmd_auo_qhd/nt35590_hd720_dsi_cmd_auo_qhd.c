@@ -20,6 +20,7 @@
  *****************************************************************************/
 #define FRAME_WIDTH                 (540)
 #define FRAME_HEIGHT                (960)
+#define LCM_DENSITY					(240)
 #define LCM_ID                      (0x69)
 #define REGFLAG_DELAY               (0xAB)
 #define REGFLAG_END_OF_TABLE        (0xAA)	/* END OF REGISTERS MARKER */
@@ -77,6 +78,7 @@ static void lcm_get_params(LCM_PARAMS *params)
 
 	params->width = FRAME_WIDTH;
 	params->height = FRAME_HEIGHT;
+	params->density = LCM_DENSITY;
 
 #if (LCM_DSI_CMD_MODE)
 	params->dsi.mode = CMD_MODE;

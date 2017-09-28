@@ -23,6 +23,7 @@
 
 #define FRAME_WIDTH  (540)
 #define FRAME_HEIGHT (960)
+#define LCM_DENSITY	(240)
 
 /* physical size in um */
 #define LCM_PHYSICAL_WIDTH    (59500)
@@ -261,6 +262,7 @@ static void lcm_get_params(LCM_PARAMS *params)
 
 	params->width = FRAME_WIDTH;
 	params->height = FRAME_HEIGHT;
+	params->density = LCM_DENSITY;
 
 	params->physical_width = LCM_PHYSICAL_WIDTH/1000;
 	params->physical_height = LCM_PHYSICAL_HEIGHT/1000;

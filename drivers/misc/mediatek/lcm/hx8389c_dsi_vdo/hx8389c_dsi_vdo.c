@@ -20,6 +20,7 @@
 /* --------------------------------------------------------------------------- */
 #define FRAME_WIDTH             (540)
 #define FRAME_HEIGHT            (960)
+#define LCM_DENSITY				(240)
 
 #define REGFLAG_DELAY           0xFE
 #define REGFLAG_END_OF_TABLE    0xFF    /* END OF REGISTERS MARKER */
@@ -183,6 +184,7 @@ static void lcm_get_params(LCM_PARAMS *params)
 	params->type = LCM_TYPE_DSI;
 	params->width = FRAME_WIDTH;
 	params->height = FRAME_HEIGHT;
+	params->density = LCM_DENSITY;
 
 	/* enable tearing-free */
 	params->dbi.te_mode = LCM_DBI_TE_MODE_VSYNC_ONLY;
