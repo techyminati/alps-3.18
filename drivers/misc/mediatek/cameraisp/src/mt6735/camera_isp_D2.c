@@ -2325,10 +2325,10 @@ static MINT32 ISP_WriteReg(ISP_REG_IO_STRUCT *pRegIo)
 	/* MUINT8 *pData = NULL; */
 	ISP_REG_STRUCT *pData = NULL;
 
-	/* The maximum number of Count equals to PAGE_SIZE*/
+	/* The maximum number of Count should equal to PAGE_SIZE/sizeof(MUINT32)*/
 	if (pRegIo->Count > (PAGE_SIZE/sizeof(MUINT32))) {
-		LOG_ERR("pRegIo->Count error");
-		Ret = -EFAULT;
+		LOG_DBG("pRegIo->Count error");
+		Ret = -EINVAL;
 		goto EXIT;
 	}
 
