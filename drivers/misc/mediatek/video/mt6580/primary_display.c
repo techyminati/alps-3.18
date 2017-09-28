@@ -88,7 +88,6 @@ DISP_PRIMARY_PATH_MODE primary_display_mode = DIRECT_LINK_MODE;
 static unsigned long dim_layer_mva;
 typedef void (*fence_release_callback) (unsigned int data);
 static disp_internal_buffer_info *decouple_buffer_info[DISP_INTERNAL_BUFFER_COUNT];
-static disp_internal_buffer_info *gmo_decouple_buffer_info;
 static disp_internal_buffer_info *freeze_buffer_info;
 static RDMA_CONFIG_STRUCT decouple_rdma_config;
 static WDMA_CONFIG_STRUCT decouple_wdma_config;
@@ -1298,7 +1297,7 @@ static int init_decouple_buffers(void)
 	    width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
 	/* When enable the gmo option, only use one buf */
 	if (disp_helper_get_option(DISP_HELPER_OPTION_GMO_OPTIMIZE)) {
-		decouple_buffer_info[0] = allocat_decouple_buffer(buffer_size);
+		decouple_buffer_info[0] = allocate_decouple_buffer(buffer_size);
 		if (decouple_buffer_info[0] != NULL)
 			pgc->dc_buf[0] = decouple_buffer_info[0]->mva;
 		else
@@ -1311,7 +1310,7 @@ static int init_decouple_buffers(void)
 		DISPMSG("%s alloc gmo bufs done\n", __func__);
 	} else {
 		for (i = 0; i < DISP_INTERNAL_BUFFER_COUNT; i++) {	/* INTERNAL Buf 3 frames */
-			decouple_buffer_info[i] = allocat_decouple_buffer(buffer_size);
+			decouple_buffer_info[i] = allocate_decouple_buffer(buffer_size);
 			if (decouple_buffer_info[i] != NULL)
 				pgc->dc_buf[i] = decouple_buffer_info[i]->mva;
 			else
