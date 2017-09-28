@@ -347,7 +347,15 @@ DDP_MODULE_DRIVER ddp_driver_gamma = {
 #define ccorr_get_offset(module) (CCORR0_OFFSET)
 #define index_of_ccorr(module) (0)
 
+#define CCORR_CLIP(val, min, max) ((val >= max) ? max : ((val <= min) ? min : val))
+
 static DISP_CCORR_COEF_T *g_disp_ccorr_coef[DISP_CCORR_TOTAL] = { NULL };
+static int g_disp_ccorr_color_matrix[3][3] = {
+	{1024, 0, 0},
+	{0, 1024, 0},
+	{0, 0, 1024} };
+static DISP_CCORR_COEF_T g_multiply_matrix_coef;
+static int g_disp_ccorr_without_gamma;
 
 static atomic_t g_ccorr_is_clock_on[CCORR_TOTAL_MODULE_NUM] = { ATOMIC_INIT(0) };
 
@@ -380,13 +388,57 @@ static int disp_ccorr_start(DISP_MODULE_ENUM module, void *cmdq)
 	return 0;
 }
 
+void disp_ccorr_multiply_3x3(unsigned int ccorrCoef[3][3], int color_matrix[3][3],
+		unsigned int resultCoef[3][3])
+{
+	int temp_Result;
+
+	temp_Result = (int)((ccorrCoef[0][0]*color_matrix[0][0] + ccorrCoef[0][1]*color_matrix[1][0] +
+		ccorrCoef[0][2]*color_matrix[2][0]) / 1024);
+	resultCoef[0][0] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+	temp_Result = (int)((ccorrCoef[0][0]*color_matrix[0][1] + ccorrCoef[0][1]*color_matrix[1][1] +
+		ccorrCoef[0][2]*color_matrix[2][1]) / 1024);
+	resultCoef[0][1] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+	temp_Result = (int)((ccorrCoef[0][0]*color_matrix[0][2] + ccorrCoef[0][1]*color_matrix[1][2] +
+		ccorrCoef[0][2]*color_matrix[2][2]) / 1024);
+	resultCoef[0][2] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+
+	temp_Result = (int)((ccorrCoef[1][0]*color_matrix[0][0] + ccorrCoef[1][1]*color_matrix[1][0] +
+		ccorrCoef[1][2]*color_matrix[2][0]) / 1024);
+	resultCoef[1][0] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+	temp_Result = (int)((ccorrCoef[1][0]*color_matrix[0][1] + ccorrCoef[1][1]*color_matrix[1][1] +
+		ccorrCoef[1][2]*color_matrix[2][1]) / 1024);
+	resultCoef[1][1] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+	temp_Result = (int)((ccorrCoef[1][0]*color_matrix[0][2] + ccorrCoef[1][1]*color_matrix[1][2] +
+		ccorrCoef[1][2]*color_matrix[2][2]) / 1024);
+	resultCoef[1][2] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+
+	temp_Result = (int)((ccorrCoef[2][0]*color_matrix[0][0] + ccorrCoef[2][1]*color_matrix[1][0] +
+		ccorrCoef[2][2]*color_matrix[2][0]) / 1024);
+	resultCoef[2][0] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+	temp_Result = (int)((ccorrCoef[2][0]*color_matrix[0][1] + ccorrCoef[2][1]*color_matrix[1][1] +
+		ccorrCoef[2][2]*color_matrix[2][1]) / 1024);
+	resultCoef[2][0] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+
+	temp_Result = (int)((ccorrCoef[2][0]*color_matrix[0][2] + ccorrCoef[2][1]*color_matrix[1][2] +
+		ccorrCoef[2][2]*color_matrix[2][2]) / 1024);
+	resultCoef[2][2] = CCORR_CLIP(temp_Result, -2048, 2047) & 0xFFF;
+}
+
 #define CCORR_REG(base, idx) (base + (idx) * 4 + 0x80)
 
 static int disp_ccorr_write_coef_reg(cmdqRecHandle cmdq, disp_ccorr_id_t id, int lock)
 {
 	const unsigned long ccorr_base = CCORR0_BASE_NAMING;
 	int ret = 0;
-	DISP_CCORR_COEF_T *ccorr;
+	DISP_CCORR_COEF_T *ccorr, *multiply_matrix;
 
 	if (lock)
 		mutex_lock(&g_gamma_global_lock);
@@ -398,8 +450,14 @@ static int disp_ccorr_write_coef_reg(cmdqRecHandle cmdq, disp_ccorr_id_t id, int
 		goto ccorr_write_coef_unlock;
 	}
 
+	if (id == 0) {
+		multiply_matrix = &g_multiply_matrix_coef;
+		disp_ccorr_multiply_3x3(ccorr->coef, g_disp_ccorr_color_matrix, multiply_matrix->coef);
+		ccorr = multiply_matrix;
+	}
+
 	DISP_REG_SET(cmdq, DISP_REG_CCORR_EN, 1);
-	DISP_REG_MASK(cmdq, DISP_REG_CCORR_CFG, 0x2, 0x3);
+	DISP_REG_MASK(cmdq, DISP_REG_CCORR_CFG, 0x2 | (g_disp_ccorr_without_gamma << 2), 0x7);
 
 	DISP_REG_SET(cmdq, CCORR_REG(ccorr_base, 0),
 		     ((ccorr->coef[0][0] << 16) | (ccorr->coef[0][1])));
@@ -618,6 +676,40 @@ static int disp_ccorr_config(DISP_MODULE_ENUM module, disp_ddp_path_config *pCon
 		disp_ccorr_init(DISP_CCORR0, pConfig->dst_w, pConfig->dst_h, cmdq);
 
 	return 0;
+}
+
+int disp_ccorr_set_color_matrix(void *cmdq, int32_t matrix[16], int32_t hint)
+{
+	int ret = 0;
+	int i, j;
+	int ccorr_without_gamma = 0;
+
+	if (cmdq == NULL) {
+		CCORR_ERR("disp_ccorr_set_color_matrix: cmdq can not be NULL\n");
+		return -EFAULT;
+	}
+
+	mutex_lock(&g_gamma_global_lock);
+
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+			/* Copy Color Matrix */
+			g_disp_ccorr_color_matrix[i][j] = matrix[i*4 + j];
+
+			if (i == j && g_disp_ccorr_color_matrix[i][j] != 1024)
+				ccorr_without_gamma = 1;
+			else if (i != j && g_disp_ccorr_color_matrix[i][j] != 0)
+				ccorr_without_gamma = 1;
+		}
+	}
+
+	g_disp_ccorr_without_gamma = ccorr_without_gamma;
+
+	disp_ccorr_write_coef_reg(cmdq, 0, 0);
+
+	mutex_unlock(&g_gamma_global_lock);
+
+	return ret;
 }
 
 #ifdef CCORR_SUPPORT_PARTIAL_UPDATE
