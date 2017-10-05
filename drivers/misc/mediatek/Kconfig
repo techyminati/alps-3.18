@@ -434,7 +434,6 @@ source "drivers/misc/mediatek/gud/Kconfig"
 source "drivers/misc/mediatek/ice_debug/Kconfig"
 source "drivers/misc/mediatek/log_store/Kconfig"
 source "drivers/misc/mediatek/masp/Kconfig"
-
 source "drivers/misc/mediatek/mlog/Kconfig"
 source "drivers/misc/mediatek/mtprof/Kconfig"
 source "drivers/misc/mediatek/performance/Kconfig"

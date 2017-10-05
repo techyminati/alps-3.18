@@ -96,8 +96,8 @@ endif
 obj-$(CONFIG_MTK_LENS)   += lens/
 obj-$(CONFIG_MTK_FLASHLIGHT)	+= flashlight/src/
 obj-$(CONFIG_RT_FLASHLIGHT)	+= flashlight/richtek/
-ifneq ($(wildcard $(srctree)/drivers/misc/mediatek/met/),)
-obj-$(CONFIG_MTK_MET) += met/
+ifneq ($(wildcard $(srctree)/drivers/misc/mediatek/met_drv/),)
+obj-$(CONFIG_MTK_MET) += met_drv/
 endif
 obj-$(CONFIG_MTK_CCCI_DEVICES)	+=  ccci_util/
 obj-$(CONFIG_MTK_NET_CCMNI) +=  ccmni/
