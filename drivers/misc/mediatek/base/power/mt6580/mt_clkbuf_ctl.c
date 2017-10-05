@@ -344,7 +344,7 @@ static ssize_t clk_buf_ctrl_store(struct kobject *kobj,
 	unsigned long flags;
 
 	if (sscanf
-	    (buf, "%s %x %x %x %x", cmd, &clk_buf_en[0], &clk_buf_en[1], &clk_buf_en[2],
+	    (buf, "%31s %x %x %x %x", cmd, &clk_buf_en[0], &clk_buf_en[1], &clk_buf_en[2],
 	     &clk_buf_en[3]) != 5)
 		return -EPERM;
 
