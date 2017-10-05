@@ -2297,10 +2297,7 @@ static long vcodec_unlocked_ioctl(struct file *file, unsigned int cmd, unsigned 
 			} else
 #endif
 			{
-				context->Oal_HW_mem_reg =
-				    (VAL_UINT32_T
-				     *) (((VAL_VCODEC_OAL_HW_REGISTER_T *) user_data_addr)->
-					 pHWStatus);
+				context->Oal_HW_mem_reg = (VAL_UINT32_T *)hwoal_reg.pHWStatus;
 			}
 
 			if (hwoal_reg.u4NumOfRegister != 0) {
