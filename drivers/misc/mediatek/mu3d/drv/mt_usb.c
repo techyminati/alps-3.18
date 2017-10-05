@@ -472,11 +472,12 @@ ssize_t musb_cmode_store(struct device *dev, struct device_attribute *attr,
 	musb = dev_to_musb(dev);
 
 	if (1 == sscanf(buf, "%ud", &cmode)) {
-		os_printk(K_INFO, "%s %s --> %s\n", __func__, usb_mode_str[cable_mode],
-			  usb_mode_str[cmode]);
 
 		if (cmode >= CABLE_MODE_MAX)
 			cmode = CABLE_MODE_NORMAL;
+
+		os_printk(K_INFO, "%s %s --> %s\n", __func__, usb_mode_str[cable_mode],
+			  usb_mode_str[cmode]);
 
 		if (cable_mode != cmode) {
 
