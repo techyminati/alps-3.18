@@ -2963,6 +2963,7 @@ static s8 gtp_enter_sleep(struct i2c_client *client)
 		ret = gtp_i2c_write(client, i2c_buf, 3);
 		if (ret > 0) {
 			GTP_INFO("GTP enter sleep!");
+			mutex_unlock(&gtp_suspend);
 			return ret;
 		}
 		msleep(20);
