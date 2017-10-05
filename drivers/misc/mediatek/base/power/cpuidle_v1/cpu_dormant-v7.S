@@ -158,6 +158,7 @@ amp:
 	.global disable_dcache_safe
 disable_dcache_safe:
 	.func
+	stmfd	sp!, {r1 - r11}
 	mrc	p15, 0, r1, c1, c0, 0
 	dsb
 	bic	r1, r1, #4
@@ -268,6 +269,8 @@ L2_cl_finished:
 	dsb
 	isb
 
+
+	ldmfd	sp!, {r1 - r11}
 	bx	lr
 	.endfunc
 
