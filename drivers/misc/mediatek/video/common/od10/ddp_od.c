@@ -404,6 +404,7 @@ static void _od_set_param(void *cmdq, int manual_comp, int image_width, int imag
 {
 	u32 u4GMV_width;
 	u32 u4Linesize;
+	u32 u4ConfigValue;
 
 	/* set gmv detection width */
 	u4GMV_width = image_width / 6;
@@ -446,8 +447,9 @@ static void _od_set_param(void *cmdq, int manual_comp, int image_width, int imag
 
 	/*set auto 8bit parameters */
 	if (image_width > 1900) {
+		u4ConfigValue = (40000 << 18) & 0xFFFFFFFF;
 		OD_REG_SET_FIELD(cmdq, OD_REG35, (140000 << 0), DET8B_DC_NUM);
-		OD_REG_SET_FIELD(cmdq, OD_REG36, (40000 << 18), DET8B_BTC_NUM);
+		OD_REG_SET_FIELD(cmdq, OD_REG36, u4ConfigValue, DET8B_BTC_NUM);
 		OD_REG_SET_FIELD(cmdq, OD_REG37, (1900000>>4) , DET8B_BIT_MGN);
 	} else {
 		OD_REG_SET_FIELD(cmdq, OD_REG35, 70000, DET8B_DC_NUM);
