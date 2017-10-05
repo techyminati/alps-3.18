@@ -159,7 +159,7 @@ static enum idpin_state mtk_idpin_cur_stat = IDPIN_OUT;
 static struct switch_dev mtk_otg_state;
 
 static struct delayed_work mtk_xhci_delaywork;
-u32 xhci_debug_level = K_ALET | K_CRIT | K_ERR | K_WARNIN;
+int xhci_debug_level = K_ALET | K_CRIT | K_ERR | K_WARNIN;
 
 int mtk_iddig_debounce = 50;
 module_param(mtk_iddig_debounce, int, 0400);

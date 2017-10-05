@@ -202,10 +202,10 @@ void qmu_done_tasklet(unsigned long data)
 #endif
 
 DEFINE_SPINLOCK(usb_io_lock);
-unsigned musb_debug = 0;
-unsigned musb_uart_debug = 0;
+int musb_debug = 0;
+int musb_uart_debug = 0;
+int musb_speed = 1;
 struct musb *mtk_musb = NULL;
-unsigned musb_speed = 1;
 u32 usb_irq_number = 0;		/* add for kernel 3.10 */
 bool mtk_usb_power = false;
 
@@ -224,11 +224,11 @@ static const struct of_device_id apusb_of_ids[] = {
 
 /* void __iomem	*USB_BASE; */
 
-module_param_named(speed, musb_speed, uint, 0400);
+module_param_named(speed, musb_speed, int, 0400);
 MODULE_PARM_DESC(debug, "USB speed configuration. default = 1, high speed");
-module_param_named(debug, musb_debug, uint, 0400);
+module_param_named(debug, musb_debug, int, 0400);
 MODULE_PARM_DESC(debug, "Debug message level. Default = 0");
-module_param_named(dbg_uart, musb_uart_debug, uint, 0400);
+module_param_named(dbg_uart, musb_uart_debug, int, 0400);
 
 #define TA_WAIT_BCON(m) max_t(int, (m)->a_wait_bcon, OTG_TIME_A_WAIT_BCON)
 

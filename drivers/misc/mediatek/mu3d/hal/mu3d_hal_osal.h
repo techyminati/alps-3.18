@@ -44,7 +44,7 @@ extern
 #define K_DEBUG	(1<<0)
 
 /*Set the debug level at musb_core.c*/
-extern u32 debug_level;
+extern int debug_level;
 
 #ifdef USE_SSUSB_QMU
 #define qmu_printk(level, fmt, args...) do { \
