@@ -656,7 +656,7 @@ static int sdm_pll_dump_regs_op(struct pll *pll, unsigned int *ptr)
 
 static int sdm_pll_hp_enable_op(struct pll *pll)
 {
-	int err;
+	int err = 0;
 
 	if (!pll->hp_switch || (pll->state == PWR_DOWN))
 		return 0;
@@ -670,7 +670,7 @@ static int sdm_pll_hp_enable_op(struct pll *pll)
 
 static int sdm_pll_hp_disable_op(struct pll *pll)
 {
-	int err;
+	int err = 0;
 
 	if (!pll->hp_switch || (pll->state == PWR_ON))
 		return 0;
