@@ -2121,7 +2121,6 @@ void Auddrv_AWB_Interrupt_Handler(void)
 		     __func__, mBlock->u4DMAReadIdx, mBlock->u4WriteIdx, mBlock->u4DataRemained,
 		     mBlock->u4BufferSize);
 		mBlock->u4DataRemained %= mBlock->u4BufferSize;
-		AUDIO_AEE("Auddrv_AWB_Interrupt_Handler : buffer overflow\n");
 	}
 
 	Mem_Block->interruptTrigger = 1;
@@ -2529,7 +2528,6 @@ void Auddrv_UL1_Interrupt_Handler(void)
 		    ("buffer overflow u4DMAReadIdx:%x,u4WriteIdx:%x, u4DataRemained:%x, u4BufferSize:%x\n",
 		     mBlock->u4DMAReadIdx, mBlock->u4WriteIdx, mBlock->u4DataRemained,
 		     mBlock->u4BufferSize);
-		AUDIO_AEE("Auddrv_UL1_Interrupt_Handler : buffer overflow\n");
 	}
 
 	AFE_Mem_Control_context[Soc_Aud_Digital_Block_MEM_VUL]->interruptTrigger = 1;
