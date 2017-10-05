@@ -193,11 +193,11 @@ static struct musb_fifo_cfg fifo_cfg_host[] = {
 };
 
 u32 delay_time = 15;
-module_param(delay_time, int, 0644);
+module_param(delay_time, int, 0400);
 u32 delay_time1 = 55;
-module_param(delay_time1, int, 0644);
+module_param(delay_time1, int, 0400);
 u32 iddig_cnt = 0;
-module_param(iddig_cnt, int, 0644);
+module_param(iddig_cnt, int, 0400);
 
 void mt_usb_set_vbus(struct musb *musb, int is_on)
 {
@@ -333,7 +333,7 @@ u32 sw_deboun_time = 1;
 #else
 u32 sw_deboun_time = 400;
 #endif
-module_param(sw_deboun_time, int, 0644);
+module_param(sw_deboun_time, int, 0400);
 struct switch_dev otg_state;
 
 static bool musb_is_host(void)
@@ -425,15 +425,15 @@ void musb_session_restart(struct musb *musb)
 
 static struct delayed_work host_plug_test_work;
 int host_plug_test_enable; /* default disable */
-module_param(host_plug_test_enable, int, 0644);
+module_param(host_plug_test_enable, int, 0400);
 int host_plug_in_test_period_ms = 5000;
-module_param(host_plug_in_test_period_ms, int, 0644);
+module_param(host_plug_in_test_period_ms, int, 0400);
 int host_plug_out_test_period_ms = 5000;
-module_param(host_plug_out_test_period_ms, int, 0644);
+module_param(host_plug_out_test_period_ms, int, 0400);
 int host_test_vbus_off_time_us = 3000;
-module_param(host_test_vbus_off_time_us, int, 0644);
+module_param(host_test_vbus_off_time_us, int, 0400);
 int host_test_vbus_only = 1;
-module_param(host_test_vbus_only, int, 0644);
+module_param(host_test_vbus_only, int, 0400);
 static int host_plug_test_triggered;
 void switch_int_to_device(struct musb *musb)
 {

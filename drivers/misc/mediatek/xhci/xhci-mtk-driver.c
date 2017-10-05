@@ -162,8 +162,8 @@ static struct delayed_work mtk_xhci_delaywork;
 u32 xhci_debug_level = K_ALET | K_CRIT | K_ERR | K_WARNIN;
 
 int mtk_iddig_debounce = 50;
-module_param(mtk_iddig_debounce, int, 0644);
-module_param(xhci_debug_level, int, 0644);
+module_param(mtk_iddig_debounce, int, 0400);
+module_param(xhci_debug_level, int, 0400);
 
 void switch_int_to_host_and_mask(void)
 {
@@ -538,15 +538,15 @@ static void mtk_xhci_imod_set(u32 imod)
 
 static struct delayed_work host_plug_test_work;
 static int host_plug_test_enable; /* default disable */
-module_param(host_plug_test_enable, int, 0644);
+module_param(host_plug_test_enable, int, 0400);
 static int host_plug_in_test_period_ms = 5000;
-module_param(host_plug_in_test_period_ms, int, 0644);
+module_param(host_plug_in_test_period_ms, int, 0400);
 static int host_plug_out_test_period_ms = 5000;
-module_param(host_plug_out_test_period_ms, int, 0644);
+module_param(host_plug_out_test_period_ms, int, 0400);
 static int host_test_vbus_off_time_us = 3000;
-module_param(host_test_vbus_off_time_us, int, 0644);
+module_param(host_test_vbus_off_time_us, int, 0400);
 static int host_test_vbus_only = 1;
-module_param(host_test_vbus_only, int, 0644);
+module_param(host_test_vbus_only, int, 0400);
 static int host_plug_test_triggered;
 static int host_req;
 static struct wake_lock host_test_wakelock;
