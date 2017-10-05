@@ -24,4 +24,5 @@ k37mv1_bsp_op02
 k37mv1_bsp_op01
 k37tv1_bsp_512
 k37tv1_bsp_gmo_1g
+k53v1_bsp_gmo_1g
 *_schem*
