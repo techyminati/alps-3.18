@@ -2722,8 +2722,7 @@ static int32_t cmdq_core_copy_buffer_impl(void *dst, void *src, const uint32_t s
 	} else {
 		CMDQ_VERBOSE("COMMAND: Copy user to 0x%p\n", dst);
 		if (copy_from_user(dst, src, size)) {
-			CMDQ_AEE("CMDQ",
-				 "CRDISPATCH_KEY:CMDQ Fail to copy from user 0x%p, size:%d\n",
+			CMDQ_MSG("CRDISPATCH_KEY:CMDQ Fail to copy from user 0x%p, size:%d\n",
 				 src, size);
 			status = -ENOMEM;
 		}
@@ -4002,7 +4001,7 @@ int32_t cmdq_core_subsys_from_phys_addr(uint32_t physAddr)
 
 	if (-1 == subsysID) {
 		/* printf error message */
-		CMDQ_ERR("unrecognized subsys, physAddr:0x%08x\n", physAddr);
+		CMDQ_MSG("unrecognized subsys, physAddr:0x%08x\n", physAddr);
 	}
 	return subsysID;
 }
