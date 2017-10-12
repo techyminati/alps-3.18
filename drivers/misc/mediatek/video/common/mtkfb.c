@@ -919,6 +919,7 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg
 
 	case MTKFB_CAPTURE_FRAMEBUFFER:
 	{
+#if defined(CONFIG_MT_ENG_BUILD)
 		unsigned long dst_pbuf = 0;
 		unsigned long *src_pbuf = 0;
 		unsigned int pixel_bpp = info->var.bits_per_pixel / 8;
@@ -944,7 +945,7 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg
 				vfree(src_pbuf);
 			}
 		}
-
+#endif
 		return r;
 	}
 
@@ -1363,6 +1364,7 @@ static int mtkfb_compat_ioctl(struct fb_info *info, unsigned int cmd, unsigned l
 	}
 	case COMPAT_MTKFB_CAPTURE_FRAMEBUFFER:
 	{
+#if defined(CONFIG_MT_ENG_BUILD)
 		compat_ulong_t __user *data32;
 		unsigned long *pbuf;
 		unsigned int pixel_bpp = info->var.bits_per_pixel / 8;
@@ -1385,6 +1387,7 @@ static int mtkfb_compat_ioctl(struct fb_info *info, unsigned int cmd, unsigned l
 				ret  = -EFAULT;
 			}
 		}
+#endif
 		break;
 	}
 	case COMPAT_MTKFB_TRIG_OVERLAY_OUT:
