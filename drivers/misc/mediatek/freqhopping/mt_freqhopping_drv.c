@@ -460,7 +460,8 @@ static int freqhopping_dvfs_proc_open(struct inode *inode, struct file *file)
 static ssize_t freqhopping_dvfs_proc_write(struct file *file, const char *buffer, size_t count,
 					   loff_t *data)
 {
-	return (ssize_t) (g_p_fh_hal_drv->proc.dvfs_write(file, buffer, count, data));
+	/* return (ssize_t) (g_p_fh_hal_drv->proc.dvfs_write(file, buffer, count, data)); */
+	return (ssize_t) 0;
 }
 
 static int freqhopping_dumpregs_proc_open(struct inode *inode, struct file *file)
