@@ -47,7 +47,9 @@
 #endif
 
 /* PMIC */
+#ifdef CONNADP_HAS_PMIC_API
 #include <upmu_common.h>
+#endif
 
 /* MMC */
 #include <linux/mmc/card.h>
@@ -122,6 +124,7 @@ EXPORT_SYMBOL(connectivity_export_clk_buf_ctrl);
 /*******************************************************************************
  * PMIC
  ******************************************************************************/
+#ifdef CONNADP_HAS_PMIC_API
 void connectivity_export_pmic_config_interface(unsigned int RegNum, unsigned int val,
 					unsigned int MASK, unsigned int SHIFT)
 {
@@ -141,6 +144,7 @@ void connectivity_export_pmic_set_register_value(/*PMU_FLAGS_LIST_ENUM*/ int fla
 	pmic_set_register_value(flagname, val);
 }
 EXPORT_SYMBOL(connectivity_export_pmic_set_register_value);
+#endif
 
 /*******************************************************************************
  * MMC
