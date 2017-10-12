@@ -2741,6 +2741,8 @@ int32_t cmdq_core_copy_cmd_to_task_impl(struct TaskStruct *pTask, void *src, con
 	while (remaind_cmd_size > 0) {
 		/* extend buffer to copy more instruction */
 		status = cmdq_core_extend_cmd_buffer(pTask);
+		if (status < 0)
+			return status;
 
 		copy_size = pTask->buf_available_size > remaind_cmd_size ?
 			remaind_cmd_size : pTask->buf_available_size;

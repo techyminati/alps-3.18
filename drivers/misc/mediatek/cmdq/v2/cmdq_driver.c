@@ -327,11 +327,12 @@ static void cmdq_driver_process_read_address_request(cmdqReadAddressStruct *req_
 
 static long cmdq_driver_destroy_secure_medadata(cmdqCommandStruct *pCommand)
 {
+#ifdef CMDQ_SECURE_PATH_SUPPORT
 	if (pCommand->secData.addrMetadatas) {
 		kfree(CMDQ_U32_PTR(pCommand->secData.addrMetadatas));
 		pCommand->secData.addrMetadatas = (cmdqU32Ptr_t) (unsigned long)NULL;
 	}
-
+#endif
 	return 0;
 }
 
@@ -396,6 +397,8 @@ static long cmdq_driver_create_secure_medadata(cmdqCommandStruct *pCommand)
 #if 0
 	cmdq_core_dump_secure_metadata(&(pCommand->secData));
 #endif
+#else
+	pCommand->secData.addrMetadatas = 0;
 #endif
 	return 0;
 }
