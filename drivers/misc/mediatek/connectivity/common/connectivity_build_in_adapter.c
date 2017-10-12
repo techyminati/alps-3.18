@@ -14,11 +14,10 @@
 #ifdef DFT_TAG
 #undef DFT_TAG
 #endif
-#define DFT_TAG "[WMT-CONSYS-HW]"
+#define DFT_TAG "[CONNADP]"
 
-#include <linux/types.h>
-#include <linux/printk.h>
-#include <linux/export.h>
+#include "connectivity_build_in_adapter.h"
+
 
 /*device tree mode*/
 #ifdef CONFIG_OF
@@ -32,26 +31,41 @@
 #include <linux/pm_runtime.h>
 #include <linux/of_reserved_mem.h>
 
-#include "connectivity_build_in_adapter.h"
+#include <linux/interrupt.h>
 
-/* uncomment when WMT is departed from kernel*/
-/*
+
+#ifdef CONNADP_HAS_CLOCK_BUF_CTRL
+#include <mt_clkbuf_ctl.h>
+#endif
+
+/* PMIC */
+#include <upmu_common.h>
+
+/* MMC */
+#include <linux/mmc/card.h>
+#include <linux/mmc/host.h>
+#include <sdio_ops.h>
+
+
 phys_addr_t gConEmiPhyBase;
 EXPORT_SYMBOL(gConEmiPhyBase);
-*/
+
+unsigned long long gConEmiSize;
+EXPORT_SYMBOL(gConEmiSize);
+
 /*Reserved memory by device tree!*/
-/*
 int reserve_memory_consys_fn(struct reserved_mem *rmem)
 {
-	WMT_PLAT_WARN_FUNC(DFT_TAG "[W]%s:"  " name: %s, base: 0x%llx, size: 0x%llx\n",
-		__func__ , rmem->name, (unsigned long long)rmem->base,
+	pr_info(DFT_TAG "%s: name: %s, base: 0x%llx, size: 0x%llx\n",
+		__func__, rmem->name, (unsigned long long)rmem->base,
 		(unsigned long long)rmem->size);
 	gConEmiPhyBase = rmem->base;
+	gConEmiSize = rmem->size;
 	return 0;
 }
 
 RESERVEDMEM_OF_DECLARE(reserve_memory_test, "mediatek,consys-reserve-memory", reserve_memory_consys_fn);
-*/
+
 
 void connectivity_export_show_stack(struct task_struct *tsk, unsigned long *sp)
 {
@@ -85,3 +99,48 @@ void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user u
 }
 EXPORT_SYMBOL(connectivity_export_mt_ppm_sysboost_set_core_limit);
 #endif
+
+/*******************************************************************************
+ * Clock Buffer Control
+ ******************************************************************************/
+#ifdef CONNADP_HAS_CLOCK_BUF_CTRL
+void connectivity_export_clk_buf_ctrl(enum clk_buf_id id, bool onoff)
+{
+	clk_buf_ctrl(id, onoff);
+}
+EXPORT_SYMBOL(connectivity_export_clk_buf_ctrl);
+#endif
+
+/*******************************************************************************
+ * PMIC
+ ******************************************************************************/
+void connectivity_export_pmic_config_interface(unsigned int RegNum, unsigned int val,
+					unsigned int MASK, unsigned int SHIFT)
+{
+	pmic_config_interface(RegNum, val, MASK, SHIFT);
+}
+EXPORT_SYMBOL(connectivity_export_pmic_config_interface);
+
+void connectivity_export_pmic_read_interface(unsigned int RegNum, unsigned int *val,
+					unsigned int MASK, unsigned int SHIFT)
+{
+	pmic_read_interface(RegNum, val, MASK, SHIFT);
+}
+EXPORT_SYMBOL(connectivity_export_pmic_read_interface);
+
+void connectivity_export_pmic_set_register_value(/*PMU_FLAGS_LIST_ENUM*/ int flagname, unsigned int val)
+{
+	pmic_set_register_value(flagname, val);
+}
+EXPORT_SYMBOL(connectivity_export_pmic_set_register_value);
+
+/*******************************************************************************
+ * MMC
+ ******************************************************************************/
+int connectivity_export_mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
+				unsigned addr, u8 in, u8 *out)
+{
+	return mmc_io_rw_direct(card, write, fn, addr, in, out);
+}
+EXPORT_SYMBOL(connectivity_export_mmc_io_rw_direct);
+

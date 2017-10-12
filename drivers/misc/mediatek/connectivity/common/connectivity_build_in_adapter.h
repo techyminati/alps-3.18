@@ -14,6 +14,68 @@
 #ifndef CONNECTIVITY_BUILD_IN_ADAPTER_H
 #define CONNECTIVITY_BUILD_IN_ADAPTER_H
 
+#include <linux/kernel.h>
+#include <linux/sched.h>
+
+
+/*******************************************************************************
+ * Clock Buffer Control
+ *
+ * The Connsys adaptation layer must provide Clock Buffer Control support
+ * should it be available from the platform.
+ * Therefore CONNADP_HAS_CLOCK_BUF_CTRL is defined based on platform chip, and
+ * is used to decide if adaptation has support on Clock Buffer Control.
+ *
+ * Each WMT platform file must still define its own CONSYS_CLOCK_BUF_CTRL to
+ * decide if it is a co-clock'd platform.
+ * It is possible that the Clock Buffer Control is available on the platform,
+ * but is not used by Connsys.
+ *
+ * For Kernel-3.18, definition of CONNADP_HAS_CLOCK_BUF_CTRL must align with:
+ *	drivers/misc/mediatek/base/power/include/mt_clkbuf_ctl.h
+ *
+ * Platform that wishes to use Clock Buffer Control, please be sure to #include
+ * the header file above.
+ ******************************************************************************/
+#if defined(CONFIG_ARCH_MT6735) || defined(CONFIG_ARCH_MT6735M) || defined(CONFIG_ARCH_MT6753) || \
+	defined(CONFIG_ARCH_MT6755) || \
+	defined(CONFIG_ARCH_MT6757) || \
+	defined(CONFIG_ARCH_MT6797) || \
+	defined(CONFIG_ARCH_MT6580) || \
+	defined(CONFIG_ARCH_ELBRUS)
+#define CONNADP_HAS_CLOCK_BUF_CTRL
+#define KERNEL_clk_buf_ctrl connectivity_export_clk_buf_ctrl
+enum clk_buf_id;
+void connectivity_export_clk_buf_ctrl(enum clk_buf_id id, bool onoff);
+#endif
+
+/*******************************************************************************
+ * PMIC
+ * Caller please be sure to #include:
+ *	drivers/misc/mediatek/include/mt-plat/upmu_common.h
+ ******************************************************************************/
+#define KERNEL_pmic_config_interface connectivity_export_pmic_config_interface
+#define KERNEL_pmic_read_interface connectivity_export_pmic_read_interface
+#define KERNEL_pmic_set_register_value connectivity_export_pmic_set_register_value
+void connectivity_export_pmic_config_interface(unsigned int RegNum, unsigned int val,
+						unsigned int MASK, unsigned int SHIFT);
+void connectivity_export_pmic_read_interface(unsigned int RegNum, unsigned int *val,
+						unsigned int MASK, unsigned int SHIFT);
+void connectivity_export_pmic_set_register_value(/*PMU_FLAGS_LIST_ENUM*/ int flagname, unsigned int val);
+
+/*******************************************************************************
+ * MMC
+ * Caller please be sure to #include:
+ *	<linux/mmc/host.h>
+ *	<linux/mmc/card.h>
+ *	drivers/mmc/core/sdio_ops.h
+ ******************************************************************************/
+#define KERNEL_mmc_io_rw_direct connectivity_export_mmc_io_rw_direct
+struct mmc_card;
+int connectivity_export_mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
+						unsigned addr, u8 in, u8 *out);
+
+
 #ifdef CONFIG_ARCH_MT6755
 #define CPU_BOOST y
 #endif
@@ -73,4 +135,6 @@ do {                                                              \
 	} else                                                    \
 		__trace_printk(ip, fmt, ##args);                  \
 } while (0)
+
 #endif /* CONNECTIVITY_BUILD_IN_ADAPTER_H */
+
