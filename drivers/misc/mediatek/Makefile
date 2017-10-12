@@ -131,7 +131,6 @@ obj-$(CONFIG_MTK_RAM_CONSOLE)	+= ram_console/
 obj-$(CONFIG_MTK_DRAM_LOG_STORE)	+= log_store/
 obj-$(CONFIG_MTK_USE_RESERVED_EXT_MEM) += exm/
 obj-$(CONFIG_RT_REGMAP) += rt-regmap/
-# obj-$(CONFIG_TCPC_CLASS) += pd/
 
 obj-$(CONFIG_MTK_SVP) += memory-ssvp/
 obj-$(CONFIG_ZONE_MOVABLE_CMA) += zone_movable_cma/
