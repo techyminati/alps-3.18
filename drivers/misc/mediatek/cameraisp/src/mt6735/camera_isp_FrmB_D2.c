@@ -2857,7 +2857,8 @@ static MINT32 ISP_SOF_Buf_Get_FrmB(eISPIrq irqT, unsigned long long sec, unsigne
 	MUINT32 _working_dma = 0;
 	MUINT32 out = 0;
 
-	if (_IRQ == irqT) {
+	switch (irqT) {
+	case _IRQ:
 		imgo_fbc.Reg_val = pFbc[0].Reg_val;
 		img2o_fbc.Reg_val = pFbc[1].Reg_val;
 		ch_imgo = _imgo_;
@@ -2867,8 +2868,11 @@ static MINT32 ISP_SOF_Buf_Get_FrmB(eISPIrq irqT, unsigned long long sec, unsigne
 		else
 			curr_pa = pCurr_pa[1];
 		i = _PASS1;
+		break;
+	default:
+		LOG_ERR("non-supported irq type(%d)", (MUINT32)irqT);
+		return 0;
 	}
-
 	if (MTRUE == g1stSof[irqT]) {	/* 1st frame of streaming */
 #ifdef _89SERIAL_
 		pstRTBuf_FrmB->ring_buf[ch_imgo].start =
@@ -3139,11 +3143,17 @@ static MINT32 ISP_DONE_Buf_Time_FrmB(eISPIrq irqT, unsigned long long sec, unsig
 	MUINT32 shiftT = 0;
 	MUINT32 out;
 #endif
-	if (_IRQ == irqT) {
+
+	switch (irqT) {
+	case _IRQ:
 		ch_imgo = _imgo_;
 		ch_img2o = _img2o_;
 		imgo_fbc.Reg_val = pFbc[0].Reg_val;
 		img2o_fbc.Reg_val = pFbc[1].Reg_val;
+		break;
+	default:
+		LOG_ERR("non-supported irq type(%d)", (MUINT32)irqT);
+		return 0;
 	}
 
 #ifdef _rtbc_buf_que_2_0_
