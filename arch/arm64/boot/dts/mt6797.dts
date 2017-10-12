@@ -3760,12 +3760,24 @@
 			vcn33_wifi-supply = <&mt_pmic_vcn33_wifi_ldo_reg>;
 		};
 
-		wifi: wifi@180f0000 {
-			compatible = "mediatek,wifi";
-			reg = <0x180f0000 0x1100>;
-			interrupts = <GIC_SPI 283 IRQ_TYPE_LEVEL_LOW>;
-			clocks = <&infrasys INFRA_AP_DMA>;
-			clock-names = "wifi-dma";
+		connsys-wifi {
+			compatible = "simple-bus";
+			#address-cells = <2>;
+			#size-cells = <2>;
+			ranges;
+			wifi: wifi@180f0000 {
+				compatible = "mediatek,wifi";
+
+				reg = <0 0x180f0000 0 0x1100>,
+				      <0 0x11000080 0 0x0080>; /* DMA base */
+				interrupts = <GIC_SPI 283 IRQ_TYPE_LEVEL_LOW>,
+					     <GIC_SPI 97 IRQ_TYPE_LEVEL_LOW>; /* DMA IRQ */
+				clocks = <&infrasys INFRA_AP_DMA>;
+				clock-names = "wifi-dma";
+				hardware-values = <0x00000279>, /* HW code */
+						  <0x000a2800>, /* FW load addr */
+						  <0x000a2800>; /* FW start addr */
+			};
 		};
 
 		gic1@19000000 {

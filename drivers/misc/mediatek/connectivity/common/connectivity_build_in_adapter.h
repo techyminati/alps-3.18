@@ -14,11 +14,42 @@
 #ifndef CONNECTIVITY_BUILD_IN_ADAPTER_H
 #define CONNECTIVITY_BUILD_IN_ADAPTER_H
 
+#ifdef CONFIG_ARCH_MT6755
+#define CPU_BOOST y
+#endif
+#ifdef CONFIG_ARCH_MT6757
+#define CPU_BOOST y
+#endif
+#ifdef CONFIG_ARCH_MT6797
+#define CPU_BOOST y
+#endif
+
+#ifdef CPU_BOOST
+#include "mach/mt_ppm_api.h"
+#endif
+
 #define KERNEL_show_stack connectivity_export_show_stack
 #define KERNEL_tracing_record_cmdline connectivity_export_tracing_record_cmdline
 
+#ifdef CPU_BOOST
+#define KERNEL_mt_ppm_sysboost_freq connectivity_export_mt_ppm_sysboost_freq
+#define KERNEL_mt_ppm_sysboost_core connectivity_export_mt_ppm_sysboost_core
+#define KERNEL_mt_ppm_sysboost_set_core_limit connectivity_export_mt_ppm_sysboost_set_core_limit
+#else
+#define KERNEL_mt_ppm_sysboost_freq
+#define KERNEL_mt_ppm_sysboost_core
+#define KERNEL_mt_ppm_sysboost_set_core_limit
+#endif
+
 void connectivity_export_show_stack(struct task_struct *tsk, unsigned long *sp);
 void connectivity_export_tracing_record_cmdline(struct task_struct *tsk);
+#ifdef CPU_BOOST
+void connectivity_export_mt_ppm_sysboost_freq(enum ppm_sysboost_user user, unsigned int freq);
+void connectivity_export_mt_ppm_sysboost_core(enum ppm_sysboost_user user, unsigned int core_num);
+void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user user, unsigned int cluster,
+					int min_core, int max_core);
+#endif
+
 extern void tracing_record_cmdline(struct task_struct *tsk);
 extern void show_stack(struct task_struct *tsk, unsigned long *sp);
 

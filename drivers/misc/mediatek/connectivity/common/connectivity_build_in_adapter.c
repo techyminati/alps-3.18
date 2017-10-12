@@ -64,3 +64,24 @@ void connectivity_export_tracing_record_cmdline(struct task_struct *tsk)
 	tracing_record_cmdline(tsk);
 }
 EXPORT_SYMBOL(connectivity_export_tracing_record_cmdline);
+
+#ifdef CPU_BOOST
+void connectivity_export_mt_ppm_sysboost_freq(enum ppm_sysboost_user user, unsigned int freq)
+{
+	mt_ppm_sysboost_freq(user, freq);
+}
+EXPORT_SYMBOL(connectivity_export_mt_ppm_sysboost_freq);
+
+void connectivity_export_mt_ppm_sysboost_core(enum ppm_sysboost_user user, unsigned int core_num)
+{
+	mt_ppm_sysboost_core(user, core_num);
+}
+EXPORT_SYMBOL(connectivity_export_mt_ppm_sysboost_core);
+
+void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user user, unsigned int cluster,
+					int min_core, int max_core)
+{
+	mt_ppm_sysboost_set_core_limit(user, cluster, min_core, max_core);
+}
+EXPORT_SYMBOL(connectivity_export_mt_ppm_sysboost_set_core_limit);
+#endif
