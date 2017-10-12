@@ -652,17 +652,18 @@ static int mtkfb_check_var(struct fb_var_screeninfo *var, struct fb_info *fbi)
 
 		/* Check if format is RGB565 or BGR565 */
 
-		ASSERT(8 == var->green.offset);
-		ASSERT(16 == var->red.offset + var->blue.offset);
-		ASSERT(16 == var->red.offset || 0 == var->red.offset);
+		if (8 != var->green.offset ||
+			16 != var->red.offset + var->blue.offset ||
+			(16 != var->red.offset && 0 != var->red.offset))
+			return -EINVAL;
 	} else if (32 == bpp) {
 		var->red.length = var->green.length = var->blue.length = var->transp.length = 8;
 
 		/* Check if format is ARGB565 or ABGR565 */
-
-		ASSERT(8 == var->green.offset && 24 == var->transp.offset);
-		ASSERT(16 == var->red.offset + var->blue.offset);
-		ASSERT(16 == var->red.offset || 0 == var->red.offset);
+		if ((8 != var->green.offset || 24 != var->transp.offset) ||
+			(16 != var->red.offset + var->blue.offset) ||
+			(16 != var->red.offset && 0 != var->red.offset))
+			return -EINVAL;
 	}
 
 	var->red.msb_right = 0;
