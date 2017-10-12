@@ -535,7 +535,7 @@ static long fbconfig_ioctl(struct file *file, unsigned int cmd, unsigned long ar
 		}
 		if (esd_para.para_num <= 0 || esd_para.para_num > 100) {
 			pr_debug("fbconfig=>LCM_GET_ESD para_num:%d < 0\n", esd_para.para_num);
-			return -1;
+			return -EINVAL;
 		}
 
 		buffer_size = esd_para.para_num + 6;
