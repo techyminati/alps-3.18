@@ -41,12 +41,12 @@
 	defined(CONFIG_ARCH_MT6755) || \
 	defined(CONFIG_ARCH_MT6757) || \
 	defined(CONFIG_ARCH_MT6797) || \
+	defined(CONFIG_ARCH_MT6570) || \
 	defined(CONFIG_ARCH_MT6580) || \
 	defined(CONFIG_ARCH_ELBRUS)
 #define CONNADP_HAS_CLOCK_BUF_CTRL
 #define KERNEL_clk_buf_ctrl connectivity_export_clk_buf_ctrl
-enum clk_buf_id;
-void connectivity_export_clk_buf_ctrl(enum clk_buf_id id, bool onoff);
+void connectivity_export_clk_buf_ctrl(/*enum clk_buf_id*/ int id, bool onoff);
 #endif
 
 /*******************************************************************************

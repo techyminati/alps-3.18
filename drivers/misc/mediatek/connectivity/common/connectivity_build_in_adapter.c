@@ -35,7 +35,15 @@
 
 
 #ifdef CONNADP_HAS_CLOCK_BUF_CTRL
+#ifdef CONFIG_ARCH_MT6570
+/* Ensure we #include from:
+ * drivers/misc/mediatek/include/mt-plat/mt6570/include/mach/mt_clkbuf_ctl.h
+ */
+#include <mach/mt_clkbuf_ctl.h>
+#else
+/* For all other platforms, we could safely use this file */
 #include <mt_clkbuf_ctl.h>
+#endif
 #endif
 
 /* PMIC */
@@ -104,7 +112,7 @@ EXPORT_SYMBOL(connectivity_export_mt_ppm_sysboost_set_core_limit);
  * Clock Buffer Control
  ******************************************************************************/
 #ifdef CONNADP_HAS_CLOCK_BUF_CTRL
-void connectivity_export_clk_buf_ctrl(enum clk_buf_id id, bool onoff)
+void connectivity_export_clk_buf_ctrl(/*enum clk_buf_id*/ int id, bool onoff)
 {
 	clk_buf_ctrl(id, onoff);
 }
