@@ -91,8 +91,8 @@
 #define BL_VERSION_Z7        										1
 #define BL_VERSION_GZF       						 				2
 #define FTS_REG_FW_VENDOR_ID 									0xA8
-//#define MAX_R_FLASH_SIZE										120
-//#define FTS_SETTING_BUF_LEN      								120
+/*#define MAX_R_FLASH_SIZE 120*/
+/*#define FTS_SETTING_BUF_LEN 120*/
 #define ERROR_CODE_OK 											0
 #define FTS_UPGRADE_LOOP										30
 #define FTS_MAX_POINTS_2                        							2
@@ -115,36 +115,36 @@ extern int apk_debug_flag;
 u8 ucPVendorID=0;
 #endif
 static unsigned char aucFW_PRAM_BOOT[] 	= {
-	//#include "FT8606_Pramboot_V0.6_20150304.i"
+	/*#include "FT8606_Pramboot_V0.6_20150304.i"*/
 };
 static unsigned char CTPM_FW[] 				= {
-	#include "FT6x36_4Columns_app.i" //FT6x36_4Columns_Ver0x15_20160217_app
+	#include "FT6x36_4Columns_app.i" /*FT6x36_4Columns_Ver0x15_20160217_app*/
 };
 #if FT_TP
 static unsigned char CTPM_FW_1[] 				= {
-	//#include "FT_Upgrade_App_1.i"
+	/*#include "FT_Upgrade_App_1.i"*/
 };
 static unsigned char CTPM_FW_2[] 				= {
-	//#include "FT_Upgrade_App_2.i"
+	/*#include "FT_Upgrade_App_2.i"*/
 };
 #endif
- struct fts_Upgrade_Info fts_updateinfo[] =
+struct fts_Upgrade_Info fts_updateinfo[] =
 {
-       {0x55,FTS_MAX_POINTS_5,AUTO_CLB_NEED,50, 30, 0x79, 0x03, 10, 2000}, 		//"FT5x06"
-       {0x08,FTS_MAX_POINTS_5,AUTO_CLB_NEED,50, 10, 0x79, 0x06, 100, 2000}, 	//"FT5606"
-	{0x0a,FTS_MAX_POINTS_5,AUTO_CLB_NEED,50, 30, 0x79, 0x07, 10, 1500}, 		//"FT5x16"
-	{0x06,FTS_MAX_POINTS_2,AUTO_CLB_NONEED,100, 30, 0x79, 0x08, 10, 2000}, 	//"FT6x06"
-	{0x36,FTS_MAX_POINTS_2,AUTO_CLB_NONEED,10, 10, 0x79, 0x18, 10, 2000}, 	//"FT6x36"
-	{0x55,FTS_MAX_POINTS_5,AUTO_CLB_NEED,50, 30, 0x79, 0x03, 10, 2000}, 		//"FT5x06i"
-	{0x14,FTS_MAX_POINTS_5,AUTO_CLB_NONEED,30, 30, 0x79, 0x11, 10, 2000}, 	//"FT5336"
-	{0x13,FTS_MAX_POINTS_5,AUTO_CLB_NONEED,30, 30, 0x79, 0x11, 10, 2000}, 	//"FT3316"
-	{0x12,FTS_MAX_POINTS_5,AUTO_CLB_NONEED,30, 30, 0x79, 0x11, 10, 2000}, 	//"FT5436i"
-	{0x11,FTS_MAX_POINTS_5,AUTO_CLB_NONEED,30, 30, 0x79, 0x11, 10, 2000}, 	//"FT5336i"
-	{0x54,FTS_MAX_POINTS_5,AUTO_CLB_NONEED,2, 2, 0x54, 0x2c, 20, 2000}, 	//"FT5x46"
-       {0x58,FTS_MAX_POINTS_5,AUTO_CLB_NONEED,2, 2, 0x58, 0x2c, 20, 2000},		//"FT5822",
-	{0x59,FTS_MAX_POINTS_10,AUTO_CLB_NONEED,30, 50, 0x79, 0x10, 1, 2000},	//"FT5x26",
-	{0x86,FTS_MAX_POINTS_10,AUTO_CLB_NONEED,2, 2, 0x86, 0xA6, 20, 2000},	//"FT8606",
-	{0x87,FTS_MAX_POINTS_10,AUTO_CLB_NONEED,2, 2, 0x87, 0xA6, 20, 2000},	//"FT8716",
+	{0x55, FTS_MAX_POINTS_5, AUTO_CLB_NEED, 50, 30, 0x79, 0x03, 10, 2000},/*"FT5x06"*/
+	{0x08, FTS_MAX_POINTS_5, AUTO_CLB_NEED, 50, 10, 0x79, 0x06, 100, 2000},/*"FT5606"*/
+	{0x0a, FTS_MAX_POINTS_5, AUTO_CLB_NEED, 50, 30, 0x79, 0x07, 10, 1500},/*"FT5x16"*/
+	{0x06, FTS_MAX_POINTS_2, AUTO_CLB_NONEED, 100, 30, 0x79, 0x08, 10, 2000},/*"FT6x06"*/
+	{0x36, FTS_MAX_POINTS_2, AUTO_CLB_NONEED, 10, 10, 0x79, 0x18, 10, 2000},/*"FT6x36"*/
+	{0x64, FTS_MAX_POINTS_2, AUTO_CLB_NONEED, 10, 10, 0x79, 0x1c, 10, 2000},/*"FT6436U"*/
+	{0x14, FTS_MAX_POINTS_5, AUTO_CLB_NONEED, 30, 30, 0x79, 0x11, 10, 2000},/*"FT5336"*/
+	{0x13, FTS_MAX_POINTS_5, AUTO_CLB_NONEED, 30, 30, 0x79, 0x11, 10, 2000},/*"FT3316"*/
+	{0x12, FTS_MAX_POINTS_5, AUTO_CLB_NONEED, 30, 30, 0x79, 0x11, 10, 2000},/*"FT5436i"*/
+	{0x11, FTS_MAX_POINTS_5, AUTO_CLB_NONEED, 30, 30, 0x79, 0x11, 10, 2000},/*"FT5336i"*/
+	{0x54, FTS_MAX_POINTS_5, AUTO_CLB_NONEED, 2, 2, 0x54, 0x2c, 20, 2000},/*"FT5x46"*/
+	{0x58, FTS_MAX_POINTS_5, AUTO_CLB_NONEED, 2, 2, 0x58, 0x2c, 20, 2000},/*"FT5822",*/
+	{0x59, FTS_MAX_POINTS_10, AUTO_CLB_NONEED, 30, 50, 0x79, 0x10, 1, 2000},/*"FT5x26",*/
+	{0x86, FTS_MAX_POINTS_10, AUTO_CLB_NONEED, 2, 2, 0x86, 0xA6, 20, 2000},/*"FT8606",*/
+	{0x87, FTS_MAX_POINTS_10, AUTO_CLB_NONEED, 2, 2, 0x87, 0xA6, 20, 2000},/*"FT8716",*/
 };
 /*******************************************************************************
 * Global variable or extern global variabls/functions
@@ -1958,7 +1958,6 @@ int  fts_5x46_ctpm_fw_upgrade(struct i2c_client * client, u8* pbt_buf, u32 dw_le
 }
 bool Upgrade_ReadPram(struct i2c_client * client,unsigned int Addr, unsigned char * pData, unsigned short Datalen)
 {
-	bool ReCode;
 	int ret=-1;
 	unsigned char pDataSend[16];
 	//if (iCommMode == HY_I2C_INTERFACE)
@@ -1971,20 +1970,19 @@ bool Upgrade_ReadPram(struct i2c_client * client,unsigned int Addr, unsigned cha
 		fts_i2c_write(client, pDataSend, 4);
 		//HY_IIC_IO(hDevice, NULL, 0, pData, Datalen) == ERROR_CODE_OK ? ReCode = true : ReCode = false;
 
-		
 
-		ret =fts_i2c_read(client, NULL, 0, pData, Datalen);  
-		if (ret < 0) 
-		{        
-			FTS_DBG("[FTS] failed Upgrade_ReadPram \n");     
-			return ret;    
-		} 
-		
+
+		ret = fts_i2c_read(client, NULL, 0, pData, Datalen);
+		if (ret < 0) {
+			FTS_DBG("[FTS] failed Upgrade_ReadPram\n");
+			return false;
+		}
+
 	}
-	
-	
 
-	return ReCode;
+
+
+	return true;
 }
 int  fts_8606_ctpm_fw_write_pram(struct i2c_client * client, u8* pbt_buf, u32 dw_lenth)
 {
@@ -2225,18 +2223,18 @@ int  fts_8606_ctpm_fw_write_pram(struct i2c_client * client, u8* pbt_buf, u32 dw
 		pCheckBuffer = NULL;
 		//COMM_FLASH_FT5422_Upgrade_StartApp(bOldProtocol, iCommMode);		//Reset
 		FTS_DBG("read out checksum successful\n");
-		
-	}
-	else
-	{
-		FTS_DBG("read out checksum error\n");
-	}	
 
 	}
 	else
 	{
 		FTS_DBG("read out checksum error\n");
-	}	
+	}
+
+	}
+	else
+	{
+		FTS_DBG("read out checksum error\n");
+	}
 
 	/********* Step 6: start app ***********************/
 	FTS_DBG("Step 6: start app\n");

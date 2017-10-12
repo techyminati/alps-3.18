@@ -132,21 +132,7 @@
 #define TPD_VELOCITY_CUSTOM_X 				15
 #define TPD_VELOCITY_CUSTOM_Y 				20
 
-#define CFG_MAX_TOUCH_POINTS				5
-#define MT_MAX_TOUCH_POINTS				10
-#define FTS_MAX_ID							0x0F
-#define FTS_TOUCH_STEP						6
-#define FTS_FACE_DETECT_POS				1
-#define FTS_TOUCH_X_H_POS					3
-#define FTS_TOUCH_X_L_POS					4
-#define FTS_TOUCH_Y_H_POS					5
-#define FTS_TOUCH_Y_L_POS					6
-#define FTS_TOUCH_EVENT_POS				3
-#define FTS_TOUCH_ID_POS					5
-#define FT_TOUCH_POINT_NUM				2
-#define FTS_TOUCH_XY_POS					7
-#define FTS_TOUCH_MISC						8
-#define POINT_READ_BUF						(3 + FTS_TOUCH_STEP * CFG_MAX_TOUCH_POINTS)
+#define CFG_MAX_TOUCH_POINTS				10
 #define FT_FW_NAME_MAX_LEN				50
 #define TPD_DELAY                					(2*HZ/100)
 #define TPD_RES_X                					480//1080//480
@@ -167,53 +153,23 @@
 #define IC_FT5x06i     						5				/* ft5306i */
 #define IC_FT5x36     							6				/* ft5336/ft5436/FT5436i */
 
-
+/* Time of starting to report point after resetting, per the hardware data
+ * sheet, in milliseconds. */
+#define TRSI_MS  300
 
 /*register address*/
-#define FTS_REG_CHIP_ID						0xA3    			// chip ID 
-#define FTS_REG_FW_VER						0xA6   			// FW  version 
-#define FTS_REG_VENDOR_ID					0xA8   			// TP vendor ID 
-#define FTS_REG_POINT_RATE					0x88   			// report rate	
-#define TPD_MAX_POINTS_2                        		2
-#define TPD_MAX_POINTS_5                        		5
-#define TPD_MAX_POINTS_10                        	10
-#define AUTO_CLB_NEED                           		1
-#define AUTO_CLB_NONEED                         		0
-#define LEN_FLASH_ECC_MAX 					0xFFFE
-#define FTS_PACKET_LENGTH        				120
-#define FTS_GESTRUE_POINTS 				255
-#define FTS_GESTRUE_POINTS_ONETIME  		62
-#define FTS_GESTRUE_POINTS_HEADER 		8
-#define FTS_GESTURE_OUTPUT_ADRESS 		0xD3
-#define FTS_GESTURE_OUTPUT_UNIT_LENGTH 	4
+#define FTS_REG_CHIP_ID	0xA3 /*chip ID*/
 
-#define KEY_GESTURE_U 						KEY_U
-#define KEY_GESTURE_UP 						KEY_UP
-#define KEY_GESTURE_DOWN 					KEY_DOWN
-#define KEY_GESTURE_LEFT 					KEY_LEFT 
-#define KEY_GESTURE_RIGHT 					KEY_RIGHT
-#define KEY_GESTURE_O 						KEY_O
-#define KEY_GESTURE_E 						KEY_E
-#define KEY_GESTURE_M 						KEY_M 
-#define KEY_GESTURE_L 						KEY_L
-#define KEY_GESTURE_W 						KEY_W
-#define KEY_GESTURE_S 						KEY_S 
-#define KEY_GESTURE_V 						KEY_V
-#define KEY_GESTURE_Z 						KEY_Z
-
-#define GESTURE_LEFT						0x20
-#define GESTURE_RIGHT						0x21
-#define GESTURE_UP		    					0x22
-#define GESTURE_DOWN						0x23
-#define GESTURE_DOUBLECLICK				0x24
-#define GESTURE_O		    					0x30
-#define GESTURE_W		    					0x31
-#define GESTURE_M		    					0x32
-#define GESTURE_E		    					0x33
-#define GESTURE_L		    					0x44
-#define GESTURE_S		    					0x46
-#define GESTURE_V		    					0x54
-#define GESTURE_Z		    					0x41
+#define FTS_REG_FW_VER 0xA6 /*FW version*/
+#define FTS_REG_VENDOR_ID 0xA8 /*TP vendor ID*/
+#define FTS_REG_POINT_RATE 0x88 /*report rate*/
+#define TPD_MAX_POINTS_2 2
+#define TPD_MAX_POINTS_5 5
+#define TPD_MAX_POINTS_10 10
+#define AUTO_CLB_NEED 1
+#define AUTO_CLB_NONEED	0
+#define LEN_FLASH_ECC_MAX 0xFFFE
+#define FTS_PACKET_LENGTH 120
 /*******************************************************************************
 * Private enumerations, structures and unions using typedef
 *******************************************************************************/
@@ -231,19 +187,24 @@ struct fts_Upgrade_Info
 	 u16 delay_earse_flash; 	/* delay of earse flash */
 };
 
-/*touch event info*/
-struct ts_event 
-{
-	u16 au16_x[CFG_MAX_TOUCH_POINTS];				/* x coordinate */
-	u16 au16_y[CFG_MAX_TOUCH_POINTS];				/* y coordinate */
-	u8 au8_touch_event[CFG_MAX_TOUCH_POINTS];		/* touch event: 0 -- down; 1-- up; 2 -- contact */
-	u8 au8_finger_id[CFG_MAX_TOUCH_POINTS];			/* touch ID */
-	u16 pressure[CFG_MAX_TOUCH_POINTS];
-	u16 area[CFG_MAX_TOUCH_POINTS];
-	u8 touch_point;
-	int touchs;
-	u8 touch_point_num;
+/* See the data sheet for the details on
+Pn_XH, Pn_XL, Pn_YH, and Pn_YL registers.*/
+
+struct fts_touch_point_registers {
+	u8 xh;
+	u8 xl;
+	u8 yh;
+	u8 yl;
+	u8 weight;  /* Note: Currently ignored by driver*/
+	u8 misc;  /* Note: Currently ignored by driver*/
 };
+
+struct ts_event
+{
+	u8 status;
+	struct fts_touch_point_registers touch_points[CFG_MAX_TOUCH_POINTS];
+};
+
 struct fts_ts_data {
 	struct i2c_client *client;
 	struct input_dev *input_dev;
@@ -281,15 +242,13 @@ struct fts_ts_data {
 * Global variable or extern global variabls/functions
 *******************************************************************************/
 // Function Switchs: define to open,  comment to close
-#define FTS_GESTRUE_EN 							1
-#define MTK_EN 									1
-#define FTS_APK_DEBUG
 #define FT_TP									1
 //#define CONFIG_TOUCHPANEL_PROXIMITY_SENSOR
 //#if FT_ESD_PROTECT
 //extern int apk_debug_flag;
 //#endif
 
+extern bool tp_probe_ok;
 extern struct i2c_client *fts_i2c_client;
 extern struct input_dev *fts_input_dev;
 extern struct tpd_device *tpd;
@@ -299,10 +258,6 @@ extern struct fts_Upgrade_Info fts_updateinfo_curr;
 int fts_rw_iic_drv_init(struct i2c_client *client);
 void  fts_rw_iic_drv_exit(void);
 void fts_get_upgrade_array(void);
-#if FTS_GESTRUE_EN
-		extern int fts_Gesture_init(struct input_dev *input_dev);
-		extern int fts_read_Gestruedata(void);
-#endif
 extern int fts_write_reg(struct i2c_client *client, u8 regaddr, u8 regvalue);
 extern int fts_read_reg(struct i2c_client *client, u8 regaddr, u8 *regvalue);
 extern int fts_i2c_read(struct i2c_client *client, char *writebuf,int writelen, char *readbuf, int readlen);

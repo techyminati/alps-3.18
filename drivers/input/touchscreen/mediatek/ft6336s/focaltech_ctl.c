@@ -34,6 +34,8 @@
 *******************************************************************************/
 #include "focaltech_core.h"
 
+#ifdef FTS_CTL_IIC
+
 extern int apk_debug_flag;
 /*******************************************************************************
 * Private constant and macro definitions using #define
@@ -402,3 +404,4 @@ void  fts_rw_iic_drv_exit(void)
 	unregister_chrdev_region(MKDEV(fts_rw_iic_drv_major, 0), 1); 
 }
 
+#endif  /* FTS_CTL_IIC */

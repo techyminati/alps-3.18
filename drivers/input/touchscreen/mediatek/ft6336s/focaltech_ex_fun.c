@@ -36,6 +36,7 @@
 *******************************************************************************/
 #include "focaltech_core.h"
 
+#ifdef FTS_APK_DEBUG
 /*******************************************************************************
 * Private constant and macro definitions using #define
 *******************************************************************************/
@@ -524,7 +525,10 @@ void fts_release_apk_debug_channel(void)
 			remove_proc_entry(PROC_NAME, NULL);
 		#endif
 }
+#endif  /* FTS_APK_DEBUG */
 
+
+#ifdef SYSFS_DEBUG
 /************************************************************************
 * Name: fts_tpfwver_show
 * Brief:  show tp fw vwersion
@@ -833,3 +837,4 @@ int fts_remove_sysfs(struct i2c_client * client)
 	sysfs_remove_group(&client->dev.kobj, &fts_attribute_group);
 	return 0;
 }
+#endif  /* SYSFS_DEBUG */
