@@ -95,12 +95,17 @@ typedef struct slob_block slob_t;
 /*
  * All partially free slob pages go on these lists.
  */
-#define SLOB_BREAK1 256
-#define SLOB_BREAK2 1024
-static LIST_HEAD(free_slob_small);
-static LIST_HEAD(free_slob_medium);
-static LIST_HEAD(free_slob_large);
+#define NR_OF_FREE_LISTS 129
+static struct list_head free_slobs[NR_OF_FREE_LISTS];
 
+static inline struct list_head *get_slob_free_list(size_t size)
+{
+	size = size / 8;
+	if (size < NR_OF_FREE_LISTS) {
+		return &free_slobs[size];
+	}
+	return &free_slobs[NR_OF_FREE_LISTS - 1];
+}
 /*
  * slob_page_free: true for pages on free_slob_pages list.
  */
@@ -273,12 +278,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 	slob_t *b = NULL;
 	unsigned long flags;
 
-	if (size < SLOB_BREAK1)
-		slob_list = &free_slob_small;
-	else if (size < SLOB_BREAK2)
-		slob_list = &free_slob_medium;
-	else
-		slob_list = &free_slob_large;
+	slob_list = get_slob_free_list(size);
 
 	spin_lock_irqsave(&slob_lock, flags);
 	/* Iterate through each partially free page, try to find room */
@@ -372,12 +372,7 @@ static void slob_free(void *block, int size)
 		set_slob(b, units,
 			(void *)((unsigned long)(b +
 					SLOB_UNITS(PAGE_SIZE)) & PAGE_MASK));
-		if (size < SLOB_BREAK1)
-			slob_list = &free_slob_small;
-		else if (size < SLOB_BREAK2)
-			slob_list = &free_slob_medium;
-		else
-			slob_list = &free_slob_large;
+		slob_list = get_slob_free_list(size);
 		set_slob_page_free(sp, slob_list);
 		goto out;
 	}
@@ -632,6 +627,10 @@ struct kmem_cache kmem_cache_boot = {
 
 void __init kmem_cache_init(void)
 {
+	int i;
+	for (i = 0; i < NR_OF_FREE_LISTS; i++) {
+		INIT_LIST_HEAD(&free_slobs[i]);
+	}
 	kmem_cache = &kmem_cache_boot;
 	slab_state = UP;
 }

@@ -767,6 +767,7 @@ CONFIG_SERIO,COMMON,Unused,,N,N,N,N,N,N,N,N,N,N,N
 CONFIG_SETEND_EMULATION,PLATFORM,,,X,X,X,X,X,y,y,y,y,y,y
 CONFIG_SLUB_DEBUG,USER;PROJECT,miles.chen,gmo project config,X,X,X,X,,X,X,X,N,X,
 CONFIG_SLUB_DEBUG_ON,USER;PROJECT,miles.chen,gmo project config,X,X,X,X,,X,X,X,X,X,
+CONFIG_SLOB,PROJECT,miles.chen,,X,X,X,X,X,X,X,X,X,X,X
 CONFIG_SND,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_SND_ARM,PLATFORM,,,N,N,X,X,X,X,X,X,X,X,X
 CONFIG_SND_DEBUG,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
@@ -927,7 +928,7 @@ CONFIG_NET_EMATCH,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_NET_EMATCH_U32,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_QUOTA_NETLINK_INTERFACE,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_SECURITY_PERF_EVENTS_RESTRICT,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
-CONFIG_HARDENED_USERCOPY,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
+CONFIG_HARDENED_USERCOPY,PROJECT,,,y,X,X,y,y,y,y,y,y,y,y
 CONFIG_MTK_LATE_MOUNT,PROJECT,,,N,N,N,N,N,N,N,N,N,N,N
 CONFIG_TARGET_COPY_OUT_ODM,PROJECT,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_TASK_IO_ACCOUNTING,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
