@@ -47,7 +47,7 @@
 #endif
 
 /* PMIC */
-#ifdef CONNADP_HAS_PMIC_API
+#if defined(CONNADP_HAS_PMIC_API) || defined(CONNADP_HAS_UPMU_VCN_CTRL)
 #include <upmu_common.h>
 #endif
 
@@ -145,6 +145,31 @@ void connectivity_export_pmic_set_register_value(/*PMU_FLAGS_LIST_ENUM*/ int fla
 }
 EXPORT_SYMBOL(connectivity_export_pmic_set_register_value);
 #endif
+#ifdef CONNADP_HAS_UPMU_VCN_CTRL
+void connectivity_export_upmu_set_vcn_1v8_lp_mode_set(unsigned int val)
+{
+	upmu_set_vcn_1v8_lp_mode_set(val);
+}
+EXPORT_SYMBOL(connectivity_export_upmu_set_vcn_1v8_lp_mode_set);
+
+void connectivity_export_upmu_set_vcn28_on_ctrl(unsigned int val)
+{
+	upmu_set_vcn28_on_ctrl(val);
+}
+EXPORT_SYMBOL(connectivity_export_upmu_set_vcn28_on_ctrl);
+
+void connectivity_export_upmu_set_vcn33_on_ctrl_bt(unsigned int val)
+{
+	upmu_set_vcn33_on_ctrl_bt(val);
+}
+EXPORT_SYMBOL(connectivity_export_upmu_set_vcn33_on_ctrl_bt);
+
+void connectivity_export_upmu_set_vcn33_on_ctrl_wifi(unsigned int val)
+{
+	upmu_set_vcn33_on_ctrl_wifi(val);
+}
+EXPORT_SYMBOL(connectivity_export_upmu_set_vcn33_on_ctrl_wifi);
+#endif
 
 /*******************************************************************************
  * MMC
@@ -155,4 +180,15 @@ int connectivity_export_mmc_io_rw_direct(struct mmc_card *card, int write, unsig
 	return mmc_io_rw_direct(card, write, fn, addr, in, out);
 }
 EXPORT_SYMBOL(connectivity_export_mmc_io_rw_direct);
+
+/*******************************************************************************
+ * Watchdog
+ ******************************************************************************/
+#if defined(CONFIG_ARCH_MT6797)
+int connectivity_export_mtk_wdt_swsysret_config(int bit, int set_value)
+{
+	return mtk_wdt_swsysret_config(bit, set_value);
+}
+EXPORT_SYMBOL(connectivity_export_mtk_wdt_swsysret_config);
+#endif
 

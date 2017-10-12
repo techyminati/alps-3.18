@@ -42,8 +42,7 @@
 	defined(CONFIG_ARCH_MT6757) || \
 	defined(CONFIG_ARCH_MT6797) || \
 	defined(CONFIG_ARCH_MT6570) || \
-	defined(CONFIG_ARCH_MT6580) || \
-	defined(CONFIG_ARCH_ELBRUS)
+	defined(CONFIG_ARCH_MT6580)
 #define CONNADP_HAS_CLOCK_BUF_CTRL
 #define KERNEL_clk_buf_ctrl connectivity_export_clk_buf_ctrl
 void connectivity_export_clk_buf_ctrl(/*enum clk_buf_id*/ int id, bool onoff);
@@ -70,6 +69,18 @@ void connectivity_export_pmic_read_interface(unsigned int RegNum, unsigned int *
 						unsigned int MASK, unsigned int SHIFT);
 void connectivity_export_pmic_set_register_value(/*PMU_FLAGS_LIST_ENUM*/ int flagname, unsigned int val);
 #endif
+#if defined(CONFIG_ARCH_MT8127) || \
+	defined(CONFIG_ARCH_MT8163)
+#define CONNADP_HAS_UPMU_VCN_CTRL
+#define KERNEL_upmu_set_vcn_1v8_lp_mode_set connectivity_export_upmu_set_vcn_1v8_lp_mode_set
+#define KERNEL_upmu_set_vcn28_on_ctrl connectivity_export_upmu_set_vcn28_on_ctrl
+#define KERNEL_upmu_set_vcn33_on_ctrl_bt connectivity_export_upmu_set_vcn33_on_ctrl_bt
+#define KERNEL_upmu_set_vcn33_on_ctrl_wifi connectivity_export_upmu_set_vcn33_on_ctrl_wifi
+void connectivity_export_upmu_set_vcn_1v8_lp_mode_set(unsigned int val);
+void connectivity_export_upmu_set_vcn28_on_ctrl(unsigned int val);
+void connectivity_export_upmu_set_vcn33_on_ctrl_bt(unsigned int val);
+void connectivity_export_upmu_set_vcn33_on_ctrl_wifi(unsigned int val);
+#endif
 
 /*******************************************************************************
  * MMC
@@ -82,6 +93,15 @@ void connectivity_export_pmic_set_register_value(/*PMU_FLAGS_LIST_ENUM*/ int fla
 struct mmc_card;
 int connectivity_export_mmc_io_rw_direct(struct mmc_card *card, int write, unsigned fn,
 						unsigned addr, u8 in, u8 *out);
+
+/*******************************************************************************
+ * Watchdog
+ ******************************************************************************/
+#if defined(CONFIG_ARCH_MT6797)
+#define KERNEL_mtk_wdt_swsysret_config connectivity_export_mtk_wdt_swsysret_config
+int connectivity_export_mtk_wdt_swsysret_config(int bit, int set_value);
+extern int mtk_wdt_swsysret_config(int bit, int set_value);
+#endif
 
 
 #ifdef CONFIG_ARCH_MT6755
