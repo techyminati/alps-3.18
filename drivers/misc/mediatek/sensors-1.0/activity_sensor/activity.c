@@ -424,7 +424,7 @@ int act_driver_add(struct act_init_info *obj)
 			break;
 		}
 	}
-	if (NULL == activity_init_list[i]) {
+	if (i >= MAX_CHOOSE_ACT_NUM) {
 		ACT_PR_ERR("act driver add err\n");
 		err = -1;
 	}
