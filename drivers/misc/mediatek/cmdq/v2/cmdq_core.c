@@ -3214,7 +3214,7 @@ static TaskStruct *cmdq_core_acquire_task(cmdqCommandStruct *pCommandDesc,
 			pTask->secData.addrMetadatas =
 				(cmdqU32Ptr_t)(unsigned long)p_metadatas;
 		} else {
-			pTask->secData.addrMetadatas = NULL;
+			pTask->secData.addrMetadatas = 0;
 		}
 #endif
 
