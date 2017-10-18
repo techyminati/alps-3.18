@@ -1,3 +1,17 @@
+/*
+ * Copyright (C) 2017 Google, Inc.
+ *
+ * This software is licensed under the terms of the GNU General Public
+ * License version 2, as published by the Free Software Foundation, and
+ * may be copied, distributed, and modified under those terms.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ */
+
 #undef TRACE_SYSTEM
 #define TRACE_SYSTEM android_fs
 
@@ -9,7 +23,7 @@
 
 DEFINE_EVENT(android_fs_data_start_template, android_fs_dataread_start,
 	TP_PROTO(struct inode *inode, loff_t offset, int bytes,
-		 pid_t pid, char *pathname, char *command),
+		 pid_t pid, const char *pathname, const char *command),
 	TP_ARGS(inode, offset, bytes, pid, pathname, command));
 
 DEFINE_EVENT(android_fs_data_end_template, android_fs_dataread_end,
@@ -18,7 +32,7 @@ DEFINE_EVENT(android_fs_data_end_template, android_fs_dataread_end,
 
 DEFINE_EVENT(android_fs_data_start_template, android_fs_datawrite_start,
 	TP_PROTO(struct inode *inode, loff_t offset, int bytes,
-		 pid_t pid, char *pathname, char *command),
+		 pid_t pid, const char *pathname, const char *command),
 	TP_ARGS(inode, offset, bytes, pid, pathname, command));
 
 DEFINE_EVENT(android_fs_data_end_template, android_fs_datawrite_end,
