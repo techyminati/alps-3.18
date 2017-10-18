@@ -1101,7 +1101,7 @@ void DpEngine_COLORonConfig(DISP_MODULE_ENUM module, void *__cmdq)
 #if defined(CONFIG_ARCH_MT6797)
 	int i, j, reg_index;
 #endif
-	int wide_gamut_en = 0;
+	const int wide_gamut_en = 0;
 
 	if (DISP_MODULE_COLOR1 == module) {
 		offset = C1_OFFSET;
@@ -1419,7 +1419,7 @@ static void color_write_hw_reg(DISP_MODULE_ENUM module,
 #if defined(CONFIG_ARCH_MT6797)
 	int i, j, reg_index;
 #endif
-	int wide_gamut_en = 0;
+	const int wide_gamut_en = 0;
 
 	if (DISP_MODULE_COLOR1 == module)
 		offset = C1_OFFSET;
