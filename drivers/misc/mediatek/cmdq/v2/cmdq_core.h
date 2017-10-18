@@ -1038,6 +1038,12 @@ extern "C" {
 								CmdqResourceReleaseCB resourceRelease);
 
 	void cmdq_core_dump_dts_setting(void);
+/*
+ * cmdq_core_get_running_task_by_engine_unlock
+ *
+ * Get copy of running task in hardware thread by provide engine flags.
+ * Lock gCmdqExecLock before call to protect hardware state and source task.
+ */
 	int32_t cmdq_core_get_running_task_by_engine_unlock(uint64_t engineFlag,
 		uint32_t userDebugStrLen, struct TaskStruct *p_out_task);
 	int32_t cmdq_core_get_running_task_by_engine(uint64_t engineFlag,

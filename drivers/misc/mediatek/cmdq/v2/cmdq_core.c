@@ -8148,8 +8148,8 @@ int32_t cmdq_core_get_running_task_by_engine_unlock(uint64_t engineFlag,
 int32_t cmdq_core_get_running_task_by_engine(uint64_t engineFlag,
 	uint32_t userDebugStrLen, struct TaskStruct *p_out_task)
 {
-	int32_t result = 0;
-	unsigned long flags = 0;
+	int32_t result;
+	unsigned long flags;
 
 	/* make sure context does not change during get and copy */
 	spin_lock_irqsave(&gCmdqExecLock, flags);
