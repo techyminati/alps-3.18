@@ -288,7 +288,7 @@ CONFIG_IPV6_SIT_6RD,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_IPV6_SUBTREES,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_ISO9660_FS,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_JOLIET,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
-CONFIG_KCOV,PROJECT,,,X,X,O,X,X,X,O,X,X,X,X
+CONFIG_KCOV,PROJECT,,,X,X,O,X,X,O,O,O,X,X,X
 CONFIG_KEYS,PROJECT,pangyen.chen,,X,X,X,X,X,X,X,X,X,X,X
 CONFIG_KEYBOARD_ATKBD,COMMON,Unused,,N,N,N,N,N,N,N,N,N,N,N
 CONFIG_KEYBOARD_MTK,COMMON,Zh.Chen,,y,y,y,y,y,y,y,y,y,y,y
@@ -626,7 +626,7 @@ CONFIG_NANOHUB_MTK_IPI,PROJECT,gaia.chang,,X,X,X,X,,X,X,X,X,O,
 CONFIG_NANOHUB,PROJECT,gaia.chang,,X,X,X,X,,X,X,X,X,O,
 CONFIG_NEON,PLATFORM,,,y,y,y,y,y,X,X,X,X,X,X
 CONFIG_NET,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
-CONFIG_NET_9P,PROJECT,,,X,X,O,X,X,X,O,X,X,X,X
+CONFIG_NET_9P,PROJECT,,,X,X,O,X,X,O,O,O,X,X,X
 CONFIG_NET_ACT_IPT,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_NET_ACT_MIRRED,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_NET_ACT_POLICE,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
