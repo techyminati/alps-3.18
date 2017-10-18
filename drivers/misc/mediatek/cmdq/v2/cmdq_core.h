@@ -837,7 +837,8 @@ extern "C" {
  * Return:
  *     task pointer if available
  */
-	struct TaskStruct *cmdq_core_get_task_ptr(void *task_handle);
+	struct TaskStruct *cmdq_core_get_task_ptr(
+		struct TaskStruct *task_handle);
 
 /**
  * Immediately clear CMDQ event to 0 with CPU

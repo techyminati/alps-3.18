@@ -2106,10 +2106,10 @@ int32_t cmdqCoreRegisterTrackTaskCB(CMDQ_GROUP_ENUM engGroup,
 	return 0;
 }
 
-struct TaskStruct *cmdq_core_get_task_ptr(void *task_handle)
+struct TaskStruct *cmdq_core_get_task_ptr(struct TaskStruct *task_handle)
 {
 	struct TaskStruct *ptr = NULL;
-	struct TaskStruct *task = NULL;
+	struct TaskStruct *task;
 
 	mutex_lock(&gCmdqTaskMutex);
 
@@ -2121,8 +2121,10 @@ struct TaskStruct *cmdq_core_get_task_ptr(void *task_handle)
 	}
 
 	if (!ptr) {
-		list_for_each_entry(task, &gCmdqContext.taskWaitList, listEntry) {
-			if (task == task_handle && TASK_STATE_WAITING == task->taskState) {
+		list_for_each_entry(task, &gCmdqContext.taskWaitList,
+			listEntry) {
+			if (task == task_handle &&
+				TASK_STATE_WAITING == task->taskState) {
 				ptr = task;
 				break;
 			}
@@ -3191,8 +3193,8 @@ static TaskStruct *cmdq_core_acquire_task(cmdqCommandStruct *pCommandDesc,
 		    pCommandDesc->secData.enginesNeedPortSecurity;
 		pTask->secData.addrMetadataCount = pCommandDesc->secData.addrMetadataCount;
 		if (pTask->secData.is_secure == true && pTask->secData.addrMetadataCount > 0) {
-			uint32_t metadata_length = 0;
-			void *p_metadatas = NULL;
+			uint32_t metadata_length;
+			void *p_metadatas;
 
 			metadata_length = (pTask->secData.addrMetadataCount) * sizeof(cmdqSecAddrMetadataStruct);
 			/* create sec data task buffer for working */
@@ -3209,9 +3211,10 @@ static TaskStruct *cmdq_core_acquire_task(cmdqCommandStruct *pCommandDesc,
 			}
 			memcpy(p_metadatas, CMDQ_U32_PTR(pCommandDesc->secData.addrMetadatas),
 			       metadata_length);
-			pTask->secData.addrMetadatas = (cmdqU32Ptr_t)(unsigned long)p_metadatas;
+			pTask->secData.addrMetadatas =
+				(cmdqU32Ptr_t)(unsigned long)p_metadatas;
 		} else {
-			pTask->secData.addrMetadatas = (cmdqU32Ptr_t)(unsigned long)NULL;
+			pTask->secData.addrMetadatas = NULL;
 		}
 #endif
 
@@ -7741,7 +7744,8 @@ int32_t cmdqCoreWaitResultAndReleaseTask(TaskStruct *pTask, cmdqRegValueStruct *
 
 	/*  */
 	/* retrieve result */
-	if (pResult && pResult->count && pResult->count <= CMDQ_MAX_DUMP_REG_COUNT) {
+	if (pResult && pResult->count &&
+		pResult->count <= CMDQ_MAX_DUMP_REG_COUNT) {
 		/* clear results */
 		memset(CMDQ_U32_PTR(pResult->regValues), 0,
 		       pResult->count * sizeof(CMDQ_U32_PTR(pResult->regValues)[0]));

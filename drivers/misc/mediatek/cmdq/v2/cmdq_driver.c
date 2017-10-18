@@ -342,13 +342,16 @@ static long cmdq_driver_create_secure_medadata(cmdqCommandStruct *pCommand)
 	void *pAddrMetadatas = NULL;
 	uint32_t length;
 
-	if (pCommand->secData.addrMetadataCount >= CMDQ_IWC_MAX_ADDR_LIST_LENGTH) {
+	if (pCommand->secData.addrMetadataCount >=
+		CMDQ_IWC_MAX_ADDR_LIST_LENGTH) {
 		CMDQ_ERR("Metadata %u reach the max allowed number = %u\n",
-			 pCommand->secData.addrMetadataCount, CMDQ_IWC_MAX_ADDR_LIST_LENGTH);
-		return -EFAULT;
+			pCommand->secData.addrMetadataCount,
+			CMDQ_IWC_MAX_ADDR_LIST_LENGTH);
+		return -EOVERFLOW;
 	}
 
-	length = pCommand->secData.addrMetadataCount * sizeof(struct cmdqSecAddrMetadataStruct);
+	length = pCommand->secData.addrMetadataCount *
+		sizeof(struct cmdqSecAddrMetadataStruct);
 
 
 	/* verify parameter */
@@ -622,10 +625,11 @@ static long cmdq_ioctl(struct file *pFile, unsigned int code, unsigned long para
 		}
 
 		/* verify job handle */
-		pTask = cmdq_core_get_task_ptr((void *)(unsigned long)jobResult.hJob);
+		pTask = cmdq_core_get_task_ptr((struct TaskStruct *)
+			(unsigned long)jobResult.hJob);
 		if (!pTask) {
 			CMDQ_ERR("invalid task ptr = 0x%llx\n", jobResult.hJob);
-			return -EFAULT;
+			return -EINVAL;
 		}
 
 		if (pTask->regCount > CMDQ_MAX_DUMP_REG_COUNT)
