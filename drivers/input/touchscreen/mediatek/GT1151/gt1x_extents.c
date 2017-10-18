@@ -604,6 +604,8 @@ static long gt1x_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		data_length = _IOC_SIZE(cmd);
 
 		data = kzalloc(data_length, GFP_KERNEL);
+		if (data == NULL)
+			return -1;
 		memset(data, 0, data_length);
 
 		if (_IOC_DIR(cmd) & _IOC_WRITE) {
