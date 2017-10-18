@@ -453,82 +453,6 @@ typedef struct {
 	MUINT32 Custom5DelayFrame;
 	MUINT16 SensorGrabStartX;
 	MUINT16 SensorGrabStartY;
-	MUINT16 SensorDrivingCurrent;
-	MUINT8 SensorMasterClockSwitch;
-	MUINT8 AEShutDelayFrame;    /* The frame of setting shutter default 0 for TG int */
-	MUINT8 AESensorGainDelayFrame;  /* The frame of setting sensor gain */
-	MUINT8 AEISPGainDelayFrame;
-	MUINT8 FrameTimeDelayFrame; /* The delay frame of setting frame length  */
-	MUINT8 MIPIDataLowPwr2HighSpeedTermDelayCount;
-	MUINT8 MIPIDataLowPwr2HighSpeedSettleDelayCount;
-	MUINT8 MIPICLKLowPwr2HighSpeedTermDelayCount;
-	MUINT8 SensorWidthSampling;
-	MUINT8 SensorHightSampling;
-	MUINT8 SensorPacketECCOrder;
-	SENSOR_MIPI_TYPE_ENUM MIPIsensorType;
-	MUINT8 SensorCaptureOutputJPEG; /* JPEG file or not? */
-	MUINT8 SensorModeNum;
-	MUINT8 IHDR_Support;
-	MUINT16 IHDR_LE_FirstLine;
-	MUINT8 TEMPERATURE_SUPPORT;
-	MUINT8 ZHDR_Mode;
-	SENSOR_SETTLEDELAY_MODE_ENUM SettleDelayMode;
-	/*0: NO PDAF, 1: PDAF Raw Data mode, 2:PDAF VC mode(Full),
-	  3:PDAF VC mode(Binning), 4: PDAF DualPD Raw Data mode, 5: PDAF DualPD VC mode*/
-	MUINT8 PDAF_Support;
-	MUINT8 HDR_Support;/*0: NO HDR, 1: iHDR, 2:mvHDR, 3:zHDR*/
-	MUINT8 DPCM_INFO;
-	MUINT8 PerFrameCTL_Support;
-	SENSOR_SCAM_DATA_CHANNEL_ENUM SCAM_DataNumber;
-	MUINT8 SCAM_DDR_En;
-	MUINT8 SCAM_CLK_INV;
-	MUINT8 SCAM_DEFAULT_DELAY;
-	MUINT8 SCAM_CRC_En;
-	MUINT8 SCAM_SOF_src;
-	MUINT32 SCAM_Timout_Cali;
-	MUINT32 SensorMIPIDeskew;
-	MUINT16 SensorHorFOV;
-	MUINT16 SensorVerFOV;
-	MUINT16 SensorOrientation;
-} ACDK_SENSOR_INFO_STRUCT, *PACDK_SENSOR_INFO_STRUCT;
-
-typedef struct {
-	MUINT16 SensorPreviewResolutionX;
-	MUINT16 SensorPreviewResolutionY;
-	MUINT16 SensorFullResolutionX;
-	MUINT16 SensorFullResolutionY;
-	MUINT8 SensorClockFreq; /* MHz */
-	MUINT8 SensorCameraPreviewFrameRate;
-	MUINT8 SensorVideoFrameRate;
-	MUINT8 SensorStillCaptureFrameRate;
-	MUINT8 SensorWebCamCaptureFrameRate;
-	MUINT8 SensorClockPolarity; /* SENSOR_CLOCK_POLARITY_HIGH/SENSOR_CLOCK_POLARITY_Low */
-	MUINT8 SensorClockFallingPolarity;
-	MUINT8 SensorClockRisingCount;  /* 0..15 */
-	MUINT8 SensorClockFallingCount; /* 0..15 */
-	MUINT8 SensorClockDividCount;   /* 0..15 */
-	MUINT8 SensorPixelClockCount;   /* 0..15 */
-	MUINT8 SensorDataLatchCount;    /* 0..15 */
-	MUINT8 SensorHsyncPolarity;
-	MUINT8 SensorVsyncPolarity;
-	MUINT8 SensorInterruptDelayLines;
-	MINT32 SensorResetActiveHigh;
-	MUINT32 SensorResetDelayCount;
-	ACDK_SENSOR_INTERFACE_TYPE_ENUM SensroInterfaceType;
-	ACDK_SENSOR_OUTPUT_DATA_FORMAT_ENUM SensorOutputDataFormat;
-	ACDK_SENSOR_MIPI_LANE_NUMBER_ENUM SensorMIPILaneNumber;
-	MUINT32 CaptureDelayFrame;
-	MUINT32 PreviewDelayFrame;
-	MUINT32 VideoDelayFrame;
-	MUINT32 HighSpeedVideoDelayFrame;
-	MUINT32 SlimVideoDelayFrame;
-	MUINT32 YUVAwbDelayFrame;
-	MUINT32 YUVEffectDelayFrame;
-	MUINT32 Custom1DelayFrame;
-	MUINT32 Custom2DelayFrame;
-	MUINT32 Custom3DelayFrame;
-	MUINT32 Custom4DelayFrame;
-	MUINT32 Custom5DelayFrame;
 	MUINT16 SensorGrabStartX_PRV;
 	MUINT16 SensorGrabStartY_PRV;
 	MUINT16 SensorGrabStartX_CAP;
@@ -596,8 +520,10 @@ typedef struct {
 	MUINT16 SensorHorFOV;
 	MUINT16 SensorVerFOV;
 	MUINT16 SensorOrientation;
-} ACDK_SENSOR_INFO2_STRUCT, *PACDK_SENSOR_INFO2_STRUCT;
+} ACDK_SENSOR_INFO_STRUCT, *PACDK_SENSOR_INFO_STRUCT;
 
+#define ACDK_SENSOR_INFO2_STRUCT ACDK_SENSOR_INFO_STRUCT
+#define PACDK_SENSOR_INFO2_STRUCT PACDK_SENSOR_INFO_STRUCT
 
 typedef enum {
 	ACDK_CCT_REG_ISP = 0,
