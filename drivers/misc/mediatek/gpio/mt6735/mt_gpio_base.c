@@ -213,12 +213,13 @@ int mt_get_gpio_smt_base(unsigned long pin)
 	unsigned long data;
 	unsigned long bit = 0;
 
-	bit = SMT_offset[pin].offset;
 	if (pin >= MAX_GPIO_PIN)
 		return -ERINVAL;
 
 	if (SMT_offset[pin].offset == -1)
 		return GPIO_SMT_UNSUPPORTED;
+
+	bit = SMT_offset[pin].offset;
 	data = GPIO_RD32(SMT_addr[pin].addr);
 	return ((data & (1L << bit)) != 0) ? 1 : 0;
 }
