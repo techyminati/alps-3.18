@@ -38,6 +38,7 @@ int gM4U_log_level = 2;
 
 unsigned int gM4U_seed_mva = 0;
 
+#if 0
 int m4u_test_alloc_dealloc(int id, unsigned int size)
 {
 	m4u_client_t *client;
@@ -308,6 +309,7 @@ int m4u_test_tf(unsigned int prot)
 
 	return 0;
 }
+#endif
 
 #if 0
 #include <mtk/ion_drv.h>
@@ -373,6 +375,7 @@ void m4u_test_ion(void)
 #define m4u_test_ion(...)
 #endif
 
+#if 0
 static int m4u_debug_set(void *data, u64 val)
 {
 	m4u_domain_t *domain = data;
@@ -771,6 +774,7 @@ static int m4u_debug_set(void *data, u64 val)
 
 	return 0;
 }
+#endif
 
 static int m4u_debug_get(void *data, u64 *val)
 {
@@ -778,7 +782,13 @@ static int m4u_debug_get(void *data, u64 *val)
 	return 0;
 }
 
-DEFINE_SIMPLE_ATTRIBUTE(m4u_debug_fops, m4u_debug_get, m4u_debug_set, "%llu\n");
+static int m4u_debug_set_do_nothing(void *data, u64 val)
+{
+	M4UMSG("%s: data: %p value: %llu\n", __func__, data, val);
+	return 0;
+}
+
+DEFINE_SIMPLE_ATTRIBUTE(m4u_debug_fops, m4u_debug_get, m4u_debug_set_do_nothing, "%llu\n");
 
 #if (M4U_DVT != 0)
 static void m4u_test_init(void)
