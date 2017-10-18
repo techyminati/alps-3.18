@@ -3163,13 +3163,13 @@ static ssize_t msdc_debug_proc_write_DVT(struct file *file, const char __user *b
 	struct msdc_host *host;
 
 	if (count == 0)
-		return -1;
+		return -EINVAL;
 	if (count > 255)
 		count = 255;
 
 	ret = copy_from_user(cmd_buf, buf, count);
 	if (ret < 0)
-		return -1;
+		return -EFAULT;
 
 	cmd_buf[count] = '\0';
 	pr_err("[****SD_Debug****]msdc Write %s\n", cmd_buf);
@@ -3379,13 +3379,13 @@ static ssize_t msdc_voltage_proc_write(struct file *file, const char __user *buf
 	int scan_ret;
 
 	if (count == 0)
-		return -1;
+		return -EINVAL;
 	if (count > 255)
 		count = 255;
 
 	ret = copy_from_user(cmd_buf, buf, count);
 	if (ret < 0)
-		return -1;
+		return -EFAULT;
 
 	cmd_buf[count] = '\0';
 	pr_err("[****SD_Debug****]msdc Write %s\n", cmd_buf);
