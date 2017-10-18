@@ -290,7 +290,6 @@ static snd_pcm_uframes_t mtk_capture_pcm_pointer(struct snd_pcm_substream *subst
 			pr_warn("%s buffer overflow u4DMAReadIdx:%x, u4WriteIdx:%x, DataRemained:%x, BufferSize:%x\n",
 			       __func__, UL1_Block->u4DMAReadIdx, UL1_Block->u4WriteIdx,
 			       UL1_Block->u4DataRemained, UL1_Block->u4BufferSize);
-			AUDIO_AEE("mtk_capture_pcm_pointer : buffer overflow\n");
 		}
 
 		PRINTK_AUD_UL1("[Auddrv] mtk_capture_pcm_pointer =0x%x HW_memory_index = 0x%x\n",
@@ -347,6 +346,28 @@ static int mtk_capture_pcm_hw_params(struct snd_pcm_substream *substream,
 	dma_buf->dev.dev = substream->pcm->card->dev;
 	dma_buf->private_data = NULL;
 
+	runtime->dma_bytes = params_buffer_bytes(hw_params);
+
+    /* can allocate sram_dbg */
+	AfeControlSramLock();
+#ifdef AUDIO_FPGA_EARLYPORTING
+	SetSramState(SRAM_STATE_CAPTURE);
+#endif
+
+#ifndef CAPTURE_FORCE_USE_DRAM
+	if ((GetSramState() == SRAM_STATE_FREE) && (substream->runtime->dma_bytes <= GetCaptureSramSize())) {
+		pr_warn("mtk_capture_pcm_open use sram\n");
+		SetSramState(SRAM_STATE_CAPTURE);
+		mCaptureUseSram = true;
+	} else {
+		pr_warn("mtk_capture_pcm_open use dram\n");
+	}
+#else
+	pr_warn("mtk_capture_pcm_open use dram\n");
+#endif
+
+	AfeControlSramUnLock();
+
 	if (mCaptureUseSram == true) {
 		runtime->dma_bytes = params_buffer_bytes(hw_params);
 		pr_warn("mtk_capture_pcm_hw_params mCaptureUseSram dma_bytes = %zu\n",
@@ -357,6 +378,7 @@ static int mtk_capture_pcm_hw_params(struct snd_pcm_substream *substream,
 	} else if (Capture_dma_buf->area) {
 		pr_warn("Capture_dma_buf = %p Capture_dma_buf->area = %p apture_dma_buf->addr = 0x%lx\n",
 		       Capture_dma_buf, Capture_dma_buf->area, (long) Capture_dma_buf->addr);
+		AudDrv_Emi_Clk_On();
 		runtime->dma_bytes = params_buffer_bytes(hw_params);
 		runtime->dma_area = Capture_dma_buf->area;
 		runtime->dma_addr = Capture_dma_buf->addr;
@@ -377,11 +399,16 @@ static int mtk_capture_pcm_hw_params(struct snd_pcm_substream *substream,
 static int mtk_capture_pcm_hw_free(struct snd_pcm_substream *substream)
 {
 	pr_warn("mtk_capture_pcm_hw_free\n");
-	if (Capture_dma_buf->area)
+	if (Capture_dma_buf->area) {
+		if (mCaptureUseSram == false) {
+			AudDrv_Emi_Clk_Off();
+		} else {
+			ClearSramState(SRAM_STATE_CAPTURE);
+			mCaptureUseSram = false;
+		}
 		return 0;
-	else
+	} else
 		return snd_pcm_lib_free_pages(substream);
-
 }
 
 static struct snd_pcm_hw_constraint_list constraints_sample_rates = {
@@ -397,29 +424,6 @@ static int mtk_capture_pcm_open(struct snd_pcm_substream *substream)
 	AudDrv_Clk_On();
 	AudDrv_ADC_Clk_On();
 	VUL_Control_context = Get_Mem_ControlT(Soc_Aud_Digital_Block_MEM_VUL);
-
-	/* can allocate sram_dbg */
-	AfeControlSramLock();
-#ifdef AUDIO_FPGA_EARLYPORTING
-	SetSramState(SRAM_STATE_CAPTURE);
-#endif
-
-#ifndef CAPTURE_FORCE_USE_DRAM
-	if (GetSramState() == SRAM_STATE_FREE) {
-		/* pr_warn("mtk_capture_pcm_open use sram\n"); */
-		mtk_capture_hardware.buffer_bytes_max = GetCaptureSramSize();
-		SetSramState(SRAM_STATE_CAPTURE);
-		mCaptureUseSram = true;
-	} else {
-		/* pr_warn("mtk_capture_pcm_open use dram\n"); */
-		mtk_capture_hardware.buffer_bytes_max = UL1_MAX_BUFFER_SIZE;
-	}
-#else
-	pr_warn("mtk_capture_pcm_open use dram\n");
-	mtk_capture_hardware.buffer_bytes_max = UL1_MAX_BUFFER_SIZE;
-#endif
-
-	AfeControlSramUnLock();
 
 	runtime->hw = mtk_capture_hardware;
 	memcpy((void *)(&(runtime->hw)), (void *)&mtk_capture_hardware,
@@ -440,22 +444,12 @@ static int mtk_capture_pcm_open(struct snd_pcm_substream *substream)
 		return ret;
 	}
 
-	if (mCaptureUseSram == false)
-		AudDrv_Emi_Clk_On();
-
 	/* pr_warn("mtk_capture_pcm_open return\n"); */
 	return 0;
 }
 
 static int mtk_capture_pcm_close(struct snd_pcm_substream *substream)
 {
-	if (mCaptureUseSram == false)
-		AudDrv_Emi_Clk_Off();
-
-	if (mCaptureUseSram == true) {
-		ClearSramState(SRAM_STATE_CAPTURE);
-		mCaptureUseSram = false;
-	}
 	AudDrv_ADC_Clk_Off();
 	AudDrv_Clk_Off();
 	return 0;

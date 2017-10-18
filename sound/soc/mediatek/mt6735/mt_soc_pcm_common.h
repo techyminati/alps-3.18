@@ -133,7 +133,7 @@ define for PCM settings
 #define MIN_PERIOD_SIZE       1
 #define MAX_PERIOD_SIZE     MAX_BUFFER_SIZE
 
-#define UL1_MAX_BUFFER_SIZE     (36*1024)
+#define UL1_MAX_BUFFER_SIZE     (48*1024)
 #define UL1_MIN_PERIOD_SIZE       1
 #define UL1_MAX_PERIOD_SIZE     UL1_MAX_BUFFER_SIZE
 
