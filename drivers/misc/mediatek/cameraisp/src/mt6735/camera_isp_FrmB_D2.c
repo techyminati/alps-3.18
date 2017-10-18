@@ -490,32 +490,37 @@ static MUINT32 g_DmaErr_p1[nDMA_ERR] = { 0 };
 }
 #if 1
 #define IRQ_LOG_KEEPER(irq, ppb, logT, fmt, ...) do {\
-	if (irq >= _IRQ_MAX) {\
-		LOG_ERR("IRQ_LOG_KEEPER : Array Max Size Exceeded!");\
+	char *ptr;\
+	char *pDes;\
+	MINT32 avaLen;\
+	MUINT32 *ptr2 = &gSvLog[irq]._cnt[ppb][logT];\
+	unsigned int str_leng = 0;\
+	if (_LOG_ERR == logT) {\
+		str_leng = NORMAL_STR_LEN*ERR_PAGE;\
+	} \
+	else if (_LOG_DBG == logT) {\
+		str_leng = NORMAL_STR_LEN*DBG_PAGE;\
+	} \
+	else if (_LOG_INF == logT) {\
+		str_leng = NORMAL_STR_LEN*INF_PAGE;\
 	} else {\
-		char *ptr; \
-		char *pDes;\
-		MUINT32 *ptr2 = &gSvLog[irq]._cnt[ppb][logT];\
-		unsigned int str_leng;\
-		if (_LOG_ERR == logT) {\
-			str_leng = NORMAL_STR_LEN*ERR_PAGE; \
-		} else if (_LOG_DBG == logT) {\
-			str_leng = NORMAL_STR_LEN*DBG_PAGE; \
-		} else if (_LOG_INF == logT) {\
-			str_leng = NORMAL_STR_LEN*INF_PAGE;\
-		} else {\
-			str_leng = 0;\
-		} \
-		ptr = pDes = (char *)&(gSvLog[irq]._str[ppb][logT][gSvLog[irq]._cnt[ppb][logT]]);    \
-		sprintf((char *)(pDes), fmt, ##__VA_ARGS__);   \
+		LOG_ERR("Unknown logT(%d)", (MUINT32)logT);\
+		break;\
+	} \
+	ptr = pDes = (char *)&(gSvLog[irq]._str[ppb][logT][gSvLog[irq]._cnt[ppb][logT]]); \
+	avaLen = str_leng - 1 - gSvLog[irq]._cnt[ppb][logT];\
+	if (avaLen > 1) { \
+		snprintf(pDes, avaLen, fmt, ##__VA_ARGS__); \
 		if ('\0' != gSvLog[irq]._str[ppb][logT][str_leng - 1]) {\
-			LOG_ERR("log str over flow(%d)", irq);\
+			LOG_ERR("(%d)(%d)log str over flow", irq, logT);\
 		} \
 		while (*ptr++ != '\0') { \
 			(*ptr2)++;\
 		} \
+	} else { \
+		LOG_ERR("(%d)(%d)log str available=0", irq, logT);\
 	} \
-} while (0);
+} while (0)
 #else
 #define IRQ_LOG_KEEPER(irq, ppb, logT, fmt, ...)  pr_debug("KEEPER[%s] " fmt, __func__, ##__VA_ARGS__)
 #endif

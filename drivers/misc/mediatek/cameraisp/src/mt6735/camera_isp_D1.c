@@ -998,18 +998,19 @@ static MUINT32 g_DmaErr_p1[nDMA_ERR] = { 0 };
 	} else if (_LOG_INF	== logT) {\
 		str_leng = NORMAL_STR_LEN*INF_PAGE;\
 	} else {\
-		str_leng = 0;\
+		LOG_ERR("Unknown logT(%d)", (MUINT32)logT);\
+		break;\
 	} \
 	ptr	= pDes = (char *)&(gSvLog[irq]._str[ppb][logT][gSvLog[irq]._cnt[ppb][logT]]);	\
 	avaLen = str_leng - 1 - gSvLog[irq]._cnt[ppb][logT];\
-	if (avaLen > 1) {\
-		snprintf((char *)(pDes), avaLen, fmt, ##__VA_ARGS__);  \
-		if ('\0' !=	gSvLog[irq]._str[ppb][logT][str_leng - 1]) { \
+	if (avaLen > 1) {  \
+		snprintf(pDes, avaLen, fmt, ##__VA_ARGS__);  \
+		if ('\0' !=	gSvLog[irq]._str[ppb][logT][str_leng - 1]) {\
 			LOG_ERR("(%d)(%d)log str over flow", irq, logT);\
 		} \
 		while (*ptr++ != '\0') {\
 			(*ptr2)++;\
-		} \
+		}	  \
 	} else { \
 		LOG_ERR("(%d)(%d)log str avalible=0", irq, logT);\
 	} \
