@@ -1034,36 +1034,58 @@ static ssize_t store_bq25890_access(struct device *dev, struct device_attribute 
 				    const char *buf, size_t size)
 {
 	int ret = 0;
-	/*char *pvalue = NULL;*/
+	char *pvalue = NULL, *addr = NULL;
+	char temp_buf[32];
 	unsigned int reg_value = 0;
-	unsigned long int reg_address = 0;
-	int rv;
+	unsigned int reg_address = 0;
 
 	battery_log(BAT_LOG_CRTI, "[store_bq25890_access]\n");
+	strncpy(temp_buf, buf, sizeof(temp_buf) - 1);
+	temp_buf[sizeof(temp_buf) - 1] = '\0';
+	pvalue = temp_buf;
 
-	if (buf != NULL && size != 0) {
+	if (size != 0) {
 		battery_log(BAT_LOG_CRTI, "[store_bq25890_access] buf is %s and size is %zu\n", buf,
 			    size);
-		/*reg_address = simple_strtoul(buf, &pvalue, 16);*/
-		rv = kstrtoul(buf, 0, &reg_address);
-			if (rv != 0)
-				return -EINVAL;
-		/*ret = kstrtoul(buf, 16, reg_address); *//* This must be a null terminated string */
+
 		if (size > 3) {
-			/*NEED to check kstr*/
-			/*reg_value = simple_strtoul((pvalue + 1), NULL, 16);*/
-			/*ret = kstrtoul(buf + 3, 16, reg_value); */
+			addr = strsep(&pvalue, " ");
+			if (addr == NULL) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error\n", __func__);
+				return -EINVAL;
+			}
+			ret = kstrtou32(addr, 16, &reg_address);
+			if (ret) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error, ret = %d\n", __func__, ret);
+				return ret;
+			}
+
+			if (pvalue == NULL) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error\n", __func__);
+				return -EINVAL;
+			}
+			ret = kstrtou32(pvalue, 16, &reg_value);
+			if (ret) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error, ret = %d\n", __func__, ret);
+				return ret;
+			}
+
 			battery_log(BAT_LOG_CRTI,
-				    "[store_bq25890_access] write bq25890 reg 0x%x with value 0x%x !\n",
-				    (unsigned int) reg_address, reg_value);
+				"[store_bq25890_access] write bq25890 reg 0x%x with value 0x%x !\n",
+				reg_address, reg_value);
 			ret = bq25890_config_interface(reg_address, reg_value, 0xFF, 0x0);
 		} else {
+			ret = kstrtou32(pvalue, 16, &reg_address);
+			if (ret) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error, ret = %d\n", __func__, ret);
+				return ret;
+			}
 			ret = bq25890_read_interface(reg_address, &g_reg_value_bq25890, 0xFF, 0x0);
 			battery_log(BAT_LOG_CRTI,
-				    "[store_bq25890_access] read bq25890 reg 0x%x with value 0x%x !\n",
-				    (unsigned int) reg_address, g_reg_value_bq25890);
+				"[store_bq25890_access] read bq25890 reg 0x%x with value 0x%x !\n",
+				reg_address, g_reg_value_bq25890);
 			battery_log(BAT_LOG_CRTI,
-				    "[store_bq25890_access] Please use \"cat bq25890_access\" to get value\r\n");
+				"[store_bq25890_access] Please use \"cat bq25890_access\" to get value\r\n");
 		}
 	}
 	return size;

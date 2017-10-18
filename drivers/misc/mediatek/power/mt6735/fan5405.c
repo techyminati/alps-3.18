@@ -605,30 +605,49 @@ static ssize_t store_fan5405_access(struct device *dev, struct device_attribute 
 				    const char *buf, size_t size)
 {
 	int ret = 0;
-	char *pvalue = NULL, *addr, *val;
+	char *pvalue = NULL, *addr = NULL;
+	char temp_buf[32];
 	unsigned int reg_value = 0;
 	unsigned int reg_address = 0;
 
 	battery_log(BAT_LOG_CRTI, "[store_fan5405_access]\n");
+	strncpy(temp_buf, buf, sizeof(temp_buf) - 1);
+	temp_buf[sizeof(temp_buf) - 1] = '\0';
+	pvalue = temp_buf;
 
-	if (buf != NULL && size != 0) {
-
-		pvalue = (char *)buf;
+	if (size != 0) {
 		if (size > 3) {
 			addr = strsep(&pvalue, " ");
-			ret = kstrtou32(addr, 16, (unsigned int *)&reg_address);
-		} else
-			ret = kstrtou32(pvalue, 16, (unsigned int *)&reg_address);
+			if (addr == NULL) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error\n", __func__);
+				return -EINVAL;
+			}
+			ret = kstrtou32(addr, 16, &reg_address);
+			if (ret) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error, ret = %d\n", __func__, ret);
+				return ret;
+			}
 
-		if (size > 3) {
-			val = strsep(&pvalue, " ");
-			ret = kstrtou32(val, 16, (unsigned int *)&reg_value);
+			if (pvalue == NULL) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error\n", __func__);
+				return -EINVAL;
+			}
+			ret = kstrtou32(pvalue, 16, &reg_value);
+			if (ret) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error, ret = %d\n", __func__, ret);
+				return ret;
+			}
 
 			battery_log(BAT_LOG_CRTI,
 			    "[store_fan5405_access] write fan5405 reg 0x%x with value 0x%x !\n",
 			     reg_address, reg_value);
 			ret = fan5405_config_interface(reg_address, reg_value, 0xFF, 0x0);
 		} else {
+			ret = kstrtou32(pvalue, 16, &reg_address);
+			if (ret) {
+				battery_log(BAT_LOG_CRTI, "[%s] format error, ret = %d\n", __func__, ret);
+				return ret;
+			}
 			ret = fan5405_read_interface(reg_address, &g_reg_value_fan5405, 0xFF, 0x0);
 			battery_log(BAT_LOG_CRTI,
 			    "[store_fan5405_access] read fan5405 reg 0x%x with value 0x%x !\n",
