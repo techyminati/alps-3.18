@@ -335,7 +335,7 @@ extern kal_bool ta_cable_out_occur;
 extern kal_bool is_ta_connect;
 extern struct wake_lock TA_charger_suspend_lock;
 #endif
-
+extern bool gDisableGM;
 
 /*****************************************************************************
  *  Extern Function

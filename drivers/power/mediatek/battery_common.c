@@ -158,7 +158,7 @@ int g_battery_tt_check_flag = 0;
 /*
  *  Global Variable
  */
-
+bool gDisableGM;
 struct wake_lock battery_suspend_lock;
 struct wake_lock battery_fg_lock;
 CHARGING_CONTROL battery_charging_control;
@@ -1722,6 +1722,22 @@ static ssize_t store_Pump_Express(struct device *dev, struct device_attribute *a
 
 static DEVICE_ATTR(Pump_Express, 0664, show_Pump_Express, store_Pump_Express);
 
+static ssize_t show_FG_daemon_disable(struct device *dev, struct device_attribute *attr, char *buf)
+{
+	battery_log(BAT_LOG_CRTI, "[FG] show FG disable : %d\n", gDisableGM);
+	return sprintf(buf, "%d\n", gDisableGM);
+}
+
+static ssize_t store_FG_daemon_disable(struct device *dev, struct device_attribute *attr,
+					const char *buf, size_t size)
+{
+	battery_log(BAT_LOG_CRTI, "[disable FG ]\n");
+	gDisableGM = true;
+	return size;
+}
+static DEVICE_ATTR(FG_daemon_disable, 0664, show_FG_daemon_disable, store_FG_daemon_disable);
+
+
 static void mt_battery_update_EM(struct battery_data *bat_data)
 {
 	bat_data->BAT_CAPACITY = BMT_status.UI_SOC;
@@ -1909,24 +1925,24 @@ static kal_bool mt_battery_0Percent_tracking_check(void)
 
 static void mt_battery_Sync_UI_Percentage_to_Real(void)
 {
-	static unsigned int timer_counter;
+	static struct timespec lasttime;
+	struct timespec now_time, diff;
 
+	get_monotonic_boottime(&now_time);
+	diff = timespec_sub(now_time, lasttime);
 	if ((BMT_status.UI_SOC > BMT_status.SOC) && ((BMT_status.UI_SOC != 1))) {
 #if !defined(SYNC_UI_SOC_IMM)
 		/* reduce after xxs */
 		if (chr_wake_up_bat == KAL_FALSE) {
-			if (timer_counter ==
-			    (batt_cust_data.sync_to_real_tracking_time / BAT_TASK_PERIOD)) {
+			if (diff.tv_sec >= batt_cust_data.sync_to_real_tracking_time) {
 				BMT_status.UI_SOC--;
-				timer_counter = 0;
+				get_monotonic_boottime(&lasttime);
 			}
 #ifdef FG_BAT_INT
 			else if (fg_wake_up_bat == KAL_TRUE)
 				BMT_status.UI_SOC--;
 
 #endif				/* #ifdef FG_BAT_INT */
-			else
-				timer_counter++;
 
 		} else {
 			battery_log(BAT_LOG_CRTI,
@@ -1935,10 +1951,10 @@ static void mt_battery_Sync_UI_Percentage_to_Real(void)
 #else
 		BMT_status.UI_SOC--;
 #endif
-		battery_log(BAT_LOG_CRTI, "[Sync_Real] UI_SOC=%d, SOC=%d, counter = %d\n",
-			    BMT_status.UI_SOC, BMT_status.SOC, timer_counter);
+		battery_log(BAT_LOG_CRTI, "[Sync_Real] UI_SOC=%d, SOC=%d diff=%d\n",
+			    BMT_status.UI_SOC, BMT_status.SOC, (int)diff.tv_sec);
 	} else {
-		timer_counter = 0;
+		get_monotonic_boottime(&lasttime);
 
 		BMT_status.UI_SOC = BMT_status.SOC;
 
@@ -2493,12 +2509,13 @@ void mt_battery_GetBatteryData(void)
 		g_battery_soc_ready = KAL_TRUE;
 
 	battery_log(BAT_LOG_CRTI,
-	"AvgVbat=(%d,%d),AvgI=(%d,%d),VChr=%d,AvgT=(%d,%d),SOC=(%d,%d),UI_SOC=%d,ZCV=%d,CHR_Type=%d bcct:%d:%d I:%d Ibat:%d\n",
+	"AvgVbat=(%d,%d),AvgI=(%d,%d),VChr=%d,AvgT=(%d,%d),SOC=(%d,%d),UI_SOC=%d,ZCV=%d,CHR_Type=%d bcct:%d:%d I:%d Ibat:%d fg:%d\n",
 		    BMT_status.bat_vol, bat_vol, BMT_status.ICharging, ICharging,
 		    BMT_status.charger_vol, BMT_status.temperature, temperature,
 		    previous_SOC, BMT_status.SOC, BMT_status.UI_SOC, BMT_status.ZCV,
 		    BMT_status.charger_type, g_bcct_flag, get_usb_current_unlimited(),
-		    get_bat_charging_current_level(), BMT_status.IBattery / 10);
+		    get_bat_charging_current_level(), BMT_status.IBattery / 10,
+		    gDisableGM);
 
 }
 
@@ -4465,6 +4482,7 @@ static int battery_probe(struct platform_device *dev)
 
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Charger_Type);
 		ret_device_file = device_create_file(&(dev->dev), &dev_attr_Pump_Express);
+		ret_device_file = device_create_file(&(dev->dev), &dev_attr_FG_daemon_disable);
 	}
 
 	/* battery_meter_initial();      //move to mt_battery_GetBatteryData() to decrease booting time */

@@ -2971,6 +2971,7 @@ void fgauge_algo_run_init(void)
 unsigned char reset_fg_bat_int = KAL_TRUE;
 void fg_bat_int_handler(void)
 {
+	pr_notice("fg_bat_int_handler\n");
 	reset_fg_bat_int = KAL_TRUE;
 	wake_up_bat2();
 }
@@ -3092,9 +3093,9 @@ signed int get_dynamic_period(int first_use, int first_wakeup_time, int battery_
 		car_instant = car_instant - (car_instant * 2);
 
 
-	if (BMT_status.UI_SOC != BMT_status.SOC) {
-		last_time = 10;
-		g_spm_timer = 10;
+	if (BMT_status.UI_SOC != BMT_status.SOC && gDisableGM != true) {
+		last_time = 60;
+		g_spm_timer = 60;
 		bm_print(BM_LOG_CRTI, "[get_dynamic_period] UISOC:%d SOC:%d vbat:%d current:%d car:%d new_time:%d\n",
 			BMT_status.UI_SOC, BMT_status.SOC, vbat_val, current_instant, car_instant, g_spm_timer);
 		return g_spm_timer;
