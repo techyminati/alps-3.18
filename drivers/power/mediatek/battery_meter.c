@@ -4527,7 +4527,7 @@ static int battery_meter_resume(struct platform_device *dev)
 
 #elif defined(SOC_BY_SW_FG) || defined(SOC_BY_HW_FG)
 #if defined(SOC_BY_SW_FG)
-	signed int hw_ocv_after_sleep;
+	signed int hw_ocv_after_sleep = 0;
 	signed int DOD_hwocv;
 	struct timespec now_time;
 #endif
