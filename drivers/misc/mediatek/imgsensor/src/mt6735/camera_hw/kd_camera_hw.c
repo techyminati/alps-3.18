@@ -260,6 +260,9 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 		PK_DBG("[PowerON]pinSetIdx:%d, currSensorName: %s\n", pinSetIdx, currSensorName);
 
 		if ((currSensorName && (0 == strcmp(currSensorName, "imx135mipiraw"))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_3MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_5MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_8MP))) ||
 		    (currSensorName && (0 == strcmp(currSensorName, "imx220mipiraw")))) {
 			/* First Power Pin low and Reset Pin Low */
 			if (GPIO_CAMERA_INVALID != pinSet[pinSetIdx][IDX_PS_CMPDN])
@@ -526,6 +529,9 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 			ISP_MCLK2_EN(0);
 
 		if ((currSensorName && (0 == strcmp(currSensorName, "imx135mipiraw"))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_3MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_5MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_8MP))) ||
 		    (currSensorName && (0 == strcmp(currSensorName, "imx220mipiraw"))))
 
 		{
@@ -758,6 +764,9 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 		PK_DBG("[PowerON]pinSetIdx:%d, currSensorName: %s\n", pinSetIdx, currSensorName);
 
 		if ((currSensorName && (0 == strcmp(currSensorName, "imx135mipiraw"))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_3MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_5MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_8MP))) ||
 		    (currSensorName && (0 == strcmp(currSensorName, "imx220mipiraw")))) {
 			/* First Power Pin low and Reset Pin Low */
 			if (GPIO_CAMERA_INVALID != pinSet[pinSetIdx][IDX_PS_CMPDN]) {
@@ -1127,6 +1136,9 @@ int kdCISModulePowerOn(CAMERA_DUAL_CAMERA_SENSOR_ENUM SensorIdx, char *currSenso
 			ISP_MCLK2_EN(0);
 
 		if ((currSensorName && (0 == strcmp(currSensorName, "imx135mipiraw"))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_3MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_5MP))) ||
+			(currSensorName && (0 == strcmp(currSensorName, SENSOR_DRVNAME_IMX135_MIPI_RAW_8MP))) ||
 		    (currSensorName && (0 == strcmp(currSensorName, "imx220mipiraw")))) {
 			/* Set Power Pin low and Reset Pin Low */
 			if (GPIO_CAMERA_INVALID != pinSet[pinSetIdx][IDX_PS_CMPDN]) {
