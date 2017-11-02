@@ -1467,7 +1467,7 @@ out:
 }
 
 static int __write_data_page(struct page *page, bool *submitted,
-				struct writeback_control *wbc)
+			     struct writeback_control *wbc, int *page_writes)
 {
 	struct inode *inode = page->mapping->host;
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
@@ -1581,6 +1581,9 @@ out:
 	if (submitted)
 		*submitted = fio.submitted;
 
+	if (fio.submitted && page_writes)
+		(*page_writes)++;
+
 	return 0;
 
 redirty_out:
@@ -1594,7 +1597,24 @@ redirty_out:
 static int f2fs_write_data_page(struct page *page,
 					struct writeback_control *wbc)
 {
-	return __write_data_page(page, NULL, wbc);
+	int ret = 0;
+	int page_writes = 0;
+
+	ret = __write_data_page(page, NULL, wbc, &page_writes);
+	if (trace_android_fs_writepages_enabled()) {
+		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
+		struct inode *inode = page->mapping->host;
+
+		if ((ret == 0) && (page_writes > 0)) {
+			path = android_fstrace_get_pathname(pathbuf,
+						    MAX_TRACE_PATHBUF_LEN,
+						    inode);
+			trace_android_fs_writepages(inode,
+						    PAGE_SIZE,
+						    path);
+		}
+	}
+	return ret;
 }
 
 /*
@@ -1603,7 +1623,8 @@ static int f2fs_write_data_page(struct page *page,
  * warm/hot data page.
  */
 static int f2fs_write_cache_pages(struct address_space *mapping,
-					struct writeback_control *wbc)
+				  struct writeback_control *wbc,
+				  int *page_writes)
 {
 	int ret = 0;
 	int done = 0;
@@ -1693,7 +1714,8 @@ continue_unlock:
 			if (!clear_page_dirty_for_io(page))
 				goto continue_unlock;
 
-			ret = __write_data_page(page, &submitted, wbc);
+			ret = __write_data_page(page, &submitted, wbc,
+						page_writes);
 			if (unlikely(ret)) {
 				/*
 				 * keep nr_to_write, since vfs uses this to
@@ -1755,6 +1777,7 @@ static int f2fs_write_data_pages(struct address_space *mapping,
 	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
 	struct blk_plug plug;
 	int ret;
+	int page_writes = 0;
 
 	/* deal with chardevs and other special file */
 	if (!mapping->a_ops->writepage)
@@ -1786,7 +1809,7 @@ static int f2fs_write_data_pages(struct address_space *mapping,
 		goto skip_write;
 
 	blk_start_plug(&plug);
-	ret = f2fs_write_cache_pages(mapping, wbc);
+	ret = f2fs_write_cache_pages(mapping, wbc, &page_writes);
 	blk_finish_plug(&plug);
 
 	if (wbc->sync_mode == WB_SYNC_ALL)
@@ -1797,6 +1820,18 @@ static int f2fs_write_data_pages(struct address_space *mapping,
 	 */
 
 	remove_dirty_inode(inode);
+	if (trace_android_fs_writepages_enabled()) {
+		char *path, pathbuf[MAX_TRACE_PATHBUF_LEN];
+
+		if (page_writes > 0) {
+			path = android_fstrace_get_pathname(pathbuf,
+						    MAX_TRACE_PATHBUF_LEN,
+						    inode);
+			trace_android_fs_writepages(inode,
+						    page_writes * PAGE_SIZE,
+						    path);
+		}
+	}
 	return ret;
 
 skip_write:

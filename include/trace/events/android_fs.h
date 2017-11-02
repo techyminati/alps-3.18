@@ -39,6 +39,34 @@ DEFINE_EVENT(android_fs_data_end_template, android_fs_datawrite_end,
 	TP_PROTO(struct inode *inode, loff_t offset, int bytes),
 	     TP_ARGS(inode, offset, bytes));
 
+TRACE_EVENT(android_fs_writepages,
+	    TP_PROTO(struct inode *inode, int bytes,
+		     const char *pathname),
+	    TP_ARGS(inode, bytes, pathname),
+	    TP_STRUCT__entry(
+		    __string(pathbuf, pathname);
+		    __field(int,	bytes);
+		    __field(ino_t,	ino);
+		    ),
+	    TP_fast_assign(
+		{
+			/*
+			 * Replace the spaces in filenames and cmdlines
+			 * because this screws up the tooling that parses
+			 * the traces.
+			 */
+			__assign_str(pathbuf, pathname);
+			(void)strreplace(__get_str(pathbuf), ' ', '_');
+			__entry->bytes		= bytes;
+			__entry->ino		= inode->i_ino;
+		}
+	),
+	TP_printk("entry_name %s, bytes %d,"
+		  " ino %lu",
+		  __get_str(pathbuf), __entry->bytes,
+		  (unsigned long) __entry->ino)
+);
+
 #endif /* _TRACE_ANDROID_FS_H */
 
 /* This part must be outside protection */
