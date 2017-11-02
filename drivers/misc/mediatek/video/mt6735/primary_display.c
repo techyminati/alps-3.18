@@ -603,21 +603,12 @@ end:
 	return 0;
 }
 
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
-static int release_idle_lp_dc_buffer(unsigned int need_primary_lock);
-static int allocate_idle_lp_dc_buffer(void);
-#endif
-
 void _disp_primary_path_exit_idle(const char *caller, unsigned int need_primary_lock)
 {
 	/* _disp_primary_idle_lock(); */
 	if (atomic_read(&isDdp_Idle) == 1) {
 		DISPMSG("[ddp_idle_on]_disp_primary_path_exit_idle (%s) &&&\n", caller);
 		primary_display_save_power_for_idle(0, need_primary_lock);
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
-		if (primary_display_is_video_mode())
-			release_idle_lp_dc_buffer(need_primary_lock);
-#endif
 		atomic_set(&isDdp_Idle, 0);
 		atomic_set(&idle_detect_flag, 1);
 		wake_up(&idle_detect_wq);
@@ -698,18 +689,6 @@ static int _disp_primary_path_idle_detect_thread(void *data)
 		_primary_path_esd_check_lock();
 		_primary_path_lock(__func__);
 		if (((sched_clock() - last_primary_trigger_time) / 1000) > idle_time * 1000) {
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
-			/* Dynamically allocate decouple buffer. */
-			if (primary_display_is_video_mode()) {
-				ret = allocate_idle_lp_dc_buffer();
-				if (ret < 0) {
-					DISPMSG("[ddp_idle]allocate dc buffer fail\n");
-					_primary_path_unlock(__func__);
-					_primary_path_esd_check_unlock();
-					continue;
-				}
-			}
-#endif
 			enter_cnt++;
 			pr_debug("[LP] - enter: %d, flag:%d,%d\n", enter_cnt,
 				atomic_read(&isDdp_Idle), atomic_read(&idle_detect_flag));
@@ -2501,66 +2480,6 @@ static int init_decouple_buffers(void)
 	return 0;
 }
 
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
-
-
-static int allocate_idle_lp_dc_buffer(void)
-{
-	int height = primary_display_get_height();
-	int width = primary_display_get_width();
-	int bpp = primary_display_get_dc_bpp();
-	int buffer_size =  width * height * bpp / 8;
-
-	decouple_buffer_info[0] = allocat_decouple_buffer(buffer_size);
-	if (decouple_buffer_info[0] != NULL) {
-		pgc->dc_buf[0] = decouple_buffer_info[0]->mva;
-		dc_vAddr[0] = (unsigned long)decouple_buffer_info[0]->va;
-	} else {
-		return -1;
-	}
-
-	/*initialize rdma config*/
-	decouple_rdma_config.height = height;
-	decouple_rdma_config.width = width;
-	decouple_rdma_config.idx = 0;
-	decouple_rdma_config.inputFormat = eRGB888;
-	decouple_rdma_config.pitch = width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
-	decouple_rdma_config.security = DISP_NORMAL_BUFFER;
-
-	/*initialize wdma config*/
-	decouple_wdma_config.srcHeight = height;
-	decouple_wdma_config.srcWidth = width;
-	decouple_wdma_config.clipX = 0;
-	decouple_wdma_config.clipY = 0;
-	decouple_wdma_config.clipHeight = height;
-	decouple_wdma_config.clipWidth = width;
-	decouple_wdma_config.outputFormat = eRGB888;
-	decouple_wdma_config.useSpecifiedAlpha = 1;
-	decouple_wdma_config.alpha = 0xFF;
-	decouple_wdma_config.dstPitch = width * DP_COLOR_BITS_PER_PIXEL(eRGB888) / 8;
-	decouple_wdma_config.security = DISP_NORMAL_BUFFER;
-
-	return 0;
-}
-
-static int release_idle_lp_dc_buffer(unsigned int need_primary_lock)
-{
-	if (need_primary_lock)
-		_primary_path_lock(__func__);
-
-	if (decouple_buffer_info[0]) {
-		ion_free(decouple_buffer_info[0]->client, decouple_buffer_info[0]->handle);
-		ion_client_destroy(decouple_buffer_info[0]->client);
-		kfree(decouple_buffer_info[0]);
-		decouple_buffer_info[0] = NULL;
-	}
-
-	if (need_primary_lock)
-		_primary_path_unlock(__func__);
-	return 0;
-}
-#endif
-
 static int __build_path_direct_link(void)
 {
 	int ret = 0;
@@ -2583,9 +2502,7 @@ static int __build_path_direct_link(void)
 	DISPMSG("dpmgr set dst module FINISHED(%s)\n", ddp_get_module_name(dst_module));
 #ifndef MTKFB_NO_M4U
 	config_display_m4u_port();
-#if !defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
 	init_decouple_buffers();
-#endif
 #endif
 	dpmgr_set_lcm_utils(pgc->dpmgr_handle, pgc->plcm->drv);
 
@@ -5126,6 +5043,7 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited
 	dprec_init();
 	dpmgr_init();
 
+
 #ifndef MTK_FB_CMDQ_DISABLE
 	init_cmdq_slots(&(pgc->cur_config_fence), DISP_SESSION_TIMELINE_COUNT, 0);
 	init_cmdq_slots(&(pgc->subtractor_when_free), DISP_SESSION_TIMELINE_COUNT, 0);
@@ -7297,31 +7215,7 @@ user_cmd_unlock:
 	}
 	MMProfileLogEx(ddp_mmp_get_events()->primary_display_cmd, MMProfileFlagEnd,
 		       cmdqsize, 0);
-	return ret;
-}
 
-
-int init_ext_decouple_buffers(void)
-{
-	int ret = 0;
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
-	_primary_path_lock(__func__);
-
-	if (decouple_buffer_info[0] == NULL)
-		ret = allocate_idle_lp_dc_buffer();
-
-	_primary_path_unlock(__func__);
-#endif
-	return ret;
-}
-int deinit_ext_decouple_buffers(void)
-{
-	int ret = 0;
-#if defined(CONFIG_MTK_GMO_RAM_OPTIMIZE)
-	_primary_path_lock(__func__);
-	ret = release_idle_lp_dc_buffer(0);
-	_primary_path_unlock(__func__);
-#endif
 	return ret;
 }
 
@@ -7405,10 +7299,6 @@ int primary_display_switch_mode(int sess_mode, unsigned int session, int force)
 	} else if (pgc->session_mode == DISP_SESSION_DIRECT_LINK_MODE
 		   && sess_mode == DISP_SESSION_DECOUPLE_MIRROR_MODE) {
 		/* dl to dc mirror  mirror */
-#ifdef CONFIG_MTK_GMO_RAM_OPTIMIZE
-		if (decouple_buffer_info[0] == NULL)
-			allocate_idle_lp_dc_buffer();
-#endif
 		_DL_switch_to_DC_fast();
 		pgc->session_mode = sess_mode;
 		DISPMSG("primary display is %s mode now\n", session_mode_spy(pgc->session_mode));
@@ -7420,9 +7310,6 @@ int primary_display_switch_mode(int sess_mode, unsigned int session, int force)
 		/*dc mirror  to dl */
 		_DC_switch_to_DL_fast();
 		pgc->session_mode = sess_mode;
-#ifdef CONFIG_MTK_GMO_RAM_OPTIMIZE
-		release_idle_lp_dc_buffer(0);
-#endif
 		DISPMSG("primary display is %s mode now\n", session_mode_spy(pgc->session_mode));
 		MMProfileLogEx(ddp_mmp_get_events()->primary_switch_mode, MMProfileFlagPulse,
 			       pgc->session_mode, sess_mode);

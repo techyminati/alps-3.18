@@ -423,17 +423,6 @@ int _ioctl_create_session(unsigned long arg)
 		return -EFAULT;
 	}
 
-#ifdef CONFIG_MTK_GMO_RAM_OPTIMIZE
-	if (config.type == DISP_SESSION_MEMORY) {
-		if (init_ext_decouple_buffers() < 0) {
-			DISPERR("allocate dc buffer fail\n");
-			return -ENOMEM;
-		}
-
-		DISPMSG("allocate dc buffer success\n");
-	}
-#endif
-
 #if !defined(OVL_TIME_SHARING)
 	if ((config.type == DISP_SESSION_MEMORY) && (get_ovl1_to_mem_on() == false)) {
 		DISPMSG("[FB]: _ioctl_create_session! line:%d  %d\n", __LINE__,
@@ -478,13 +467,6 @@ int _ioctl_destroy_session(unsigned long arg)
 		DISPMSG("[FB]: copy_from_user failed! line:%d\n", __LINE__);
 		return -EFAULT;
 	}
-
-#ifdef CONFIG_MTK_GMO_RAM_OPTIMIZE
-	if (config.type == DISP_SESSION_MEMORY) {
-		deinit_ext_decouple_buffers();
-		DISPMSG("free dc buffer\n");
-	}
-#endif
 
 	if (disp_destroy_session(&config) != 0)
 		ret = -EFAULT;
