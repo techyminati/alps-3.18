@@ -16,6 +16,7 @@
 
 #include <linux/kernel.h>
 #include <linux/sched.h>
+#include <mach/mt_lbc.h>
 
 
 /*******************************************************************************
@@ -133,6 +134,10 @@ extern int mtk_wdt_swsysret_config(int bit, int set_value);
 
 void connectivity_export_show_stack(struct task_struct *tsk, unsigned long *sp);
 void connectivity_export_tracing_record_cmdline(struct task_struct *tsk);
+void connectivity_update_userlimit_cpu_freq(int kicker,
+						int num_cluster, struct ppm_limit_data *freq_limit);
+void connectivity_update_userlimit_cpu_core(int kicker,
+						int num_cluster, struct ppm_limit_data *core_limit);
 #ifdef CPU_BOOST
 void connectivity_export_mt_ppm_sysboost_freq(enum ppm_sysboost_user user, unsigned int freq);
 void connectivity_export_mt_ppm_sysboost_core(enum ppm_sysboost_user user, unsigned int core_num);
@@ -142,6 +147,10 @@ void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user u
 
 extern void tracing_record_cmdline(struct task_struct *tsk);
 extern void show_stack(struct task_struct *tsk, unsigned long *sp);
+extern int
+update_userlimit_cpu_freq(int kicker, int num_cluster, struct ppm_limit_data *freq_limit);
+extern int
+update_userlimit_cpu_core(int kicker, int num_cluster, struct ppm_limit_data *core_limit);
 
 /*********************************************
  * copy from
