@@ -2202,13 +2202,8 @@ static int btif_rx_thread(void *p_data)
 
 
 	while (1) {
-		if (p_btif->enable) {
-			/*if BTIF is enabled we will polling if there's any data received at least each 360ms*/
-			wait_for_completion_interruptible_timeout(&p_btif->rx_comp, msecs_to_jiffies(360));
-		} else {
-			/*if BTIF is not enabled, stop polling*/
-			wait_for_completion_interruptible(&p_btif->rx_comp);
-		}
+		wait_for_completion_interruptible(&p_btif->rx_comp);
+
 		if (kthread_should_stop()) {
 			BTIF_WARN_FUNC("btif rx thread stoping ...\n");
 			break;
