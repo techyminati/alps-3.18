@@ -320,6 +320,7 @@ static void *slob_alloc(size_t size, gfp_t gfp, int align, int node)
 			return NULL;
 		sp = virt_to_page(b);
 		__SetPageSlab(sp);
+		inc_zone_page_state(sp, NR_SLAB_UNRECLAIMABLE);
 
 		spin_lock_irqsave(&slob_lock, flags);
 		sp->units = SLOB_UNITS(PAGE_SIZE);
@@ -362,6 +363,7 @@ static void slob_free(void *block, int size)
 			clear_slob_page_free(sp);
 		spin_unlock_irqrestore(&slob_lock, flags);
 		__ClearPageSlab(sp);
+		dec_zone_page_state(sp, NR_SLAB_UNRECLAIMABLE);
 		page_mapcount_reset(sp);
 		slob_free_pages(b, 0);
 		return;
