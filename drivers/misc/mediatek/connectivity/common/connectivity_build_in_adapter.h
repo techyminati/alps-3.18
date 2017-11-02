@@ -153,6 +153,22 @@ extern int
 update_userlimit_cpu_core(int kicker, int num_cluster, struct ppm_limit_data *core_limit);
 
 /*********************************************
+ * for CPU unified APIs
+ *********************************************/
+#if defined(CONFIG_ARCH_MT6735) || defined(CONFIG_ARCH_MT6735M) || defined(CONFIG_ARCH_MT6753)
+#include <mach/mt_lbc.h>
+void connectivity_update_userlimit_cpu_freq(int kicker,
+						int num_cluster, struct ppm_limit_data *freq_limit);
+void connectivity_update_userlimit_cpu_core(int kicker,
+						int num_cluster, struct ppm_limit_data *core_limit);
+
+extern int
+update_userlimit_cpu_freq(int kicker, int num_cluster, struct ppm_limit_data *freq_limit);
+extern int
+update_userlimit_cpu_core(int kicker, int num_cluster, struct ppm_limit_data *core_limit);
+#endif
+
+/*********************************************
  * copy from
  * kernel-3.18/include/linux/ftrace_event.h
  * kernel-4.4/include/linux/trace_events.h
