@@ -40,6 +40,7 @@
 #include <mach/irqs.h>
 #include <mach/mt_clkmgr.h>	/* For clock mgr APIS. enable_clock()/disable_clock(). */
 #include <mt-plat/sync_write.h>	/* For mt65xx_reg_sync_writel(). */
+#include <mt-plat/mt_ccci_common.h>
 #include <linux/of_platform.h>
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
@@ -11197,6 +11198,7 @@ static MINT32 ISP_open(struct inode *pInode, struct file *pFile)
 	MUINT32 i;
 	int q = 0, p = 0;
 	ISP_USER_INFO_STRUCT *pUserInfo;
+	char mode = 0;
 
 	LOG_INF("- E. UserCount: %d.", IspInfo.UserCount);
 	/*      */
@@ -11228,6 +11230,10 @@ static MINT32 ISP_open(struct inode *pInode, struct file *pFile)
 		LOG_DBG("Curr UserCount(%d), (process, pid, tgid)=(%s, %d, %d),	first user",
 			IspInfo.UserCount, current->comm, current->pid, current->tgid);
 	}
+	mode = 1;
+	LOG_DBG("before exec_ccci_kern_func_by_md_id enable");
+	exec_ccci_kern_func_by_md_id(0, ID_MD_RF_DESENSE, &mode, sizeof(int));
+	LOG_DBG("after exec_ccci_kern_func_by_md_id enable");
 
 	/* kernel log */
 #if (LOG_CONSTRAINT_ADJ == 1)
@@ -11382,6 +11388,7 @@ static MINT32 ISP_release(struct inode *pInode, struct file *pFile)
 	ISP_USER_INFO_STRUCT *pUserInfo;
 	MUINT32 Reg;
 	MUINT32 i = 0;
+	char mode = 0;
 
 	LOG_INF("- E. UserCount: %d.", IspInfo.UserCount);
 	/*      */
@@ -11451,6 +11458,10 @@ static MINT32 ISP_release(struct inode *pInode, struct file *pFile)
 	ISP_WR32(ISP_ADDR + 0x4a00, 0x00000001);
 	LOG_DBG("ISP_MCLK1_EN Release");
 	ISP_BufWrite_Free();
+	mode = 0;
+	LOG_DBG("before exec_ccci_kern_func_by_md_id disable");
+	exec_ccci_kern_func_by_md_id(0, ID_MD_RF_DESENSE, &mode, sizeof(int));
+	LOG_DBG("after exec_ccci_kern_func_by_md_id disable");
 
 #if (LOG_CONSTRAINT_ADJ == 1)
 	set_detect_count(g_log_def_constraint);
