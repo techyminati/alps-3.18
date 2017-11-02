@@ -1382,7 +1382,10 @@ static int mtkfb_compat_ioctl(struct fb_info *info, unsigned int cmd, unsigned l
 			dprec_logger_start(DPREC_LOGGER_WDMA_DUMP, 0, 0);
 			primary_display_capture_framebuffer_ovl((unsigned long)pbuf, MTK_FB_FORMAT_BGRA8888);
 			dprec_logger_done(DPREC_LOGGER_WDMA_DUMP, 0, 0);
-			ret = get_user(dest, data32);
+			if (get_user(dest, data32)) {
+				DISPERR("[FB]: get_user failed! line:%d\n", __LINE__);
+				return -EFAULT;
+			}
 			if (copy_in_user((unsigned long *)dest, pbuf, fbsize/2)) {
 				DISPERR("[FB]: copy_to_user failed! line:%d\n", __LINE__);
 				ret  = -EFAULT;
