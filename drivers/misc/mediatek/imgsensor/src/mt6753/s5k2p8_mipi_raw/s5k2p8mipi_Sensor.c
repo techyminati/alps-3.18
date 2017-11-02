@@ -270,6 +270,8 @@ static SET_PD_BLOCK_INFO_T imgsensor_pd_info =
     .i4SubBlkH  =16,
     .i4PosL = {{8,35},{60,35},{24,39},{44,39},{12,55},{56,55},{28,59},{40,59},{28,67},{40,67},{12,71},{56,71},{24,87},{44,87},{8,91},{60,91}},
     .i4PosR = {{8,39},{60,39},{24,43},{44,43},{12,51},{56,51},{28,55},{40,55},{28,71},{40,71},{12,75},{56,75},{24,83},{44,83},{8,87},{60,87}},
+	.i4BlockNumX = 83,
+	.i4BlockNumY = 46,
 };
 
 static kal_uint16 read_cmos_sensor(kal_uint32 addr)
@@ -3155,7 +3157,8 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
             get_default_framerate_by_scenario((MSDK_SCENARIO_ID_ENUM)*(feature_data), (MUINT32 *)(uintptr_t)(*(feature_data+1)));
 			break;
         case SENSOR_FEATURE_GET_PDAF_DATA: /* For PDAF EEPROM Read Information*/
-			//read_eeprom((kal_uint16 )(*feature_data),(char*)(uintptr_t)(*(feature_data+1)),(kal_uint32)(*(feature_data+2)));
+			read_eeprom((kal_uint16)(*feature_data),
+					(char *)(uintptr_t)(*(feature_data+1)), (kal_uint32)(*(feature_data+2)));
 			break;
 		case SENSOR_FEATURE_SET_TEST_PATTERN:
             set_test_pattern_mode((BOOL)*feature_data);
