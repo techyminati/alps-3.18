@@ -2152,8 +2152,6 @@ static bool SetIrqMcuSampleRate(uint32 Irqmode, uint32 SampleRate)
 {
 	uint32 SRIdx = SampleRateTransform(SampleRate);
 
-	pr_debug("%s(), Irqmode %d, SampleRate %d\n",
-		 __func__, Irqmode, SampleRate);
 	switch (Irqmode) {
 	case Soc_Aud_IRQ_MCU_MODE_IRQ1_MCU_MODE:
 		Afe_Set_Reg(AFE_IRQ_MCU_CON, SRIdx << 4, 0xf << 4);
@@ -2176,7 +2174,6 @@ static bool SetIrqMcuSampleRate(uint32 Irqmode, uint32 SampleRate)
 
 static bool SetIrqMcuCounter(uint32 Irqmode, uint32 Counter)
 {
-	pr_debug("%s(), Irqmode %d, Counter %d\n", __func__, Irqmode, Counter);
 	switch (Irqmode) {
 	case Soc_Aud_IRQ_MCU_MODE_IRQ1_MCU_MODE:
 		Afe_Set_Reg(AFE_IRQ_MCU_CNT1, Counter, 0xffffffff);
@@ -4041,8 +4038,6 @@ int irq_add_user(const void *_user,
 	struct irq_user *ptr;
 
 	spin_lock_irqsave(&afe_control_lock, flags);
-	pr_debug("%s(), user %p, irq %d, rate %d, count %d\n",
-		 __func__, _user, _irq, _rate, _count);
 	/* check if user already exist */
 	list_for_each_entry(ptr, &irq_managers[_irq].users, list) {
 		if (ptr->user == _user) {
@@ -4090,8 +4085,6 @@ int irq_remove_user(const void *_user,
 	struct irq_user *corr_user = NULL;
 
 	spin_lock_irqsave(&afe_control_lock, flags);
-	pr_debug("%s(), user %p, irq %d\n",
-		 __func__, _user, _irq);
 	/* get _user's irq_user ptr */
 	list_for_each_entry(ptr, &irq_managers[_irq].users, list) {
 		if (ptr->user == _user) {
@@ -4133,8 +4126,6 @@ int irq_update_user(const void *_user,
 	struct irq_user *corr_user = NULL;
 
 	spin_lock_irqsave(&afe_control_lock, flags);
-	pr_debug("%s(), user %p, irq %d, rate %d, count %d\n",
-		 __func__, _user, _irq, _rate, _count);
 	/* get _user's irq_user ptr */
 	list_for_each_entry(ptr, &irq_managers[_irq].users, list) {
 		if (ptr->user == _user) {

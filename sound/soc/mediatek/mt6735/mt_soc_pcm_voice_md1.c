@@ -154,8 +154,6 @@ static int mtk_voice_pcm_open(struct snd_pcm_substream *substream)
 	AudDrv_Clk_On();
 	AudDrv_ADC_Clk_On();
 
-	pr_debug("mtk_voice_pcm_open\n");
-
 	runtime->hw = mtk_pcm_hardware;
 	memcpy((void *)(&(runtime->hw)), (void *)&mtk_pcm_hardware , sizeof(struct snd_pcm_hardware));
 
@@ -164,18 +162,16 @@ static int mtk_voice_pcm_open(struct snd_pcm_substream *substream)
 	ret = snd_pcm_hw_constraint_integer(runtime, SNDRV_PCM_HW_PARAM_PERIODS);
 
 	/* print for hw pcm information */
-	pr_debug("mtk_voice_pcm_open runtime rate = %d channels = %d\n", runtime->rate, runtime->channels);
+	pr_debug("%s(), substream->stream = %d\n", __func__, substream->stream);
 
 	runtime->hw.info |= SNDRV_PCM_INFO_INTERLEAVED;
 	runtime->hw.info |= SNDRV_PCM_INFO_NONINTERLEAVED;
 	runtime->rate = 16000;
 
 	if (ret < 0) {
-		pr_warn("mtk_voice_close\n");
 		mtk_voice_close(substream);
 		return ret;
 	}
-	pr_debug("mtk_voice_pcm_open return\n");
 	return 0;
 }
 
@@ -194,10 +190,9 @@ static void ConfigAdcI2S(struct snd_pcm_substream *substream)
 
 static int mtk_voice_close(struct snd_pcm_substream *substream)
 {
-	pr_debug("mtk_voice_close\n");
+	pr_debug("%s(), substream->stream = %d\n", __func__, substream->stream);
 
 	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
-		pr_debug("%s  with SNDRV_PCM_STREAM_CAPTURE\n", __func__);
 		AudDrv_ADC_Clk_Off();
 		AudDrv_Clk_Off();
 		return 0;
@@ -229,7 +224,6 @@ static int mtk_voice_close(struct snd_pcm_substream *substream)
 
 static int mtk_voice_trigger(struct snd_pcm_substream *substream, int cmd)
 {
-	pr_debug("mtk_voice_trigger cmd = %d\n", cmd);
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 	case SNDRV_PCM_TRIGGER_RESUME:
@@ -266,11 +260,11 @@ static int mtk_voice1_prepare(struct snd_pcm_substream *substream)
 {
 	struct snd_pcm_runtime *runtimeStream = substream->runtime;
 
-	pr_debug("mtk_voice1_prepare rate = %d  channels = %d period_size = %lu\n",
-	       runtimeStream->rate, runtimeStream->channels, runtimeStream->period_size);
+	pr_debug("%s(), rate = %d, channels = %d, period_size = %lu, substream->stream = %d\n",
+		 __func__, runtimeStream->rate, runtimeStream->channels,
+		 runtimeStream->period_size, substream->stream);
 
 	if (substream->stream == SNDRV_PCM_STREAM_CAPTURE) {
-		pr_debug("%s  with SNDRV_PCM_STREAM_CAPTURE\n", __func__);
 		return 0;
 	}
 	/* here start digital part */
@@ -307,7 +301,6 @@ static int mtk_pcm_hw_params(struct snd_pcm_substream *substream,
 {
 	int ret = 0;
 
-	pr_debug("mtk_pcm_hw_params\n");
 	return ret;
 }
 
