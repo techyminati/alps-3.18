@@ -11063,8 +11063,6 @@ static long ISP_ioctl_compat(struct file *filp, unsigned int cmd, unsigned long 
 				return -EFAULT;
 
 			err = compat_get_isp_buf_ctrl_struct_data(data32, data);
-			if (err)
-				return err;
 			if (err) {
 				LOG_INF("compat_get_isp_buf_ctrl_struct_data error!!!\n");
 				return err;
