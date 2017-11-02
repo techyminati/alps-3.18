@@ -287,6 +287,7 @@ static int tpd_debug_log_release(struct inode *inode, struct file *file)
 	/* struct tpd_debug_log_buf *tpd_buf = (tpd_debug_log_buf *)file->private_data; */
 	pr_debug("[tpd_em_log]: close log file\n");
 	vfree(tpd_buf.buffer);
+	tpd_buf.buffer = NULL;
 	/* free(tpd_buf); */
 	return 0;
 }
