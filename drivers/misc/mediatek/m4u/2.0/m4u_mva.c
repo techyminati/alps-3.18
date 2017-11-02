@@ -352,7 +352,7 @@ int m4u_do_mva_free(unsigned int mva, unsigned int size)
 	unsigned long irq_flags;
 
 	startIdx = mva >> MVA_BLOCK_SIZE_ORDER;
-	if (startIdx < 0 && startIdx > 4095)
+	if (startIdx < 0 || startIdx > 4095)
 		return -1;
 	nr = mvaGraph[startIdx] & MVA_BLOCK_NR_MASK;
 	endIdx = startIdx + nr - 1;
