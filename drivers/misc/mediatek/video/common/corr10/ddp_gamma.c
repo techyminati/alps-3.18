@@ -350,7 +350,11 @@ DDP_MODULE_DRIVER ddp_driver_gamma = {
 #define CCORR_CLIP(val, min, max) ((val >= max) ? max : ((val <= min) ? min : val))
 
 static DISP_CCORR_COEF_T *g_disp_ccorr_coef[DISP_CCORR_TOTAL] = { NULL };
-static int g_disp_ccorr_color_matrix[3][3] = {
+static int g_ccorr_color_matrix[3][3] = {
+	{1024, 0, 0},
+	{0, 1024, 0},
+	{0, 0, 1024} };
+static int g_ccorr_prev_matrix[3][3] = {
 	{1024, 0, 0},
 	{0, 1024, 0},
 	{0, 0, 1024} };
@@ -461,7 +465,7 @@ static int disp_ccorr_write_coef_reg(cmdqRecHandle cmdq, disp_ccorr_id_t id, int
 
 	if (id == 0) {
 		multiply_matrix = &g_multiply_matrix_coef;
-		disp_ccorr_multiply_3x3(ccorr->coef, g_disp_ccorr_color_matrix, multiply_matrix->coef);
+		disp_ccorr_multiply_3x3(ccorr->coef, g_ccorr_color_matrix, multiply_matrix->coef);
 		ccorr = multiply_matrix;
 	}
 
@@ -692,6 +696,7 @@ int disp_ccorr_set_color_matrix(void *cmdq, int32_t matrix[16], int32_t hint)
 	int ret = 0;
 	int i, j;
 	int ccorr_without_gamma = 0;
+	bool need_refresh = false;
 
 	if (cmdq == NULL) {
 		CCORR_ERR("disp_ccorr_set_color_matrix: cmdq can not be NULL\n");
@@ -703,15 +708,15 @@ int disp_ccorr_set_color_matrix(void *cmdq, int32_t matrix[16], int32_t hint)
 	for (i = 0; i < 3; i++) {
 		for (j = 0; j < 3; j++) {
 			/* Copy Color Matrix */
-			g_disp_ccorr_color_matrix[i][j] = matrix[j*4 + i];
+			g_ccorr_color_matrix[i][j] = matrix[j*4 + i];
 
 			/* early jump out */
 			if (ccorr_without_gamma == 1)
 				continue;
 
-			if (i == j && g_disp_ccorr_color_matrix[i][j] != 1024)
+			if (i == j && g_ccorr_color_matrix[i][j] != 1024)
 				ccorr_without_gamma = 1;
-			else if (i != j && g_disp_ccorr_color_matrix[i][j] != 0)
+			else if (i != j && g_ccorr_color_matrix[i][j] != 0)
 				ccorr_without_gamma = 1;
 		}
 	}
@@ -720,7 +725,19 @@ int disp_ccorr_set_color_matrix(void *cmdq, int32_t matrix[16], int32_t hint)
 
 	disp_ccorr_write_coef_reg(cmdq, 0, 0);
 
+	for (i = 0; i < 3; i++) {
+		for (j = 0; j < 3; j++) {
+			if (g_ccorr_prev_matrix[i][j] != g_ccorr_color_matrix[i][j])
+				need_refresh = true;
+			/* Copy Color Matrix */
+			g_ccorr_prev_matrix[i][j] = g_ccorr_color_matrix[i][j];
+		}
+	}
+
 	mutex_unlock(&g_gamma_global_lock);
+
+	if (need_refresh == true)
+		disp_ccorr_trigger_refresh(DISP_CCORR0);
 
 	return ret;
 }
