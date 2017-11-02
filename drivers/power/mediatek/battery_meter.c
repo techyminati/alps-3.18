@@ -4569,11 +4569,13 @@ static int battery_meter_resume(struct platform_device *dev)
 			pr_warn("[battery_meter] trigger oam_run() for 30s threshold.\n");
 	}
 
+
+	battery_meter_ctrl(BATTERY_METER_CMD_GET_HW_OCV,
+		&hw_ocv_after_sleep);
+
 	/* try to calibrate D0 by HWOCV
 	if battery has no loading for more than 30mins */
 	if (sleep_interval > 1800 && bat_is_charger_exist() == KAL_FALSE) {
-		battery_meter_ctrl(BATTERY_METER_CMD_GET_HW_OCV,
-			&hw_ocv_after_sleep);
 
 		DOD_hwocv = fgauge_read_d_by_v(hw_ocv_after_sleep);
 
@@ -4604,8 +4606,8 @@ static int battery_meter_resume(struct platform_device *dev)
 	}
 
 	bm_print(BM_LOG_CRTI,
-		 "sleeptime=(%d)s, be_ocv=(%d), af_ocv=(%d), D0=(%d), car1=(%d), car2=(%d)\n",
-		 _g_bat_sleep_total_time,
+		 "sleeptime=(%d:%d)s, be_ocv=(%d), af_ocv=(%d), D0=(%d), car1=(%d), car2=(%d)\n",
+		 _g_bat_sleep_total_time, sleep_interval,
 		 g_hw_ocv_before_sleep, hw_ocv_after_sleep, oam_d0, oam_car_1, oam_car_2);
 #endif
 #endif
