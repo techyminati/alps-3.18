@@ -173,6 +173,8 @@ static snd_pcm_uframes_t mtk_deep_buffer_dl_pointer(struct snd_pcm_substream
 	else
 		ptr_bytes = hw_ptr - Afe_Get_Reg(AFE_DL2_BASE);
 
+	ptr_bytes = Align64ByteSize(ptr_bytes);
+
 	return bytes_to_frames(substream->runtime, ptr_bytes);
 }
 
