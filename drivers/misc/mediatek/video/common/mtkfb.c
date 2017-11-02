@@ -951,8 +951,8 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg
 			}
 		}
 #endif
-#endif
 		return r;
+#endif
 	}
 
 	case MTKFB_SLT_AUTO_CAPTURE:
