@@ -1454,7 +1454,7 @@ static int dbug_thread(void *unused)
 	int rawdata = 0;
 	int cali_voltage = 0;
 
-	while (g_start_debug_thread && !kthread_should_stop()) {
+	while (g_start_debug_thread) {
 		for (i = 0; i < ADC_CHANNEL_MAX; i++) {
 			res = IMM_auxadc_GetOneChannelValue(i, data, &rawdata);
 			if (res < 0) {
@@ -1475,7 +1475,6 @@ static int dbug_thread(void *unused)
 
 		}
 		msleep(500);
-
 	}
 	return 0;
 }
@@ -1490,29 +1489,24 @@ static ssize_t store_AUXADC_channel(struct device *dev, struct device_attribute 
 
 	if (buf == NULL) {
 		pr_debug("[%s] Invalid input!!\n", __func__);
-		return 0;
+		return size;
 	}
 
 	ret = kstrtoint(buf, sizeof(int), &start_flag);
 	if (ret < 0) {
 		pr_debug("[%s] Invalid invalues!!\n", __func__);
-		return 0;
+		return size;
 	}
 
 	pr_debug("[adc_driver] start flag =%d\n", start_flag);
+	g_start_debug_thread = start_flag;
 	if (start_flag) {
-		g_start_debug_thread = start_flag;
 		thread = kthread_run(dbug_thread, 0, "AUXADC");
-
 		if (IS_ERR(thread)) {
 			error = PTR_ERR(thread);
 			pr_debug("[adc_driver] failed to create kernel thread: %d\n", error);
 		}
-	} else {
-		kthread_stop(thread);
-		pr_debug("[%s] Stop thread AUXADC!!\n", __func__);
 	}
-
 	return size;
 }
 
