@@ -110,6 +110,7 @@ void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user u
 EXPORT_SYMBOL(connectivity_export_mt_ppm_sysboost_set_core_limit);
 #endif
 
+#if defined(CONFIG_ARCH_MT6735) || defined(CONFIG_ARCH_MT6735M) || defined(CONFIG_ARCH_MT6753)
 void connectivity_update_userlimit_cpu_freq(int kicker,
 						int num_cluster, struct ppm_limit_data *freq_limit)
 {
@@ -123,6 +124,7 @@ void connectivity_update_userlimit_cpu_core(int kicker,
 	update_userlimit_cpu_core(kicker, num_cluster, core_limit);
 }
 EXPORT_SYMBOL(connectivity_update_userlimit_cpu_core);
+#endif
 
 /*******************************************************************************
  * Clock Buffer Control
