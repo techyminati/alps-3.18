@@ -158,11 +158,6 @@ static struct zram_table_entry *search_node_in_zram_tree(struct zram_table_entry
 		pr_err("[zram][search_node_in_zram_tree] input_node is NULL\n");
 		return NULL;
 	}
-	if (current_node == NULL) {
-		*new_node = new;
-		*parent_node = NULL;
-		return NULL;
-	}
 
 	while (*new) {
 		current_node = rb_entry(*new, struct zram_table_entry, node);
