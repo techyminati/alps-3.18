@@ -3511,9 +3511,37 @@ static ssize_t md_cd_parameter_store(struct ccci_modem *md, const char *buf, siz
 	return count;
 }
 
+static int ee_stop_trace_en;
+static ssize_t md_cd_ee_stop_trace_store(struct ccci_modem *md, const char *buf, size_t count)
+{
+	if (md->index == MD_SYS1) {
+		if (strncmp("1", buf, 1) == 0)
+			ee_stop_trace_en = 1;
+		else
+			ee_stop_trace_en = 0;
+		CCCI_NOTICE_LOG(md->index, TAG, "change stop trace when EE value to:%d\n",
+							ee_stop_trace_en);
+	}
+	return count;
+}
+
+static ssize_t md_cd_ee_stop_trace_show(struct ccci_modem *md, char *buf)
+{
+	int count;
+
+	count = snprintf(buf, 128, "%d\n", ee_stop_trace_en);
+	return count;
+}
+
+int get_ee_stop_tracing_en(void)
+{
+	return ee_stop_trace_en;
+}
+
 CCCI_MD_ATTR(NULL, dump, 0660, md_cd_dump_show, md_cd_dump_store);
 CCCI_MD_ATTR(NULL, control, 0660, md_cd_control_show, md_cd_control_store);
 CCCI_MD_ATTR(NULL, parameter, 0660, md_cd_parameter_show, md_cd_parameter_store);
+CCCI_MD_ATTR(NULL, ee_stop_trace, 0660, md_cd_ee_stop_trace_show, md_cd_ee_stop_trace_store);
 
 static void md_cd_sysfs_init(struct ccci_modem *md)
 {
@@ -3533,6 +3561,18 @@ static void md_cd_sysfs_init(struct ccci_modem *md)
 	ret = sysfs_create_file(&md->kobj, &ccci_md_attr_parameter.attr);
 	if (ret)
 		CCCI_ERROR_LOG(md->index, TAG, "fail to add sysfs node %s %d\n", ccci_md_attr_parameter.attr.name, ret);
+
+	ccci_md_attr_ee_stop_trace.modem = md;
+	ret = sysfs_create_file(&md->kobj, &ccci_md_attr_ee_stop_trace.attr);
+	if (ret)
+		CCCI_ERROR_LOG(md->index, TAG, "fail to add sysfs node %s %d\n",
+				ccci_md_attr_ee_stop_trace.attr.name, ret);
+
+#ifdef CONFIG_MTK_ECCCI_STOP_TRACE
+	ee_stop_trace_en = 1;
+#else
+	ee_stop_trace_en = 0;
+#endif
 }
 
 #ifdef ENABLE_CLDMA_AP_SIDE
