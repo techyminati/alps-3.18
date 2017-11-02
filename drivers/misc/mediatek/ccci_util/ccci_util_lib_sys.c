@@ -131,8 +131,6 @@ static ssize_t boot_status_store(const char *buf, size_t count)
 	if (md_id < MAX_MD_NUM) {
 		if (trigger_md_boot(md_id) != 0)
 			CCCI_UTIL_INF_MSG("md%d n/a\n", md_id + 1);
-		else
-			clear_meta_1st_boot_arg(md_id);
 	} else
 		CCCI_UTIL_INF_MSG("invalid id(%d)\n", md_id + 1);
 	return count;

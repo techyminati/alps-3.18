@@ -1143,6 +1143,7 @@ long port_proxy_user_ioctl(struct port_proxy *proxy_p, int ch, unsigned int cmd,
 	case CCCI_IOC_MD_RESET:
 		CCCI_NORMAL_LOG(md_id, CHAR, "MD reset ioctl called by (%d)%s\n", ch, current->comm);
 		ccci_event_log("md%d: MD reset ioctl called by (%d)%s\n", md_id, ch, current->comm);
+		clear_meta_1st_boot_arg(md_id);
 		inject_md_status_event(md_id, MD_STA_EV_RESET_REQUEST, current->comm);
 		ret = port_proxy_send_msg_to_user(proxy_p, CCCI_MONITOR_CH, CCCI_MD_MSG_RESET_REQUEST, 0);
 #ifdef CONFIG_MTK_ECCCI_C2K

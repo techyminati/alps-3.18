@@ -619,6 +619,8 @@ static int parse_meta_boot_arguments(unsigned int *raw_ptr)
 
 	CCCI_UTIL_INF_MSG("md type at lk:0x%x] with rat 0x%x\n",
 			md_type_at_lk[active_id], md_info_tag_array[0]);
+	CCCI_UTIL_INF_MSG("final active_id:%d, meta_boot_arguments:%d\n",
+			active_id, meta_boot_arguments[active_id]);
 
 	return 0;
 }
