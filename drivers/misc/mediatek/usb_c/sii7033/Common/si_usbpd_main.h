@@ -671,7 +671,7 @@ void sii_rcv_usbpd_data(struct sii70xx_drv_context *drv_context);
 bool usbipd_send_soft_reset(struct sii70xx_drv_context *drv_context, enum ctrl_msg type);
 void change_drp_pwr_role(struct sii_usbp_policy_engine *pUsbpd);
 void set_70xx_mode(struct sii70xx_drv_context *drv_context, enum phy_drp_config drp_role);
-void update_typec_status(struct sii_typec *ptypec_dev, bool status, bool is_dfp);
+void update_typec_status(struct sii_typec *ptypec_dev, bool is_dfp, bool status);
 void set_cc_reset(struct sii70xx_drv_context *drv_context, bool is_set);
 void set_pd_reset(struct sii70xx_drv_context *drv_context, bool is_set);
 void usbpd_ufp_exit(struct sii_usbp_policy_engine *pUsbpd);
