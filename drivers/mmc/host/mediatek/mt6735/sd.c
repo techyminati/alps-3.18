@@ -94,6 +94,7 @@ struct clk *g_msdc0_pll_200m = NULL;
 static int msdc_get_card_status(struct mmc_host *mmc,
 	struct msdc_host *host, u32 *status);
 static void msdc_clksrc_onoff(struct msdc_host *host, u32 on);
+static void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios);
 
 /* ========================= move from dbg.c start =========================*/
 /* for debug zone */
@@ -1953,6 +1954,7 @@ static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 		return;
 	}
 	host->card_inserted = 0;
+	host->block_bad_card = 1;
 
 	if ((host->mmc == NULL) || (host->mmc->card == NULL)) {
 		ERR_MSG("WARN: mmc or card is NULL");
@@ -1960,15 +1962,13 @@ static void msdc_set_bad_card_and_remove(struct msdc_host *host)
 	}
 	if (host->mmc->card) {
 		spin_lock_irqsave(&host->remove_bad_card, flags);
-		host->block_bad_card = 1;
-
 		mmc_card_set_removed(host->mmc->card);
 		spin_unlock_irqrestore(&host->remove_bad_card, flags);
 
 		if (!(host->mmc->caps & MMC_CAP_NONREMOVABLE)
 			&& (host->hw->cd_level == __gpio_get_value(cd_gpio))) {
-				/* do nothing*/
-				/*tasklet_hi_schedule(&host->card_tasklet);*/
+			ERR_MSG("Schedule remove card");
+			mmc_detect_change(host->mmc, msecs_to_jiffies(200));
 		} else {
 			mmc_remove_card(host->mmc->card);
 			host->mmc->card = NULL;
@@ -3778,6 +3778,7 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 				break;
 			default:	/* Response types 1, 3, 4, 5, 6, 7(1b) */
 				*rsp = sdr_read32(SDC_RESP0);
+				host->cmd13_timeout_cont = 0;
 				/* workaround for latch error */
 				if (((cmd->opcode == 13) || (cmd->opcode == 25)) &&
 					(*rsp & R1_OUT_OF_RANGE) &&
@@ -3810,6 +3811,11 @@ static unsigned int msdc_command_resp_polling(struct msdc_host *host,
 			if ((cmd->opcode != 52) && (cmd->opcode != 8) && (cmd->opcode != 5)
 			    && (cmd->opcode != 55) && (cmd->opcode != 1))
 				msdc_dump_info(host->id);
+			if ((cmd->opcode == 13)  && (host->hw->host_function == MSDC_SD)) {
+				host->cmd13_timeout_cont++;
+				pr_notice("%s: %d: CMD%d cmd13_timeout_cont = %d\n", __func__, __LINE__,
+						cmd->opcode, host->cmd13_timeout_cont);
+			}
 			if ((cmd->opcode == 5) && emmc_do_sleep_awake)
 				msdc_dump_info(host->id);
 			if (((MMC_RSP_R1B == mmc_resp_type(cmd)) || (cmd->opcode == 13))
@@ -7281,6 +7287,27 @@ static void msdc_async_tune(struct work_struct *work)
 	msdc_tune_async_request(mmc, host->mrq_tune);
 }
 
+int sdcard_hw_reset(struct mmc_host *mmc)
+{
+	struct msdc_host *host = mmc_priv(mmc);
+	int ret = 0;
+	/* power reset sdcard */
+	mmc->ios.timing = MMC_TIMING_LEGACY;
+	mmc->ios.clock = HOST_MIN_MCLK;
+	msdc_ops_set_ios(mmc, &mmc->ios);
+	ret = mmc_hw_reset(mmc);
+	if (ret) {
+		if (++host->reset_cycle_cnt > 3)
+			msdc_set_bad_card_and_remove(host);
+		pr_notice("msdc%d hw reset (%d) failed, block_bad_card = %d\n",
+				host->id, host->reset_cycle_cnt, host->block_bad_card);
+	} else {
+		host->reset_cycle_cnt = 0;
+		pr_notice("msdc%d hw reset success\n", host->id);
+	}
+	return ret;
+}
+
 static void msdc_ops_request(struct mmc_host *mmc, struct mmc_request *mrq)
 {
 	struct mmc_data *data;
@@ -7299,6 +7326,15 @@ static void msdc_ops_request(struct mmc_host *mmc, struct mmc_request *mrq)
 	data = mrq->data;
 	if (data)
 		host_cookie = data->host_cookie;
+
+	if ((host->cmd13_timeout_cont >= 3) && (!host->tuning_in_process)) {
+		host->tuning_in_process = true;
+		pr_notice("%s: CMD%d cmd13 continuous timeout count = %d, reset sdcard\n", __func__,
+					 mrq->cmd->opcode, host->cmd13_timeout_cont);
+		(void)sdcard_hw_reset(mmc);
+		host->cmd13_timeout_cont = 0;
+		host->tuning_in_process = false;
+	}
 	/*
 	 * Asyn only support  DMA and asyc CMD flow
 	 * if cmd send error occur, dma not start yet, return error,
@@ -7567,6 +7603,7 @@ static void msdc_ops_card_event(struct mmc_host *mmc)
 {
 	struct msdc_host *host = mmc_priv(mmc);
 
+	host->reset_cycle_cnt = 0;
 	host->block_bad_card = 0;
 	msdc_reset_pwr_cycle_counter(host);
 	msdc_reset_crc_tune_counter(host, ALL_TUNE_CNT);
@@ -9093,6 +9130,7 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	msdc_reset_tmo_tune_counter(host, ALL_TUNE_CNT);
 	msdc_reset_pwr_cycle_counter(host);
 	host->is_in_power_tune = 0;
+	host->tuning_in_process = false;
 
 	if (is_card_sdio(host) || (host->hw->flags & MSDC_SDIO_IRQ)) {
 		host->saved_para.suspend_flag = 0;

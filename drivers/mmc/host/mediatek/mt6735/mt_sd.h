@@ -1167,6 +1167,10 @@ struct msdc_host {
 	u32 timeout_ns;		/* data timeout ns */
 	u32 timeout_clks;	/* data timeout clks */
 
+	u32  cmd13_timeout_cont;
+	bool tuning_in_process;
+	int  reset_cycle_cnt;
+
 	atomic_t abort;		/* abort transfer */
 
 	int irq;		/* host interrupt */
@@ -1527,6 +1531,7 @@ extern u32 msdc_host_mode[HOST_MAX_NUM];
 extern u32 msdc_host_mode2[HOST_MAX_NUM];
 extern u32 g_emmc_mode_switch;
 
+extern int sdcard_hw_reset(struct mmc_host *mmc);
 extern struct msdc_host *msdc_get_host(int host_function, bool boot,
 	bool secondary);
 extern int msdc_reinit(struct msdc_host *host);
