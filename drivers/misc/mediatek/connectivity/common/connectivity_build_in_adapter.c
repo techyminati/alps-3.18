@@ -208,3 +208,15 @@ int connectivity_export_mtk_wdt_swsysret_config(int bit, int set_value)
 EXPORT_SYMBOL(connectivity_export_mtk_wdt_swsysret_config);
 #endif
 
+void connectivity_export_set_logtoomuch_enable(int value)
+{
+	set_logtoomuch_enable(value);
+}
+EXPORT_SYMBOL(connectivity_export_set_logtoomuch_enable);
+
+int connectivity_export_get_logtoomuch_enable(void)
+{
+	return get_logtoomuch_enable();
+}
+EXPORT_SYMBOL(connectivity_export_get_logtoomuch_enable);
+

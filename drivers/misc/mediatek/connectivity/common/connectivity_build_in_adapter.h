@@ -131,6 +131,9 @@ extern int mtk_wdt_swsysret_config(int bit, int set_value);
 #define KERNEL_mt_ppm_sysboost_set_core_limit
 #endif
 
+#define KERNEL_set_logtoomuch_enable  connectivity_export_set_logtoomuch_enable
+#define KERNEL_get_logtoomuch_enable  connectivity_export_get_logtoomuch_enable
+
 void connectivity_export_show_stack(struct task_struct *tsk, unsigned long *sp);
 void connectivity_export_tracing_record_cmdline(struct task_struct *tsk);
 #ifdef CPU_BOOST
@@ -142,6 +145,9 @@ void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user u
 
 extern void tracing_record_cmdline(struct task_struct *tsk);
 extern void show_stack(struct task_struct *tsk, unsigned long *sp);
+
+void connectivity_export_set_logtoomuch_enable(int value);
+int connectivity_export_get_logtoomuch_enable(void);
 
 /*********************************************
  * for CPU unified APIs
