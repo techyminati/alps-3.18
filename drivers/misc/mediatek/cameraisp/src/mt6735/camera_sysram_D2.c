@@ -900,7 +900,8 @@ static long SYSRAM_Ioctl(struct file *pFile, unsigned int Cmd, unsigned long Par
 						}
 					}
 				} else {
-					LOG_MSG("[christ test] SYSRAM_ALLOC E.6 ");
+					LOG_ERR("wrong Alloc.Addr(%d/0x%x/0x%x)",
+						Alloc.User, (unsigned int)(Alloc.Addr), (unsigned int)(pProc->Table));
 					Ret = -EFAULT;
 				}
 				/*  */
@@ -942,7 +943,8 @@ static long SYSRAM_Ioctl(struct file *pFile, unsigned int Cmd, unsigned long Par
 					SYSRAM_SpinUnlock();
 				} else {
 					SYSRAM_SpinUnlock();
-					LOG_WRN("Freeing unallocated buffer user(%d)", User);
+					LOG_ERR("Freeing unallocated buffer user(%d/0x%x)", User,
+						(unsigned int)(pProc->Table));
 					Ret = -EFAULT;
 				}
 			} else {
