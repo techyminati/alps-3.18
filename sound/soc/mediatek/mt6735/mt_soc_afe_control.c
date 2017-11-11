@@ -3833,12 +3833,18 @@ void AudDrv_checkDLISRStatus(void)
 		}
 		if (localctl.u4UnderflowCnt) {
 			for (index = 0; index < localctl.u4UnderflowCnt && index < DL_ABNORMAL_CONTROL_MAX; index++) {
-				pr_warn("AudWarn data underflow [%d/%d] MemType %d, Remain:0x%x, R:0x%x,W:0x%x, BufSize:0x%x, consumebyte:0x%x, hw index:0x%x, addr:0x%x\n",
+				MTK_SND_LOG_LIMIT(20,
+					"AudWarn data underflow [%d/%d] MemType %d, Remain:0x%x, R:0x%x,W:0x%x, BufSize:0x%x, consumebyte:0x%x, hw index:0x%x, addr:0x%x\n",
 					index,
-				localctl.u4UnderflowCnt, localctl.MemIfNum[index], localctl.u4DataRemained[index],
-				localctl.u4DMAReadIdx[index], localctl.u4WriteIdx[index], localctl.u4BufferSize[index],
-				localctl.u4ConsumedBytes[index], localctl.u4HwMemoryIndex[index],
-				localctl.pucPhysBufAddr[index]);
+					localctl.u4UnderflowCnt,
+					localctl.MemIfNum[index],
+					localctl.u4DataRemained[index],
+					localctl.u4DMAReadIdx[index],
+					localctl.u4WriteIdx[index],
+					localctl.u4BufferSize[index],
+					localctl.u4ConsumedBytes[index],
+					localctl.u4HwMemoryIndex[index],
+					localctl.pucPhysBufAddr[index]);
 			}
 		}
 	}
