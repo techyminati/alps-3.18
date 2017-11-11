@@ -167,6 +167,7 @@ ret_update:
 
 	return 0;
 }
+EXPORT_SYMBOL(update_userlimit_cpu_core);
 
 /*************************************************************************************/
 int update_userlimit_cpu_freq(int kicker, int num_cluster, struct ppm_limit_data *freq_limit)
@@ -235,6 +236,7 @@ ret_update:
 
 	return 0;
 }
+EXPORT_SYMBOL(update_userlimit_cpu_freq);
 
 /*************************************************************************************/
 static ssize_t perfmgr_perfserv_core_write(struct file *filp, const char __user *ubuf,
