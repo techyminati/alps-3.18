@@ -957,6 +957,10 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg
 
 	case MTKFB_SLT_AUTO_CAPTURE:
 	{
+#if defined(MTK_NO_CAPTURE_SUPPORT)
+		DISPERR("[FB] no support capture frame buffer\n");
+		return 0;
+#else
 		struct fb_slt_catpure capConfig;
 		char *dst_buffer;
 		unsigned int fb_size;
@@ -988,6 +992,7 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg
 		}
 
 		return r;
+#endif
 	}
 
 	case MTKFB_GET_OVERLAY_LAYER_INFO:
