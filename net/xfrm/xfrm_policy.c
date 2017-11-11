@@ -1369,8 +1369,8 @@ int __xfrm_sk_clone_policy(struct sock *sk)
 }
 
 static int
-xfrm_get_saddr(struct net *net, xfrm_address_t *local,
-	       xfrm_address_t *remote, unsigned short family, u32 mark)
+xfrm_get_saddr(struct net *net, xfrm_address_t *local, xfrm_address_t *remote,
+	       unsigned short family, u32 mark)
 {
 	int err;
 	struct xfrm_policy_afinfo *afinfo = xfrm_policy_get_afinfo(family);
@@ -1406,7 +1406,8 @@ xfrm_tmpl_resolve_one(struct xfrm_policy *policy, const struct flowi *fl,
 			remote = &tmpl->id.daddr;
 			local = &tmpl->saddr;
 			if (xfrm_addr_any(local, tmpl->encap_family)) {
-				error = xfrm_get_saddr(net, &tmp, remote, tmpl->encap_family, 0);
+				error = xfrm_get_saddr(net, &tmp, remote,
+						       tmpl->encap_family, 0);
 				if (error)
 					goto fail;
 				local = &tmp;
@@ -1687,7 +1688,8 @@ static struct dst_entry *xfrm_bundle_create(struct xfrm_policy *policy,
 		if (xfrm[i]->props.mode != XFRM_MODE_TRANSPORT) {
 			family = xfrm[i]->props.family;
 			dst = xfrm_dst_lookup(xfrm[i], tos, &saddr, &daddr,
-					      family, xfrm[i]->props.output_mark);
+					      family,
+					      xfrm[i]->props.output_mark);
 			err = PTR_ERR(dst);
 			if (IS_ERR(dst))
 				goto put_states;

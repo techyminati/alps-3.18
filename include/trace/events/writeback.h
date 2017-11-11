@@ -616,11 +616,11 @@ DECLARE_EVENT_CLASS(writeback_lazytime_template,
 	TP_ARGS(inode),
 
 	TP_STRUCT__entry(
-		__field(dev_t,	dev)
-		__field(unsigned long,	ino)
-		__field(unsigned long,	state)
-		__field(__u16, mode)
-		__field(unsigned long, dirtied_when)
+		__field(	dev_t,	dev			)
+		__field(unsigned long,	ino			)
+		__field(unsigned long,	state			)
+		__field(	__u16, mode			)
+		__field(unsigned long, dirtied_when		)
 	),
 
 	TP_fast_assign(
