@@ -68,7 +68,47 @@ static int mPlaybackSramState;
 static struct device *mDev;
 
 static int bt_dl_mem_blk = Soc_Aud_Digital_Block_MEM_DL2;
+static int bt_dl_mem_ch1 = Soc_Aud_InterConnectionInput_I07;
+static int bt_dl_mem_ch2 = Soc_Aud_InterConnectionInput_I08;
 static unsigned int bt_dl_mem_cur_reg = AFE_DL2_CUR;
+
+/* kcontrol */
+static int dl1bt_memif_select;
+
+enum {
+	DL1BT_USE_DL1 = 0,
+	DL1BT_USE_DL2,
+};
+
+const char * const dl1bt_memif_select_str[] = {"dl1", "dl2"};
+
+static const struct soc_enum mtk_dl1bt_enum[] = {
+	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(dl1bt_memif_select_str), dl1bt_memif_select_str),
+};
+
+static int dl1bt_memif_select_get(struct snd_kcontrol *kcontrol,
+				  struct snd_ctl_elem_value *ucontrol)
+{
+	ucontrol->value.integer.value[0] = dl1bt_memif_select;
+	return 0;
+}
+
+static int dl1bt_memif_select_set(struct snd_kcontrol *kcontrol,
+				  struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s()\n", __func__);
+	if (ucontrol->value.enumerated.item[0] > ARRAY_SIZE(dl1bt_memif_select_str))
+		return -EINVAL;
+
+	dl1bt_memif_select = ucontrol->value.integer.value[0];
+
+	return 0;
+}
+
+static const struct snd_kcontrol_new mtk_dl1bt_control[] = {
+	SOC_ENUM_EXT("dl1bt_memif_select", mtk_dl1bt_enum[0],
+		     dl1bt_memif_select_get, dl1bt_memif_select_set),
+};
 
 /*
  *    function implementation
@@ -102,8 +142,8 @@ static int mtk_pcm_dl1Bt_stop(struct snd_pcm_substream *substream)
 	PRINTK_AUDDRV("mtk_pcm_dl1Bt_stop\n");
 
 	/* here to turn off digital part */
-	SetConnection(Soc_Aud_InterCon_DisConnect, Soc_Aud_InterConnectionInput_I07, Soc_Aud_InterConnectionOutput_O02);
-	SetConnection(Soc_Aud_InterCon_DisConnect, Soc_Aud_InterConnectionInput_I08, Soc_Aud_InterConnectionOutput_O02);
+	SetConnection(Soc_Aud_InterCon_DisConnect, bt_dl_mem_ch1, Soc_Aud_InterConnectionOutput_O02);
+	SetConnection(Soc_Aud_InterCon_DisConnect, bt_dl_mem_ch2, Soc_Aud_InterConnectionOutput_O02);
 	SetMemoryPathEnable(bt_dl_mem_blk, false);
 
 	irq_remove_user(substream, Soc_Aud_IRQ_MCU_MODE_IRQ1_MCU_MODE);
@@ -207,11 +247,14 @@ static int mtk_pcm_dl1bt_hw_params(struct snd_pcm_substream *substream,
 		substream->runtime->dma_addr = AFE_INTERNAL_SRAM_PHY_BASE;
 		AudDrv_Allocate_DL2_Buffer(mDev, substream->runtime->dma_bytes);
 	} else {
+		Dl1_Playback_dma_buf =  Get_Mem_Buffer(bt_dl_mem_blk);
 		substream->runtime->dma_bytes = params_buffer_bytes(hw_params);
 		substream->runtime->dma_area = Dl1_Playback_dma_buf->area;
 		substream->runtime->dma_addr = Dl1_Playback_dma_buf->addr;
 		SetDLBuffer(substream, hw_params);
 	}
+
+	pdl1btMemControl = Get_Mem_ControlT(bt_dl_mem_blk);
 
 	PRINTK_AUDDRV(" dma_bytes = %zu dma_area = %p dma_addr = 0x%lx\n",
 		      substream->runtime->dma_bytes, substream->runtime->dma_area, (long)substream->runtime->dma_addr);
@@ -250,8 +293,19 @@ static int mtk_dl1bt_pcm_open(struct snd_pcm_substream *substream)
 	PRINTK_AUDDRV("mtk_dl1bt_pcm_open\n");
 	AudDrv_Clk_On();
 
+	if (dl1bt_memif_select == DL1BT_USE_DL1) {
+		bt_dl_mem_blk = Soc_Aud_Digital_Block_MEM_DL1;
+		bt_dl_mem_ch1 = Soc_Aud_InterConnectionInput_I05;
+		bt_dl_mem_ch2 = Soc_Aud_InterConnectionInput_I06;
+		bt_dl_mem_cur_reg = AFE_DL1_CUR;
+	} else {
+		bt_dl_mem_blk = Soc_Aud_Digital_Block_MEM_DL2;
+		bt_dl_mem_ch1 = Soc_Aud_InterConnectionInput_I07;
+		bt_dl_mem_ch2 = Soc_Aud_InterConnectionInput_I08;
+		bt_dl_mem_cur_reg = AFE_DL2_CUR;
+	}
+
 	/* get dl1 memconptrol and record substream */
-	pdl1btMemControl = Get_Mem_ControlT(bt_dl_mem_blk);
 	runtime->hw = mtk_dl1bt_pcm_hardware;
 	memcpy((void *)(&(runtime->hw)), (void *)&mtk_dl1bt_pcm_hardware , sizeof(struct snd_pcm_hardware));
 
@@ -266,8 +320,8 @@ static int mtk_dl1bt_pcm_open(struct snd_pcm_substream *substream)
 		PRINTK_AUDDRV("snd_pcm_hw_constraint_integer failed\n");
 
 	/* print for hw pcm information */
-	PRINTK_AUDDRV("mtk_dl1bt_pcm_open runtime rate = %d channels = %d substream->pcm->device = %d\n",
-		      runtime->rate, runtime->channels, substream->pcm->device);
+	pr_debug("mtk_dl1bt_pcm_open runtime rate = %d channels = %d substream->pcm->device = %d\n",
+		     runtime->rate, runtime->channels, substream->pcm->device);
 
 	if (substream->stream == SNDRV_PCM_STREAM_PLAYBACK)
 		PRINTK_AUDDRV("SNDRV_PCM_STREAM_PLAYBACK mtkalsa_playback_constraints\n");
@@ -283,7 +337,7 @@ static int mtk_dl1bt_pcm_open(struct snd_pcm_substream *substream)
 
 static int mtk_Dl1Bt_close(struct snd_pcm_substream *substream)
 {
-	PRINTK_AUDDRV("%s\n", __func__);
+	pr_debug("%s\n", __func__);
 	AfeControlSramLock();
 	ClearSramState(mPlaybackSramState);
 	mPlaybackSramState = GetSramState();
@@ -335,13 +389,13 @@ static int mtk_pcm_dl1bt_start(struct snd_pcm_substream *substream)
 	}
 
 	/* here start digital part */
-	SetConnection(Soc_Aud_InterCon_Connection, Soc_Aud_InterConnectionInput_I07,
+	SetConnection(Soc_Aud_InterCon_Connection, bt_dl_mem_ch1,
 		      Soc_Aud_InterConnectionOutput_O02);
-	SetConnection(Soc_Aud_InterCon_Connection, Soc_Aud_InterConnectionInput_I08,
+	SetConnection(Soc_Aud_InterCon_Connection, bt_dl_mem_ch2,
 		      Soc_Aud_InterConnectionOutput_O02);
-	SetConnection(Soc_Aud_InterCon_ConnectionShift, Soc_Aud_InterConnectionInput_I07,
+	SetConnection(Soc_Aud_InterCon_ConnectionShift, bt_dl_mem_ch1,
 		      Soc_Aud_InterConnectionOutput_O02);
-	SetConnection(Soc_Aud_InterCon_ConnectionShift, Soc_Aud_InterConnectionInput_I08,
+	SetConnection(Soc_Aud_InterCon_ConnectionShift, bt_dl_mem_ch2,
 		      Soc_Aud_InterConnectionOutput_O02);
 
 	/* set dl1 sample ratelimit_state */
@@ -372,7 +426,7 @@ static int mtk_pcm_dl1bt_start(struct snd_pcm_substream *substream)
 
 static int mtk_pcm_trigger(struct snd_pcm_substream *substream, int cmd)
 {
-	PRINTK_AUDDRV("mtk_pcm_trigger cmd = %d\n", cmd);
+	pr_debug("mtk_pcm_trigger cmd = %d\n", cmd);
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
 	case SNDRV_PCM_TRIGGER_RESUME:
@@ -592,6 +646,10 @@ static int mtk_asoc_dl1bt_probe(struct snd_soc_platform *platform)
 	PRINTK_AUDDRV("mtk_asoc_dl1bt_probe\n");
 	AudDrv_Allocate_mem_Buffer(platform->dev, bt_dl_mem_blk, Dl1_MAX_BUFFER_SIZE);
 	Dl1_Playback_dma_buf =  Get_Mem_Buffer(bt_dl_mem_blk);
+
+	snd_soc_add_platform_controls(platform, mtk_dl1bt_control,
+				      ARRAY_SIZE(mtk_dl1bt_control));
+
 	return 0;
 }
 
