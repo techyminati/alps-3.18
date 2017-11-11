@@ -11,9 +11,8 @@
 # GNU General Public License for more details.
 #
 
-obj-y += perf_ioctl.o
-
 ifneq ($(CONFIG_MTK_PERFMGR_TOUCH_BOOST),y)
+obj-y += perf_ioctl.o
 obj-y += $(MTK_PLATFORM)/
 endif
 

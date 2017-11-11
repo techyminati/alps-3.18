@@ -11,9 +11,9 @@
 # GNU General Public License for more details.
 #
 
+ifeq ($(CONFIG_MTK_PERFMGR_TOUCH_BOOST),y)
 obj-y += perfmgr_main.o
 
-ifeq ($(CONFIG_MTK_PERFMGR_TOUCH_BOOST),y)
 ccflags-y += -DMTK_TOUCH_BOOST
 
 obj-y += perfmgr_touch.o
