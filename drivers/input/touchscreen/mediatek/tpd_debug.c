@@ -288,6 +288,7 @@ static int tpd_debug_log_release(struct inode *inode, struct file *file)
 	pr_debug("[tpd_em_log]: close log file\n");
 	vfree(tpd_buf.buffer);
 	tpd_buf.buffer = NULL;
+	file->private_data = NULL;
 	/* free(tpd_buf); */
 	return 0;
 }
@@ -301,27 +302,29 @@ static ssize_t tpd_debug_log_write(struct file *file, const char __user *buffer,
 static ssize_t tpd_debug_log_read(struct file *file, char __user *buffer,
 				  size_t count, loff_t *ppos)
 {
-	struct tpd_debug_log_buf *tpd_buf = (struct tpd_debug_log_buf *)file->private_data;
+	struct tpd_debug_log_buf *l_tpd_buf = (struct tpd_debug_log_buf *)file->private_data;
 	unsigned int retval = 0, unit = tpd_log_line_buffer;
 	unsigned char *tmp_buf = NULL;
 
-	if (tpd_buf == NULL)
+	if ((l_tpd_buf == NULL) || (l_tpd_buf != &tpd_buf)) {
+		pr_debug("[tpd_em_log]: not open file before read\n");
 		return -ENOMEM;
-	if (tpd_buf->head == tpd_buf->tail && (file->f_flags & O_NONBLOCK))
+	}
+	if (l_tpd_buf->head == l_tpd_buf->tail && (file->f_flags & O_NONBLOCK))
 		return -EAGAIN;
 
 
 	while ((count - retval) >= unit) {
-		spin_lock_irq(&tpd_buf->buffer_lock);
-		if (tpd_buf->head != tpd_buf->tail) {
-			tmp_buf = &tpd_buf->buffer[tpd_buf->tail++ * unit];
-			tpd_buf->tail &= tpd_log_line_cnt - 1;
+		spin_lock_irq(&l_tpd_buf->buffer_lock);
+		if (l_tpd_buf->head != l_tpd_buf->tail) {
+			tmp_buf = &l_tpd_buf->buffer[l_tpd_buf->tail++ * unit];
+			l_tpd_buf->tail &= tpd_log_line_cnt - 1;
 		} else {
 			/* printk("*******************tpd_debug_log is empty ****************\n"); */
-			spin_unlock_irq(&tpd_buf->buffer_lock);
+			spin_unlock_irq(&l_tpd_buf->buffer_lock);
 			break;
 		}
-		spin_unlock_irq(&tpd_buf->buffer_lock);
+		spin_unlock_irq(&l_tpd_buf->buffer_lock);
 		/* printk("%s, tmp_buf:0x%x\n", tmp_buf, tmp_buf); */
 		if (copy_to_user(buffer + retval, tmp_buf, unit))
 			return -EFAULT;
