@@ -79,6 +79,7 @@
 #elif defined(CONFIG_ARCH_MT6735M)
 #define GPU_DVFS_FREQ0_0   (650000)	/* KHz */
 #define GPU_DVFS_FREQ0	 (549250)	/* KHz */
+#define GPU_DVFS_FREQ0_P   (497250)   /* KHz */
 #define GPU_DVFS_FREQ1	 (448500)	/* KHz */
 #define GPU_DVFS_FREQ2	 (299000)	/* KHz */
 #define GPUFREQ_LAST_FREQ_LEVEL	(GPU_DVFS_FREQ2)
@@ -185,6 +186,13 @@ static struct mt_gpufreq_table_info mt_gpufreq_opp_tbl_e1_2[] = {
 	GPUOP(GPU_DVFS_FREQ1, GPU_DVFS_VOLT1),
 	GPUOP(GPU_DVFS_FREQ2, GPU_DVFS_VOLT2),
 };
+
+/* LV4: add 500MHz for D2+ */
+static struct mt_gpufreq_table_info mt_gpufreq_opp_tbl_e1_4[] = {
+	GPUOP(GPU_DVFS_FREQ0_P, GPU_DVFS_VOLT1),
+	GPUOP(GPU_DVFS_FREQ2, GPU_DVFS_VOLT2),
+};
+
 #else
 /* LV0: 600MHz for HPM */
 static struct mt_gpufreq_table_info mt_gpufreq_opp_tbl_e1_0[] = {
@@ -396,6 +404,10 @@ static unsigned int _mt_gpufreq_get_dvfs_table_type(void)
 			return 3;	/* 37M: 550M */
 		case 0x4A:
 		case 0x4B:
+#ifdef CONFIG_ARCH_MT6735M
+			if (mt_gpufreq_dvfs_mmpll_spd_bond == 5)
+				return 4;
+#endif
 			return 0;	/* 35M+: 550M */
 		case 0x51:
 			return 1;	/* 37: 450M */
@@ -873,6 +885,7 @@ static int _mt_gpufreq_set_cur_volt(unsigned int new_oppidx)
 #ifdef MT_GPUFREQ_VCOREFS_ENABLED
 	switch (mt_gpufreqs[new_oppidx].gpufreq_khz) {
 #ifdef CONFIG_ARCH_MT6735M
+	case GPU_DVFS_FREQ0_P:
 	case GPU_DVFS_FREQ0_0:
 	case GPU_DVFS_FREQ0:
 		g_last_gpu_dvs_result = vcorefs_request_dvfs_opp(KIR_GPU, OPPI_PERF_ULTRA);
@@ -1915,6 +1928,10 @@ static int _mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 		_mt_setup_gpufreqs_table(mt_gpufreq_opp_tbl_e1_0, ARRAY_SIZE(mt_gpufreq_opp_tbl_e1_0));
 	else if (mt_gpufreq_dvfs_table_type == 1)	/* 450M */
 		_mt_setup_gpufreqs_table(mt_gpufreq_opp_tbl_e1_1, ARRAY_SIZE(mt_gpufreq_opp_tbl_e1_1));
+#ifdef CONFIG_ARCH_MT6735M
+	else if (mt_gpufreq_dvfs_table_type == 4)	/* 500M */
+		_mt_setup_gpufreqs_table(mt_gpufreq_opp_tbl_e1_4, ARRAY_SIZE(mt_gpufreq_opp_tbl_e1_4));
+#endif
 #ifndef CONFIG_ARCH_MT6753
 	else if (mt_gpufreq_dvfs_table_type == 2)    /* for 35+/37+ */
 		_mt_setup_gpufreqs_table(mt_gpufreq_opp_tbl_e1_2, ARRAY_SIZE(mt_gpufreq_opp_tbl_e1_2));
