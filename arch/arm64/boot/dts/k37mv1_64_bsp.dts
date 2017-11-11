@@ -56,6 +56,21 @@
 	};
 };
 
+&reserved_memory {
+	#address-cells = <2>;
+	#size-cells = <2>;
+	ranges;
+
+	reserve-memory-ccci_md1 {
+		compatible = "mediatek,reserve-memory-ccci_md1";
+		no-map;
+		size = <0 0x3010000>; // md_size+smem_size
+		alignment = <0 0x2000000>;
+		alloc-ranges = <0 0x40000000 0 0xC0000000>;
+	};
+
+};
+
 &bus {
 	compatible = "simple-bus";
 	#address-cells = <1>;
