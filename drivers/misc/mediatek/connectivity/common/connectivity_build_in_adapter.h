@@ -137,6 +137,10 @@ extern int mtk_wdt_swsysret_config(int bit, int set_value);
 void connectivity_export_show_stack(struct task_struct *tsk, unsigned long *sp);
 void connectivity_export_tracing_record_cmdline(struct task_struct *tsk);
 #ifdef CPU_BOOST
+void __attribute__((weak)) mt_ppm_sysboost_freq(enum ppm_sysboost_user user, unsigned int freq);
+void __attribute__((weak)) mt_ppm_sysboost_core(enum ppm_sysboost_user user, unsigned int core_num);
+void __attribute__((weak)) mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user user, unsigned int cluster,
+					int min_core, int max_core);
 void connectivity_export_mt_ppm_sysboost_freq(enum ppm_sysboost_user user, unsigned int freq);
 void connectivity_export_mt_ppm_sysboost_core(enum ppm_sysboost_user user, unsigned int core_num);
 void connectivity_export_mt_ppm_sysboost_set_core_limit(enum ppm_sysboost_user user, unsigned int cluster,
