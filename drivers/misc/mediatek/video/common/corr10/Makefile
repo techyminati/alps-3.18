@@ -25,21 +25,20 @@ ccflags-y += \
 				-I$(srctree)/drivers/misc/mediatek/cmdq/v2/$(MTK_PLATFORM)/ \
 				-I$(srctree)/drivers/misc/mediatek/lcm/inc/
 
-ifneq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735" "mt6755" "mt6797"))
-ccflags-y += -DCCORR_TRANSITION
-endif
-
 ifeq ($(CONFIG_ARCH_MT6735),y)
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/dispsys/mt6735/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/videox/mt6735/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/mt6735/
-ccflags-y += -DCCORR_LINEARMODE
 endif
+
+ifneq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6735" "mt6755" "mt6797"))
+ccflags-y += -DCCORR_TRANSITION
+endif
+
 ifeq ($(CONFIG_ARCH_MT6735M),y)
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/dispsys/mt6735m/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/videox/mt6735m/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/mt6735m/
-ccflags-y += -DCCORR_LINEARMODE
 endif
 ifeq ($(CONFIG_ARCH_MT6753),y)
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/dispsys/mt6753/
