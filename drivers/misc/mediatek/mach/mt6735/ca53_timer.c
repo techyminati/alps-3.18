@@ -494,9 +494,6 @@ static void __init arch_counter_register(unsigned type)
 
 static void arch_timer_stop(struct clock_event_device *clk)
 {
-	pr_debug("arch_timer_teardown disable IRQ%d cpu #%d\n",
-		 clk->irq, smp_processor_id());
-
 	if (arch_timer_use_virtual)
 		disable_percpu_irq(arch_timer_ppi[VIRT_PPI]);
 	else {
