@@ -12,11 +12,7 @@
 #
 
 obj-y += fliper/
-
-ifeq ($(CONFIG_MTK_PERFMGR_TOUCH_BOOST),y)
 obj-y += perfmgr/
-endif
-
 obj-y += legacy_controller/
 
 ifneq ($(CONFIG_MTK_PERFMGR_TOUCH_BOOST),y)
