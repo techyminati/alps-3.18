@@ -2411,6 +2411,7 @@ exit_misc_device_register_failed:
 exit_kfree:
 	kfree(obj);
 exit:
+	err = -EIO;
 	GSE_ERR("%s: err = %d\n", __func__, err);
 	obj = NULL;
 	new_client = NULL;

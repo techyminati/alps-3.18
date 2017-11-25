@@ -1323,6 +1323,7 @@ exit_misc_device_register_failed:
 exit_kfree:
 	kfree(obj);
 exit:
+	err = -EIO;
 	obj = NULL;
 	new_client = NULL;
 	ITG1010_i2c_client = NULL;
