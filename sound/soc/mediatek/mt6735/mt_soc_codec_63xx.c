@@ -2026,20 +2026,20 @@ static void Ext_Speaker_Amp_Change(bool enable)
 #endif /*CONFIG_MTK_LEGACY*/
 		msleep(SPK_WARM_UP_TIME);
 #endif
-#if 1	/* for gobo y33 */
-		mt_set_gpio_mode(GPIO_AUDIO_SEL, GPIO_AUDIO_SEL_M_GPIO);
-		mt_set_gpio_dir(GPIO_AUDIO_SEL, GPIO_DIR_OUT);
-		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
-		udelay(2);
-		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
-		udelay(2);
-		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
-		udelay(2);
-		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
-		udelay(2);
-		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
-		mdelay(50);
-#endif
+		if (strncmp("gobo", CONFIG_ARCH_MTK_PROJECT, 4) == 0) {/* for gobo y33 */
+			mt_set_gpio_mode(GPIO_AUDIO_SEL, GPIO_AUDIO_SEL_M_GPIO);
+			mt_set_gpio_dir(GPIO_AUDIO_SEL, GPIO_DIR_OUT);
+			mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
+			udelay(2);
+			mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
+			udelay(2);
+			mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
+			udelay(2);
+			mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
+			udelay(2);
+			mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ONE);
+			mdelay(50);
+		}
 		pr_debug("Ext_Speaker_Amp_Change ON-\n");
 	} else {
 		pr_debug("Ext_Speaker_Amp_Change OFF+\n");
@@ -2059,11 +2059,11 @@ static void Ext_Speaker_Amp_Change(bool enable)
 #endif
 		udelay(500);
 #endif
-#if 1	/* for gobo y33 */
-		mt_set_gpio_mode(GPIO_AUDIO_SEL, GPIO_AUDIO_SEL_M_GPIO);
-		mt_set_gpio_dir(GPIO_AUDIO_SEL, GPIO_DIR_OUT);
-		mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
-#endif
+		if (strncmp("gobo", CONFIG_ARCH_MTK_PROJECT, 4) == 0) {/* for gobo y33 */
+			mt_set_gpio_mode(GPIO_AUDIO_SEL, GPIO_AUDIO_SEL_M_GPIO);
+			mt_set_gpio_dir(GPIO_AUDIO_SEL, GPIO_DIR_OUT);
+			mt_set_gpio_out(GPIO_AUDIO_SEL, GPIO_OUT_ZERO);
+		}
 		pr_debug("Ext_Speaker_Amp_Change OFF-\n");
 	}
 #endif
