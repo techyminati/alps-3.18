@@ -897,7 +897,7 @@ static int hang_detect_thread(void *arg)
 			aee_rr_rec_hang_detect_timeout_count(hd_timeout);
 #endif
 #ifdef CONFIG_MT_ENG_BUILD
-			if (hang_detect_counter == 1 && hang_aee_warn == 1) {
+			if (hang_detect_counter == 1 && hang_aee_warn == 1 && hd_timeout != 11) {
 				hang_detect_counter = hd_timeout / 2;
 				dump_bt_done = 0;
 				wake_up_interruptible(&dump_bt_start_wait);
