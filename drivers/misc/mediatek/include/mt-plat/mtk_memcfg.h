@@ -77,6 +77,7 @@ extern unsigned long totalhigh_pages;
 #endif /* end of CONFIG_HIGHMEM */
 
 extern void split_page(struct page *page, unsigned int order);
+extern void mtk_memcfg_inform_vmpressure(bool to_trigger);
 
 #else
 
@@ -90,6 +91,7 @@ extern void split_page(struct page *page, unsigned int order);
 #define mtk_memcfg_late_warning(flag) do { } while (0)
 #define mtk_memcfg_write_memory_layout_info(arg...) do { } while (0)
 #define mtk_memcfg_record_freed_reserved(start, end) do {} while (0)
+#define mtk_memcfg_inform_vmpressure(to_trigger) do { } while (0)
 #endif /* end CONFIG_MTK_MEMCFG */
 
 #endif /* end __MTK_MEMCFG_H__ */

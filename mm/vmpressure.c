@@ -23,6 +23,7 @@
 #include <linux/swap.h>
 #include <linux/printk.h>
 #include <linux/vmpressure.h>
+#include <mt-plat/mtk_memcfg.h>
 
 /*
  * The window size (vmpressure_win) is the number of scanned pages before
@@ -144,6 +145,10 @@ static bool vmpressure_event(struct vmpressure *vmpr,
 	bool signalled = false;
 
 	level = vmpressure_calc_level(scanned, reclaimed);
+
+#ifdef CONFIG_MT_ENG_BUILD
+	mtk_memcfg_inform_vmpressure(level == VMPRESSURE_CRITICAL);
+#endif
 
 	mutex_lock(&vmpr->events_lock);
 
