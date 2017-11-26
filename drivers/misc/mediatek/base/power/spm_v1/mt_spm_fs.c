@@ -52,6 +52,9 @@ static ssize_t show_pcm_desc(const struct pcm_desc *pcmdesc, char *buf)
 {
 	char *p = buf;
 
+	if (!pcmdesc)
+		return 0;
+
 	p += sprintf(p, "version = %s\n", pcmdesc->version);
 	p += sprintf(p, "base = 0x%p\n", pcmdesc->base);
 	p += sprintf(p, "size = %u\n", pcmdesc->size);
