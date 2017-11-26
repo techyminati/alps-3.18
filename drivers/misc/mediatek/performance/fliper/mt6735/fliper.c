@@ -31,10 +31,9 @@
 #include <linux/fb.h>
 #include <linux/notifier.h>
 #endif
-
+#include <mt_vcore_dvfs_2.h>
 #include "mach/fliper.h"
 #include "mach/mt_mem_bw.h"
-#include <mt_vcore_dvfs.h>
 #define SEQ_printf(m, x...)\
 	do {\
 		if (m)\
@@ -48,7 +47,8 @@
 #define BW_THRESHOLD 1500
 #define BW_THRESHOLD_MAX 9000
 #define BW_THRESHOLD_MIN 1000
-
+static int num_opp;
+static int perf_now = -1;
 static int bw_threshold;
 static int fliper_enabled;
 static void enable_fliper(void);
@@ -65,6 +65,7 @@ enum {
 	mDDR,
 };
 static int fliper_debug;
+static int ddr_type;
 static ssize_t mt_fliper_write(struct file *filp, const char *ubuf,
 		size_t cnt, loff_t *data)
 {
@@ -324,33 +325,95 @@ static struct notifier_block fliper_fb_notif = {
 	.notifier_call = fliper_fb_notifier_callback,
 };
 #endif
+static ssize_t mt_perf_write(struct file *filp, const char *ubuf,
+		size_t cnt, loff_t *data)
+{
+	char buf[64];
+	int val;
+	int ret;
+	/*
+	if (ddr_type == TYPE_LPDDR3)
+		return cnt;
+	*/
+	if (fliper_debug)
+		return cnt;
 
+	if (cnt >= sizeof(buf))
+		return -EINVAL;
+
+	if (copy_from_user(buf, ubuf, cnt))
+		return -EFAULT;
+	buf[cnt] = 0;
+	ret = kstrtoint(buf, 10, &val);
+	if (ret < 0)
+		return ret;
+
+	if (val < -1 || val > num_opp)
+		return -1;
+
+	if (vcorefs_request_dvfs_opp(KIR_PERF, val) < 0)
+		return cnt;
+	perf_now = val;
+	return cnt;
+}
+
+static int mt_perf_show(struct seq_file *m, void *v)
+{
+	SEQ_printf(m, "perf_now :%d\n", perf_now);
+	SEQ_printf(m, "num_opp :%d\n", num_opp);
+	return 0;
+}
+/*** Seq operation of mtprof ****/
+static int mt_perf_open(struct inode *inode, struct file *file)
+{
+	return single_open(file, mt_perf_show, inode->i_private);
+}
+
+
+static const struct file_operations mt_perf_fops = {
+	.open = mt_perf_open,
+	.write = mt_perf_write,
+	.read = seq_read,
+	.llseek = seq_lseek,
+	.release = single_release,
+};
 
 /*-----------------------------------------------*/
 
 #define TIME_5SEC_IN_MS 5000
 static int __init init_fliper(void)
 {
-	struct proc_dir_entry *pe;
+	struct proc_dir_entry *pe, *fliperfs_dir, *perf_dir;
 	int ret = 0;
 
-	pe = proc_create("fliper", 0664, NULL, &mt_fliper_fops);
+	pr_debug("init fliper driver start\n");
+	fliperfs_dir = proc_mkdir("fliperfs", NULL);
+
+	pe = proc_create("fliper", 0664, fliperfs_dir, &mt_fliper_fops);
 	if (!pe)
 		return -ENOMEM;
+	perf_dir = proc_create("perf", 0644, fliperfs_dir, &mt_perf_fops);
+	if (!perf_dir) {
+		pr_debug("not perf_dir\n");
+		return -ENOMEM;
+	}
 	bw_threshold = BW_THRESHOLD;
 	pr_debug("prepare mt pp transfer: jiffies:%lu-->%lu\n", jiffies, jiffies + msecs_to_jiffies(TIME_5SEC_IN_MS));
 	pr_debug("-	next jiffies:%lu >>> %lu\n", jiffies, jiffies + msecs_to_jiffies(X_ms));
 	mod_timer(&mt_pp_transfer_timer, jiffies + msecs_to_jiffies(TIME_5SEC_IN_MS));
 	fliper_enabled = 1;
 
+	num_opp = 1;
+	ddr_type = get_ddr_type();
 #ifdef CONFIG_PM_AUTOSLEEP
 	ret = fb_register_client(&fliper_fb_notif);
 	if (ret)
-		pr_err("\n<<SOC DVFS FLIPER>> register fb notifier, ret=%d\n", ret);
+		pr_debug("\n<<SOC DVFS FLIPER>> register fb notifier, ret=%d\n", ret);
 #else
 	pm_notifier(fliper_pm_callback, 0);
 #endif
 
+	pr_debug("init fliper driver done\n");
 	return 0;
 }
 late_initcall(init_fliper);
