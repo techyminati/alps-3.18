@@ -1224,7 +1224,8 @@ static int mtkfb_ioctl(struct fb_info *info, unsigned int cmd, unsigned long arg
 				input->tgt_width = MTK_FB_XRES;
 				input->tgt_height = MTK_FB_YRES;
 
-				input->src_pitch = ALIGN_TO(MTK_FB_XRES, MTK_FB_ALIGNMENT) * 4;
+				/* ovl pitch = src_pitch * Bpp in _convert_disp_input_to_ovl */
+				input->src_pitch = ALIGN_TO(MTK_FB_XRES, MTK_FB_ALIGNMENT);
 				input->alpha_enable = 1;
 				input->alpha = 0xff;
 				input->next_buff_idx = -1;
