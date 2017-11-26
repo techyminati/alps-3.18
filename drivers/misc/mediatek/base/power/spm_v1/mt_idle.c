@@ -2347,8 +2347,10 @@ static ssize_t slidle_state_read(struct file *filp, char __user *userbuf, size_t
 	return simple_read_from_buffer(userbuf, count, f_pos, dbg_buf, len);
 }
 
-static ssize_t slidle_state_write(struct file *filp, const char __user *userbuf,
-									size_t count, loff_t *f_pos)
+static ssize_t slidle_state_write(struct file *filp,
+									const char __user *userbuf,
+									size_t count,
+									loff_t *f_pos)
 {
 	char cmd[32];
 	int param;
@@ -2363,7 +2365,7 @@ static ssize_t slidle_state_write(struct file *filp, const char __user *userbuf,
 
 	cmd_buf[count] = '\0';
 
-	if (sscanf(userbuf, "%31s %d", cmd, &param) == 2) {
+	if (sscanf(cmd_buf, "%31s %d", cmd, &param) == 2) {
 		if (!strcmp(cmd, "slidle"))
 			idle_switch[IDLE_TYPE_SL] = param;
 		else if (!strcmp(cmd, "enable"))
