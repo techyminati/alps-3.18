@@ -1180,6 +1180,11 @@ static bool soidle_can_enter(int cpu)
 		}
 	}
 
+	if (sodi_forbid_by_prev_wakeup_info()) {
+		reason = BY_OTH;
+		goto out;
+	}
+
 out:
 	if (reason < NR_REASONS) {
 		if (soidle_block_prev_time == 0)

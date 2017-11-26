@@ -58,6 +58,7 @@ void spm_sodi_mempll_pwr_mode(bool pwr_mode);
 void spm_enable_sodi(bool);
 bool spm_get_sodi_en(void);
 void spm_sodi_init(void);
+int sodi_forbid_by_prev_wakeup_info(void);
 /* #define SPM_SODI_PROFILE_TIME */
 #ifdef SPM_SODI_PROFILE_TIME
 #define SPM_SODI_PROFILE_APXGPT GPT2
