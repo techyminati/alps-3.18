@@ -150,6 +150,9 @@ static ssize_t pwrap_trace_write(struct file *file, const char __user *buf, size
 	unsigned int addr = 0;
 	int ret = 0;
 
+	if (!buf || (size == 0))
+		return -EINVAL;
+
 	info = kmalloc_array(size, sizeof(char), GFP_KERNEL);
 	if (!info)
 		return -ENOMEM;
