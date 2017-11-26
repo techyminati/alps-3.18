@@ -4468,11 +4468,6 @@ static int msdc_dma_config(struct msdc_host *host, struct msdc_dma *dma)
 
 	switch (dma->mode) {
 	case MSDC_MODE_DMA_BASIC:
-		if (host->hw->host_function == MSDC_SDIO)
-			BUG_ON(dma->xfersz > 0xFFFFFFFF);
-		else
-			BUG_ON(dma->xfersz > 65535);
-
 		BUG_ON(dma->sglen != 1);
 		dma_address = sg_dma_address(sg);
 		dma_len = msdc_sg_len(sg, host->dma_xfer);
