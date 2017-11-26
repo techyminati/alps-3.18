@@ -448,6 +448,7 @@ int mtk_wdt_swsysret_config(int bit, int set_value)
 	pr_debug("after set wdt_sys_val =%x,wdt_sys_val=%x\n", __raw_readl(MTK_WDT_SWSYSRST), wdt_sys_val);
 	return 0;
 }
+EXPORT_SYMBOL(mtk_wdt_swsysret_config);
 
 int mtk_wdt_request_en_set(int mark_bit, WD_REQ_CTL en)
 {
@@ -613,6 +614,7 @@ void mtk_wd_suspend(void){}
 void mtk_wd_resume(void){}
 void wdt_dump_reg(void){}
 int mtk_wdt_swsysret_config(int bit, int set_value) { return 0; }
+EXPORT_SYMBOL(mtk_wdt_swsysret_config);
 int mtk_wdt_request_mode_set(int mark_bit, WD_REQ_MODE mode) {return 0; }
 int mtk_wdt_request_en_set(int mark_bit, WD_REQ_CTL en) {return 0; }
 void mtk_wdt_set_c2k_sysrst(unsigned int flag) {}

@@ -411,6 +411,7 @@ int mtk_wdt_swsysret_config(int bit, int set_value)
 		 wdt_sys_val);
 	return 0;
 }
+EXPORT_SYMBOL(mtk_wdt_swsysret_config);
 
 int mtk_wdt_request_en_set(int mark_bit, WD_REQ_CTL en)
 {
@@ -629,6 +630,7 @@ int mtk_wdt_swsysret_config(int bit, int set_value)
 {
 	return 0;
 }
+EXPORT_SYMBOL(mtk_wdt_swsysret_config);
 
 int mtk_wdt_request_mode_set(int mark_bit, WD_REQ_MODE mode)
 {
