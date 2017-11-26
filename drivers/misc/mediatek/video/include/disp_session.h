@@ -470,6 +470,13 @@ enum DISP_UT_ERROR {
 	DISP_UT_ERROR_RDMA = 0x00000004,
 	DISP_UT_ERROR_CMDQ_TIMEOUT = 0x00000008,
 };
+
+enum DISP_SELF_REFRESH_TYPE {
+	REFRESH_FOR_ANTI_LATENCY2 = 0,
+	REFRESH_FOR_SWITCH_DECOUPLE,
+	REFRESH_FOR_SWITCH_DECOUPLE_MIRROR,
+};
+
 /* IOCTL commands. */
 #define DISP_IOW(num, dtype)     _IOW('O', num, dtype)
 #define DISP_IOR(num, dtype)     _IOR('O', num, dtype)
@@ -506,6 +513,7 @@ enum DISP_UT_ERROR {
 #define	DISP_IOCTL_WAIT_ALL_JOBS_DONE			DISP_IOW(224, unsigned int)
 #define	DISP_IOCTL_SCREEN_FREEZE			DISP_IOW(225, unsigned int)
 #define DISP_IOCTL_GET_UT_RESULT			DISP_IOW(226, unsigned int)
+#define DISP_IOCTL_WAIT_DISP_SELF_REFRESH		DISP_IOW(227, unsigned int)
 #ifdef __KERNEL__
 
 int disp_mgr_get_session_info(disp_session_info *info);
