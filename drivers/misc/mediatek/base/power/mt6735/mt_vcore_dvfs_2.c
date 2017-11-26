@@ -654,6 +654,8 @@ int vcorefs_request_dvfs_opp(enum dvfs_kicker kicker, enum dvfs_opp new_opp)
 
 	return r;
 }
+EXPORT_SYMBOL(vcorefs_request_dvfs_opp);
+
 
 /**************************************
  * SDIO AutoK related API
