@@ -77,7 +77,7 @@ static int hang_aee_warn = 1;
 static int system_server_pid;
 extern void get_msdc_aee_buffer(unsigned long *buff,
 	unsigned long *size)__attribute__((weak));
-static bool msdc_debug_done;
+
 DECLARE_WAIT_QUEUE_HEAD(dump_bt_start_wait);
 DECLARE_WAIT_QUEUE_HEAD(dump_bt_done_wait);
 static long monitor_hang_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
@@ -337,13 +337,10 @@ static void DumpMsdc2HangInfo(void)
 	char *buff_add;
 	unsigned long buff_size;
 
-	if (msdc_debug_done == false) {
-		msdc_debug_done = true;
-		if (get_msdc_aee_buffer) {
-			get_msdc_aee_buffer((unsigned long *)&buff_add, &buff_size);
-			if (buff_size != 0 && buff_size <= 30 * 1024)
-				Buff2HangInfo(buff_add, buff_size);
-		}
+	if (get_msdc_aee_buffer) {
+		get_msdc_aee_buffer((unsigned long *)&buff_add, &buff_size);
+		if (buff_size != 0 && buff_size <= 30 * 1024)
+			Buff2HangInfo(buff_add, buff_size);
 	}
 }
 
@@ -363,6 +360,22 @@ static void get_kernel_bt(struct task_struct *tsk)
 		Log2HangInfo("<%lx> %pS\n", (long)trace.entries[i], (void *)trace.entries[i]);
 }
 
+static void DumpMemInfo(void)
+{
+	char *buff_add;
+	int buff_size;
+
+	mlog_get_buffer(&buff_add, &buff_size);
+	if (buff_size <= 0) {
+		pr_info("hang_detect: mlog_get_buffer size %d.\n", buff_size);
+		return;
+	}
+
+	if (buff_size > 3*1024)
+		buff_size = 3*1024;
+
+	Buff2HangInfo(buff_add, buff_size);
+}
 
 void sched_show_task_local(struct task_struct *p)
 {
@@ -411,6 +424,9 @@ static int DumpThreadNativeMaps(pid_t pid)
 	int flags;
 	struct mm_struct *mm;
 	struct pt_regs *user_ret;
+	char tpath[512];
+	char *path_p = NULL;
+	struct path base_path;
 
 	current_task = find_task_by_vpid(pid);	/* get tid task */
 	if (current_task == NULL)
@@ -441,12 +457,13 @@ static int DumpThreadNativeMaps(pid_t pid)
 			     (unsigned char *)(file->f_path.dentry->d_iname));
 
 			if (flags & VM_EXEC) {	/* we only catch code section for reduce maps space */
+				base_path = file->f_path;
+				path_p = d_path(&base_path, tpath, 512);
 				Log2HangInfo("%08lx-%08lx %c%c%c%c    %s\n", vma->vm_start,
 					     vma->vm_end, flags & VM_READ ? 'r' : '-',
 					     flags & VM_WRITE ? 'w' : '-',
 					     flags & VM_EXEC ? 'x' : '-',
-					     flags & VM_MAYSHARE ? 's' : 'p',
-					     (unsigned char *)(file->f_path.dentry->d_iname));
+					     flags & VM_MAYSHARE ? 's' : 'p', path_p);
 			}
 		} else {
 			const char *name = arch_vma_name(vma);
@@ -822,9 +839,10 @@ static void ShowStatus(void)
 	}
 	read_unlock(&tasklist_lock);
 
-	if (Hang_Detect_first == false)
+	if (Hang_Detect_first == false) {
+		DumpMemInfo();
 		show_state_filter_local();
-	else
+	} else
 		DumpMsdc2HangInfo();
 
 	for (i = 0; i < dump_count; i++)
