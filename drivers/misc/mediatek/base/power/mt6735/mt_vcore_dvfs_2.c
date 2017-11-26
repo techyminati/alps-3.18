@@ -611,7 +611,7 @@ static int vcorefs_func_enable_check(enum dvfs_kicker kicker, enum dvfs_opp new_
 		return -ERR_OPP;
 
 	/* UHPM is only for GPU */
-	if (new_opp == OPPI_PERF_ULTRA && kicker != KIR_GPU && kicker != KIR_SYSFS)
+	if (new_opp == OPPI_PERF_ULTRA && kicker != KIR_GPU && kicker != KIR_WIFI && kicker != KIR_SYSFS)
 		return -ERR_OPP;
 
 	if (!pwrctrl->late_init_opp_done)
