@@ -1473,7 +1473,7 @@ static int emmc_rpmb_open(struct inode *inode, struct file *file)
 static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
 	int err = 0;
-	struct mmc_card *card = mtk_msdc_host[0]->mmc->card;
+	struct mmc_card *card;
 	struct rpmb_ioc_param param;
 	int ret = 0;
 #if (defined(CONFIG_MICROTRUST_TEE_SUPPORT))
@@ -1484,9 +1484,13 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 #endif
 
 	/* MSG(INFO, "%s, !!!!!!!!!!!!\n", __func__);    */
+	if (!mtk_msdc_host[0] || !mtk_msdc_host[0]->mmc || !mtk_msdc_host[0]->mmc->card)
+		return -1;
+
+	card = mtk_msdc_host[0]->mmc->card;
 
 	err = copy_from_user(&param, (void *)arg, sizeof(param));
-	if (err < 0) {
+	if (err != 0) {
 		MSG(ERR, "%s, err=%x\n", __func__, err);
 		return -1;
 	}
@@ -1498,7 +1502,7 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 			return -1;
 		}
 		err = copy_from_user(&rpmb_size, (void *)arg, 4);
-		if (err < 0) {
+		if (err != 0) {
 			MSG(ERR, "%s, err=%x\n", __func__, err);
 			return -1;
 		}
@@ -1507,7 +1511,7 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 		if (rpmbinfor.size <= (RPMB_DATA_BUFF_SIZE-4)) {
 			MSG(INFO, "%s, rpmbinfor.size is %d!\n", __func__, rpmbinfor.size);
 			err = copy_from_user(rpmb_buffer, (void *)arg, 4 + rpmbinfor.size);
-			if (err < 0) {
+			if (err != 0) {
 				MSG(ERR, "%s, err=%x\n", __func__, err);
 				return -1;
 			}
@@ -1537,7 +1541,7 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 		ret = emmc_rpmb_req_read_data(card, &param);
 
 		err = copy_to_user((void *)arg, &param, sizeof(param));
-		if (err < 0) {
+		if (err != 0) {
 			MSG(ERR, "%s, err=%x\n", __func__, err);
 			return -1;
 		}
@@ -1565,6 +1569,10 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 		}
 
 		ret = copy_to_user((void *)arg, rpmb_buffer, 4 + rpmbinfor.size);
+		if (ret != 0) {
+			MSG(ERR, "%s, err=%x\n", __func__, ret);
+			return -1;
+		}
 
 	    break;
 
@@ -1580,6 +1588,10 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 		}
 
 		ret = copy_to_user((void *)arg, rpmb_buffer, 4 + rpmbinfor.size);
+		if (ret != 0) {
+			MSG(ERR, "%s, err=%x\n", __func__, ret);
+			return -1;
+		}
 
 	    break;
 
