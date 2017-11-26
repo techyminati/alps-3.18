@@ -580,18 +580,8 @@ void c2k_modem_power_on_platform(void)
 
 	/*step 3: PMIC VTCXO_1 enable */
 	pmic_config_interface(0x0A02, 0xA12E, 0xFFFF, 0x0);
-	/*step 4: reset C2K */
-#if 0
-	c2k_write32(toprgu_base, TOP_RGU_WDT_SWSYSRST,
-		    (c2k_read32(toprgu_base, TOP_RGU_WDT_SWSYSRST) | 0x88000000)
-		    & (~(0x1 << 15)));
-#else
-	mtk_wdt_set_c2k_sysrst(1);
-#endif
-	C2K_BOOTUP_LOG("[C2K] TOP_RGU_WDT_SWSYSRST = 0x%x\n",
-		 c2k_read32(toprgu_base, TOP_RGU_WDT_SWSYSRST));
 
-	/*step 5: set memory remap */
+	/*step 4: set memory remap */
 	if (first_init) {
 		first_init = 0;
 		c2k_write32(infra_ao_base, MD3_BANK0_MAP0,
@@ -603,6 +593,11 @@ void c2k_modem_power_on_platform(void)
 		C2K_BOOTUP_LOG("[C2K] MD3_BANK0_MAP0 = 0x%x\n",
 			 c2k_read32(infra_ao_base, MD3_BANK0_MAP0));
 	}
+
+	/*step 5: reset C2K */
+	mtk_wdt_set_c2k_sysrst(1);
+	C2K_BOOTUP_LOG("[C2K] TOP_RGU_WDT_SWSYSRST = 0x%x\n",
+		 c2k_read32(toprgu_base, TOP_RGU_WDT_SWSYSRST));
 
 	/*step 6: wake up C2K */
 	c2k_write32(infra_ao_base, INFRA_AO_C2K_SPM_CTRL,
