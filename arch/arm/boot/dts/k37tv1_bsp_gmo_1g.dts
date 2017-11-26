@@ -8,7 +8,7 @@
 #else
 #include "mt6735.dts"
 #endif
-#include <dt-bindings/lcm/r63417_fhd_dsi_cmd_truly_nt50358.dtsi>
+#include <dt-bindings/lcm/r63417_fhd_dsi_cmd_truly_nt50358_hdplus.dtsi>
 
 &reserved_memory {
 	#address-cells = <2>;
