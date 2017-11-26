@@ -338,7 +338,7 @@ static int check_port(struct sdio_modem_port *port)
 			       __LINE__, port->index);
 			ret = -ENODEV;
 		} else if (modem->status == MD_OFF) {
-			LOGPRT(LOG_ERR, "%s %d: modem is off now.(%d)\n",
+			LOGPRT(LOG_INFO, "%s %d: modem is off now.(%d)\n",
 			       __func__, __LINE__, port->index);
 			ret = -ENODEV;
 		}
