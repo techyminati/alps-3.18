@@ -560,6 +560,11 @@ static int MT6573FDVT_WaitIRQ(u32 *u4IRQMask)
 	*u4IRQMask = g_u4MT6573FDVTIRQ;
 	/* LOG_DBG("[FDVT] IRQ : 0x%8x\n",g_u4MT6573FDVTIRQ); */
 
+	if (timeout != 0 && !(g_u4MT6573FDVTIRQMSK & g_u4MT6573FDVTIRQ)) {
+		LOG_DBG("interrupted by system signal, return value(%d)\n", timeout);
+		return -ERESTARTSYS;
+	}
+
 	if (!(g_u4MT6573FDVTIRQMSK & g_u4MT6573FDVTIRQ)) {
 		LOG_DBG("wait_event_interruptible Not FDVT, %d, %d\n", g_u4MT6573FDVTIRQMSK, g_u4MT6573FDVTIRQ);
 		MT6573FDVT_DUMPREG();
