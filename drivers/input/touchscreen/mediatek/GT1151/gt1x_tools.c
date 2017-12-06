@@ -50,7 +50,8 @@ typedef struct {
 } st_cmd_head;
 #pragma pack()
 st_cmd_head cmd_head;
-struct mutex rw_mutex;
+static DEFINE_MUTEX(rw_mutex);
+
 
 s32 DATA_LENGTH = 0;
 s8 IC_TYPE[16] = "GT9XX";
@@ -384,7 +385,6 @@ static ssize_t gt1x_tool_read(struct file *filp, char __user *buffer, size_t cou
 		*ppos = 0;
 		return 0;
 	}
-
 	if (cmd_head.data_len > DATA_LENGTH)
 		cmd_head.data_len = DATA_LENGTH;
 	mutex_lock(&rw_mutex);
