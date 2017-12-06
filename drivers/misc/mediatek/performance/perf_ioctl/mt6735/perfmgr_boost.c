@@ -24,8 +24,8 @@
 
 /*--------------DEFAULT SETTING-------------------*/
 
-#define TARGET_CORE (3)
-#define TARGET_FREQ (819000)
+#define TARGET_CORE (4)
+#define TARGET_FREQ (1092000)
 
 /*-----------------------------------------------*/
 
