@@ -31,6 +31,14 @@ static int tboost_freq;
 #define UI_UPDATE_DURATION_MS 300UL
 #define RENDER_AWARE_DURATION_MS 3000UL
 
+unsigned long perfctl_copy_from_user(void *pvTo, const void __user *pvFrom, unsigned long ulBytes)
+{
+	if (access_ok(VERIFY_READ, pvFrom, ulBytes))
+		return __copy_from_user(pvTo, pvFrom, ulBytes);
+
+	return ulBytes;
+}
+
 /*--------------------TIMER------------------------*/
 static void enable_ui_update_timer(void)
 {
@@ -179,6 +187,15 @@ long device_ioctl(struct file *filp,
 		unsigned int cmd, unsigned long arg)
 {
 	ssize_t ret = 0;
+	FPSGO_PACKAGE *msgKM = NULL, *msgUM = (FPSGO_PACKAGE *)arg;
+	FPSGO_PACKAGE smsgKM;
+
+	msgKM = &smsgKM;
+
+	if (perfctl_copy_from_user(msgKM, msgUM, sizeof(FPSGO_PACKAGE))) {
+		ret = -EFAULT;
+		goto ret_ioctl;
+	}
 
 	mutex_lock(&notify_lock);
 	if (fbc_debug)
@@ -187,13 +204,13 @@ long device_ioctl(struct file *filp,
 	/* start of ux fbc */
 	switch (cmd) {
 	/*receive touch info*/
-	case IOCTL_WRITE_TH:
-		notify_touch(arg);
+	case FPSGO_TOUCH:
+		notify_touch(msgKM->frame_time);
 		break;
 
 	/*receive frame_time info*/
-	case IOCTL_WRITE_FC:
-		notify_frame_complete(arg);
+	case FPSGO_FRAME_COMPLETE:
+		notify_frame_complete(msgKM->frame_time);
 		break;
 
 	default:
