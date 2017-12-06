@@ -403,7 +403,7 @@ static int __init init_fliper(void)
 	mod_timer(&mt_pp_transfer_timer, jiffies + msecs_to_jiffies(TIME_5SEC_IN_MS));
 	fliper_enabled = 1;
 
-	num_opp = 1;
+	num_opp = 2;
 	ddr_type = get_ddr_type();
 #ifdef CONFIG_PM_AUTOSLEEP
 	ret = fb_register_client(&fliper_fb_notif);
