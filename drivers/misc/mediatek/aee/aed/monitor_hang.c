@@ -360,6 +360,7 @@ static void get_kernel_bt(struct task_struct *tsk)
 		Log2HangInfo("<%lx> %pS\n", (long)trace.entries[i], (void *)trace.entries[i]);
 }
 
+#ifdef CONFIG_MTK_MLOG
 static void DumpMemInfo(void)
 {
 	char *buff_add;
@@ -376,6 +377,7 @@ static void DumpMemInfo(void)
 
 	Buff2HangInfo(buff_add, buff_size);
 }
+#endif
 
 void sched_show_task_local(struct task_struct *p)
 {
@@ -840,7 +842,9 @@ static void ShowStatus(void)
 	read_unlock(&tasklist_lock);
 
 	if (Hang_Detect_first == false) {
+#ifdef CONFIG_MTK_MLOG
 		DumpMemInfo();
+#endif
 		show_state_filter_local();
 	} else
 		DumpMsdc2HangInfo();
