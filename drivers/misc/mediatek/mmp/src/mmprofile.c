@@ -1270,12 +1270,17 @@ static ssize_t mmprofile_dbgfs_global_read(struct file *file, char __user *buf, 
 	return simple_read_from_buffer(buf, size, ppos, &MMProfileGlobals, MMProfileGlobalsSize);
 }
 
+/* Remove mmprofile_dbgfs_global_write for syzkaller io fuzzer test temporally
+ * TODO: enable this function and check if userspace buffer is feasible for
+ * MMProfileGlobals
+ */
+#if 0
 static ssize_t mmprofile_dbgfs_global_write(struct file *file, const char __user *buf, size_t size,
 					    loff_t *ppos)
 {
 	return simple_write_to_buffer(&MMProfileGlobals, MMProfileGlobalsSize, ppos, buf, size);
 }
-
+#endif
 static const struct file_operations mmprofile_dbgfs_enable_fops = {
 	.read = mmprofile_dbgfs_enable_read,
 	.write = mmprofile_dbgfs_enable_write,
@@ -1300,7 +1305,9 @@ static const struct file_operations mmprofile_dbgfs_buffer_fops = {
 
 static const struct file_operations mmprofile_dbgfs_global_fops = {
 	.read = mmprofile_dbgfs_global_read,
+#if 0
 	.write = mmprofile_dbgfs_global_write,
+#endif
 	.llseek = generic_file_llseek,
 };
 
@@ -1877,6 +1884,8 @@ static long mmprofile_ioctl_compat(struct file *file, unsigned int cmd, unsigned
 }
 #endif
 
+/* TODO: remove for temp workaround for syzkaller. Need to check if input vma is feasible */
+#if 0
 static int mmprofile_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	unsigned int pos = 0;
@@ -1926,6 +1935,7 @@ static int mmprofile_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EINVAL;
 	return 0;
 }
+#endif
 
 const struct file_operations mmprofile_fops = {
 	.owner = THIS_MODULE,
@@ -1934,7 +1944,9 @@ const struct file_operations mmprofile_fops = {
 	.release = mmprofile_release,
 	.read = mmprofile_read,
 	.write = mmprofile_write,
+#if 0
 	.mmap = mmprofile_mmap,
+#endif
 #ifdef CONFIG_COMPAT
 	.compat_ioctl = mmprofile_ioctl_compat,
 #endif
