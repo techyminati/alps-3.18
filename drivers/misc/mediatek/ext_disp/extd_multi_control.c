@@ -22,7 +22,8 @@
 #include "mtk_ovl.h"
 
 static const struct EXTD_DRIVER  *extd_driver[DEV_MAX_NUM];
-static struct SWITCH_MODE_INFO_STRUCT path_info;
+struct SWITCH_MODE_INFO_STRUCT path_info;
+
 
 struct task_struct *disp_switch_mode_task = NULL;
 wait_queue_head_t switch_mode_wq;
@@ -227,7 +228,7 @@ static int disp_switch_mode_kthread(void *data)
 }
 
 #ifndef OVL_CASCADE_SUPPORT
-static int path_change_without_cascade(DISP_MODE mode, unsigned int session_id, unsigned int device_id)
+int path_change_without_cascade(DISP_MODE mode, unsigned int session_id, unsigned int device_id)
 {
 	int ret = -1;
 	unsigned int session = 0;

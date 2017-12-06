@@ -97,11 +97,14 @@
 #include "extd_hdmi.h"
 #include "external_display.h"
 #endif
-
+#if defined(HDMI_MT8193_SUPPORT)
+#include "mt6735/external_display.h"
+#endif
 
 static dev_t mtk_disp_mgr_devno;
 static struct cdev *mtk_disp_mgr_cdev;
 static struct class *mtk_disp_mgr_class;
+
 
 DEFINE_MUTEX(session_config_mutex);
 disp_session_input_config _session_input[2][DISP_SESSION_MEMORY];
@@ -283,13 +286,20 @@ int disp_create_session(disp_session_config *config)
 
 	/* 2. Create this session */
 	if (idx != -1) {
-#ifdef CONFIG_SINGLE_PANEL_OUTPUT
+#if defined(HDMI_MT8193_SUPPORT) || defined(CONFIG_SINGLE_PANEL_OUTPUT)
 		if ((path_info.switching == DEV_MAX_NUM) && (DISP_SESSION_TYPE(session) == DISP_SESSION_EXTERNAL)
 			&& ext_disp_is_alive()) {
 				path_info.switching = DEV_MAX_NUM - 1;
 				pr_err("create external session, but path have not been destroyed ,need destroy first\n");
+#if defined(CONFIG_SINGLE_PANEL_OUTPUT)
 				external_display_path_change_without_cascade(DISP_SESSION_DIRECT_LINK_MODE,
 					0x0, DEV_MHL, 1);
+#endif
+#if defined(HDMI_MT8193_SUPPORT)
+				path_change_without_cascade(DISP_SESSION_DIRECT_LINK_MODE,
+					0x0, DEV_MHL);
+#endif
+
 		}
 #endif
 		config->session_id = session;
