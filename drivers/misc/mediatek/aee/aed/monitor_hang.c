@@ -72,7 +72,7 @@ static int hd_timeout = 0x7fffffff;
 static int hang_detect_counter = 0x7fffffff;
 static int dump_bt_done;
 #ifdef CONFIG_MT_ENG_BUILD
-static int hang_aee_warn = 1;
+static int hang_aee_warn = 2;
 #endif
 static int system_server_pid;
 extern void get_msdc_aee_buffer(unsigned long *buff,
@@ -951,9 +951,10 @@ static int hang_detect_thread(void *arg)
 			aee_rr_rec_hang_detect_timeout_count(hd_timeout);
 #endif
 #ifdef CONFIG_MT_ENG_BUILD
-			if (hang_detect_counter == 1 && hang_aee_warn == 1 && hd_timeout != 11) {
+			if (hang_detect_counter == 1 && hang_aee_warn == 2 && hd_timeout != 11) {
 				hang_detect_counter = hd_timeout / 2;
 				dump_bt_done = 0;
+				hang_aee_warn = 1;
 				wake_up_interruptible(&dump_bt_start_wait);
 				if (dump_bt_done != 1)
 					wait_event_interruptible_timeout(dump_bt_done_wait, dump_bt_done == 1, HZ*10);
