@@ -27,7 +27,7 @@
 #define MAKE_DISP_SESSION(type, dev) (unsigned int)((type)<<16 | (dev))
 #define MAX_OVL_CONFIG 12
 
-#define RSZ_RES_LIST_NUM 4
+#define RSZ_RES_LIST_NUM 8
 
 /* /============================================================================= */
 /* structure declarations */
@@ -323,6 +323,9 @@ struct disp_frame_cfg_t {
 
 	/* ccorr config */
 	struct disp_ccorr_config ccorr_config;
+
+	/* res_idx: SF/HWC selects which resolution to use */
+	int res_idx;
 };
 
 typedef struct disp_session_info_t {
@@ -402,6 +405,7 @@ typedef enum {
 	DISP_FEATURE_RSZ = 0x00000010,
 	DISP_FEATURE_NO_PARGB = 0x00000020,
 	DISP_FEATURE_DISP_SELF_REFRESH = 0x00000040,
+	DISP_FEATURE_RPO = 0x00000080,
 } DISP_FEATURE;
 
 typedef struct disp_caps_t {
@@ -415,12 +419,21 @@ typedef struct disp_caps_t {
 	int is_support_frame_cfg_ioctl;
 	int is_output_rotated;
 	int lcm_degree;
+
 	/* resizer input resolution list
 	 * format:
-	 *   sequence from big resolution to small
-	 *   portrait width first then height
+	 *   sequence from big resolution(LCM resolution) to small
+	 *   portrait {width, height, rsz layer cnt to use}
+	 * ex:
+	 *   { 1440, 2560, 0},
+	 *   { 1080, 1920, 1},
+	 *   ...
 	 */
-	unsigned int rsz_in_res_list[RSZ_RES_LIST_NUM][2];
+	unsigned int rsz_in_res_list[RSZ_RES_LIST_NUM][3];
+	unsigned int rsz_list_length;
+	/* portrait { width, height } */
+	unsigned int rsz_in_max[2];
+
 	/* is_support_three_session:
 	 *  1: support three session at same time
 	 *  0: not support three session at same time
@@ -434,7 +447,10 @@ typedef struct disp_session_buf_t {
 } disp_session_buf_info;
 
 enum LAYERING_CAPS {
-	LAYERING_OVL_ONLY = 0x00000001,
+	LAYERING_OVL_ONLY =	0x00000001,
+	MDP_RSZ_LAYER =		0x00000002,
+	DISP_RSZ_LAYER =	0x00000004,
+	MDP_ROT_LAYER =		0x00000008,
 };
 
 typedef struct layer_config_t {
@@ -454,6 +470,8 @@ typedef struct disp_layer_info_t {
 	int gles_head[2];
 	int gles_tail[2];
 	int hrt_num;
+	/* res_idx: SF/HWC selects which resolution to use */
+	int res_idx;
 } disp_layer_info;
 
 enum DISP_SCENARIO {
