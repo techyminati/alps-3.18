@@ -477,6 +477,8 @@ typedef struct disp_layer_info_t {
 enum DISP_SCENARIO {
 	DISP_SCENARIO_NORMAL,
 	DISP_SCENARIO_SELF_REFRESH,
+	DISP_SCENARIO_FORCE_DC,
+	DISP_SCENARIO_NUM,
 };
 struct disp_scenario_config_t {
 	unsigned int session_id;
