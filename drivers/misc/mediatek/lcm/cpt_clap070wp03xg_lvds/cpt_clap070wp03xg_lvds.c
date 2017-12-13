@@ -89,6 +89,7 @@ static void lcm_get_params(LCM_PARAMS *params)
 	params->height = FRAME_HEIGHT;
 	params->io_select_mode = 0;
 
+	params->density = 213;
 	params->dpi.PLL_CLOCK = 67;
 
 	params->dpi.clk_pol = LCM_POLARITY_FALLING;
