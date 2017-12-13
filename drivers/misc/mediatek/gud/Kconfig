@@ -14,6 +14,7 @@ config TRUSTONIC_TEE_VERSION
 	string "TRUSTONIC TEE Version"
 	depends on TRUSTONIC_TEE_SUPPORT
 	default "302c" if (ARCH_MT6570 || ARCH_MT6580)
+	default "311c" if (ARCH_MT6755)
 	default "302d"
 
 #config MT_TRUSTONIC_TEE_DEBUGFS
