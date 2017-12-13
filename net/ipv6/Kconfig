@@ -263,7 +263,7 @@ config MTK_DHCPV6C_WIFI
 	default y
 
 
-config MTK_IPV6_VZW_REQ6378
+config MTK_IPV6_VZW
 	bool "IPV6: RS triggering to extend route lifetime"
 	depends on IPV6
 	default n
