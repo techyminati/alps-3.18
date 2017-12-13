@@ -1885,13 +1885,17 @@ static long mmprofile_ioctl_compat(struct file *file, unsigned int cmd, unsigned
 #endif
 
 /* TODO: remove for temp workaround for syzkaller. Need to check if input vma is feasible */
-#if 0
 static int mmprofile_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	unsigned int pos = 0;
 	unsigned int i = 0;
 
 	if (MMProfileGlobals.selected_buffer == MMProfileGlobalsBuffer) {
+
+		/* check user space buffer length */
+		if ((vma->vm_end - vma->vm_start) != MMProfileGlobalsSize)
+			return -EINVAL;
+
 		/* vma->vm_flags |= VM_RESERVED; */
 		/* vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot); */
 
@@ -1910,6 +1914,11 @@ static int mmprofile_mmap(struct file *file, struct vm_area_struct *vma)
 			/* pr_debug("pfn: 0x%08x\n", pfn); */
 		}
 	} else if (MMProfileGlobals.selected_buffer == MMProfilePrimaryBuffer) {
+
+		/* check user space buffer length */
+		if ((vma->vm_end - vma->vm_start) != MMProfileGlobals.buffer_size_bytes)
+			return -EINVAL;
+
 		MMProfileInitBuffer();
 
 		if (!bMMProfileInitBuffer)
@@ -1935,7 +1944,6 @@ static int mmprofile_mmap(struct file *file, struct vm_area_struct *vma)
 		return -EINVAL;
 	return 0;
 }
-#endif
 
 const struct file_operations mmprofile_fops = {
 	.owner = THIS_MODULE,
@@ -1944,9 +1952,7 @@ const struct file_operations mmprofile_fops = {
 	.release = mmprofile_release,
 	.read = mmprofile_read,
 	.write = mmprofile_write,
-#if 0
 	.mmap = mmprofile_mmap,
-#endif
 #ifdef CONFIG_COMPAT
 	.compat_ioctl = mmprofile_ioctl_compat,
 #endif
