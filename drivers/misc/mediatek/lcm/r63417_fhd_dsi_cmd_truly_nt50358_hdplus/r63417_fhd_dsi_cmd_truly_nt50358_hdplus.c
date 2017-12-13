@@ -381,10 +381,9 @@ static void lcm_get_params(LCM_PARAMS *params)
 
 #ifndef CONFIG_FPGA_EARLY_PORTING
 #ifdef LCM_DSI_CMD_MODE
-	/* illi hd+ lcm under vdo mode pll_clock = 255*/
-	params->dsi.PLL_CLOCK = 255; /* this value must be in MTK suggested table */
+	params->dsi.PLL_CLOCK = 290; /* this value must be in MTK suggested table */
 #else
-	params->dsi.PLL_CLOCK = 255; /* this value must be in MTK suggested table */
+	params->dsi.PLL_CLOCK = 290; /* this value must be in MTK suggested table */
 #endif
 #else
 	params->dsi.pll_div1 = 0;

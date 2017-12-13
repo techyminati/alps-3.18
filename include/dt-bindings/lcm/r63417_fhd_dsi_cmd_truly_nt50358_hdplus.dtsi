@@ -149,7 +149,7 @@
 		lcm_params-dsi-rg_bir;
 		lcm_params-dsi-rg_bic;
 		lcm_params-dsi-rg_bp;
-		lcm_params-dsi-pll_clock = <255>;
+		lcm_params-dsi-pll_clock = <290>;
 		lcm_params-dsi-dsi_clock;
 		lcm_params-dsi-ssc_disable;
 		lcm_params-dsi-ssc_range;
