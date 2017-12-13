@@ -410,6 +410,8 @@ int ccci_md_check_ee_done(struct ccci_modem *md, int timeout)
 
 void ccci_md_set_reload_type(struct ccci_modem *md, int type)
 {
+	if (md_tpye_check(type))
+		return;
 	if (set_modem_support_cap(md->index, type) == 0) {
 		md->config.load_type = type;
 		md->config.setting |= MD_SETTING_RELOAD;
@@ -973,5 +975,4 @@ void ccci_md_dump_log_history(struct ccci_modem *md, int dump_multi_rec, int tx_
 	}
 #endif
 }
-
 

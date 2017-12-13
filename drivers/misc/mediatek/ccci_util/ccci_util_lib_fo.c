@@ -50,7 +50,7 @@
 /**************************************************************************
 **** Local debug option for this file only ********************************
 **************************************************************************/
-/* #define LK_LOAD_MD_INFO_DEBUG_EN //*/
+/* #define LK_LOAD_MD_INFO_DEBUG_EN */
 
 #define CCCI_MEM_ALIGN      (SZ_32M)
 #define CCCI_SMEM_ALIGN_MD1 (0x200000)	/*2M */
@@ -1498,6 +1498,42 @@ int get_md_img_type(int md_id)
 	CCCI_UTIL_INF_MSG("get_md_img_type ret 0 for normal(%d)\n", md_support_val);
 	return 0;
 }
+
+int md_type_convert(int type)
+{
+	int i;
+	unsigned int val;
+
+	val = compatible_convert((unsigned int)(type & (~MD_CAP_ENHANCE)));
+	for (i = 0; i < (sizeof(legacy_ubin_rat_map)/sizeof(unsigned int)); i++) {
+		if (val == legacy_ubin_rat_map[i])
+			return LEGACY_UBIN_START_ID + i;
+	}
+	return type;
+}
+
+int md_type_from_lk(int type)
+{
+	if (s_g_lk_load_img_status & LK_LOAD_MD_EN)
+		if (type == 3 || (type >= LEGACY_UBIN_START_ID &&
+			type <= LEGACY_UBIN_END_ID))
+			return 0;
+	if (type == 5 || type == 6 || type == 7)
+		return 0;
+	return 1;
+}
+
+int md_tpye_check(int type)
+{
+	int res = 1;
+
+	if ((type & MD_CAP_ENHANCE) == MD_CAP_ENHANCE)
+		res = md_type_from_lk(md_type_convert(type));
+	else
+		res = md_type_from_lk(type);
+	return res;
+}
+
 
 int get_legacy_md_type(int md_id)
 {
