@@ -829,6 +829,7 @@ static int FDVT_open(struct inode *inode, struct file *file)
 		LOG_DBG("pread_buf is not null\n");
 
 	pBuff = kmalloc(buf_size, GFP_KERNEL);
+	memset(pBuff, 0, buf_size);
 	if (NULL == pBuff) {
 		LOG_DBG(" ioctl allocate mem failed\n");
 		ret = -ENOMEM;
