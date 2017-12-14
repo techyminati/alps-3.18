@@ -550,17 +550,17 @@ static s32 pwrap_wacs2_hal(u32  write, u32  adr, u32  wdata, u32 *rdata)
 	if ((wdata & ~(0xffff)) != 0)
 		return E_PWR_INVALID_WDAT;
 
-	spin_lock_irqsave(&wrp_lock, flags);
 	/* check pmicaddr 0xa bit11 & bit10 ,bit 11 only can write1 bit 10 only can write 0 request by Wy Chuang */
 	if (0 != write && 0xa == adr) {
 
 		if (0 == (wdata & (1<<11)) || 1 == ((wdata>>10) & 0x1)) {
 			PWRAPERR(" pwrap_wacs2_hal check 0xa err pid=%d, wdata=0x%x\n", current->pid, wdata);
-			goto FAIL;
+			return E_PWR_INVALID_WDAT;
 			/* BUG_ON(1); */
 		}
 	}
 
+	spin_lock_irqsave(&wrp_lock, flags);
 	/* Check IDLE & INIT_DONE in advance */
 	return_value = wait_for_state_idle(wait_for_fsm_idle, TIMEOUT_WAIT_IDLE,
 	PMIC_WRAP_WACS2_RDATA, PMIC_WRAP_WACS2_VLDCLR, 0);
