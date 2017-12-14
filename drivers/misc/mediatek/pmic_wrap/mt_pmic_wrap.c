@@ -145,7 +145,7 @@ static unsigned int pwrap_trace_level_set(unsigned int level, unsigned int addr)
 /*-------pwrap_trace-------*/
 static ssize_t pwrap_trace_write(struct file *file, const char __user *buf, size_t size, loff_t *ppos)
 {
-	char *info, *pvalue, *paddr;
+	char *info, *pvalue, *paddr, *pinfo;
 	unsigned int value = 0;
 	unsigned int addr = 0;
 	int ret = 0;
@@ -164,9 +164,11 @@ static ssize_t pwrap_trace_write(struct file *file, const char __user *buf, size
 
 	info[size-1] = '\0';
 
+	pinfo = info;
+
 	if (size != 0) {
 		if (size > 2) {
-			pvalue = strsep(&info, " ");
+			pvalue = strsep(&pinfo, " ");
 			if (pvalue != NULL)
 				ret = kstrtou32(pvalue, 16, (unsigned int *)&value);
 			else {
@@ -178,7 +180,7 @@ static ssize_t pwrap_trace_write(struct file *file, const char __user *buf, size
 		if (size > 2) {
 			/*reg_value = simple_strtoul((pvalue + 1), NULL, 16);*/
 			/*pvalue = (char *)buf + 1;*/
-			paddr =  strsep(&info, " ");
+			paddr =  strsep(&pinfo, " ");
 			if (paddr != NULL)
 				ret = kstrtou32(paddr, 16, (unsigned int *)&addr);
 			else {
