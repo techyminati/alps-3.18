@@ -1127,6 +1127,9 @@ static long simple_sd_ioctl(struct file *file, unsigned int cmd, unsigned long a
 			return -EINVAL;
 		}
 		msdc_ctl.result = ret;
+
+		if (arg < USER_DS && get_fs() == KERNEL_DS)
+			return -EFAULT;
 		if (copy_to_user((void *)arg, &msdc_ctl, size))
 			return -EFAULT;
 	}
