@@ -168,6 +168,10 @@ static unsigned long lowmem_scan(struct shrinker *s, struct shrink_control *sc)
 	int log_offset = 0, log_ret;
 #endif /* CONFIG_MT_ENG_BUILD*/
 
+	/* Do not use in kernel lowmemorykiller */
+	if (IS_ENABLED(CONFIG_MEMCG) && (lowmem_minfree[0] == 0))
+		return SHRINK_STOP;
+
 	/* Check whether it is in cpu_hotplugging */
 	in_cpu_hotplugging = cpu_hotplugging();
 
