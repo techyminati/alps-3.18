@@ -24,6 +24,12 @@ ifeq ($(CONFIG_MTK_CCCI_EXT), y)
 ENABLE_CCCI_UTIL=y
 endif
 
+ifneq ($(TARGET_BUILD_VARIANT),eng)
+ifeq ($(CONFIG_EXTREME_LOW_RAM), y)
+ccflags-y += -DCCCI_LOG_DISABLE
+endif
+endif
+
 ifeq ($(ENABLE_CCCI_UTIL), y)
 
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/ccci_util
