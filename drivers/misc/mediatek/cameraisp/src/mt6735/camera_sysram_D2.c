@@ -823,9 +823,10 @@ static int SYSRAM_Flush(struct file *pFile, fl_owner_t Id)
 }
 
 /* ------------------------------------------------------------------------------ */
+/*
 static int SYSRAM_mmap(struct file *pFile, struct vm_area_struct *pVma)
 {
-	/* LOG_MSG(""); */
+	// LOG_MSG("");
 	long length = 0;
 	MUINT32 pfn = 0x0;
 
@@ -850,7 +851,7 @@ static int SYSRAM_mmap(struct file *pFile, struct vm_area_struct *pVma)
 	}
 	return 0;
 }
-
+*/
 /* ------------------------------------------------------------------------------ */
 static long SYSRAM_Ioctl(struct file *pFile, unsigned int Cmd, unsigned long Param)
 {
@@ -1137,7 +1138,7 @@ static const struct file_operations SysramFileOper = {
 	.release = SYSRAM_Release,
 	.flush = SYSRAM_Flush,
 	.unlocked_ioctl = SYSRAM_Ioctl,
-	.mmap = SYSRAM_mmap,
+	/*.mmap = SYSRAM_mmap,*/
 #ifdef CONFIG_COMPAT
 	.compat_ioctl = SYSRAM_ioctl_compat,
 #endif
