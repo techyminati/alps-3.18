@@ -100,6 +100,7 @@ size_t mt8193_rxcecmode = CEC_NORMAL_MODE;
 HDMI_CTRL_STATE_T e_hdmi_ctrl_state = HDMI_STATE_IDLE;
 HDCP_CTRL_STATE_T e_hdcp_ctrl_state = HDCP_RECEIVER_NOT_READY;
 unsigned int mt8193_hotplugstate = HDMI_STATE_HOT_PLUG_OUT;
+unsigned int mt8193_edidstate = 0;
 
 #if defined(CONFIG_HAS_EARLYSUSPEND)
 size_t mt8193_hdmiearlysuspend = 1;
@@ -495,6 +496,9 @@ void mt8193_dump(void)
 enum HDMI_STATE mt8193_get_state(void)
 {
 	MT8193_DRV_FUNC();
+
+	if (mt8193_edidstate == 0)
+		return HDMI_STATE_NO_DEVICE;
 
 	if (mt8193_hotplugstate == HDMI_STATE_HOT_PLUGIN_AND_POWER_ON)
 		return HDMI_STATE_ACTIVE;

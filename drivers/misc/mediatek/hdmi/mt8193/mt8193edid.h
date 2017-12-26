@@ -328,6 +328,7 @@ extern void mt8193_AppGetEdidInfo(HDMI_EDID_T *pv_get_info);
 extern unsigned char vCheckPcmBitSize(unsigned char ui1ChNumInx);
 extern unsigned char mt8193_Check_EdidHeader(void);
 extern void hdmi_show_def_info(void);
+extern unsigned int mt8193_edidstate;
 
 #endif
 #endif
