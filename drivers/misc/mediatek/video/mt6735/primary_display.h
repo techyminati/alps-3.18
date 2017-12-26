@@ -292,6 +292,7 @@ unsigned int primary_display_get_ticket(void);
 int primary_display_config_input(primary_disp_input_config *input);
 int primary_display_user_cmd(unsigned int cmd, unsigned long arg);
 int primary_display_trigger(int blocking, void *callback, unsigned int userdata);
+int primary_display_trigger_nolock(int blocking, void *callback, unsigned int userdata);
 int primary_display_ext_trigger(int blocking, void *callback, unsigned int userdata);
 void primary_display_trigger_and_merge(disp_session_config *config, int session_id);
 int primary_display_config_output(disp_mem_output_config *output, unsigned int session_id);
