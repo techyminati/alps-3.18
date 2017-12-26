@@ -2157,6 +2157,9 @@ void mt_battery_GetBatteryData(void)
 	static unsigned char batteryIndex = 0xff;
 	static signed int previous_SOC = -1;
 	kal_bool current_sign;
+#ifdef GM20_LOW_TEMP_SUPPORT
+	int rtc_tmp;
+#endif
 
 	if (batteryIndex == 0xff)
 		batteryIndex = 0;
@@ -2171,6 +2174,17 @@ void mt_battery_GetBatteryData(void)
 		charger_vol = 0;
 	}
 	temperature = battery_meter_get_battery_temperature();
+#ifdef GM20_LOW_TEMP_SUPPORT
+	rtc_tmp = get_rtc_spare_bat_temp_value();
+
+	if (temperature < rtc_tmp * 5 - 20)
+		set_rtc_spare_bat_temp_value((temperature + 20) / 5);
+
+	battery_log(BAT_LOG_CRTI, "rtc_tmp tmp:%d old_rtc:%d new_rtc:%d\n",
+		temperature,
+		rtc_tmp,
+		get_rtc_spare_bat_temp_value());
+#endif
 	temperatureV = battery_meter_get_tempV();
 	temperatureR = battery_meter_get_tempR(temperatureV);
 	ZCV = battery_meter_get_battery_zcv();
@@ -3010,6 +3024,7 @@ void BAT_thread(void)
 	}
 
 	mt_kpoc_power_off_check();
+	battery_meter_set_fg_int();
 }
 
 /* ///////////////////////////////////////////////////////////////////////////////////////// */
