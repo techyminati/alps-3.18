@@ -137,8 +137,6 @@ char DDP_STR_HELP[] =
 	"USAGE:\n"
 	"       echo [ACTION]>/d/dispsys\n"
 	"ACTION:\n"
-	"       regr:addr\n              :regr:0xf400c000\n"
-	"       regw:addr,value          :regw:0xf400c000,0x1\n"
 	"       dbg_log:0|1|2            :0 off, 1 dbg, 2 all\n"
 	"       irq_log:0|1              :0 off, !0 on\n"
 	"       met_on:[0|1],[0|1],[0|1] :fist[0|1]on|off,other [0|1]direct|decouple\n"
@@ -592,48 +590,7 @@ void ddp_process_dbg_opt(const char *opt)
 	int ret = 0;
 	char *p;
 
-	if (0 == strncmp(opt, "regr:", 5)) {
-		unsigned long addr = 0;
-
-		p = (char *)opt + 5;
-		ret = kstrtoul(p, 16, (unsigned long int *)&addr);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-		if (is_reg_addr_valid(1, addr) == 1) {	/* (addr >= 0xf0000000U && addr <= 0xff000000U) */
-			unsigned int regVal = DISP_REG_GET(addr);
-
-			DISPMSG("regr: 0x%lx = 0x%08X\n", addr, regVal);
-			sprintf(buf, "regr: 0x%lx = 0x%08X\n", addr, regVal);
-		} else {
-			sprintf(buf, "regr, invalid address 0x%lx\n", addr);
-			goto Error;
-		}
-	} else if (0 == strncmp(opt, "regw:", 5)) {
-		unsigned long addr = 0;
-		unsigned long val = 0;
-
-		p = (char *)opt + 5;
-		ret = kstrtoul(p, 16, (unsigned long int *)&addr);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-		ret = kstrtoul(p + 1, 16, (unsigned long int *)&val);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-
-		if (is_reg_addr_valid(1, addr) == 1) {	/* (addr >= 0xf0000000U && addr <= 0xff000000U) */
-			unsigned int regVal;
-
-			DISP_CPU_REG_SET(addr, val);
-			regVal = DISP_REG_GET(addr);
-			DISPMSG("regw: 0x%lx, 0x%08X = 0x%08X\n", addr, (int) val, regVal);
-			sprintf(buf, "regw: 0x%lx, 0x%08X = 0x%08X\n", addr, (int) val, regVal);
-		} else {
-			sprintf(buf, "regw, invalid address 0x%lx\n", addr);
-			goto Error;
-		}
-	} else if (0 == strncmp(opt, "rdma_ultra:", 11)) {
+	if (0 == strncmp(opt, "rdma_ultra:", 11)) {
 		p = (char *)opt + 11;
 		ret = kstrtoul(p, 16, &gRDMAUltraSetting);
 		if (ret)
@@ -652,63 +609,6 @@ void ddp_process_dbg_opt(const char *opt)
 				       DISP_REG_RDMA_FIFO_CON, gRDMAFIFOLen);
 		sprintf(buf, "rdma_fifo, gRDMAFIFOLen=0x%x, reg=0x%x\n",
 			(unsigned int)gRDMAFIFOLen, DISP_REG_GET(DISP_REG_RDMA_FIFO_CON));
-	} else if (0 == strncmp(opt, "g_regr:", 7)) {
-		unsigned int reg_va_before;
-		unsigned long reg_va;
-		unsigned long reg_pa = 0;
-		unsigned long size;
-
-		p = (char *)opt + 7;
-		ret = kstrtoul(p, 16, (unsigned long int *)&reg_pa);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-		if (reg_pa < 0x10000000 || reg_pa > 0x18000000) {
-			sprintf(buf, "g_regr, invalid pa=0x%lx\n", reg_pa);
-		} else {
-			size = sizeof(unsigned long);
-			reg_va = (unsigned long)ioremap_nocache(reg_pa, size);
-			reg_va_before = DISP_REG_GET(reg_va);
-			pr_debug("g_regr, pa=%lx, va=0x%lx, reg_val=0x%x\n",
-				 reg_pa, reg_va, reg_va_before);
-			sprintf(buf, "g_regr, pa=%lx, va=0x%lx, reg_val=0x%x\n",
-				reg_pa, reg_va, reg_va_before);
-
-			iounmap((void *)reg_va);
-		}
-	} else if (0 == strncmp(opt, "g_regw:", 7)) {
-		unsigned int reg_va_before;
-		unsigned int reg_va_after;
-		unsigned long int val;
-		unsigned long reg_va;
-		unsigned long reg_pa = 0;
-		unsigned long size;
-
-		p = (char *)opt + 7;
-		ret = kstrtoul(p, 16, (unsigned long int *)&reg_pa);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-		if (reg_pa < 0x10000000 || reg_pa > 0x18000000) {
-			sprintf(buf, "g_regw, invalid pa=0x%lx\n", reg_pa);
-		} else {
-			ret = kstrtoul(p + 1, 16, &val);
-			if (ret)
-				pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-			size = sizeof(unsigned long);
-			reg_va = (unsigned long)ioremap_nocache(reg_pa, size);
-			reg_va_before = DISP_REG_GET(reg_va);
-			DISP_CPU_REG_SET(reg_va, val);
-			reg_va_after = DISP_REG_GET(reg_va);
-
-			pr_debug("g_regw, pa=%lx, va=0x%lx, value=0x%x, reg_val_before=0x%x, reg_val_after=0x%x\n",
-				 reg_pa, reg_va, (unsigned int)val, reg_va_before, reg_va_after);
-			sprintf(buf, "g_regw, pa=%lx, va=0x%lx, value=0x%x, reg_val_before=0x%x, reg_val_after=0x%x\n",
-				reg_pa, reg_va, (unsigned int)val, reg_va_before, reg_va_after);
-
-			iounmap((void *)reg_va);
-		}
 	} else if (0 == strncmp(opt, "dbg_log:", 8)) {
 		unsigned long int enable = 0;
 
@@ -979,36 +879,6 @@ void mtkfb_process_dbg_opt(const char *opt)
 			pr_err("DISP/%s: errno %d\n", __func__, ret);
 
 		DISPMSG("DDP: gTriggerDispMode=%d\n", gTriggerDispMode);
-	} else if (0 == strncmp(opt, "regw:", 5)) {
-		char *p = (char *)opt + 5;
-		unsigned long addr = 0;
-		unsigned long val = 0;
-
-		ret = kstrtoul(p, 16, &addr);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-		ret = kstrtoul(p + 1, 16, &val);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-		if (addr)
-			OUTREG32(addr, val);
-		else
-			return;
-
-	} else if (0 == strncmp(opt, "regr:", 5)) {
-		char *p = (char *)opt + 5;
-		unsigned long addr = 0;
-
-		ret = kstrtoul(p, 16, (unsigned long int *)&addr);
-		if (ret)
-			pr_err("DISP/%s: errno %d\n", __func__, ret);
-
-		if (addr)
-			pr_debug("Read register 0x%lx: 0x%08x\n", addr, INREG32(addr));
-		else
-			return;
-
 	} else if (0 == strncmp(opt, "cmmva_dprec", 11)) {
 		dprec_handle_option(0x7);
 	} else if (0 == strncmp(opt, "cmmpa_dprec", 11)) {
