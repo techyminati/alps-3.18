@@ -313,7 +313,12 @@ static long CAM_CAL_Ioctl(
 				return -EFAULT;
 			}
 		}
+	} else {
+		CAM_CALDB("[BRCB032GWZ] a_u4Command failed\n");
+		return -EFAULT;
 	}
+
+
 
 	ptempbuf = (stCAM_CAL_INFO_STRUCT *)pBuff;
 	pWorkingBuff = kmalloc(ptempbuf->u4Length, GFP_KERNEL);

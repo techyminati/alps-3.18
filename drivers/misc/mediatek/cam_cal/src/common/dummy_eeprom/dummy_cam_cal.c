@@ -287,6 +287,9 @@ static long CAM_CAL_Ioctl(
 				return -EFAULT;
 			}
 		}
+	} else {
+		CAM_CALDB("[Dummy] a_u4Command failed\n");
+		return -EFAULT;
 	}
 
 	ptempbuf = (stCAM_CAL_INFO_STRUCT *)pBuff;
