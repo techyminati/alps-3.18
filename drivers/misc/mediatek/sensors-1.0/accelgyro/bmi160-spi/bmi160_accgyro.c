@@ -2144,9 +2144,9 @@ static int bmg_set_range(struct bmi160_accelgyro_data *obj, enum BMG_RANGE_ENUM 
 			actual_range = BMI160_RANGE_1000;
 		else if (range == BMG_RANGE_500)
 			actual_range = BMI160_RANGE_500;
-		else if (range == BMG_RANGE_500)
+		else if (range == BMG_RANGE_250)
 			actual_range = BMI160_RANGE_250;
-		else if (range == BMG_RANGE_500)
+		else if (range == BMG_RANGE_125)
 			actual_range = BMI160_RANGE_125;
 		else {
 			err = -EINVAL;
