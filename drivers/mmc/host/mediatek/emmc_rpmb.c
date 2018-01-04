@@ -1495,8 +1495,9 @@ static long emmc_rpmb_ioctl(struct file *file, unsigned int cmd, unsigned long a
 		MSG(ERR, "%s, err=%x\n", __func__, err);
 		return -1;
 	}
-
-	if (!param.key || !param.data || !param.hmac)
+	/* RPMB MAC is 32bytes, max data length isn't more than 8K bytes */
+	if (!param.key || !param.data || !param.hmac || param.hmac_len != 32
+		|| param.data_len > 8*1024)
 		return -1;
 
 	/* temp storage userspace pointer */
