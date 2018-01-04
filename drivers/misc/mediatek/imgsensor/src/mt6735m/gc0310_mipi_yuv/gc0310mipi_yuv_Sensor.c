@@ -1891,33 +1891,117 @@ UINT32 GC0310YUVSetVideoMode(UINT16 u2FrameRate)    // lanking add
 {
 
 	SENSORDB("Enter GC0310YUVSetVideoMode, u2FrameRate = %d\n", u2FrameRate);
-//	spin_lock(&GC0310_drv_lock);  
-//    GC0310_MPEG4_encode_mode = KAL_TRUE;
-//	spin_unlock(&GC0310_drv_lock);
 
-    
-     if (u2FrameRate == 30)
-   	{
-   	
-   	    /*********video frame ************/
-		
-   	}
-    else if (u2FrameRate == 15)       
-    	{
-    	
-   	    /*********video frame ************/
-		
-    	}
-    else
-   	{
-   	
-            SENSORDB("Wrong Frame Rate"); 
-			
-   	}
-   	
-	GC0310NightMode(GC0310_night_mode_enable);
+	if (u2FrameRate == 30) {
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x0d, 0xf8);
+		GC0310_write_cmos_sensor(0xfe, 0x00);
+		GC0310_write_cmos_sensor(0x05, 0x01);
+		GC0310_write_cmos_sensor(0x06, 0x18);
+		GC0310_write_cmos_sensor(0x07, 0x00);
+		GC0310_write_cmos_sensor(0x08, 0x10);
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x25, 0x00);
+		GC0310_write_cmos_sensor(0x26, 0x9a);
+		GC0310_write_cmos_sensor(0x27, 0x01);
+		GC0310_write_cmos_sensor(0x28, 0x34);   /*30fps*/
+		GC0310_write_cmos_sensor(0x29, 0x01);
+		GC0310_write_cmos_sensor(0x2a, 0x34);   /*30fps*/
+		GC0310_write_cmos_sensor(0x2b, 0x01);
+		GC0310_write_cmos_sensor(0x2c, 0x34);   /*30fps*/
+		GC0310_write_cmos_sensor(0x2d, 0x01);
+		GC0310_write_cmos_sensor(0x2e, 0x34);   /*30fos*/
+		GC0310_write_cmos_sensor(0x2f, 0x01);
+		GC0310_write_cmos_sensor(0x30, 0x34);   /*30fps*/
+		GC0310_write_cmos_sensor(0x31, 0x01);
+		GC0310_write_cmos_sensor(0x32, 0x34);   /*30fps*/
+		GC0310_write_cmos_sensor(0x33, 0x01);
+		GC0310_write_cmos_sensor(0x34, 0x34);
+		GC0310_write_cmos_sensor(0x35, 0x0d);
+		GC0310_write_cmos_sensor(0x36, 0x14);
+		GC0310_write_cmos_sensor(0x37, 0x18);
+		GC0310_write_cmos_sensor(0x38, 0x20);
+		GC0310_write_cmos_sensor(0x39, 0x30);
+		GC0310_write_cmos_sensor(0x3a, 0x30);
+		GC0310_write_cmos_sensor(0x3b, 0x30);
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x13, 0x35);
+		GC0310_write_cmos_sensor(0xfe, 0x00);
+	} else if (u2FrameRate == 20) {
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x0d, 0xf8);
+		GC0310_write_cmos_sensor(0xfe, 0x00);
+		GC0310_write_cmos_sensor(0x05, 0x02);
+		GC0310_write_cmos_sensor(0x06, 0xd1);
+		GC0310_write_cmos_sensor(0x07, 0x00);
+		GC0310_write_cmos_sensor(0x08, 0x22);
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x25, 0x00);
+		GC0310_write_cmos_sensor(0x26, 0x6a);
+		GC0310_write_cmos_sensor(0x27, 0x01);
+		GC0310_write_cmos_sensor(0x28, 0xa8);   /*20fps*/
+		GC0310_write_cmos_sensor(0x29, 0x01);
+		GC0310_write_cmos_sensor(0x2a, 0xa8);   /*20fps*/
+		GC0310_write_cmos_sensor(0x2b, 0x01);
+		GC0310_write_cmos_sensor(0x2c, 0xa8);   /*20fps*/
+		GC0310_write_cmos_sensor(0x2d, 0x01);
+		GC0310_write_cmos_sensor(0x2e, 0xa8);   /*20fps*/
+		GC0310_write_cmos_sensor(0x2f, 0x01);
+		GC0310_write_cmos_sensor(0x30, 0xa8);   /*20fps*/
+		GC0310_write_cmos_sensor(0x31, 0x01);
+		GC0310_write_cmos_sensor(0x32, 0xa8);
+		GC0310_write_cmos_sensor(0x33, 0x01);
+		GC0310_write_cmos_sensor(0x34, 0xa8);
+		GC0310_write_cmos_sensor(0x35, 0x0d);
+		GC0310_write_cmos_sensor(0x36, 0x14);
+		GC0310_write_cmos_sensor(0x37, 0x18);
+		GC0310_write_cmos_sensor(0x38, 0x20);
+		GC0310_write_cmos_sensor(0x39, 0x30);
+		GC0310_write_cmos_sensor(0x3a, 0x30);
+		GC0310_write_cmos_sensor(0x3b, 0x30);
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x13, 0x35);
+		GC0310_write_cmos_sensor(0xfe, 0x00);
+	} else if (u2FrameRate == 15) {
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x0d, 0xf8);
+		GC0310_write_cmos_sensor(0xfe, 0x00);
+		GC0310_write_cmos_sensor(0x05, 0x04);
+		GC0310_write_cmos_sensor(0x06, 0xe6);
+		GC0310_write_cmos_sensor(0x07, 0x00);
+		GC0310_write_cmos_sensor(0x08, 0x10);
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x25, 0x00);
+		GC0310_write_cmos_sensor(0x26, 0x4d);
+		GC0310_write_cmos_sensor(0x27, 0x01);
+		GC0310_write_cmos_sensor(0x28, 0x34);   /*15fps*/
+		GC0310_write_cmos_sensor(0x29, 0x01);
+		GC0310_write_cmos_sensor(0x2a, 0x34);   /*15ps*/
+		GC0310_write_cmos_sensor(0x2b, 0x01);
+		GC0310_write_cmos_sensor(0x2c, 0x34);   /*15fps*/
+		GC0310_write_cmos_sensor(0x2d, 0x01);
+		GC0310_write_cmos_sensor(0x2e, 0x34);   /*15fps*/
+		GC0310_write_cmos_sensor(0x2f, 0x01);
+		GC0310_write_cmos_sensor(0x30, 0x34);   /*15fps*/
+		GC0310_write_cmos_sensor(0x31, 0x01);
+		GC0310_write_cmos_sensor(0x32, 0x34);   /*15fps*/
+		GC0310_write_cmos_sensor(0x33, 0x01);
+		GC0310_write_cmos_sensor(0x34, 0x34);
+		GC0310_write_cmos_sensor(0x35, 0x0d);
+		GC0310_write_cmos_sensor(0x36, 0x14);
+		GC0310_write_cmos_sensor(0x37, 0x18);
+		GC0310_write_cmos_sensor(0x38, 0x20);
+		GC0310_write_cmos_sensor(0x39, 0x30);
+		GC0310_write_cmos_sensor(0x3a, 0x30);
+		GC0310_write_cmos_sensor(0x3b, 0x30);
+		GC0310_write_cmos_sensor(0xfe, 0x01);
+		GC0310_write_cmos_sensor(0x13, 0x35);
+		GC0310_write_cmos_sensor(0xfe, 0x00);
+	} else {
+		SENSORDB("Wrong frame rate setting\n");
+	}
 
-    return TRUE;
+	return TRUE;
 
 }
 
