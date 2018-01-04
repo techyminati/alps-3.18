@@ -86,15 +86,19 @@ extern int apk_debug_flag;
 static ssize_t fts_debug_write(struct file *filp, const char __user *buff, size_t count, loff_t *ppos)
 {
 	unsigned char writebuf[WRITE_BUF_SIZE];
-	int buflen = count;
+	unsigned long buflen = count;
 	int writelen = 0;
 	int ret = 0;
 	#if FT_ESD_PROTECT
-//printk("\n  zax proc w 0 \n");
-				esd_switch(0);apk_debug_flag = 1;
-//printk("\n  zax v= %d \n",apk_debug_flag);
+/*printk("\n  zax proc w 0\n");*/
+	esd_switch(0);
+	apk_debug_flag = 1;
+/*printk("\n  zax v= %d\n",apk_debug_flag);*/
 
-			#endif
+	#endif
+	if ((buflen == 0) || (buflen > sizeof(writebuf))) {
+		return -EINVAL;
+	}
 	if (copy_from_user(&writebuf, buff, buflen)) {
 		dev_err(&fts_i2c_client->dev, "%s:copy from user error\n", __func__);
 #if FT_ESD_PROTECT
@@ -109,8 +113,12 @@ static ssize_t fts_debug_write(struct file *filp, const char __user *buff, size_
 		{
 			char upgrade_file_path[128];
 			memset(upgrade_file_path, 0, sizeof(upgrade_file_path));
-			sprintf(upgrade_file_path, "%s", writebuf + 1);
-			upgrade_file_path[buflen-1] = '\0';
+			snprintf(upgrade_file_path, sizeof(upgrade_file_path), "%s", writebuf + 1);
+			/* If buflen is large, our snprintf will assure
+			we're properly terminated.  But otherwise, we
+			handle the termination. */
+			if (buflen <= sizeof(upgrade_file_path))
+				upgrade_file_path[buflen-1] = '\0';
 			FTS_DBG("%s\n", upgrade_file_path);	
 						
 			//#if FT_ESD_PROTECT
@@ -223,9 +231,9 @@ static ssize_t fts_debug_read(struct file *filp, char __user *buff, size_t count
 		regaddr = 0xA6;
 		ret = fts_read_reg(fts_i2c_client, regaddr, &regvalue);
 		if (ret < 0)
-			num_read_chars = sprintf(buf, "%s", "get fw version failed.\n");
+			num_read_chars = snprintf(buf, sizeof(buf), "%s", "get fw version failed.\n");
 		else
-			num_read_chars = sprintf(buf, "current fw version:0x%02x\n", regvalue);
+			num_read_chars = snprintf(buf, sizeof(buf), "current fw version:0x%02x\n", regvalue);
 		break;
 	case PROC_READ_REGISTER:
 		readlen = 1;
@@ -293,15 +301,19 @@ static int fts_debug_write(struct file *filp,
 {
 	//struct i2c_client *client = (struct i2c_client *)fts_proc_entry->data;
 	unsigned char writebuf[WRITE_BUF_SIZE];
-	int buflen = len;
+	unsigned long buflen = len;
 	int writelen = 0;
 	int ret = 0;
 	
 	#if FT_ESD_PROTECT
-			//printk("\n  zax proc w 0 \n");	
-esd_switch(0);apk_debug_flag = 1;
-//printk("\n  zax v= %d \n",apk_debug_flag);
+/*printk("\n  zax proc w 0\n");*/
+	esd_switch(0);
+	apk_debug_flag = 1;
+/*printk("\n  zax v= %d\n",apk_debug_flag);*/
 			#endif
+	if ((buflen == 0) || (buflen > sizeof(writebuf))) {
+		return -EINVAL;
+	}
 	if (copy_from_user(&writebuf, buff, buflen)) {
 		dev_err(&fts_i2c_client->dev, "%s:copy from user error\n", __func__);
 #if FT_ESD_PROTECT
@@ -317,8 +329,12 @@ esd_switch(0);apk_debug_flag = 1;
 		{
 			char upgrade_file_path[128];
 			memset(upgrade_file_path, 0, sizeof(upgrade_file_path));
-			sprintf(upgrade_file_path, "%s", writebuf + 1);
-			upgrade_file_path[buflen-1] = '\0';
+			snprintf(upgrade_file_path, sizeof(upgrade_file_path), "%s", writebuf + 1);
+			/* If buflen is large, our snprintf will assure
+			we're properly terminated.  But otherwise, we
+			handle the termination.*/
+			if (buflen <= sizeof(upgrade_file_path))
+				upgrade_file_path[buflen-1] = '\0';
 			FTS_DBG("%s\n", upgrade_file_path);
 			//#if FT_ESD_PROTECT
 			//	esd_switch(0);apk_debug_flag = 1;
@@ -432,9 +448,9 @@ esd_switch(0);apk_debug_flag = 1;
 		regaddr = 0xA6;
 		ret = fts_read_reg(fts_i2c_client, regaddr, &regvalue);
 		if (ret < 0)
-			num_read_chars = sprintf(buf, "%s", "get fw version failed.\n");
+			num_read_chars = snprintf(buf, sizeof(buf), "%s", "get fw version failed.\n");
 		else
-			num_read_chars = sprintf(buf, "current fw version:0x%02x\n", regvalue);
+			num_read_chars = snprintf(buf, sizeof(buf), "current fw version:0x%02x\n", regvalue);
 		break;
 	case PROC_READ_REGISTER:
 		readlen = 1;
@@ -720,8 +736,9 @@ static ssize_t fts_fwupgradeapp_store(struct device *dev, struct device_attribut
 	char fwname[128];
 	struct i2c_client *client = container_of(dev, struct i2c_client, dev);
 	memset(fwname, 0, sizeof(fwname));
-	sprintf(fwname, "%s", buf);
-	fwname[count-1] = '\0';
+	snprintf(fwname, sizeof(fwname), "%s", buf);
+	if ((count > 0) && (count <= sizeof(fwname)))
+		fwname[count-1] = '\0';
 	#if FT_ESD_PROTECT
 		esd_switch(0);apk_debug_flag = 1;
 	#endif
