@@ -788,6 +788,25 @@ ssize_t DrvMainProcfsFirmwareDebugRead(struct file *pFile, char __user *pBuffer,
     return nLength;
 }
 
+static ssize_t SetDebugBuf(const char __user *pBuffer, size_t nCount)
+{
+	memset(_gDebugBuf, 0, sizeof(_gDebugBuf));
+	if (nCount >= sizeof(_gDebugBuf)) {
+		/* Note nCount cannot == sizeof(_gDebugBuf), due to
+		assignment of _gDebugBuf[nCount] below.*/
+		return -EINVAL;
+	}
+
+	if (copy_from_user(_gDebugBuf, pBuffer, nCount)) {
+		DBG("copy_from_user() failed\n");
+
+		return -EFAULT;
+	}
+
+	_gDebugBuf[nCount] = '\0';
+	return 0;
+}
+
 ssize_t DrvMainProcfsFirmwareDebugWrite(struct file *pFile, const char __user *pBuffer, size_t nCount, loff_t *pPos)  
 {    
     u32 i;
@@ -796,8 +815,8 @@ ssize_t DrvMainProcfsFirmwareDebugWrite(struct file *pFile, const char __user *p
 
     DBG("*** %s() ***\n", __func__);
 
-    if (pBuffer != NULL)
-    {
+	if (pBuffer != NULL) {
+		ssize_t ret;
         DBG("*** pBuffer[0] = %c ***\n", pBuffer[0]);
         DBG("*** pBuffer[1] = %c ***\n", pBuffer[1]);
         DBG("*** pBuffer[2] = %c ***\n", pBuffer[2]);
@@ -805,18 +824,10 @@ ssize_t DrvMainProcfsFirmwareDebugWrite(struct file *pFile, const char __user *p
         DBG("*** pBuffer[4] = %c ***\n", pBuffer[4]);
         DBG("*** pBuffer[5] = %c ***\n", pBuffer[5]);
 
-        DBG("nCount = %d\n", (int)nCount);
-       
-        memset(_gDebugBuf, 0, 1024);
-
-        if (copy_from_user(_gDebugBuf, pBuffer, nCount))
-        {
-            DBG("copy_from_user() failed\n");
-
-            return -EFAULT;
-        }
-
-        _gDebugBuf[nCount] = '\0';
+		DBG("nCount = %d\n", (int)nCount);
+		ret = SetDebugBuf(pBuffer, nCount);
+		if (ret != 0)
+			return ret;
         pStr = _gDebugBuf;
         
         i = 0;
@@ -902,24 +913,17 @@ ssize_t DrvMainProcfsFirmwareSetDebugValueWrite(struct file *pFile, const char _
 
     DBG("*** %s() ***\n", __func__);
 
-    if (pBuffer != NULL)
-    {
+	if (pBuffer != NULL) {
+		ssize_t ret;
         DBG("*** pBuffer[0] = %c ***\n", pBuffer[0]);
         DBG("*** pBuffer[1] = %c ***\n", pBuffer[1]);
 
         DBG("nCount = %d\n", (int)nCount);
 
-        memset(_gDebugBuf, 0, 1024);
-
-        if (copy_from_user(_gDebugBuf, pBuffer, nCount))
-        {
-            DBG("copy_from_user() failed\n");
-
-            return -EFAULT;
-        }
-       
-        _gDebugBuf[nCount] = '\0';
-        pStr = _gDebugBuf;
+		ret = SetDebugBuf(pBuffer, nCount);
+		if (ret != 0)
+			return ret;
+		pStr = _gDebugBuf;
 
         i = 0;
         j = 0;
@@ -1030,33 +1034,25 @@ ssize_t DrvMainProcfsFirmwareSmBusDebugWrite(struct file *pFile, const char __us
 
     if (pBuffer != NULL)
     {
+		ssize_t ret;
         DBG("*** pBuffer[0] = %c ***\n", pBuffer[0]);
         DBG("*** pBuffer[1] = %c ***\n", pBuffer[1]);
         DBG("*** pBuffer[2] = %c ***\n", pBuffer[2]);
         DBG("*** pBuffer[3] = %c ***\n", pBuffer[3]);
         DBG("*** pBuffer[4] = %c ***\n", pBuffer[4]);
         DBG("*** pBuffer[5] = %c ***\n", pBuffer[5]);
-
-        DBG("nCount = %d\n", (int)nCount);
-       
-        memset(_gDebugBuf, 0, 1024);
-
-        if (copy_from_user(_gDebugBuf, pBuffer, nCount))
-        {
-            DBG("copy_from_user() failed\n");
-
-            return -EFAULT;
-        }
-
+		DBG("nCount = %d\n", (int)nCount);
+		ret = SetDebugBuf(pBuffer, nCount);
+		if (ret != 0)
+			return ret;
         // Reset to 0 before parsing the adb command
-        _gDebugCmdArguCount = 0;
-        _gDebugReadDataSize = 0;
+		_gDebugCmdArguCount = 0;
+		_gDebugReadDataSize = 0;
         
-        _gDebugBuf[nCount] = '\0';
         pStr = _gDebugBuf;
 
         i = 0;
-        j = 0;
+		j = 0;
 
         while ((pCh = strsep((char **)&pStr, " ,")) && (j < MAX_DEBUG_COMMAND_ARGUMENT_NUM))
         {
@@ -1151,23 +1147,16 @@ ssize_t DrvMainProcfsFirmwareSetDQMemValueWrite(struct file *pFile, const char _
 
     if (pBuffer != NULL)
     {
+		ssize_t ret;
         DBG("*** pBuffer[0] = %c ***\n", pBuffer[0]);
         DBG("*** pBuffer[1] = %c ***\n", pBuffer[1]);
 
         DBG("nCount = %d\n", (int)nCount);
 
-        memset(_gDebugBuf, 0, 1024);
-
-        if (copy_from_user(_gDebugBuf, pBuffer, nCount))
-        {
-            DBG("copy_from_user() failed\n");
-
-            return -EFAULT;
-        }
-
-        _gDebugBuf[nCount] = '\0';
-        pStr = _gDebugBuf;
-
+		ret = SetDebugBuf(pBuffer, nCount);
+		if (ret != 0)
+			return ret;
+		pStr = _gDebugBuf;
         i = 0;
         j = 0;
         k = 0;
@@ -1725,18 +1714,12 @@ ssize_t DrvMainProcfsChangeFeatureSupportStatusWrite(struct file *pFile, const c
 
     if (pBuffer != NULL)
     {
+		ssize_t ret;
         DBG("nCount = %d\n", (int)nCount);
 
-        memset(_gDebugBuf, 0, 1024);
-
-        if (copy_from_user(_gDebugBuf, pBuffer, nCount))
-        {
-            DBG("copy_from_user() failed\n");
-
-            return -EFAULT;
-        }
-       
-        _gDebugBuf[nCount] = '\0';
+		ret = SetDebugBuf(pBuffer, nCount);
+		if (ret != 0)
+			return ret;
         pStr = _gDebugBuf;
         
         i = 0;
