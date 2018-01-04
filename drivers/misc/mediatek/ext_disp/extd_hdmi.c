@@ -1477,7 +1477,7 @@ int hdmi_init(void)
 {
 	int ret = 0;
 
-	HDMI_ERR(" start\n");
+	HDMI_FUNC();
 	/* for support hdmi hotplug, inform AP the event */
 	hdmi_switch_data.name = "hdmi";
 	hdmi_switch_data.index = 0;
@@ -1494,7 +1494,7 @@ int hdmi_init(void)
 
 	if (ret)
 		HDMI_ERR("[hdmi][HDMI]switch_dev_register failed, returned:%d!\n", ret);
-	HDMI_ERR(" done\n");
+	HDMI_LOG("hdmi_init done\n");
 	return 0;
 }
 
