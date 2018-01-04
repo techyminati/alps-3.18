@@ -75,9 +75,6 @@ static int dump_bt_done;
 static int hang_aee_warn = 2;
 #endif
 static int system_server_pid;
-extern void get_msdc_aee_buffer(unsigned long *buff,
-	unsigned long *size)__attribute__((weak));
-
 DECLARE_WAIT_QUEUE_HEAD(dump_bt_start_wait);
 DECLARE_WAIT_QUEUE_HEAD(dump_bt_done_wait);
 static long monitor_hang_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
@@ -360,24 +357,24 @@ static void get_kernel_bt(struct task_struct *tsk)
 		Log2HangInfo("<%lx> %pS\n", (long)trace.entries[i], (void *)trace.entries[i]);
 }
 
-#ifdef CONFIG_MTK_MLOG
 static void DumpMemInfo(void)
 {
 	char *buff_add;
 	int buff_size;
 
-	mlog_get_buffer(&buff_add, &buff_size);
-	if (buff_size <= 0) {
-		pr_info("hang_detect: mlog_get_buffer size %d.\n", buff_size);
-		return;
+	if (mlog_get_buffer) {
+		mlog_get_buffer(&buff_add, &buff_size);
+		if (buff_size <= 0) {
+			pr_info("hang_detect: mlog_get_buffer size %d.\n", buff_size);
+			return;
+		}
+
+		if (buff_size > 3*1024)
+			buff_size = 3*1024;
+
+		Buff2HangInfo(buff_add, buff_size);
 	}
-
-	if (buff_size > 3*1024)
-		buff_size = 3*1024;
-
-	Buff2HangInfo(buff_add, buff_size);
 }
-#endif
 
 static long long nsec_high(unsigned long long nsec)
 {
@@ -423,12 +420,11 @@ void sched_show_task_local(struct task_struct *p)
 	ppid = task_pid_nr(rcu_dereference(p->real_parent));
 	pid = task_pid_nr(p);
 	rcu_read_unlock();
-	LOGV("%lld.%06ld %5d %lld 0x%08lx\n", nsec_high(p->se.vruntime), nsec_low(p->se.vruntime),
-			 task_pid_nr(p), (long long)(p->nvcsw + p->nivcsw), (unsigned long)task_thread_info(p)->flags);
 
 	Log2HangInfo("%-15.15s %c ", p->comm, state < sizeof(stat_nam) - 1 ? stat_nam[state] : '?');
-	Log2HangInfo("%lld.%06ld %d %1ld 0x%lx\n", nsec_high(p->se.vruntime), nsec_low(p->se.vruntime), task_pid_nr(p),
-		(long long)(p->nvcsw + p->nivcsw), (unsigned long)task_thread_info(p)->flags);
+	Log2HangInfo("%lld.%06ld %d %1ld %1ld 0x%lx\n", nsec_high(p->se.sum_exec_runtime),
+		nsec_low(p->se.sum_exec_runtime), task_pid_nr(p), (long long)p->nvcsw,
+		(long long)p->nivcsw, (unsigned long)task_thread_info(p)->flags);
 	get_kernel_bt(p);	/* Catch kernel-space backtrace */
 }
 
@@ -857,12 +853,14 @@ static void ShowStatus(void)
 	read_unlock(&tasklist_lock);
 
 	if (Hang_Detect_first == false) {
-#ifdef CONFIG_MTK_MLOG
 		DumpMemInfo();
-#endif
 		show_state_filter_local();
-	} else
+	} else {
+#ifndef __aarch64__
+		show_state_filter_local();
+#endif
 		DumpMsdc2HangInfo();
+	}
 
 	for (i = 0; i < dump_count; i++)
 		show_bt_by_pid(dumppids[i]);
