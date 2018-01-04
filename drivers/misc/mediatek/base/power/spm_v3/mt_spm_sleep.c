@@ -1103,12 +1103,10 @@ wake_reason_t spm_go_to_sleep(u32 spm_flags, u32 spm_data)
 #endif
 
 #ifndef CONFIG_MTK_FPGA
-#ifndef CONFIG_MTK_TINYSYS_SSPM_SUPPORT
 	if (dyna_load_pcm[DYNA_LOAD_PCM_SUSPEND].ready)
 		pcmdesc = &(dyna_load_pcm[DYNA_LOAD_PCM_SUSPEND].desc);
 	else
 		BUG();
-#endif /* CONFIG_MTK_TINYSYS_SSPM_SUPPORT */
 #else
 	pcmdesc = __spm_suspend.pcmdesc;
 #endif

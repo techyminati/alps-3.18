@@ -1047,12 +1047,10 @@ wake_reason_t spm_go_to_sleep_dpidle(u32 spm_flags, u32 spm_data)
 	spm_dpidle_footprint(SPM_DEEPIDLE_SLEEP_DPIDLE | SPM_DEEPIDLE_ENTER);
 
 #ifndef CONFIG_MTK_FPGA
-#ifndef CONFIG_MTK_TINYSYS_SSPM_SUPPORT
 	if (dyna_load_pcm[DYNA_LOAD_PCM_DEEPIDLE].ready)
 		pcmdesc = &(dyna_load_pcm[DYNA_LOAD_PCM_DEEPIDLE].desc);
 	else
 		BUG();
-#endif /* CONFIG_MTK_TINYSYS_SSPM_SUPPORT */
 #else
 	pcmdesc = __spm_dpidle.pcmdesc;
 	pwrctrl = __spm_dpidle.pwrctrl;
