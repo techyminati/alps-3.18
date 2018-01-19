@@ -551,7 +551,7 @@ static s32 pwrap_wacs2_hal(u32  write, u32  adr, u32  wdata, u32 *rdata)
 		return E_PWR_INVALID_WDAT;
 
 	/* check pmicaddr 0xa bit11 & bit10 ,bit 11 only can write1 bit 10 only can write 0 request by Wy Chuang */
-	if (0 != write && 0xa == adr) {
+	if (0 != write && (0xa == adr || 0xb == adr)) {
 
 		if (0 == (wdata & (1<<11)) || 1 == ((wdata>>10) & 0x1)) {
 			PWRAPERR(" pwrap_wacs2_hal check 0xa err pid=%d, wdata=0x%x\n", current->pid, wdata);
@@ -651,7 +651,7 @@ static s32 _pwrap_wacs2_nochk(u32 write, u32 adr, u32 wdata, u32 *rdata)
 	/* PWRAPFUC(); */
 	/* Check argument validation */
 
-	if (0 != write && 0xa == adr) {
+	if (0 != write && (0xa == adr || 0xb == adr)) {
 
 		if (0 == (wdata & (1<<11)) || 1 == ((wdata>>10) & 0x01)) {
 			PWRAPERR("_pwrap_wacs2_nochk check 0xa err pid=%d, wdata=0x%x\n", current->pid, wdata);
