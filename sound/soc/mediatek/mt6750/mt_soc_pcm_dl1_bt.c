@@ -226,8 +226,14 @@ static void SetDLBuffer(struct snd_pcm_substream *substream,
 	PRINTK_AUDDRV("SetDLBuffer u4BufferSize = %d pucVirtBufAddr = %p pucPhysBufAddr = 0x%x\n",
 		pblock->u4BufferSize, pblock->pucVirtBufAddr, pblock->pucPhysBufAddr);
 	/*set dram address top hardware*/
-	Afe_Set_Reg(AFE_DL2_BASE , pblock->pucPhysBufAddr , 0xffffffff);
-	Afe_Set_Reg(AFE_DL2_END  , pblock->pucPhysBufAddr + (pblock->u4BufferSize - 1), 0xffffffff);
+
+	if (bt_dl_mem_blk == Soc_Aud_Digital_Block_MEM_DL1) {
+		Afe_Set_Reg(AFE_DL1_BASE , pblock->pucPhysBufAddr , 0xffffffff);
+		Afe_Set_Reg(AFE_DL1_END  , pblock->pucPhysBufAddr + (pblock->u4BufferSize - 1), 0xffffffff);
+	} else {
+		Afe_Set_Reg(AFE_DL2_BASE , pblock->pucPhysBufAddr , 0xffffffff);
+		Afe_Set_Reg(AFE_DL2_END  , pblock->pucPhysBufAddr + (pblock->u4BufferSize - 1), 0xffffffff);
+	}
 	memset((void *)pblock->pucVirtBufAddr, 0, pblock->u4BufferSize);
 
 }
@@ -239,6 +245,8 @@ static int mtk_pcm_dl1bt_hw_params(struct snd_pcm_substream *substream,
 
 	PRINTK_AUDDRV("mtk_pcm_dl1bt_hw_params\n");
 
+	pdl1btMemControl = Get_Mem_ControlT(bt_dl_mem_blk);
+
 	/* runtime->dma_bytes has to be set manually to allow mmap */
 	substream->runtime->dma_bytes = params_buffer_bytes(hw_params);
 
@@ -246,7 +254,11 @@ static int mtk_pcm_dl1bt_hw_params(struct snd_pcm_substream *substream,
 		substream->runtime->dma_area = (unsigned char *)Get_Afe_SramBase_Pointer();
 		substream->runtime->dma_addr = AFE_INTERNAL_SRAM_PHY_BASE;
 		SetHighAddr(bt_dl_mem_blk, false);
-		AudDrv_Allocate_DL2_Buffer(mDev, substream->runtime->dma_bytes);
+
+		if (bt_dl_mem_blk == Soc_Aud_Digital_Block_MEM_DL1)
+			AudDrv_Allocate_DL1_Buffer(mDev, substream->runtime->dma_bytes);
+		else
+			AudDrv_Allocate_DL2_Buffer(mDev, substream->runtime->dma_bytes);
 	} else {
 		Dl1_Playback_dma_buf =  Get_Mem_Buffer(bt_dl_mem_blk);
 		substream->runtime->dma_bytes = params_buffer_bytes(hw_params);
@@ -255,8 +267,6 @@ static int mtk_pcm_dl1bt_hw_params(struct snd_pcm_substream *substream,
 		SetHighAddr(bt_dl_mem_blk, true);
 		SetDLBuffer(substream, hw_params);
 	}
-
-	pdl1btMemControl = Get_Mem_ControlT(bt_dl_mem_blk);
 
 	PRINTK_AUDDRV(" dma_bytes = %zu dma_area = %p dma_addr = 0x%lx\n",
 		      substream->runtime->dma_bytes, substream->runtime->dma_area, (long)substream->runtime->dma_addr);
