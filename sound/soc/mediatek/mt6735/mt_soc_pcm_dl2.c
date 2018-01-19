@@ -60,7 +60,7 @@
 #include <linux/ftrace.h>
 
 
-
+static int fast_dl_hdoutput;
 static AFE_MEM_CONTROL_T *pMemControl;
 static int mPlaybackSramState;
 static struct snd_dma_buffer *Dl2_Playback_dma_buf;
@@ -75,6 +75,39 @@ static unsigned long NowTime;
 static const int ISRCopyMaxSize = 256*2*4;     /* 256 frames, stereo, 32bit */
 static AFE_DL_ISR_COPY_T ISRCopyBuffer = {0};
 #endif
+
+const char * const fast_dl_hd_output[] = {"Off", "On"};
+
+static const struct soc_enum fast_dl_enum[] = {
+	SOC_ENUM_SINGLE_EXT(ARRAY_SIZE(fast_dl_hd_output), fast_dl_hd_output),
+};
+
+static int fast_dl_hdoutput_get(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	pr_debug("%s() = %d\n", __func__, fast_dl_hdoutput);
+	ucontrol->value.integer.value[0] = fast_dl_hdoutput;
+	return 0;
+}
+
+static int fast_dl_hdoutput_set(struct snd_kcontrol *kcontrol,
+				struct snd_ctl_elem_value *ucontrol)
+{
+	if (ucontrol->value.enumerated.item[0] >
+	    ARRAY_SIZE(fast_dl_hd_output)) {
+		pr_warn("%s(), return -EINVAL\n", __func__);
+		return -EINVAL;
+	}
+
+	fast_dl_hdoutput = ucontrol->value.integer.value[0];
+
+	return 0;
+}
+
+static const struct snd_kcontrol_new fast_dl_controls[] = {
+	SOC_ENUM_EXT("fast_dl_hd_Switch", fast_dl_enum[0],
+		    fast_dl_hdoutput_get, fast_dl_hdoutput_set),
+};
 
 static int dataTransfer(void *dest, const void *src, uint32_t size);
 
@@ -331,7 +364,8 @@ static int mtk_pcm_dl2_open(struct snd_pcm_substream *substream)
 
 static int mtk_soc_pcm_dl2_close(struct snd_pcm_substream *substream)
 {
-	pr_debug("%s\n", __func__);
+	pr_debug("%s(), mPrepareDone = %d, fast_dl_hdoutput = %d\n",
+		 __func__, mPrepareDone, fast_dl_hdoutput);
 
 	if (mPrepareDone == true) {
 		/* stop DAC output */
@@ -344,6 +378,11 @@ static int mtk_soc_pcm_dl2_close(struct snd_pcm_substream *substream)
 		RemoveMemifSubStream(Soc_Aud_Digital_Block_MEM_DL2, substream);
 
 		EnableAfe(false);
+
+		/* here to open APLL */
+		if (fast_dl_hdoutput == true)
+			DisableALLbySampleRate(substream->runtime->rate);
+
 		mPrepareDone = false;
 	}
 
@@ -369,12 +408,11 @@ static int mtk_pcm_dl2_prepare(struct snd_pcm_substream *substream)
 	bool mI2SWLen = Soc_Aud_I2S_WLEN_WLEN_16BITS;
 	struct snd_pcm_runtime *runtime = substream->runtime;
 
-	pr_debug("%s\n", __func__);
-
 	if (mPrepareDone == false) {
-		pr_debug
-		    ("%s format = %d SNDRV_PCM_FORMAT_S32_LE = %d SNDRV_PCM_FORMAT_U32_LE = %d\n",
-		     __func__, runtime->format, SNDRV_PCM_FORMAT_S32_LE, SNDRV_PCM_FORMAT_U32_LE);
+		pr_debug(
+			"%s format = %d SNDRV_PCM_FORMAT_S32_LE = %d SNDRV_PCM_FORMAT_U32_LE = %d, fast_dl_hdoutput = %d\n",
+			__func__, runtime->format, SNDRV_PCM_FORMAT_S32_LE,
+			SNDRV_PCM_FORMAT_U32_LE, fast_dl_hdoutput);
 		SetMemifSubStream(Soc_Aud_Digital_Block_MEM_DL2, substream);
 
 		if (runtime->format == SNDRV_PCM_FORMAT_S32_LE ||
@@ -402,10 +440,14 @@ static int mtk_pcm_dl2_prepare(struct snd_pcm_substream *substream)
 
 		SetSampleRate(Soc_Aud_Digital_Block_MEM_I2S, runtime->rate);
 
+		/* here to open APLL */
+		if (fast_dl_hdoutput == true)
+			EnableALLbySampleRate(runtime->rate);
+
 		/* start I2S DAC out */
 		if (GetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC) == false) {
 			SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC, true);
-			SetI2SDacOut(substream->runtime->rate, false, mI2SWLen);
+			SetI2SDacOut(substream->runtime->rate, fast_dl_hdoutput, mI2SWLen);
 			SetI2SDacEnable(true);
 		} else {
 			SetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC, true);
@@ -415,7 +457,10 @@ static int mtk_pcm_dl2_prepare(struct snd_pcm_substream *substream)
 		if (GetMemoryPathEnable(Soc_Aud_Digital_Block_I2S_OUT_DAC) == true)
 			SetI2SADDAEnable(true);
 		mPrepareDone = true;
+	} else {
+		pr_debug("%s\n", __func__);
 	}
+
 	return 0;
 }
 
@@ -868,6 +913,10 @@ static int mtk_asoc_pcm_dl2_new(struct snd_soc_pcm_runtime *rtd)
 static int mtk_asoc_dl2_probe(struct snd_soc_platform *platform)
 {
 	PRINTK_AUD_DL2("mtk_asoc_dl2_probe\n");
+
+	snd_soc_add_platform_controls(platform, fast_dl_controls,
+				      ARRAY_SIZE(fast_dl_controls));
+
 	/* allocate dram */
 	AudDrv_Allocate_mem_Buffer(platform->dev, Soc_Aud_Digital_Block_MEM_DL2,
 				   Dl2_MAX_BUFFER_SIZE);
