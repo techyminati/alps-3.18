@@ -105,8 +105,6 @@
 #define HOTKNOT_SYSTEM_PATH "/sdcard/goodix/_hotknot_.bin"
 #define FX_SYSTEM_PATH "/sdcard/goodix/_authorization_.bin"
 
-#define	GTP_FORCE_UPDATE_FW 0
-#define GT917S_UPDATE_RULE 1
 #pragma pack(1)
 struct st_fw_head {
 	u8 hw_info[4];		/* hardware info// */
@@ -142,6 +140,7 @@ u8 load_fw_process = 0;
 
 static u8 gup_burn_fw_app_section(struct i2c_client *client, u8 *fw_section, u16 start_addr,
 				  u32 len, u8 bank_cmd);
+static u8 gup_check_and_repair(struct i2c_client *, s32, u8 *, u32);
 
 static s32 gup_i2c_read(struct i2c_client *client, u8 *buf, s32 len)
 {
@@ -244,9 +243,10 @@ static u8 gup_get_ic_fw_msg(struct i2c_client *client)
 
 		update_msg.force_update = buf[GTP_ADDR_LENGTH];
 
-		if ((0xBE != update_msg.force_update) && (!retry)) {
+		if (0xBE != update_msg.force_update) {
 			GTP_INFO("The check sum in ic is error.");
 			GTP_INFO("The IC will be updated by force.");
+			usleep_range(5000, 5001);
 			continue;
 		}
 		break;
@@ -291,18 +291,30 @@ s32 gup_enter_update_mode(struct i2c_client *client)
 	s32 ret = -1;
 	s32 retry = 0;
 	u8 rd_buf[3];
-
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
 	/* step1:RST output low last at least 2ms */
-	tpd_gpio_output(0, 0);
+	gpio_direction_output(tpd_rst_gpio_number, 0);
 	msleep(20);
 
 	/* step2:select I2C slave addr,INT:0--0xBA;1--0x28. */
-	tpd_gpio_output(1, (client->addr == 0x14));
+	gtp_eint_gpio_output(tpd_int_gpio_number, (client->addr == 0x14));
 	msleep(20);
 
 	/* step3:RST output high reset guitar */
-	tpd_gpio_output(0, 1);
+	gpio_direction_output(tpd_rst_gpio_number, 1);
+#else
 
+	/* step1:RST output low last at least 2ms */
+	tpd_gpio_output(GTP_RST_PORT, 0);
+	msleep(20);
+
+	/* step2:select I2C slave addr,INT:0--0xBA;1--0x28. */
+	tpd_gpio_output(GTP_INT_PORT, (client->addr == 0x14));
+	msleep(20);
+
+	/* step3:RST output high reset guitar */
+	tpd_gpio_output(GTP_RST_PORT, 1);
+#endif
 	/* 20121211 modify start */
 	msleep(20);
 	while (retry++ < 200) {
@@ -338,8 +350,11 @@ s32 gup_enter_update_mode(struct i2c_client *client)
 
 void gup_leave_update_mode(void)
 {
-	tpd_gpio_as_int(1);
-
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	gpio_direction_input(tpd_int_gpio_number);
+#else
+	tpd_gpio_as_int(GTP_INT_PORT);
+#endif
 	GTP_DEBUG("[leave_update_mode]reset chip.");
 #if defined(CONFIG_GTP_COMPATIBLE_MODE)
 	if (CHIP_TYPE_GT9F == gtp_chip_type) {
@@ -348,7 +363,7 @@ void gup_leave_update_mode(void)
 		return;
 	}
 #endif
-	gtp_reset_guitar(i2c_client_tp_point, 20);
+	gtp_reset_guitar(i2c_client_point, 20);
 }
 
 static u8 gup_enter_update_judge(struct st_fw_head *fw_head)
@@ -447,7 +462,6 @@ static u8 gup_enter_update_judge(struct st_fw_head *fw_head)
 }
 
 #if defined(CONFIG_GTP_AUTO_UPDATE_CFG)
-#if defined(CONFIG_GTP_AUTO_UPDATE)
 static u8 ascii2hex(u8 a)
 {
 	s8 value = 0;
@@ -463,6 +477,7 @@ static u8 ascii2hex(u8 a)
 
 	return value;
 }
+
 static s8 gup_update_config(struct i2c_client *client)
 {
 	s32 file_len = 0;
@@ -555,7 +570,6 @@ update_cfg_file_failed:
 	kfree(file_config);
 	return ret;
 }
-#endif
 #endif
 
 #if (defined(CONFIG_GTP_AUTO_UPDATE) && (!defined(CONFIG_GTP_HEADER_FW_UPDATE) || defined(CONFIG_GTP_AUTO_UPDATE_CFG)))
@@ -1917,9 +1931,6 @@ s32 gup_update_proc(void *dir)
 	u8 retry = 0;
 	s32 update_ret = FAIL;
 	struct st_fw_head fw_head;
-#if GT917S_UPDATE_RULE
-	char temp_data[6] = {0};
-#endif
 
 	GTP_INFO("[update_proc]Begin update ......");
 
@@ -1942,14 +1953,14 @@ s32 gup_update_proc(void *dir)
 		return gup_fw_download_proc(dir, GTP_FL_FW_BURN);
 #endif
 	update_msg.file = NULL;
-	ret = gup_check_update_file(i2c_client_tp_point, &fw_head, (u8 *) dir);	/* 20121212 */
+	ret = gup_check_update_file(i2c_client_point, &fw_head, (u8 *) dir);	/* 20121212 */
 
 	if (FAIL == ret) {
 		GTP_ERROR("[update_proc]check update file fail.");
 		goto file_fail;
 	}
-	/* gtp_reset_guitar(i2c_client_tp_point, 20); */
-	ret = gup_get_ic_fw_msg(i2c_client_tp_point);
+	/* gtp_reset_guitar(i2c_client_point, 20); */
+	ret = gup_get_ic_fw_msg(i2c_client_point);
 
 	if (FAIL == ret) {
 		GTP_ERROR("[update_proc]get ic message fail.");
@@ -1957,34 +1968,22 @@ s32 gup_update_proc(void *dir)
 	}
 
 	ret = gup_enter_update_judge(&fw_head);	/* 20121212 */
-#if GT917S_UPDATE_RULE
-	i2c_read_bytes(i2c_client_tp_point, 0x8140, temp_data, 6);
-	GTP_INFO("917S firmware detect add function temp_data = (%c, %c, %c, %c)!",
-	temp_data[0], temp_data[1], temp_data[2], temp_data[3]);
-	if (temp_data[0] == 57 && temp_data[1] == 49 && temp_data[2] == 55 && temp_data[3] == 83) {
-		GTP_INFO("GT917S firmware detect Force Update!");
-		ret = SUCCESS;
-	}
-#endif
-
-#ifdef GTP_FORCE_UPDATE_FW_K92
-		ret = SUCCESS;
-#endif
-
-#if GTP_FORCE_UPDATE_FW
-	ret = SUCCESS;								/*for test*/
-#endif
 
 	if (FAIL == ret) {
 		GTP_ERROR("[update_proc]Check *.bin file fail.");
 		goto file_fail;
 	}
+
+	load_fw_process = 1;
 	/* mt_eint_mask(CUST_EINT_TOUCH_PANEL_NUM); */
-	disable_irq(touch_irq);
+	if (true == tpdIrqIsEnabled) {
+		disable_irq(touch_irq);
+		tpdIrqIsEnabled = false;
+	}
 #if defined(CONFIG_GTP_ESD_PROTECT)
-	gtp_esd_switch(i2c_client_tp_point, SWITCH_OFF);
+	gtp_esd_switch(i2c_client_point, SWITCH_OFF);
 #endif
-	ret = gup_enter_update_mode(i2c_client_tp_point);
+	ret = gup_enter_update_mode(i2c_client_point);
 
 	if (FAIL == ret) {
 		GTP_ERROR("[update_proc]enter update mode fail.");
@@ -1996,55 +1995,55 @@ s32 gup_update_proc(void *dir)
 		total_len = 100;
 		update_msg.fw_burned_len = 0;
 		GTP_DEBUG("[update_proc]Burned length:%d", update_msg.fw_burned_len);
-		ret = gup_burn_dsp_isp(i2c_client_tp_point);
+		ret = gup_burn_dsp_isp(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn dsp isp fail.");
 			continue;
 		}
 
 		show_len = 30;
-		ret = gup_burn_fw_ss51(i2c_client_tp_point);
+		ret = gup_burn_fw_ss51(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn ss51 firmware fail.");
 			continue;
 		}
 
 		show_len = 40;
-		ret = gup_burn_fw_dsp(i2c_client_tp_point);
+		ret = gup_burn_fw_dsp(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn dsp firmware fail.");
 			continue;
 		}
 
 		show_len = 50;
-		ret = gup_burn_fw_boot(i2c_client_tp_point);
+		ret = gup_burn_fw_boot(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn bootloader firmware fail.");
 			continue;
 		}
 		show_len = 60;
 
-		ret = gup_burn_fw_boot_isp(i2c_client_tp_point);
+		ret = gup_burn_fw_boot_isp(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn boot_isp firmware fail.");
 			continue;
 		}
 
 		show_len = 70;
-		ret = gup_burn_fw_link(i2c_client_tp_point);
+		ret = gup_burn_fw_link(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn link firmware fail.");
 			continue;
 		}
 
 		show_len = 80;
-		ret = gup_burn_fw_app_code(i2c_client_tp_point);
+		ret = gup_burn_fw_app_code(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn app_code firmware fail.");
 			continue;
 		}
 		show_len = 90;
-		ret = gup_burn_fw_finish(i2c_client_tp_point);
+		ret = gup_burn_fw_finish(i2c_client_point);
 		if (FAIL == ret) {
 			GTP_ERROR("[update_proc]burn finish fail.");
 			continue;
@@ -2067,17 +2066,20 @@ update_fail:
 
 	if (SUCCESS == update_ret) {
 		GTP_DEBUG("[update_proc]send config.");
-		ret = gtp_send_cfg(i2c_client_tp_point);
+		ret = gtp_send_cfg(i2c_client_point);
 		if (ret < 0)
 			GTP_ERROR("[update_proc]send config fail.");
 	}
 #if defined(CONFIG_GTP_ESD_PROTECT)
-	gtp_esd_switch(i2c_client_tp_point, SWITCH_ON);
+	gtp_esd_switch(i2c_client_point, SWITCH_ON);
 #endif
 
 file_fail:
-	/* mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); */
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	gtp_irq_enable();
+#else
 	enable_irq(touch_irq);
+#endif
 
 	if (update_msg.file && !IS_ERR(update_msg.file)) {
 		if (update_msg.old_fs)
@@ -2088,13 +2090,14 @@ file_fail:
 	if (NULL == dir) {
 		gup_search_file(AUTO_SEARCH_CFG);
 		if (got_file_flag & CFG_FILE_READY) {
-			ret = gup_update_config(i2c_client_tp_point);
+			ret = gup_update_config(i2c_client_point);
 			if (FAIL == ret)
 				GTP_ERROR("Update config failed!");
 		}
 	}
 #endif
 
+	load_fw_process = 0;
 	total_len = 100;
 	if (SUCCESS == update_ret) {
 		show_len = 100;
@@ -2171,7 +2174,6 @@ u8 gup_init_update_proc(struct i2c_client *client)
 #define _rRW_MISCTL__GIO1CTL_B1_                  0x41ed
 
 #if defined(CONFIG_GTP_COMPATIBLE_MODE)
-static u8 gup_check_and_repair(struct i2c_client *, s32, u8 *, u32);
 
 u8 gup_check_fs_mounted(char *path_name)
 {
@@ -2186,14 +2188,23 @@ u8 gup_check_fs_mounted(char *path_name)
 
 	err = kern_path(path_name, LOOKUP_FOLLOW, &path);
 
-	if (err)
-		return FAIL;
+	if (err) {
+		err = FAIL;
+		goto exit_chk;
+	}
 
-	if (path.mnt->mnt_sb == root_path.mnt->mnt_sb)
+	if (path.mnt->mnt_sb == root_path.mnt->mnt_sb) {
 		/* -- not mounted */
-		return FAIL;
+		err = FAIL;
+	} else {
+		err = SUCCESS;
+	}
 
-	return SUCCESS;
+	path_put(&path);
+exit_chk:
+	path_put(&root_path);
+
+	return err;
 }
 
 s32 gup_hold_ss51_dsp(struct i2c_client *client)
@@ -2268,19 +2279,32 @@ s32 gup_enter_update_mode_fl(struct i2c_client *client)
 	s32 ret = -1;
 	/* s32 retry = 0; */
 	/* u8 rd_buf[3]; */
-
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
 	/* step1:RST output low last at least 2ms */
-	tpd_gpio_output(0, 0);
+	gpio_direction_output(tpd_rst_gpio_number, 0);
 	msleep(20);
 
 	/* step2:select I2C slave addr,INT:0--0xBA;1--0x28. */
-	tpd_gpio_output(1, (client->addr == 0x14));
+	gtp_eint_gpio_output(tpd_int_gpio_number, (client->addr == 0x14));
 	msleep(20);
 
 	/* step3:RST output high reset guitar */
-	tpd_gpio_output(0, 1);
+	gpio_direction_output(tpd_rst_gpio_number, 1);
+	msleep(20);
+#else
+	/* step1:RST output low last at least 2ms */
+	tpd_gpio_output(GTP_RST_PORT, 0);
+	msleep(20);
+
+	/* step2:select I2C slave addr,INT:0--0xBA;1--0x28. */
+	tpd_gpio_output(GTP_INT_PORT, (client->addr == 0x14));
+	msleep(20);
+
+	/* step3:RST output high reset guitar */
+	tpd_gpio_output(GTP_RST_PORT, 1);
 
 	msleep(20);
+#endif
 
 	/* select addr & hold ss51_dsp */
 	ret = gup_hold_ss51_dsp(client);
@@ -2436,7 +2460,7 @@ static u8 gup_download_fw_ss51(struct i2c_client *client, u8 dwn_mode)
 		GTP_INFO("[download_fw_ss51]Begin check ss51 firmware----->>");
 	/* step1:download FW section 1 */
 	GTP_DEBUG("[download_fw_ss51]step1:download FW section 1");
-	ret = gup_set_ic_msg(i2c_client_tp_point, _bRW_MISCTL__SRAM_BANK, 0x00);
+	ret = gup_set_ic_msg(i2c_client_point, _bRW_MISCTL__SRAM_BANK, 0x00);
 
 	if (ret <= 0) {
 		GTP_ERROR("[download_fw_ss51]select bank0 fail.");
@@ -2457,7 +2481,7 @@ static u8 gup_download_fw_ss51(struct i2c_client *client, u8 dwn_mode)
 
 
 	if (GTP_FL_FW_BURN == dwn_mode) {
-		ret = gup_check_and_repair(i2c_client_tp_point,
+		ret = gup_check_and_repair(i2c_client_point,
 					   0xC000,
 					   &gtp_default_FW_fl[FW_HEAD_LENGTH], FW_DOWNLOAD_LENGTH);
 		if (FAIL == ret) {
@@ -2467,7 +2491,7 @@ static u8 gup_download_fw_ss51(struct i2c_client *client, u8 dwn_mode)
 	}
 	/* step2:download FW section 2 */
 	GTP_DEBUG("[download_fw_ss51]step2:download FW section 1");
-	ret = gup_set_ic_msg(i2c_client_tp_point, _bRW_MISCTL__SRAM_BANK, 0x01);
+	ret = gup_set_ic_msg(i2c_client_point, _bRW_MISCTL__SRAM_BANK, 0x01);
 
 	if (ret <= 0) {
 		GTP_ERROR("[download_fw_ss51]select bank1 fail.");
@@ -2486,7 +2510,7 @@ static u8 gup_download_fw_ss51(struct i2c_client *client, u8 dwn_mode)
 	}
 
 	if (GTP_FL_FW_BURN == dwn_mode) {
-		ret = gup_check_and_repair(i2c_client_tp_point,
+		ret = gup_check_and_repair(i2c_client_point,
 					   0xC000,
 					   &gtp_default_FW_fl[FW_HEAD_LENGTH + FW_DOWNLOAD_LENGTH],
 					   FW_DOWNLOAD_LENGTH);
@@ -2513,13 +2537,11 @@ static s32 i2c_auto_read(struct i2c_client *client, u8 *rxbuf, int len)
 	struct i2c_msg msg = {
 #ifdef CONFIG_MTK_I2C_EXTENSION
 		.addr = ((client->addr & I2C_MASK_FLAG) | (I2C_ENEXT_FLAG)),
-		/*.addr = ((client->addr &I2C_MASK_FLAG) | (I2C_PUSHPULL_FLAG)), */
-		.flags = I2C_M_RD,
-		.timing = I2C_MASTER_CLOCK
+		.timing = I2C_MASTER_CLOCK,
 #else
 		.addr = client->addr,
-		.flags = I2C_M_RD,
 #endif
+		.flags = I2C_M_RD
 	};
 
 	if (NULL == rxbuf)
@@ -2673,7 +2695,7 @@ s32 gup_fw_download_proc(void *dir, u8 dwn_mode)
 	show_len = 0;
 	total_len = 100;
 
-	ret = gup_check_update_file_fl(i2c_client_tp_point, &fw_head, (char *)dir);
+	ret = gup_check_update_file_fl(i2c_client_point, &fw_head, (char *)dir);
 
 	show_len = 10;
 
@@ -2682,14 +2704,18 @@ s32 gup_fw_download_proc(void *dir, u8 dwn_mode)
 		goto file_fail;
 	}
 	/* mt_eint_mask(CUST_EINT_TOUCH_PANEL_NUM); */
-	disable_irq(touch_irq);
+	if (true == tpdIrqIsEnabled) {
+		disable_irq(touch_irq);
+		tpdIrqIsEnabled = false;
+	}
+
 	if (NULL != dir) {
 #if defined(CONFIG_GTP_ESD_PROTECT)
-		gtp_esd_switch(i2c_client_tp_point, SWITCH_OFF);
+		gtp_esd_switch(i2c_client_point, SWITCH_OFF);
 #endif
 	}
 
-	ret = gup_enter_update_mode_fl(i2c_client_tp_point);
+	ret = gup_enter_update_mode_fl(i2c_client_point);
 	show_len = 20;
 
 	if (FAIL == ret) {
@@ -2698,14 +2724,14 @@ s32 gup_fw_download_proc(void *dir, u8 dwn_mode)
 	}
 
 	while (retry++ < 5) {
-		ret = gup_download_fw_ss51(i2c_client_tp_point, dwn_mode);
+		ret = gup_download_fw_ss51(i2c_client_point, dwn_mode);
 		show_len = 60;
 		if (FAIL == ret) {
 			GTP_ERROR("[fw_download_proc]burn ss51 firmware fail.");
 			continue;
 		}
 
-		ret = gup_download_fw_dsp(i2c_client_tp_point, dwn_mode);
+		ret = gup_download_fw_dsp(i2c_client_point, dwn_mode);
 		show_len = 80;
 		if (FAIL == ret) {
 			GTP_ERROR("[fw_download_proc]burn dsp firmware fail.");
@@ -2722,28 +2748,37 @@ s32 gup_fw_download_proc(void *dir, u8 dwn_mode)
 	}
 
 	if (NULL != dir) {
-		gtp_fw_startup(i2c_client_tp_point);
+		gtp_fw_startup(i2c_client_point);
 #if defined(CONFIG_GTP_ESD_PROTECT)
-		gtp_esd_switch(i2c_client_tp_point, SWITCH_ON);
+		gtp_esd_switch(i2c_client_point, SWITCH_ON);
 #endif
 	}
 	show_len = 100;
-	/* mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); */
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	gtp_irq_enable();
+#else
 	enable_irq(touch_irq);
+#endif
+
 	return SUCCESS;
 
 download_fail:
 	if (NULL != dir) {
-		gtp_fw_startup(i2c_client_tp_point);
+		gtp_fw_startup(i2c_client_point);
 #if defined(CONFIG_GTP_ESD_PROTECT)
-		gtp_esd_switch(i2c_client_tp_point, SWITCH_ON);
+		gtp_esd_switch(i2c_client_point, SWITCH_ON);
 #endif
 	}
 
 file_fail:
 	show_len = 200;
 	/* mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); */
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	gtp_irq_enable();
+#else
 	enable_irq(touch_irq);
+#endif
+
 	return FAIL;
 }
 
@@ -2752,11 +2787,11 @@ static void gup_bit_write(s32 addr, s32 bit, s32 val)
 {
 	u8 buf;
 
-	i2c_read_bytes(i2c_client_tp_point, addr, &buf, 1);
+	i2c_read_bytes(i2c_client_point, addr, &buf, 1);
 
 	buf = (buf & (~((u8) 1 << bit))) | ((u8) val << bit);
 
-	i2c_write_bytes(i2c_client_tp_point, addr, &buf, 1);
+	i2c_write_bytes(i2c_client_point, addr, &buf, 1);
 }
 
 static void gup_clk_count_init(s32 bCh, s32 bCNT)
@@ -2769,13 +2804,13 @@ static void gup_clk_count_init(s32 bCh, s32 bCNT)
 	gup_bit_write(_fRW_MISCTL__MEA, 1, 1);
 	/* _bRW_MISCTL__MEA_MODE = 0; //Pulse mode */
 	buf = 0;
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__MEA_MODE, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__MEA_MODE, &buf, 1);
 	/* _bRW_MISCTL__MEA_SRCSEL = 8 + bCh; //From GIO1 */
 	buf = 8 + bCh;
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__MEA_SRCSEL, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__MEA_SRCSEL, &buf, 1);
 	/* _wRW_MISCTL__MEA_MAX_NUM = bCNT; //Set the Measure Counts = 1 */
 	buf = bCNT;
-	i2c_write_bytes(i2c_client_tp_point, _wRW_MISCTL__MEA_MAX_NUM, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _wRW_MISCTL__MEA_MAX_NUM, &buf, 1);
 	/* _fRW_MISCTL__MEA_CLR = 0; //Frequency measure not clear */
 	gup_bit_write(_fRW_MISCTL__MEA, 1, 0);
 	/* _fRW_MISCTL__MEA_EN = 1; */
@@ -2789,7 +2824,7 @@ static u32 gup_clk_count_get(void)
 	s8 buf[4];
 
 	while ((ready == 0)) {
-		i2c_read_bytes(i2c_client_tp_point, _bRO_MISCTL__MEA_RDY, buf, 1);
+		i2c_read_bytes(i2c_client_point, _bRO_MISCTL__MEA_RDY, buf, 1);
 		ready = buf[0];
 	}
 
@@ -2797,7 +2832,7 @@ static u32 gup_clk_count_get(void)
 
 	/* _fRW_MISCTL__MEA_EN = 0; */
 	gup_bit_write(_fRW_MISCTL__MEA, 0, 0);
-	i2c_read_bytes(i2c_client_tp_point, _dRO_MISCTL__MEA_VAL, buf, 4);
+	i2c_read_bytes(i2c_client_point, _dRO_MISCTL__MEA_VAL, buf, 4);
 	GTP_INFO("Clk_count 0: %2X", buf[0]);
 	GTP_INFO("Clk_count 1: %2X", buf[1]);
 	GTP_INFO("Clk_count 2: %2X", buf[2]);
@@ -2812,14 +2847,14 @@ u8 gup_clk_dac_setting(int dac)
 {
 	s8 buf1, buf2;
 
-	i2c_read_bytes(i2c_client_tp_point, _wRW_MISCTL__RG_DMY, &buf1, 1);
-	i2c_read_bytes(i2c_client_tp_point, _bRW_MISCTL__RG_OSC_CALIB, &buf2, 1);
+	i2c_read_bytes(i2c_client_point, _wRW_MISCTL__RG_DMY, &buf1, 1);
+	i2c_read_bytes(i2c_client_point, _bRW_MISCTL__RG_OSC_CALIB, &buf2, 1);
 
 	buf1 = (buf1 & 0xFFCF) | ((dac & 0x03) << 4);
 	buf2 = (dac >> 2) & 0x3f;
 
-	i2c_write_bytes(i2c_client_tp_point, _wRW_MISCTL__RG_DMY, &buf1, 1);
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__RG_OSC_CALIB, &buf2, 1);
+	i2c_write_bytes(i2c_client_point, _wRW_MISCTL__RG_DMY, &buf1, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__RG_OSC_CALIB, &buf2, 1);
 
 	return 0;
 }
@@ -2878,23 +2913,43 @@ static u8 gup_clk_calibration_pin_select(s32 bCh)
 void gup_output_pulse(int t)
 {
 	unsigned long flags;
+
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	/* s32 i; */
+	gtp_eint_gpio_output(tpd_int_gpio_number, 0);
+	udelay(10);
+
+	local_irq_save(flags);
+	gtp_eint_gpio_output(tpd_int_gpio_number, 1);
+	udelay(50);
+
+	gtp_eint_gpio_output(tpd_int_gpio_number, 0);
+	udelay(t - 50);
+
+	gtp_eint_gpio_output(tpd_int_gpio_number, 1);
+	local_irq_restore(flags);
+	udelay(20);
+
+	gtp_eint_gpio_output(tpd_int_gpio_number, 0);
+#else
 	/* s32 i; */
 
-	tpd_gpio_output(1, 0);
+	tpd_gpio_output(GTP_INT_PORT, 0);
 	udelay(10);
 
 	local_irq_save(flags);
 
-	mt_set_gpio_out(GTP_INT_PORT, 1);
+	tpd_gpio_output(GTP_INT_PORT, 1);
 	udelay(50);
-	mt_set_gpio_out(GTP_INT_PORT, 0);
+	tpd_gpio_output(GTP_INT_PORT, 0);
 	udelay(t - 50);
-	mt_set_gpio_out(GTP_INT_PORT, 1);
+	tpd_gpio_output(GTP_INT_PORT, 1);
 
 	local_irq_restore(flags);
 
 	udelay(20);
-	tpd_gpio_output(1, 0);
+	tpd_gpio_output(GTP_INT_PORT, 0);
+#endif
 }
 
 static void gup_sys_clk_init(void)
@@ -2905,13 +2960,13 @@ static void gup_sys_clk_init(void)
 	gup_bit_write(_rRW_MISCTL__ANA_RXADC_B0_, 5, 0);
 	/* _bRW_MISCTL__RG_LDO_A18_PWD = 0; //DrvMISCTL_A18_PowerON */
 	buf = 0;
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__RG_LDO_A18_PWD, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__RG_LDO_A18_PWD, &buf, 1);
 	/* _bRW_MISCTL__RG_BG_PWD = 0; //DrvMISCTL_BG_PowerON */
 	buf = 0;
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__RG_BG_PWD, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__RG_BG_PWD, &buf, 1);
 	/* _bRW_MISCTL__RG_CLKGEN_PWD = 0; //DrvMISCTL_CLKGEN_PowerON */
 	buf = 0;
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__RG_CLKGEN_PWD, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__RG_CLKGEN_PWD, &buf, 1);
 	/* _fRW_MISCTL__RG_RXADC_PWD = 0; //DrvMISCTL_RX_ADC_PowerON */
 	gup_bit_write(_rRW_MISCTL__ANA_RXADC_B0_, 0, 0);
 	/* _fRW_MISCTL__RG_RXADC_REF_PWD = 0; //DrvMISCTL_RX_ADCREF_PowerON */
@@ -2919,7 +2974,7 @@ static void gup_sys_clk_init(void)
 	/* gup_clk_dac_setting(60); */
 	/* _bRW_MISCTL__OSC_CK_SEL = 1;; */
 	buf = 1;
-	i2c_write_bytes(i2c_client_tp_point, _bRW_MISCTL__OSC_CK_SEL, &buf, 1);
+	i2c_write_bytes(i2c_client_point, _bRW_MISCTL__OSC_CK_SEL, &buf, 1);
 }
 
 u8 gup_clk_calibration(void)
@@ -2936,8 +2991,8 @@ u8 gup_clk_calibration(void)
 	/* unsigned long flags; */
 
 	/* buf = 0x0C; // hold ss51 and dsp */
-	/* i2c_write_bytes(i2c_client_tp_point, _rRW_MISCTL__SWRST_B0_, &buf, 1); */
-	ret = gup_hold_ss51_dsp(i2c_client_tp_point);
+	/* i2c_write_bytes(i2c_client_point, _rRW_MISCTL__SWRST_B0_, &buf, 1); */
+	ret = gup_hold_ss51_dsp(i2c_client_point);
 	if (ret <= 0) {
 		GTP_ERROR("[gup_clk_calibration]hold ss51 & dsp failed.");
 		return FAIL;
@@ -2952,15 +3007,18 @@ u8 gup_clk_calibration(void)
 	gup_bit_write(_rRW_MISCTL__GIO1CTL_B1_, 1, 0);
 
 	/* buf = 0x00; */
-	/* i2c_write_bytes(i2c_client_tp_point, _rRW_MISCTL__SWRST_B0_, &buf, 1); */
+	/* i2c_write_bytes(i2c_client_point, _rRW_MISCTL__SWRST_B0_, &buf, 1); */
 	/* msleep(1000); */
 
 	GTP_INFO("CLK calibration GO");
 	gup_sys_clk_init();
 	gup_clk_calibration_pin_select(1);	/* use GIO1 to do the calibration */
 
-	tpd_gpio_output(1, 0);
-
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	gtp_eint_gpio_output(tpd_int_gpio_number, 0);
+#else
+	tpd_gpio_output(GTP_INT_PORT, 0);
+#endif
 	for (i = INIT_CLK_DAC; i < MAX_CLK_DAC; i++) {
 		if (tpd_halt) {
 			i = 80;	/* if sleeping while calibrating main clock, set it default 80 */
@@ -2978,26 +3036,47 @@ u8 gup_clk_calibration(void)
 		if (count > PULSE_LENGTH * 60)	/* 60= 60Mhz * 1us */
 			break;
 #else
-		tpd_gpio_output(1, 0);
+	#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+		gtp_eint_gpio_output(tpd_int_gpio_number, 0);
 
 		/* local_irq_save(flags); */
 		do_gettimeofday(&start);
-		tpd_gpio_output(1, 1);
+		gtp_eint_gpio_output(tpd_int_gpio_number, 1);
 		/* local_irq_restore(flags); */
 
 		msleep(20);
-		tpd_gpio_output(1, 0);
+		gtp_eint_gpio_output(tpd_int_gpio_number, 0);
 		msleep(20);
 
 		/* local_irq_save(flags); */
 		do_gettimeofday(&end);
-		tpd_gpio_output(1, 1);
+		gtp_eint_gpio_output(tpd_int_gpio_number, 1);
 		/* local_irq_restore(flags); */
 
 		count = gup_clk_count_get();
 		udelay(20);
-		tpd_gpio_output(1, 0);
+		gtp_eint_gpio_output(tpd_int_gpio_number, 0);
+	#else
+		tpd_gpio_output(GTP_INT_PORT, 0);
 
+		/* local_irq_save(flags); */
+		do_gettimeofday(&start);
+		tpd_gpio_output(GTP_INT_PORT, 1);
+		/* local_irq_restore(flags); */
+
+		msleep(20);
+		tpd_gpio_output(GTP_INT_PORT, 0);
+		msleep(20);
+
+		/* local_irq_save(flags); */
+		do_gettimeofday(&end);
+		tpd_gpio_output(GTP_INT_PORT, 1);
+		/* local_irq_restore(flags); */
+
+		count = gup_clk_count_get();
+		udelay(20);
+		tpd_gpio_output(GTP_INT_PORT, 0);
+	#endif
 		usec = end.tv_usec - start.tv_usec;
 		sec = end.tv_sec - start.tv_sec;
 		count_ref = 60 * (usec + sec * MILLION);	/* 60= 60Mhz * 1us */
@@ -3013,27 +3092,32 @@ u8 gup_clk_calibration(void)
 
 	/* clk_dac = i; */
 
-	/* gtp_reset_guitar(i2c_client_tp_point, 20); */
+	/* gtp_reset_guitar(i2c_client_point, 20); */
 
 #if 0				/* for debug */
 	/* -- output clk to GPIO 4 */
 	buf = 0x00;
-	i2c_write_bytes(i2c_client_tp_point, 0x41FA, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x41FA, &buf, 1);
 	buf = 0x00;
-	i2c_write_bytes(i2c_client_tp_point, 0x4104, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x4104, &buf, 1);
 	buf = 0x00;
-	i2c_write_bytes(i2c_client_tp_point, 0x4105, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x4105, &buf, 1);
 	buf = 0x00;
-	i2c_write_bytes(i2c_client_tp_point, 0x4106, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x4106, &buf, 1);
 	buf = 0x01;
-	i2c_write_bytes(i2c_client_tp_point, 0x4107, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x4107, &buf, 1);
 	buf = 0x06;
-	i2c_write_bytes(i2c_client_tp_point, 0x41F8, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x41F8, &buf, 1);
 	buf = 0x02;
-	i2c_write_bytes(i2c_client_tp_point, 0x41F9, &buf, 1);
+	i2c_write_bytes(i2c_client_point, 0x41F9, &buf, 1);
 #endif
-
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
 	gpio_direction_input(tpd_int_gpio_number);
+	if (0 == tpdGPIOTiedtoIRQ)
+		tpd_irq_registration();
+#else
+	tpd_gpio_as_int(GTP_INT_PORT);
+#endif
 	return i;
 }
 
@@ -3113,33 +3197,33 @@ s32 gup_enter_update_mode_noreset(void)
 	s32 ret = FAIL;
 
 	/* disable watchdog */
-	ret = gup_set_ic_msg(i2c_client_tp_point, _bRW_MISCTL__TMR0_EN, 0x00);
+	ret = gup_set_ic_msg(i2c_client_point, _bRW_MISCTL__TMR0_EN, 0x00);
 	if (ret <= 0) {
 		GTP_ERROR("[enter_update_mode]disable wdt fail.");
 		return FAIL;
 	}
 	/* select addr & hold ss51_dsp */
-	ret = gup_hold_ss51_dsp(i2c_client_tp_point);
+	ret = gup_hold_ss51_dsp(i2c_client_point);
 	if (ret <= 0) {
 		GTP_ERROR("[enter_update_mode]hold ss51 & dsp failed.");
 		return FAIL;
 	}
 	/* clear control flag */
-	ret = gup_set_ic_msg(i2c_client_tp_point, _rRW_MISCTL__BOOT_CTL_, 0x00);
+	ret = gup_set_ic_msg(i2c_client_point, _rRW_MISCTL__BOOT_CTL_, 0x00);
 
 	if (ret <= 0) {
 		GTP_ERROR("[enter_update_mode]clear control flag fail.");
 		return FAIL;
 	}
 	/* set scramble */
-	ret = gup_set_ic_msg(i2c_client_tp_point, _rRW_MISCTL__BOOT_OPT_B0_, 0x00);
+	ret = gup_set_ic_msg(i2c_client_point, _rRW_MISCTL__BOOT_OPT_B0_, 0x00);
 
 	if (ret <= 0) {
 		GTP_ERROR("[enter_update_mode]set scramble fail.");
 		return FAIL;
 	}
 	/* enable accessing code */
-	ret = gup_set_ic_msg(i2c_client_tp_point, _bRW_MISCTL__MEM_CD_EN, 0x01);
+	ret = gup_set_ic_msg(i2c_client_point, _bRW_MISCTL__MEM_CD_EN, 0x01);
 
 	if (ret <= 0) {
 		GTP_ERROR("[enter_update_mode]enable accessing code fail.");
@@ -3156,20 +3240,20 @@ s32 gup_load_by_bank(u8 bank, u8 need_check, u8 *fw, u32 length)
 
 	GTP_DEBUG("[load_by_bank]begin download [bank:%d,length:%d].", bank, length);
 	while (retry++ < 5) {
-		ret = gup_set_ic_msg(i2c_client_tp_point, _bRW_MISCTL__SRAM_BANK, bank);
+		ret = gup_set_ic_msg(i2c_client_point, _bRW_MISCTL__SRAM_BANK, bank);
 		if (ret <= 0) {
 			GTP_ERROR("[load_by_bank]select bank fail.");
 			continue;
 		}
 
-		ret = i2c_write_bytes(i2c_client_tp_point, 0xC000, fw, length);
+		ret = i2c_write_bytes(i2c_client_point, 0xC000, fw, length);
 		if (ret == -1) {
 			GTP_ERROR("[load_by_bank]download bank fail.");
 			continue;
 		}
 
 		if (need_check) {
-			ret = gup_check_and_repair(i2c_client_tp_point, 0xC000, fw, length);
+			ret = gup_check_and_repair(i2c_client_point, 0xC000, fw, length);
 			if (FAIL == ret) {
 				GTP_ERROR("[load_by_bank]checked FW bank fail.");
 				continue;
@@ -3190,9 +3274,13 @@ s32 gup_load_system(char *firmware, s32 length, u8 need_check)
 
 	/* disable irq & ESD protect */
 	/* mt_eint_mask(CUST_EINT_TOUCH_PANEL_NUM); */
-	disable_irq(touch_irq);
+	if (true == tpdIrqIsEnabled) {
+		disable_irq(touch_irq);
+		tpdIrqIsEnabled = false;
+	}
+
 #if defined(CONFIG_GTP_ESD_PROTECT)
-	gtp_esd_switch(i2c_client_tp_point, SWITCH_OFF);
+	gtp_esd_switch(i2c_client_point, SWITCH_OFF);
 #endif
 	ret = gup_enter_update_mode_noreset();
 	if (FAIL == ret)
@@ -3209,18 +3297,22 @@ s32 gup_load_system(char *firmware, s32 length, u8 need_check)
 		length -= len;
 	}
 
-	ret = gtp_fw_startup(i2c_client_tp_point);
+	ret = gtp_fw_startup(i2c_client_point);
 
 gup_load_system_exit:
 #if defined(CONFIG_GTP_ESD_PROTECT)
 #if FLASHLESS_FLASH_WORKROUND
 
 #else
-	gtp_esd_switch(i2c_client_tp_point, SWITCH_ON);
+	gtp_esd_switch(i2c_client_point, SWITCH_ON);
 #endif
 #endif
-	/* mt_eint_unmask(CUST_EINT_TOUCH_PANEL_NUM); */
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+	gtp_irq_enable();
+#else
 	enable_irq(touch_irq);
+#endif
+
 	return ret;
 }
 
@@ -3230,9 +3322,15 @@ s32 gup_load_fx_system(void)
 	char *firmware = NULL;
 	u32 is_load_from_file = 0;
 	u32 length = 0;
+	u8 retry = 20;
 
 	GTP_INFO("[load_fx_system] Load authorization system.");
 
+	while (load_fw_process && retry--) {
+		GTP_INFO("%s:	waiting for fw download finished", __func__);
+		ssleep(2);
+	}
+	load_fw_process = 1;
 	firmware = gtp_default_FW_hotknot2;
 
 #if defined(CONFIG_GTP_AUTO_UPDATE)
@@ -3268,6 +3366,7 @@ load_fx_exit:
 	if (is_load_from_file)
 		kfree(firmware);
 
+	load_fw_process = 0;
 	return ret;
 }
 
@@ -3289,19 +3388,19 @@ s32 gup_load_hotknot_system(void)
 	   while(retry++ < 10)
 	   {
 	   wr_buf[1] = 0x46;
-	   ret = gup_i2c_write(i2c_client_tp_point, wr_buf, sizeof(wr_buf));
+	   ret = gup_i2c_write(i2c_client_point, wr_buf, sizeof(wr_buf));
 	   if(ret <= 0)
 	   {
 	   continue;
 	   }
 	   wr_buf[1] = 0x40;
-	   ret = gup_i2c_write(i2c_client_tp_point, wr_buf, sizeof(wr_buf));
+	   ret = gup_i2c_write(i2c_client_point, wr_buf, sizeof(wr_buf));
 	   if(ret <= 0)
 	   {
 	   continue;
 	   }
 	   msleep(50);
-	   ret = gup_i2c_read(i2c_client_tp_point, rd_buf, sizeof(rd_buf));
+	   ret = gup_i2c_read(i2c_client_point, rd_buf, sizeof(rd_buf));
 	   if(ret <= 0)
 	   {
 	   continue;
@@ -3349,9 +3448,10 @@ s32 gup_load_hotknot_system(void)
 	ret = gup_load_system(&firmware[FIRMWARE_HEADER_LEN], length, 0);
 
 load_hotknot_exit:
-
 	if (is_load_from_file)
 		kfree(firmware);
+
+	load_fw_process = 0;
 
 	return ret;
 
@@ -3368,11 +3468,22 @@ s32 gup_recovery_main_system(void)
 	GTP_INFO("[recovery_main_system] Recovery main system.");
 
 	if (gtp_chip_type == CHIP_TYPE_GT9) {
-		gtp_reset_guitar(i2c_client_tp_point, 10);
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+		if (true == tpdIrqIsEnabled) {
+			disable_irq(touch_irq);
+			tpdIrqIsEnabled = false;
+		}
+#endif
+		gtp_reset_guitar(i2c_client_point, 10);
+#ifdef CONFIG_GTP_USE_GPIO_BUT_NOT_PINCTRL
+		gtp_irq_enable();
+#endif
+
 		load_fw_process = 0;
 		return SUCCESS;
 	}
 
+	load_fw_process = 1;
 	firmware = gtp_default_FW_fl;
 
 #if defined(CONFIG_GTP_AUTO_UPDATE)
@@ -3411,7 +3522,7 @@ s32 gup_recovery_main_system(void)
 	ret = gup_load_system(&firmware[FIRMWARE_HEADER_LEN], current_system_length, 0);
 
 #if (FLASHLESS_FLASH_WORKROUND && defined(CONFIG_GTP_ESD_PROTECT))
-	gtp_esd_switch(i2c_client_tp_point, SWITCH_ON);
+	gtp_esd_switch(i2c_client_point, SWITCH_ON);
 #endif
 
 recovery_main_system_exit:
@@ -3432,6 +3543,8 @@ s32 gup_load_main_system(char *filepath)
 	u32 length = 0;
 
 	GTP_INFO("[load_main_system] Load main system.");
+
+	load_fw_process = 1;
 
 	if (filepath != NULL) {
 		firmware = gup_load_fw_from_file(filepath);
@@ -3479,13 +3592,15 @@ s32 gup_load_main_system(char *filepath)
 	show_len = 100;
 
 #if (FLASHLESS_FLASH_WORKROUND && defined(CONFIG_GTP_ESD_PROTECT))
-	gtp_esd_switch(i2c_client_tp_point, SWITCH_ON);
+	gtp_esd_switch(i2c_client_point, SWITCH_ON);
 #endif
 
 load_main_system_exit:
 
 	if (is_load_from_file)
 		kfree(firmware);
+
+	load_fw_process = 0;
 
 	return ret;
 }
