@@ -871,7 +871,8 @@ static unsigned int is_d2plus(void)
 	return 0;
 #else
 	return ((get_devinfo_with_index(47) & (1<<31)) &&
-				(get_devinfo_with_index(47) & (1<<29))) ? 1 : 0;
+				(get_devinfo_with_index(47) & (1<<29)) &&
+				!((get_devinfo_with_index(3) & (1<<22)))) ? 1 : 0;
 #endif
 }
 #endif
