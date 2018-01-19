@@ -118,7 +118,7 @@ static int tpd_def_calmat_local_factory[8] = TPD_CALIBRATION_MATRIX_ROTATION_FAC
 #if defined(CONFIG_GTP_SUPPORT_I2C_DMA)
 #if defined(CONFIG_MTK_I2C_EXTENSION)
 static u8 *gpDMABuf_va;
-static u32 gpDMABuf_pa;
+static dma_addr_t gpDMABuf_pa;
 #else
 static char gtpI2CDMABuf[GTP_DMA_MAX_TRANSACTION_LENGTH];
 static struct i2c_msg gtp_msg[2];
