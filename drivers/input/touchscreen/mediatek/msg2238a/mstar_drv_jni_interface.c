@@ -47,6 +47,8 @@ extern struct i2c_client *g_I2cClient;
 ////////////////////////////////////////////////////////////
 /// LOCAL VARIABLE DEFINITION
 ////////////////////////////////////////////////////////////
+#define CMD_DATA_BUFFER_SIZE 1024U
+
 static MsgToolDrvCmd_t * _gMsgToolCmdIn = NULL;
 static u8 * _gSndCmdData = NULL;
 static u8 * _gRtnCmdData = NULL;
@@ -117,6 +119,8 @@ ssize_t MsgToolWrite(struct file *pFile, const char __user *pBuffer, size_t nCou
     //DBG("*** nCount = %d ***\n", (int)nCount);        
     nBusType = nCount&0xFF;
     nWriteLen = (nCount >> 8)&0xFFFF;    
+	if (nWriteLen > sizeof(szCmdData))
+		return -EINVAL;
 	nRet = copy_from_user(szCmdData, &pBuffer[0], nWriteLen);         
     if(nBusType == SLAVE_I2C_ID_DBBUS || nBusType == SLAVE_I2C_ID_DWI2C)
     {
@@ -142,9 +146,9 @@ void _ClearMsgToolMem(void)
 {
     DBG("*** %s() ***\n", __func__);
   
-    memset(_gMsgToolCmdIn, 0, sizeof( MsgToolDrvCmd_t ));
-    memset(_gSndCmdData, 0, 1024);
-    memset(_gRtnCmdData, 0, 1024);
+	memset(_gMsgToolCmdIn, 0, sizeof(MsgToolDrvCmd_t));
+	memset(_gSndCmdData, 0, CMD_DATA_BUFFER_SIZE);
+	memset(_gRtnCmdData, 0, CMD_DATA_BUFFER_SIZE);
 }
 
 
@@ -163,14 +167,20 @@ static MsgToolDrvCmd_t* _TransJniCmdFromUser( unsigned long nArg )
     //_DebugJniShowArray(&tCmdIn, sizeof( MsgToolDrvCmd_t));
     if(tCmdIn.nSndCmdLen > 0)
     {
-        pTransCmd->nSndCmdLen = tCmdIn.nSndCmdLen;
-        nRet = copy_from_user( _gSndCmdData, U64ToPtr(tCmdIn.nSndCmdDataPtr), pTransCmd->nSndCmdLen );    	
+		pTransCmd->nSndCmdLen = min_t(u64, tCmdIn.nSndCmdLen, CMD_DATA_BUFFER_SIZE);
+		nRet = copy_from_user(_gSndCmdData, U64ToPtr(tCmdIn.nSndCmdDataPtr), pTransCmd->nSndCmdLen);
+	} else {
+		/*Set this to avoid potential information disclosure security issue.*/
+		pTransCmd->nSndCmdLen = 0;
     }
 
     if(tCmdIn.nRtnCmdLen > 0)
     {
-	    pTransCmd->nRtnCmdLen = tCmdIn.nRtnCmdLen;
+	    pTransCmd->nRtnCmdLen = min_t(u64, tCmdIn.nRtnCmdLen, CMD_DATA_BUFFER_SIZE);
         nRet = copy_from_user( _gRtnCmdData, U64ToPtr(tCmdIn.nRtnCmdDataPtr), pTransCmd->nRtnCmdLen );    	        
+	} else {
+		/* Set this to avoid potential information disclosure security issue.*/
+		pTransCmd->nRtnCmdLen = 0;
     }
   
     return pTransCmd;
@@ -186,6 +196,8 @@ static void _TransJniCmdToUser( MsgToolDrvCmd_t *pTransCmd, unsigned long nArg )
     nRet = copy_from_user( &tCmdOut, (void*)nArg, sizeof( MsgToolDrvCmd_t ) );   
 
     //_DebugJniShowArray(&tCmdOut, sizeof( MsgToolDrvCmd_t));    
+	if (tCmdOut.nRtnCmdLen > CMD_DATA_BUFFER_SIZE)
+		tCmdOut.nRtnCmdLen = CMD_DATA_BUFFER_SIZE;
     nRet = copy_to_user( U64ToPtr(tCmdOut.nRtnCmdDataPtr), _gRtnCmdData, tCmdOut.nRtnCmdLen);
 }
 
@@ -270,9 +282,9 @@ void CreateMsgToolMem(void)
 {
     DBG("*** %s() ***\n", __func__);
 
-    _gMsgToolCmdIn = (MsgToolDrvCmd_t*)kmalloc( sizeof( MsgToolDrvCmd_t ), GFP_KERNEL );
-	_gSndCmdData = (u8*)kmalloc(1024, GFP_KERNEL );	
-	_gRtnCmdData = (u8*)kmalloc(1024, GFP_KERNEL );           
+	_gMsgToolCmdIn = kmalloc(sizeof(MsgToolDrvCmd_t), GFP_KERNEL);
+	_gSndCmdData = kmalloc(CMD_DATA_BUFFER_SIZE, GFP_KERNEL);
+	_gRtnCmdData = kmalloc(CMD_DATA_BUFFER_SIZE, GFP_KERNEL);
 }
 
 
