@@ -5664,14 +5664,28 @@ static int dev_char_close(struct inode *inode, struct file *file)
 	return 0;
 }
 
+/* Add for audio */
+#define CMDM_IOCTL_CHECK_MD_READY	_IOR('c', 0x13, int)
+
 static long dev_char_ioctl(struct file *file, unsigned int cmd,
 			   unsigned long arg)
 {
 	struct sdio_modem_port *port =
 	    (struct sdio_modem_port *)file->private_data;
+	unsigned int md_ready;
 
-	LOGPRT(LOG_INFO, "ioctl is not supported on port %d by %s, %x\n",
-	       port->index, current->comm, cmd);
+	switch (cmd) {
+	case CMDM_IOCTL_CHECK_MD_READY:
+		if (c2k_modem_not_ready())
+			md_ready = 0;
+		else
+			md_ready = 2; /* Compatible with CCCI state: 0,1,2,3 */
+		return put_user((unsigned int)md_ready, (unsigned int __user *)arg);
+	default:
+		LOGPRT(LOG_INFO, "ioctl is not supported on port %d by %s, %x\n",
+		       port->index, current->comm, cmd);
+		break;
+	}
 	return 0;
 }
 
