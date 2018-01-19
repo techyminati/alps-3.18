@@ -1222,17 +1222,6 @@ char *disp_get_fmt_name(DP_COLOR_ENUM color)
 /* --------------------------------------------------------------------------- */
 static int layer_debug_open(struct inode *inode, struct file *file)
 {
-	MTKFB_LAYER_DBG_OPTIONS *dbgopt;
-	/* record the private data */
-	file->private_data = inode->i_private;
-	dbgopt = (MTKFB_LAYER_DBG_OPTIONS *) file->private_data;
-
-	dbgopt->working_size =
-	    DISP_GetScreenWidth() * DISP_GetScreenHeight() * 2 + 32;
-	dbgopt->working_buf = (unsigned long)vmalloc(dbgopt->working_size);
-	if (dbgopt->working_buf == 0)
-		DISPMSG("DISP/DBG Vmalloc to get temp buffer failed\n");
-
 	return 0;
 }
 
@@ -1246,26 +1235,11 @@ static ssize_t layer_debug_write(struct file *file,
 				 const char __user *ubuf, size_t count,
 				 loff_t *ppos)
 {
-	MTKFB_LAYER_DBG_OPTIONS *dbgopt =
-	    (MTKFB_LAYER_DBG_OPTIONS *) file->private_data;
-
-	DISPMSG("DISP/DBG " "mtkfb_layer%d write is not implemented yet\n",
-		       dbgopt->layer_index);
-
-	return count;
+	return 0;
 }
 
 static int layer_debug_release(struct inode *inode, struct file *file)
 {
-	MTKFB_LAYER_DBG_OPTIONS *dbgopt;
-
-	dbgopt = (MTKFB_LAYER_DBG_OPTIONS *) file->private_data;
-
-	if (dbgopt->working_buf != 0)
-		vfree((void *)dbgopt->working_buf);
-
-	dbgopt->working_buf = 0;
-
 	return 0;
 }
 
