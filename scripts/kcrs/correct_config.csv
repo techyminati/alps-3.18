@@ -773,7 +773,7 @@ CONFIG_SND_ARM,PLATFORM,,,N,N,X,X,X,X,X,X,X,X,X
 CONFIG_SND_DEBUG,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_SND_DEBUG_VERBOSE,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_SND_DYNAMIC_MINORS,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
-CONFIG_SND_HRTIMER,PROJECT,,,O,X,y,y,,y,y,y,y,y,
+CONFIG_SND_HRTIMER,PROJECT,,,O,X,X,X,,X,X,X,y,y,
 CONFIG_SND_MIXER_OSS,PROJECT,georgecy.lin,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_SND_PCM_OSS,PROJECT,georgecy.lin,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_SND_PCM_XRUN_DEBUG,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
