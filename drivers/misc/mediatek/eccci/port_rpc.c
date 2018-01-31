@@ -1204,7 +1204,7 @@ static void rpc_msg_handler(struct ccci_port *port, struct sk_buff *skb)
 	for (i = 0; i < rpc_buf->para_num; i++) {
 		pkt[i].len = *((unsigned int *)ptr);
 		if (pkt[i].len >= skb->len) {
-			CCCI_ERROR_LOG(md_id, RPC, "invalid packet length in parse %zu\n", pkt[i].len);
+			CCCI_ERROR_LOG(md_id, RPC, "invalid packet length in parse %u\n", pkt[i].len);
 			goto err_out;
 		}
 		if ((buf_len + sizeof(pkt[i].len) + pkt[i].len) > RPC_MAX_BUF_SIZE) {
