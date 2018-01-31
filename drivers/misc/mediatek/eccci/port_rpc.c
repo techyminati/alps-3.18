@@ -484,7 +484,14 @@ static void ccci_rpc_work_helper(struct ccci_port *port, struct rpc_pkt *pkt,
 			}
 			ContentLen = *(unsigned int *)pkt[2].buf;
 			/* CustomSeed = *(sed_t*)pkt[3].buf; */
-			WARN_ON(sizeof(CustomSeed.sed) < pkt[3].len);
+			if (sizeof(CustomSeed.sed) < pkt[3].len) {
+				CCCI_ERROR_LOG(md_id, RPC, "invalid pkt_len %d for RPC_SECURE_ALGO_OP!\n", pkt[3].len);
+				tmp_data[0] = FS_PARAM_ERROR;
+				pkt_num = 0;
+				pkt[pkt_num].len = sizeof(unsigned int);
+				pkt[pkt_num++].buf = (void *)&tmp_data[0];
+				break;
+			}
 			memcpy(CustomSeed.sed, pkt[3].buf, pkt[3].len);
 
 #ifdef ENCRYPT_DEBUG
@@ -1169,7 +1176,7 @@ static void rpc_msg_handler(struct ccci_port *port, struct sk_buff *skb)
 {
 	int md_id = port->md_id;
 	struct rpc_buffer *rpc_buf = (struct rpc_buffer *)skb->data;
-	int i, data_len = 0, AlignLength, ret;
+	int i, data_len, buf_len = 0, AlignLength, ret;
 	struct rpc_pkt pkt[RPC_MAX_ARG_NUM];
 	char *ptr, *ptr_base;
 	/* unsigned int tmp_data[128]; */	/* size of tmp_data should be >= any RPC output result */
@@ -1188,11 +1195,18 @@ static void rpc_msg_handler(struct ccci_port *port, struct sk_buff *skb)
 	}
 	/* parse buffer */
 	ptr_base = ptr = rpc_buf->buffer;
+	buf_len = sizeof(rpc_buf->op_id) + sizeof(rpc_buf->para_num);
 	for (i = 0; i < rpc_buf->para_num; i++) {
 		pkt[i].len = *((unsigned int *)ptr);
+		if ((buf_len + sizeof(pkt[i].len) + pkt[i].len) > RPC_MAX_BUF_SIZE) {
+			CCCI_ERROR_LOG(md_id, RPC, "RPC overflow in parse %zu\n",
+								 buf_len + sizeof(pkt[i].len) + pkt[i].len);
+						goto err_out;
+		}
 		ptr += sizeof(pkt[i].len);
 		pkt[i].buf = ptr;
 		ptr += ((pkt[i].len + 3) >> 2) << 2;	/* 4byte align */
+		buf_len += (sizeof(pkt[i].len) + pkt[i].len);
 	}
 	if ((ptr - ptr_base) > RPC_MAX_BUF_SIZE) {
 		CCCI_ERROR_LOG(md_id, RPC, "RPC overflow in parse 0x%p\n", (void *)(ptr - ptr_base));
