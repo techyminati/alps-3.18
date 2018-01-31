@@ -2866,12 +2866,14 @@ static int tpd_local_init(void)
 #if defined(CONFIG_GTP_SUPPORT_I2C_DMA)
 #if defined(CONFIG_MTK_I2C_EXTENSION)
 	gpDMABuf_va =
-	    (u8 *)dma_alloc_coherent(NULL,
+	    (u8 *)dma_alloc_coherent(tpd->tpd_dev,
 				     GTP_DMA_MAX_TRANSACTION_LENGTH,
 				     &gpDMABuf_pa,
 				     GFP_KERNEL);
-	if (!gpDMABuf_va)
-		GTP_INFO("[Error] Allocate DMA I2C Buffer failed!\n");
+	if (!gpDMABuf_va) {
+		GTP_ERROR("[Error] Allocate DMA I2C Buffer failed!\n");
+		return -1;
+	}
 
 	memset(gpDMABuf_va, 0, GTP_DMA_MAX_TRANSACTION_LENGTH);
 #else
