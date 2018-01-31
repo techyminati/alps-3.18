@@ -31,7 +31,9 @@
 #define ARM64_ALT_PAN_NOT_UAO			6
 #define ARM64_WORKAROUND_855872			7
 
-#define ARM64_NCAPS				8
+#define ARM64_UNMAP_KERNEL_AT_EL0		23
+
+#define ARM64_NCAPS				24
 
 #ifndef __ASSEMBLY__
 
