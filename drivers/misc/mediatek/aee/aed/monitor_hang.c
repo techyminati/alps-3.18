@@ -63,6 +63,14 @@ static bool Hang_Detect_first;
 
 
 #define HD_PROC "hang_detect"
+#define	COUNT_SWT_INIT	0
+#define	COUNT_SWT_NORMAL	10
+#define	COUNT_SWT_FIRST		12
+#define	COUNT_ANDROID_REBOOT	11
+#define	COUNT_SWT_CREATE_DB	14
+#define	COUNT_NE_EXCEPION	20
+#define	COUNT_AEE_COREDUMP	40
+#define	COUNT_COREDUMP_DONE	19
 
 /* static DEFINE_SPINLOCK(hd_locked_up); */
 #define HD_INTER 30
@@ -75,6 +83,7 @@ static int dump_bt_done;
 static int hang_aee_warn = 2;
 #endif
 static int system_server_pid;
+static bool watchdog_thread_exist;
 DECLARE_WAIT_QUEUE_HEAD(dump_bt_start_wait);
 DECLARE_WAIT_QUEUE_HEAD(dump_bt_done_wait);
 static long monitor_hang_ioctl(struct file *file, unsigned int cmd, unsigned long arg);
@@ -357,8 +366,8 @@ static void Buff2HangInfo(const char *buff, unsigned long size)
 
 static void DumpMsdc2HangInfo(void)
 {
-	char *buff_add;
-	unsigned long buff_size;
+	char *buff_add = NULL;
+	unsigned long buff_size = 0;
 
 	if (get_msdc_aee_buffer) {
 		get_msdc_aee_buffer((unsigned long *)&buff_add, &buff_size);
@@ -390,8 +399,8 @@ static void get_kernel_bt(struct task_struct *tsk)
 
 static void DumpMemInfo(void)
 {
-	char *buff_add;
-	int buff_size;
+	char *buff_add = NULL;
+	int buff_size = 0;
 
 	if (mlog_get_buffer) {
 		mlog_get_buffer(&buff_add, &buff_size);
@@ -846,7 +855,11 @@ static void show_state_filter_local(int flag)
 {
 	struct task_struct *g, *p;
 
+	watchdog_thread_exist = false;
+
 	do_each_thread(g, p) {
+		if (strcmp(p->comm, "watchdog") == 0)
+			watchdog_thread_exist = true;
 		/*
 		 * reset the NMI-timeout, listing all files on a slow
 		 * console might take a lot of time:
@@ -1028,8 +1041,12 @@ static int hang_detect_thread(void *arg)
 
 				if (Hang_Detect_first == true) {
 					pr_err("[Hang_Detect] aee mode is %d, we should triger KE...\n", aee_mode);
+#ifdef CONFIG_MTK_RAM_CONSOLE
+					if (watchdog_thread_exist == false)
+						aee_rr_rec_hang_detect_timeout_count(COUNT_ANDROID_REBOOT);
+#endif
 #ifdef CONFIG_MT_ENG_BUILD
-					if (monit_hang_flag == 1)
+				if (monit_hang_flag == 1)
 #endif
 					BUG();
 				} else
