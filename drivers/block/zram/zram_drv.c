@@ -1043,25 +1043,34 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 		{
 		int search_ret = 0;
 
-		bit_spin_lock(ZRAM_ACCESS, &meta->table[index].value);
-		zram_free_page(zram, index);
-		meta->table[index].checksum = checksum;
-		zram_set_obj_size(meta, index, clen);
-		meta->table[index].next_index = index;
-		meta->table[index].copy_index = index;
-		meta->table[index].copy_count = 0;
-		INIT_LIST_HEAD(&(meta->table[index].head));
-		bit_spin_unlock(ZRAM_ACCESS, &meta->table[index].value);
 		if ((clen == PAGE_SIZE) && !is_partial_io(bvec)) {
 			src = kmap_atomic(page);
+			bit_spin_lock(ZRAM_ACCESS, &meta->table[index].value);
+			zram_free_page(zram, index);
+			zram_set_obj_size(meta, index, clen);
 			spin_lock(&zram_node4k_mutex);
+			meta->table[index].checksum = checksum;
+			meta->table[index].next_index = index;
+			meta->table[index].copy_index = index;
+			meta->table[index].copy_count = 0;
+			INIT_LIST_HEAD(&(meta->table[index].head));
 			search_ret = insert_node_to_zram_tree(zram, meta, index, src, &root_zram_tree_4k, clen);
 			spin_unlock(&zram_node4k_mutex);
+			bit_spin_unlock(ZRAM_ACCESS, &meta->table[index].value);
 			kunmap_atomic(src);
 		} else {
+			bit_spin_lock(ZRAM_ACCESS, &meta->table[index].value);
+			zram_free_page(zram, index);
+			zram_set_obj_size(meta, index, clen);
 			spin_lock(&zram_node4k_mutex);
+			meta->table[index].checksum = checksum;
+			meta->table[index].next_index = index;
+			meta->table[index].copy_index = index;
+			meta->table[index].copy_count = 0;
+			INIT_LIST_HEAD(&(meta->table[index].head));
 			search_ret = insert_node_to_zram_tree(zram, meta, index, src, &root_zram_tree_4k, clen);
 			spin_unlock(&zram_node4k_mutex);
+			bit_spin_unlock(ZRAM_ACCESS, &meta->table[index].value);
 		}
 		if (search_ret) {
 			ret = 0;
@@ -1076,16 +1085,16 @@ static int zram_bvec_write(struct zram *zram, struct bio_vec *bvec, u32 index,
 
 		bit_spin_lock(ZRAM_ACCESS, &meta->table[index].value);
 		zram_free_page(zram, index);
-		meta->table[index].checksum = checksum;
 		zram_set_obj_size(meta, index, clen);
+		spin_lock(&zram_node_mutex);
+		meta->table[index].checksum = checksum;
 		meta->table[index].next_index = index;
 		meta->table[index].copy_index = index;
 		meta->table[index].copy_count = 0;
 		INIT_LIST_HEAD(&(meta->table[index].head));
-		bit_spin_unlock(ZRAM_ACCESS, &meta->table[index].value);
-		spin_lock(&zram_node_mutex);
 		search_ret = insert_node_to_zram_tree(zram, meta, index, src, &root_zram_tree, clen);
 		spin_unlock(&zram_node_mutex);
+		bit_spin_unlock(ZRAM_ACCESS, &meta->table[index].value);
 		if (search_ret) {
 			ret = 0;
 			goto out;
