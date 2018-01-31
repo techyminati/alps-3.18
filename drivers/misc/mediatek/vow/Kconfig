@@ -1,5 +1,0 @@
-config MTK_VOW_SUPPORT
-	bool "MediaTek VOW support"
-	default n
-	help
-	  For VOW kernel driver config
