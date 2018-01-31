@@ -33,6 +33,7 @@ int als_data_report(int value, int status)
 	/*ALSPS_LOG(" +als_data_report! %d, %d\n", value, status);*/
 	/* force trigger data update after sensor enable. */
 	if (cxt->is_get_valid_als_data_after_enable == false) {
+		event.handle = ID_LIGHT;
 		event.flush_action = DATA_ACTION;
 		event.word[0] = value + 1;
 		err = sensor_input_event(cxt->als_mdev.minor, &event);
@@ -41,6 +42,7 @@ int als_data_report(int value, int status)
 		cxt->is_get_valid_als_data_after_enable = true;
 	}
 	if (value != last_als_report_data) {
+		event.handle = ID_LIGHT;
 		event.flush_action = DATA_ACTION;
 		event.word[0] = value;
 		event.status = status;
@@ -58,6 +60,7 @@ int als_flush_report(void)
 	int err = 0;
 	memset(&event, 0, sizeof(struct sensor_event));
 
+	event.handle = ID_LIGHT;
 	event.flush_action = FLUSH_ACTION;
 	err = sensor_input_event(alsps_context_obj->als_mdev.minor, &event);
 	if (err < 0)
@@ -337,10 +340,6 @@ static int als_enable_and_batch(void)
 		}
 		ALSPS_LOG("ALSPS batch done\n");
 	}
-	/* just for debug, remove it when everything is ok */
-	if (cxt->als_power == 0 && cxt->als_delay_ns >= 0)
-		ALSPS_PR_ERR("batch will call firstly in API1.3, do nothing\n");
-
 	return 0;
 }
 #endif
@@ -349,43 +348,48 @@ static ssize_t als_store_active(struct device *dev, struct device_attribute *att
 				  const char *buf, size_t count)
 {
 	struct alsps_context *cxt = alsps_context_obj;
-	int err = 0;
+	int err = 0, handle = -1, en = 0;
+
+	err = sscanf(buf, "%d,%d", &handle, &en);
+	if (err < 0) {
+		ALSPS_PR_ERR("als_store_active param error: err = %d\n", err);
+		return err;
+	}
 
 	ALSPS_LOG("als_store_active buf=%s\n", buf);
 	mutex_lock(&alsps_context_obj->alsps_op_mutex);
-
-	if (!strncmp(buf, "1", 1)) {
-		cxt->als_enable = 1;
-		last_als_report_data = -1;
-		cxt->is_als_active_data = true;
-	} else if (!strncmp(buf, "0", 1)) {
-		cxt->als_enable = 0;
-		cxt->is_als_active_data = false;
-	} else {
-		ALSPS_PR_ERR(" alsps_store_active error !!\n");
-		err = -1;
-		goto err_out;
-	}
+	if (handle == ID_LIGHT) {
+		if (en) {
+			cxt->als_enable = 1;
+			last_als_report_data = -1;
+		} else if (!en) {
+			cxt->als_enable = 0;
+		} else {
+			ALSPS_PR_ERR(" alsps_store_active error !!\n");
+			err = -1;
+			goto err_out;
+		}
 #if defined(CONFIG_NANOHUB) && defined(CONFIG_MTK_ALSPSHUB)
-	if (cxt->als_enable) {
-		err = cxt->als_ctl.enable_nodata(cxt->als_enable);
-		if (err) {
-			ALSPS_PR_ERR("als turn on als_power err = %d\n", err);
-			goto err_out;
-		}
-	} else {
-		if (aal_use == 0)
+		if (cxt->als_enable) {
 			err = cxt->als_ctl.enable_nodata(cxt->als_enable);
-		else
-			err = cxt->als_ctl.batch(0, AAL_DELAY, 0);
-		if (err) {
-			ALSPS_PR_ERR("als turn off als_power err = %d\n", err);
-			goto err_out;
+			if (err) {
+				ALSPS_PR_ERR("als turn on als_power err = %d\n", err);
+				goto err_out;
+			}
+		} else {
+			if (aal_use == 0)
+				err = cxt->als_ctl.enable_nodata(cxt->als_enable);
+			else
+				err = cxt->als_ctl.batch(0, AAL_DELAY, 0);
+			if (err) {
+				ALSPS_PR_ERR("als turn off als_power err = %d\n", err);
+				goto err_out;
+			}
 		}
-	}
 #else
-	err = als_enable_and_batch();
+		err = als_enable_and_batch();
 #endif
+	}
 
 err_out:
 	mutex_unlock(&alsps_context_obj->alsps_op_mutex);
@@ -410,25 +414,34 @@ static ssize_t als_store_batch(struct device *dev, struct device_attribute *attr
 {
 	struct alsps_context *cxt = alsps_context_obj;
 	int handle = 0, flag = 0, err = 0;
+	int64_t delay_ns = 0;
+	int64_t latency_ns = 0;
 
 	ALSPS_LOG("als_store_batch %s\n", buf);
 	err = sscanf(buf, "%d,%d,%lld,%lld", &handle, &flag,
-			&cxt->als_delay_ns, &cxt->als_latency_ns);
-	if (err != 4)
+			&delay_ns, &latency_ns);
+	if (err != 4) {
 		ALSPS_PR_ERR("als_store_batch param error: err = %d\n", err);
-
-	if (aal_use)
-		cxt->als_delay_ns = cxt->als_delay_ns < AAL_DELAY ? cxt->als_delay_ns : AAL_DELAY;
+		return -1;
+	}
 
 	mutex_lock(&alsps_context_obj->alsps_op_mutex);
+	if (handle == ID_LIGHT) {
+		if (aal_use)
+			cxt->als_delay_ns = cxt->als_delay_ns < AAL_DELAY ? cxt->als_delay_ns : AAL_DELAY;
+		else {
+			cxt->als_delay_ns = delay_ns;
+			cxt->als_latency_ns = latency_ns;
+		}
 #if defined(CONFIG_NANOHUB) && defined(CONFIG_MTK_ALSPSHUB)
-	if (cxt->als_ctl.is_support_batch)
-		err = cxt->als_ctl.batch(0, cxt->als_delay_ns, cxt->als_latency_ns);
-	else
-		err = cxt->als_ctl.batch(0, cxt->als_delay_ns, 0);
+		if (cxt->als_ctl.is_support_batch)
+			err = cxt->als_ctl.batch(0, cxt->als_delay_ns, cxt->als_latency_ns);
+		else
+			err = cxt->als_ctl.batch(0, cxt->als_delay_ns, 0);
 #else
-	err = als_enable_and_batch();
+		err = als_enable_and_batch();
 #endif
+	}
 	mutex_unlock(&alsps_context_obj->alsps_op_mutex);
 	ALSPS_LOG(" als_store_batch done: %d\n", cxt->is_als_batch_enable);
 	return err;
@@ -454,12 +467,14 @@ static ssize_t als_store_flush(struct device *dev, struct device_attribute *attr
 
 	mutex_lock(&alsps_context_obj->alsps_op_mutex);
 	cxt = alsps_context_obj;
-	if (cxt->als_ctl.flush != NULL)
-		err = cxt->als_ctl.flush();
-	else
-		ALSPS_PR_ERR("ALS DRIVER OLD ARCHITECTURE DON'T SUPPORT ALS COMMON VERSION FLUSH\n");
-	if (err < 0)
-		ALSPS_PR_ERR("als enable flush err %d\n", err);
+	if (handle == ID_LIGHT) {
+		if (cxt->als_ctl.flush != NULL)
+			err = cxt->als_ctl.flush();
+		else
+			ALSPS_PR_ERR("ALS DRIVER OLD ARCHITECTURE DON'T SUPPORT ALS COMMON VERSION FLUSH\n");
+		if (err < 0)
+			ALSPS_PR_ERR("als enable flush err %d\n", err);
+	}
 	mutex_unlock(&alsps_context_obj->alsps_op_mutex);
 	return err;
 }
@@ -559,10 +574,6 @@ static int ps_enable_and_batch(void)
 		ps_data_report(1, SENSOR_STATUS_ACCURACY_HIGH);
 		ALSPS_LOG("PS batch done\n");
 	}
-	/* just for debug, remove it when everything is ok */
-	if (cxt->ps_power == 0 && cxt->ps_delay_ns >= 0)
-		ALSPS_PR_ERR("batch will call firstly in API1.3, do nothing\n");
-
 	return 0;
 }
 #endif
@@ -616,8 +627,10 @@ static ssize_t ps_store_batch(struct device *dev, struct device_attribute *attr,
 	ALSPS_LOG("ps_store_batch %s\n", buf);
 	err = sscanf(buf, "%d,%d,%lld,%lld", &handle, &flag,
 			&cxt->ps_delay_ns, &cxt->ps_latency_ns);
-	if (err != 4)
+	if (err != 4) {
 		ALSPS_PR_ERR("ps_store_batch param error: err = %d\n", err);
+		return -1;
+	}
 
 	mutex_lock(&alsps_context_obj->alsps_op_mutex);
 #if defined(CONFIG_NANOHUB) && defined(CONFIG_MTK_ALSPSHUB)
