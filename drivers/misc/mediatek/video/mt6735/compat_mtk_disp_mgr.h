@@ -294,18 +294,18 @@ int _compat_ioctl_set_session_mode(struct file *file, unsigned long arg);
 #define	COMPAT_DISP_IOCTL_GET_SESSION_TYPE				DISP_IOW(212, compat_disp_session_config)
 #define	COMPAT_DISP_IOCTL_WAIT_FOR_VSYNC				DISP_IOW(213, compat_disp_session_vsync_config)
 #define	COMPAT_DISP_IOCTL_SET_MAX_LAYER_NUM			DISP_IOW(214, compat_disp_session_layer_num_config)
-#define	COMPAT_DISP_IOCTL_SET_VSYNC_FPS				DISP_IOW(215, compat_uint_t)
+#define	COMPAT_DISP_IOCTL_GET_VSYNC_FPS				DISP_IOW(215, compat_uint_t)
+#define	COMPAT_DISP_IOCTL_SET_VSYNC_FPS				DISP_IOW(216, compat_uint_t)
+#define	COMPAT_DISP_IOCTL_GET_PRESENT_FENCE			DISP_IOW(217, compat_disp_present_fence)
 
-#define	COMPAT_DISP_IOCTL_GET_PRESENT_FENCE			DISP_IOW(216, compat_disp_present_fence)
-
-#define COMPAT_DISP_IOCTL_GET_IS_DRIVER_SUSPEND		DISP_IOW(217, compat_uint_t)
-#define COMPAT_DISP_IOCTL_GET_DISPLAY_CAPS			DISP_IOW(218, compat_disp_caps_info)
-#define COMPAT_DISP_IOCTL_INSERT_SESSION_BUFFERS			DISP_IOW(219, compat_disp_session_buf_info)
-#define	COMPAT_DISP_IOCTL_FRAME_CONFIG				DISP_IOW(220, compat_disp_session_output_config)
-#define COMPAT_DISP_IOCTL_QUERY_VALID_LAYER			DISP_IOW(221, compat_disp_layer_info)
-#define	COMPAT_DISP_IOCTL_SET_SCENARIO				DISP_IOW(222, struct compat_disp_scenario_config_t)
-#define	COMPAT_DISP_IOCTL_WAIT_ALL_JOBS_DONE			DISP_IOW(220, compat_uint_t)
-#define	COMPAT_DISP_IOCTL_SCREEN_FREEZE			DISP_IOW(223, compat_uint_t)
+#define COMPAT_DISP_IOCTL_GET_IS_DRIVER_SUSPEND		DISP_IOW(218, compat_uint_t)
+#define COMPAT_DISP_IOCTL_GET_DISPLAY_CAPS			DISP_IOW(219, compat_disp_caps_info)
+#define COMPAT_DISP_IOCTL_INSERT_SESSION_BUFFERS			DISP_IOW(220, compat_disp_session_buf_info)
+#define	COMPAT_DISP_IOCTL_FRAME_CONFIG				DISP_IOW(221, compat_disp_session_output_config)
+#define COMPAT_DISP_IOCTL_QUERY_VALID_LAYER			DISP_IOW(222, compat_disp_layer_info)
+#define	COMPAT_DISP_IOCTL_SET_SCENARIO				DISP_IOW(223, struct compat_disp_scenario_config_t)
+#define	COMPAT_DISP_IOCTL_WAIT_ALL_JOBS_DONE			DISP_IOW(224, compat_uint_t)
+#define	COMPAT_DISP_IOCTL_SCREEN_FREEZE			DISP_IOW(225, compat_uint_t)
 
 
 #endif
