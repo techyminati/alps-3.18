@@ -478,6 +478,7 @@ static void ccci_rpc_work_helper(struct ccci_port *port, struct rpc_pkt *pkt,
 				CCCI_ERROR_LOG(md_id, RPC, "invalid ContentAdddr[0x%p] for RPC_SECURE_ALGO_OP!\n",
 					     (void *)ContentAddr);
 				tmp_data[0] = FS_PARAM_ERROR;
+				pkt_num = 0;
 				pkt[pkt_num].len = sizeof(unsigned int);
 				pkt[pkt_num++].buf = (void *)&tmp_data[0];
 				break;
@@ -528,6 +529,7 @@ static void ccci_rpc_work_helper(struct ccci_port *port, struct rpc_pkt *pkt,
 			if (ResText == NULL) {
 				CCCI_ERROR_LOG(md_id, RPC, "Fail alloc Mem for RPC_SECURE_ALGO_OP!\n");
 				tmp_data[0] = FS_PARAM_ERROR;
+				pkt_num = 0;
 				pkt[pkt_num].len = sizeof(unsigned int);
 				pkt[pkt_num++].buf = (void *)&tmp_data[0];
 				break;
@@ -1176,7 +1178,7 @@ static void rpc_msg_handler(struct ccci_port *port, struct sk_buff *skb)
 {
 	int md_id = port->md_id;
 	struct rpc_buffer *rpc_buf = (struct rpc_buffer *)skb->data;
-	int i, data_len, buf_len, AlignLength, ret;
+	int i, data_len, AlignLength, ret;
 	struct rpc_pkt pkt[RPC_MAX_ARG_NUM];
 	char *ptr, *ptr_base;
 	/* unsigned int tmp_data[128]; */	/* size of tmp_data should be >= any RPC output result */
@@ -1200,22 +1202,23 @@ static void rpc_msg_handler(struct ccci_port *port, struct sk_buff *skb)
 	}
 	/* parse buffer */
 	ptr_base = ptr = rpc_buf->buffer;
-	buf_len = sizeof(rpc_buf->op_id) + sizeof(rpc_buf->para_num);
+	data_len = sizeof(rpc_buf->op_id) + sizeof(rpc_buf->para_num);
 	for (i = 0; i < rpc_buf->para_num; i++) {
 		pkt[i].len = *((unsigned int *)ptr);
 		if (pkt[i].len >= skb->len) {
 			CCCI_ERROR_LOG(md_id, RPC, "invalid packet length in parse %u\n", pkt[i].len);
 			goto err_out;
 		}
-		if ((buf_len + sizeof(pkt[i].len) + pkt[i].len) > RPC_MAX_BUF_SIZE) {
+		if ((data_len + sizeof(pkt[i].len) + pkt[i].len) > RPC_MAX_BUF_SIZE) {
 			CCCI_ERROR_LOG(md_id, RPC, "RPC buffer overflow in parse %zu\n",
-								 buf_len + sizeof(pkt[i].len) + pkt[i].len);
+								 data_len + sizeof(pkt[i].len) + pkt[i].len);
 						goto err_out;
 		}
 		ptr += sizeof(pkt[i].len);
 		pkt[i].buf = ptr;
-		ptr += ((pkt[i].len + 3) >> 2) << 2;	/* 4byte align */
-		buf_len += (sizeof(pkt[i].len) + pkt[i].len);
+		AlignLength = ((pkt[i].len + 3) >> 2) << 2;
+		ptr += AlignLength;	/* 4byte align */
+		data_len += (sizeof(pkt[i].len) + AlignLength);
 	}
 	if ((ptr - ptr_base) > RPC_MAX_BUF_SIZE) {
 		CCCI_ERROR_LOG(md_id, RPC, "RPC overflow in parse 0x%p\n", (void *)(ptr - ptr_base));
