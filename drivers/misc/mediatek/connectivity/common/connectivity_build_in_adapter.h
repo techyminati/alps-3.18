@@ -120,6 +120,7 @@ extern int mtk_wdt_swsysret_config(int bit, int set_value);
 
 #define KERNEL_show_stack connectivity_export_show_stack
 #define KERNEL_tracing_record_cmdline connectivity_export_tracing_record_cmdline
+#define KERNEL_dump_thread_state connectivity_export_dump_thread_state
 
 #ifdef CPU_BOOST
 #define KERNEL_mt_ppm_sysboost_freq connectivity_export_mt_ppm_sysboost_freq
@@ -132,6 +133,7 @@ extern int mtk_wdt_swsysret_config(int bit, int set_value);
 #endif
 
 void connectivity_export_show_stack(struct task_struct *tsk, unsigned long *sp);
+void connectivity_export_dump_thread_state(const char *name);
 void connectivity_export_tracing_record_cmdline(struct task_struct *tsk);
 #ifdef CPU_BOOST
 void __attribute__((weak)) mt_ppm_sysboost_freq(enum ppm_sysboost_user user, unsigned int freq);
