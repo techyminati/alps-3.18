@@ -54,7 +54,7 @@ CONFIG_CFG80211_DEVELOPER_WARNINGS,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_CFG80211_INTERNAL_REGDB,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_CFG80211_WEXT,COMMON,Peiyong.Feng,,X,X,X,X,X,X,X,X,X,X,X
 CONFIG_CGROUP_CPUACCT,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
-CONFIG_CGROUP_DEBUG,COMMON,jing-ting.wu,,y,y,y,y,y,y,y,y,y,y,y
+CONFIG_CGROUP_DEBUG,PLATFORM,jing-ting.wu,,X,X,X,X,y,X,X,X,y,y,y
 CONFIG_CGROUP_FREEZER,COMMON,jing-ting.wu,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_CGROUP_SCHED,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_CGROUPS,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
@@ -158,7 +158,7 @@ CONFIG_DM_VERITY,COMMON,Calvin.Liao,for dm-verity,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_DM_ANDROID_VERITY,PROJECT,pangyen.chen,,X,X,X,X,X,X,X,X,X,X,X
 CONFIG_DMA_API_DEBUG,USER,,,X,X,X,X,X,X,X,X,X,X,X
 CONFIG_DUAL_ROLE_USB_INTF,PROJECT,vend_jeff_chang001,new config at this commit ebc855c95fb2bdff04b66d63675dbac9387577a8,X,X,X,X,O,X,X,X,X,X,O
-CONFIG_DYNAMIC_DEBUG,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
+CONFIG_DYNAMIC_DEBUG,PLATFORM,,,X,X,X,X,y,X,X,X,y,y,y
 CONFIG_EFI,PLATFORM,my.chuang,arm64 only,X,X,X,X,X,N,N,N,N,N,N
 CONFIG_EMBEDDED,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
 CONFIG_ENABLE_DEFAULT_TRACERS,COMMON,,,y,y,y,y,y,y,y,y,y,y,y
