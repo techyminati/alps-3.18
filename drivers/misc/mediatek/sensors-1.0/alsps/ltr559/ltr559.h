@@ -82,14 +82,6 @@
  */
 #define LTR559_IOCTL_MAGIC      'c'
 
-/* IOCTLs for ltr559 device */
-#define LTR559_IOCTL_PS_ENABLE		_IOW(LTR559_IOCTL_MAGIC, 0, char *)
-#define LTR559_IOCTL_ALS_ENABLE		_IOW(LTR559_IOCTL_MAGIC, 1, char *)
-#define LTR559_IOCTL_READ_PS_DATA	_IOR(LTR559_IOCTL_MAGIC, 2, char *)
-#define LTR559_IOCTL_READ_PS_INT	_IOR(LTR559_IOCTL_MAGIC, 3, char *)
-#define LTR559_IOCTL_READ_ALS_DATA	_IOR(LTR559_IOCTL_MAGIC, 4, char *)
-#define LTR559_IOCTL_READ_ALS_INT	_IOR(LTR559_IOCTL_MAGIC, 5, char *)
-
 /* Power On response time in ms */
 #define PON_DELAY	600
 #define WAKEUP_DELAY	10
