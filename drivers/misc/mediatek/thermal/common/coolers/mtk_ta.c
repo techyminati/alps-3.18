@@ -70,6 +70,7 @@ static int g_tad_ttj;
 /* Global variables						*/
 /*========================*/
 struct SPA_T thermal_spa_t;
+static struct tad_nl_msg_t tad_ret_msg;
 
 
 
@@ -204,7 +205,7 @@ static void ta_nl_data_handler(struct sk_buff *skb)
 	int seq;
 	void *data;
 	struct nlmsghdr *nlh;
-	struct tad_nl_msg_t *tad_msg, *tad_ret_msg;
+	struct tad_nl_msg_t *tad_msg = NULL;
 	int size = 0;
 
 	nlh = (struct nlmsghdr *)skb->data;
@@ -224,20 +225,13 @@ static void ta_nl_data_handler(struct sk_buff *skb)
 	size = tad_msg->tad_ret_data_len + TAD_NL_MSG_T_HDR_LEN;
 
 
-	/*tad_ret_msg = (struct tad_nl_msg_t *)vmalloc(size);*/
-	tad_ret_msg = vmalloc(size);
-	if (tad_ret_msg != NULL) {
-		memset(tad_ret_msg, 0, size);
 
-		atm_ctrl_cmd_from_user(data, tad_ret_msg);
-		ta_nl_send_to_user(pid, seq, tad_ret_msg);
-		tsta_dprintk("[ta_nl_data_handler] send to user space process done\n");
+	memset(&tad_ret_msg, 0, size);
 
-		vfree(tad_ret_msg);
+	atm_ctrl_cmd_from_user(data, &tad_ret_msg);
+	ta_nl_send_to_user(pid, seq, &tad_ret_msg);
+	tsta_dprintk("[ta_nl_data_handler] send to user space process done\n");
 
-	} else {
-		tsta_warn("[ta_nl_data_handler] vmalloc fail\n");
-	}
 
 }
 
