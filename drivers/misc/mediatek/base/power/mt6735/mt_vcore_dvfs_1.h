@@ -53,11 +53,12 @@ enum dvfs_kicker {
 	KIR_EMIBW,		/* 2 */
 	KIR_SDIO,		/* 3 */
 	KIR_USB,		/* 4 */
-	KIR_SYSFS,		/* 5 */
-	NUM_KICKER,		/* 6 */
+	KIR_PERF,		/* 5 */
+	KIR_SYSFS,		/* 6 */
+	NUM_KICKER,		/* 7 */
 	/* internal kicker */
-	KIR_SDIO_AUTOK,		/* 7 */
-	KIR_LATE_INIT		/* 8 */
+	KIR_SDIO_AUTOK,		/* 8 */
+	KIR_LATE_INIT		/* 9 */
 };
 
 enum dvfs_opp {

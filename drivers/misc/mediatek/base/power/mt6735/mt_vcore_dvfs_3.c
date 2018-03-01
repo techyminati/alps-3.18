@@ -131,7 +131,7 @@ static struct vcorefs_profile vcorefs_ctrl = {
 	.vcore_dvs		= 1,
 	.freq_dfs		= 0,
 	.ddr_dfs		= 1,
-	.log_mask		= 0xffff0000 | (1U << KIR_GPU),
+	.log_mask		= 0xffff0000 | (1U << KIR_GPU) | (1U << KIR_PERF),
 
 	.late_init_opp_done	= 0,
 	.init_opp_perf		= 0,
@@ -180,6 +180,9 @@ static struct kicker_profile kicker_table[] = {
 	},
 	[KIR_SDIO] = {
 		.opp	= OPP_OFF,
+	},
+	[KIR_PERF] = {
+		.opp    = OPP_OFF,
 	},
 	[KIR_SYSFS] = {
 		.opp	= OPP_OFF,
@@ -244,11 +247,12 @@ void vcorefs_list_kicker_request(void)
 {
 	struct kicker_profile *kicker_ctrl_table = kicker_table;
 
-	vcorefs_crit("[%d, %d, %d, %d, %d]\n",
+	vcorefs_crit("[%d, %d, %d, %d, %d, %d]\n",
 				kicker_ctrl_table[KIR_GPU].opp,
 				kicker_ctrl_table[KIR_MM].opp,
 				kicker_ctrl_table[KIR_EMIBW].opp,
 				kicker_ctrl_table[KIR_SDIO].opp,
+				kicker_ctrl_table[KIR_PERF].opp,
 				kicker_ctrl_table[KIR_SYSFS].opp);
 }
 
@@ -389,11 +393,12 @@ static unsigned int find_min_opp(enum dvfs_kicker kicker)
 	unsigned int min = UINT_MAX;
 	int i;
 
-	vcorefs_crit_mask("[%d, %d, %d, %d, %d]\n",
+	vcorefs_crit_mask("[%d, %d, %d, %d, %d, %d]\n",
 				kicker_ctrl_table[KIR_GPU].opp,
 				kicker_ctrl_table[KIR_MM].opp,
 				kicker_ctrl_table[KIR_EMIBW].opp,
 				kicker_ctrl_table[KIR_SDIO].opp,
+				kicker_ctrl_table[KIR_PERF].opp,
 				kicker_ctrl_table[KIR_SYSFS].opp);
 
 	/* find the min opp from kicker table */
@@ -824,6 +829,7 @@ static ssize_t vcore_debug_show(struct kobject *kobj, struct kobj_attribute *att
 	p += sprintf(p, "[KIR_MM   ] opp: %d\n", kicker_ctrl_table[KIR_MM].opp);
 	p += sprintf(p, "[KIR_EMIBW] opp: %d\n", kicker_ctrl_table[KIR_EMIBW].opp);
 	p += sprintf(p, "[KIR_SDIO ] opp: %d\n", kicker_ctrl_table[KIR_SDIO].opp);
+	p += sprintf(p, "[KIR_PERF ] opp: %d\n", kicker_ctrl_table[KIR_PERF].opp);
 	p += sprintf(p, "[KIR_SYSFS] opp: %d\n", kicker_ctrl_table[KIR_SYSFS].opp);
 	p += sprintf(p, "\n");
 
@@ -882,6 +888,8 @@ static ssize_t vcore_debug_store(struct kobject *kobj, struct kobj_attribute *at
 		vcorefs_request_dvfs_opp(KIR_EMIBW, val);
 	} else if (!strcmp(cmd, "KIR_SDIO")) {
 		vcorefs_request_dvfs_opp(KIR_SDIO, val);
+	} else if (!strcmp(cmd, "KIR_PERF")) {
+		vcorefs_request_dvfs_opp(KIR_PERF, val);
 	} else if (!strcmp(cmd, "KIR_SYSFS") && (val >= OPP_OFF && val < NUM_OPP)) {
 		if (is_vcorefs_can_work()) {
 			int r = vcorefs_request_dvfs_opp(KIR_SYSFS, val);

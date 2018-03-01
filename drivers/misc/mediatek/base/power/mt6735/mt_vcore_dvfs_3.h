@@ -52,8 +52,9 @@ enum dvfs_kicker {
 	KIR_MM,			/* 1 */
 	KIR_EMIBW,		/* 2 */
 	KIR_SDIO,		/* 3 */
-	KIR_SYSFS,		/* 4 */
-	NUM_KICKER,		/* 5 */
+	KIR_PERF,		/* 4 */
+	KIR_SYSFS,		/* 5 */
+	NUM_KICKER,		/* 6 */
 
 	/* internal kicker */
 	KIR_SDIO_AUTOK,		/* 6 */
