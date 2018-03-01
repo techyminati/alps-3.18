@@ -31,7 +31,7 @@
 #include <linux/fb.h>
 #include <linux/notifier.h>
 #endif
-#include <mt_vcore_dvfs_2.h>
+#include <mt_vcore_dvfs.h>
 #include "mach/fliper.h"
 #include "mach/mt_mem_bw.h"
 #define SEQ_printf(m, x...)\
@@ -348,7 +348,7 @@ static ssize_t mt_perf_write(struct file *filp, const char *ubuf,
 	if (ret < 0)
 		return ret;
 
-	if (val < -1 || val > num_opp)
+	if (val < -1 || val >= num_opp)
 		return -1;
 
 	if (vcorefs_request_dvfs_opp(KIR_PERF, val) < 0)
@@ -359,8 +359,7 @@ static ssize_t mt_perf_write(struct file *filp, const char *ubuf,
 
 static int mt_perf_show(struct seq_file *m, void *v)
 {
-	SEQ_printf(m, "perf_now :%d\n", perf_now);
-	SEQ_printf(m, "num_opp :%d\n", num_opp);
+	SEQ_printf(m, "%d\n", perf_now);
 	return 0;
 }
 /*** Seq operation of mtprof ****/
@@ -403,7 +402,7 @@ static int __init init_fliper(void)
 	mod_timer(&mt_pp_transfer_timer, jiffies + msecs_to_jiffies(TIME_5SEC_IN_MS));
 	fliper_enabled = 1;
 
-	num_opp = 2;
+	num_opp = NUM_OPP;
 	ddr_type = get_ddr_type();
 #ifdef CONFIG_PM_AUTOSLEEP
 	ret = fb_register_client(&fliper_fb_notif);
