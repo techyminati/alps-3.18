@@ -3367,23 +3367,25 @@ static ssize_t md_cd_dump_show(struct ccci_modem *md, char *buf)
 
 static ssize_t md_cd_dump_store(struct ccci_modem *md, const char *buf, size_t count)
 {
-	/* echo will bring "xxx\n" here, so we eliminate the "\n" during comparing */
-	if (strncmp(buf, "ccif", count - 1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_CCIF_REG | DUMP_FLAG_CCIF, NULL, 0);
-	if (strncmp(buf, "cldma", count - 1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_CLDMA, NULL, -1);
-	if (strncmp(buf, "register", count - 1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_REG, NULL, 0);
-	if (strncmp(buf, "smem_exp", count-1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_SMEM_EXP, NULL, 0);
-	if (strncmp(buf, "smem_ccism", count-1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_SMEM_CCISM, NULL, 0);
-	if (strncmp(buf, "image", count - 1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_IMAGE, NULL, 0);
-	if (strncmp(buf, "layout", count - 1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_LAYOUT, NULL, 0);
-	if (strncmp(buf, "mdslp", count - 1) == 0)
-		md->ops->dump_info(md, DUMP_FLAG_SMEM_MDSLP, NULL, 0);
+	if (md->md_state != GATED && md->md_state != INVALID) {
+		/* echo will bring "xxx\n" here, so we eliminate the "\n" during comparing */
+		if (strncmp(buf, "ccif", count - 1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_CCIF_REG | DUMP_FLAG_CCIF, NULL, 0);
+		if (strncmp(buf, "cldma", count - 1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_CLDMA, NULL, -1);
+		if (strncmp(buf, "register", count - 1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_REG, NULL, 0);
+		if (strncmp(buf, "smem_exp", count-1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_SMEM_EXP, NULL, 0);
+		if (strncmp(buf, "smem_ccism", count-1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_SMEM_CCISM, NULL, 0);
+		if (strncmp(buf, "image", count - 1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_IMAGE, NULL, 0);
+		if (strncmp(buf, "layout", count - 1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_LAYOUT, NULL, 0);
+		if (strncmp(buf, "mdslp", count - 1) == 0)
+			md->ops->dump_info(md, DUMP_FLAG_SMEM_MDSLP, NULL, 0);
+	}
 	return count;
 }
 
