@@ -9970,7 +9970,7 @@ static long ISP_ioctl(struct file *pFile, unsigned int Cmd, unsigned long Param)
 	MINT32 Ret = 0;
 	/*      */
 	MBOOL HoldEnable = MFALSE;
-	MUINT32 DebugFlag[2] = { 0 }, pid = 0;
+	MUINT32 DebugFlag[2] = { 0 };
 	ISP_REG_IO_STRUCT RegIo;
 	ISP_HOLD_TIME_ENUM HoldTime;
 	ISP_WAIT_IRQ_STRUCT IrqInfo;
@@ -10525,18 +10525,21 @@ static long ISP_ioctl(struct file *pFile, unsigned int Cmd, unsigned long Param)
 		break;
 #ifdef ISP_KERNEL_MOTIFY_SINGAL_TEST
 	case ISP_SET_USER_PID:
-		if (copy_from_user(&pid, (void *)Param, sizeof(MUINT32)) == 0) {
-			spin_lock(&(IspInfo.SpinLockIsp));
-			getTaskInfo((pid_t) pid);
-
-			sendSignal();
-
-			LOG_DBG("[ISP_KERNEL_MOTIFY_SINGAL_TEST]:0x08%x	", pid);
-			spin_unlock(&(IspInfo.SpinLockIsp));
-		} else {
-			LOG_ERR("copy_from_user	failed");
-			Ret = -EFAULT;
-		}
+		/*if (copy_from_user(&pid, (void *)Param, sizeof(MUINT32)) == 0) {
+		 *	spin_lock(&(IspInfo.SpinLockIsp));
+		 *	getTaskInfo((pid_t) pid);
+		 *
+		 *	sendSignal();
+		 *
+		 *	LOG_DBG("[ISP_KERNEL_MOTIFY_SIGNAL_TEST]:0x08%x	", pid);
+		 *	spin_unlock(&(IspInfo.SpinLockIsp));
+		*} else {
+		*	LOG_ERR("copy_from_user	failed");
+		*	Ret = -EFAULT;
+		*}
+		*/
+		LOG_INF("Unsupport Cmd: ISP_SET_USER_PID");
+		Ret = -EFAULT;
 		break;
 #endif
 	case ISP_BUFFER_CTRL:
