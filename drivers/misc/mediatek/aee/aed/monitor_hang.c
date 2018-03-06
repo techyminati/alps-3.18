@@ -82,6 +82,8 @@ static int hang_detect_counter = 0x7fffffff;
 static int dump_bt_done;
 #ifdef CONFIG_MT_ENG_BUILD
 static int hang_aee_warn = 2;
+#else
+static int hang_aee_warn;
 #endif
 static int system_server_pid;
 static bool watchdog_thread_exist;
@@ -244,7 +246,21 @@ static long monitor_hang_ioctl(struct file *file, unsigned int cmd, unsigned lon
 		return ret;
 	}
 
-	return -1;
+	if ((cmd == AEEIOCTL_SET_HANG_FLAG) &&
+		(!strncmp(current->comm, "aee_aed", 7))) {
+		const struct cred *cred = current_cred();
+
+		if (!uid_eq(cred->euid, GLOBAL_ROOT_UID))
+			return -EACCES;
+
+		if ((int)arg == 1) {
+			hang_aee_warn = 2;
+			pr_info("hang_detect: aee enable system_server coredump.\n");
+		}
+
+	}
+
+	return ret;
 }
 
 
@@ -423,7 +439,7 @@ static void save_stack_trace_tsk_me(struct task_struct *tsk, struct stack_trace 
 	data.skip = trace->skip;
 
 	if (tsk != current) {
-		data.no_sched_functions = 0;
+		data.no_sched_functions = 0; /* modify to 0*/
 		frame.fp = thread_saved_fp(tsk);
 		frame.sp = thread_saved_sp(tsk);
 		frame.pc = thread_saved_pc(tsk);
@@ -599,7 +615,7 @@ static unsigned long nsec_low(unsigned long long nsec)
 void sched_show_task_local(struct task_struct *p)
 {
 	int ppid;
-	unsigned state;
+	unsigned int state;
 	char stat_nam[] = TASK_STATE_TO_CHAR_STR;
 	pid_t pid;
 
@@ -1076,7 +1092,7 @@ static int DumpThreadNativeMaps(pid_t pid)
 			     flags & VM_WRITE ? 'w' : '-',
 			     flags & VM_EXEC ? 'x' : '-', flags & VM_MAYSHARE ? 's' : 'p', name);
 			if (flags & VM_EXEC) {
-				Log2HangInfo("%08lx-%08lx %c%c%c%c    %s\n", vma->vm_start,
+				Log2HangInfo("%08lx-%08lx %c%c%c%c %s\n", vma->vm_start,
 					     vma->vm_end, flags & VM_READ ? 'r' : '-',
 					     flags & VM_WRITE ? 'w' : '-',
 					     flags & VM_EXEC ? 'x' : '-',
@@ -1319,7 +1335,7 @@ static void show_bt_by_pid(int task_pid)
 	struct pt_regs *user_ret;
 #endif
 	int count = 0, dump_native = 0;
-	unsigned state;
+	unsigned int state = 0;
 	char stat_nam[] = TASK_STATE_TO_CHAR_STR;
 
 	pid = find_get_pid(task_pid);
@@ -1404,7 +1420,6 @@ static void show_state_filter_local(int flag)
 	} while_each_thread(g, p);
 }
 
-
 static void ShowStatus(void)
 {
 #define DUMP_PROCESS_NUM 10
@@ -1475,7 +1490,7 @@ void reset_hang_info(void)
 	memset(&Hang_Info, 0, MaxHangInfoSize);
 	Hang_Info_Size = 0;
 }
-#ifdef CONFIG_MT_ENG_BUILD
+
 static int hang_detect_warn_thread(void *arg)
 {
 
@@ -1491,20 +1506,19 @@ static int hang_detect_warn_thread(void *arg)
 	sched_setscheduler(current, SCHED_FIFO, &param);
 	pr_notice("hang_detect create warning api: %s.", string_tmp);
 #ifdef __aarch64__
-	aee_kernel_warning_api(__FILE__, __LINE__, DB_OPT_PROCESS_COREDUMP | DB_OPT_AARCH64,
+		aee_kernel_warning_api(__FILE__, __LINE__, DB_OPT_PROCESS_COREDUMP | DB_OPT_AARCH64 | DB_OPT_FTRACE,
 		"maybe have other hang_detect KE DB, please send together!!\n", string_tmp);
 #else
-	aee_kernel_warning_api(__FILE__, __LINE__, DB_OPT_PROCESS_COREDUMP,
+		aee_kernel_warning_api(__FILE__, __LINE__, DB_OPT_PROCESS_COREDUMP | DB_OPT_FTRACE,
 		"maybe have other hang_detect KE DB, please send together!!\n", string_tmp);
 #endif
 	return 0;
 }
-#endif
+
 static int hang_detect_dump_thread(void *arg)
 {
-#ifdef CONFIG_MT_ENG_BUILD
 	struct task_struct *hd_thread;
-#endif
+
 
 	/* unsigned long flags; */
 	struct sched_param param = {
@@ -1516,13 +1530,11 @@ static int hang_detect_dump_thread(void *arg)
 	dump_bt_done = 1;
 	while (1) {
 		wait_event_interruptible(dump_bt_start_wait, dump_bt_done == 0);
-#ifdef CONFIG_MT_ENG_BUILD
 		if (hang_aee_warn == 1) {
 			hd_thread = kthread_create(hang_detect_warn_thread, NULL, "hang_detect2");
 			if (hd_thread != NULL)
 				wake_up_process(hd_thread);
 		} else
-#endif
 			ShowStatus();
 
 		dump_bt_done = 1;
@@ -1553,7 +1565,7 @@ static int hang_detect_thread(void *arg)
 #ifdef CONFIG_MTK_RAM_CONSOLE
 			aee_rr_rec_hang_detect_timeout_count(hd_timeout);
 #endif
-#ifdef CONFIG_MT_ENG_BUILD
+
 			if (hang_detect_counter == 1 && hang_aee_warn == 2 && hd_timeout != 11) {
 				hang_detect_counter = hd_timeout / 2;
 				dump_bt_done = 0;
@@ -1564,7 +1576,6 @@ static int hang_detect_thread(void *arg)
 				hang_aee_warn = 0;
 
 			}
-#endif
 			if (hang_detect_counter <= 0) {
 				Log2HangInfo("[Hang_detect]Dump the %d time process bt.\n", Hang_Detect_first ? 2 : 1);
 				dump_bt_done = 0;
