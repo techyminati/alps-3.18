@@ -908,6 +908,7 @@ static int BMA222_ReadSensorData(struct i2c_client *client, char *buf, int bufsi
 	acc[obj->cvt.map[BMA222_AXIS_Z]] =
 	    obj->cvt.sign[BMA222_AXIS_Z] * obj->data[BMA222_AXIS_Z];
 
+
 	acc[BMA222_AXIS_X] =
 	    acc[BMA222_AXIS_X] * GRAVITY_EARTH_1000 / obj->reso->sensitivity;
 	acc[BMA222_AXIS_Y] =
@@ -1686,14 +1687,9 @@ static int bma222_factory_set_cali(int32_t data[3])
 	int err = 0;
 	int cali[3] = { 0 };
 
-	/* obj */
-	obj_i2c_data->cali_sw[BMA222_AXIS_X] += data[0];
-	obj_i2c_data->cali_sw[BMA222_AXIS_Y] += data[1];
-	obj_i2c_data->cali_sw[BMA222_AXIS_Z] += data[2];
-
-	cali[BMA222_AXIS_X] = data[0] * gsensor_gain.x / GRAVITY_EARTH_1000;
-	cali[BMA222_AXIS_Y] = data[1] * gsensor_gain.y / GRAVITY_EARTH_1000;
-	cali[BMA222_AXIS_Z] = data[2] * gsensor_gain.z / GRAVITY_EARTH_1000;
+	cali[BMA222_AXIS_X] = data[0] * obj_i2c_data->reso->sensitivity / GRAVITY_EARTH_1000;
+	cali[BMA222_AXIS_Y] = data[1] * obj_i2c_data->reso->sensitivity / GRAVITY_EARTH_1000;
+	cali[BMA222_AXIS_Z] = data[2] * obj_i2c_data->reso->sensitivity / GRAVITY_EARTH_1000;
 	err = BMA222_WriteCalibration(bma222_i2c_client, cali);
 	if (err) {
 		GSE_ERR("bma222_WriteCalibration failed!\n");
@@ -1704,9 +1700,17 @@ static int bma222_factory_set_cali(int32_t data[3])
 
 static int bma222_factory_get_cali(int32_t data[3])
 {
-	data[0] = obj_i2c_data->cali_sw[BMA222_AXIS_X];
-	data[1] = obj_i2c_data->cali_sw[BMA222_AXIS_Y];
-	data[2] = obj_i2c_data->cali_sw[BMA222_AXIS_Z];
+	int err = 0;
+	int cali[3] = { 0 };
+
+	err = BMA222_ReadCalibration(bma222_i2c_client, cali);
+	if (err) {
+		GSE_ERR("mpu6050a_ReadCalibration failed!\n");
+		return -1;
+	}
+	data[0] = cali[BMA222_AXIS_X] * GRAVITY_EARTH_1000 / obj_i2c_data->reso->sensitivity;
+	data[1] = cali[BMA222_AXIS_Y] * GRAVITY_EARTH_1000 / obj_i2c_data->reso->sensitivity;
+	data[2] = cali[BMA222_AXIS_Z] * GRAVITY_EARTH_1000 / obj_i2c_data->reso->sensitivity;
 	return 0;
 }
 static int bma222_factory_do_self_test(void)
