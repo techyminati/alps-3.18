@@ -6212,7 +6212,7 @@ static ssize_t ISP_RegDebug(struct file *pFile,
 			   const char __user *pBuffer, size_t  Count, loff_t *p_off)
 {
 	LOG_ERR("ISP_RegDebug: Not implement");
-	return 0;
+	return -EPERM;
 }
 
 static ssize_t CAMIO_DumpRegToProc(struct file *pPage,
@@ -6229,7 +6229,7 @@ static ssize_t CAMIO_RegDebug(struct file *pFile,
 			     const char __user*pBuffer, size_t Count, loff_t *p_off)
 {
 	LOG_ERR("CAMIO_RegDebug: Not implement");
-	return 0;
+	return -EPERM;
 }
 
 /*******************************************************************************
