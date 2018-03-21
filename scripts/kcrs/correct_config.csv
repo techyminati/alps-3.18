@@ -154,7 +154,7 @@ CONFIG_DISABLE_CPU_SCHED_DOMAIN_BALANCE,COMMON,yt.chang,new config in this commi
 CONFIG_DM_CRYPT,COMMON,,,y,y,y,y,y,y,y,y,y,y,y,,
 CONFIG_DM_DEBUG,USER,,,X,X,X,X,X,X,X,X,X,X,X,,
 CONFIG_DM_UEVENT,COMMON,,,y,y,y,y,y,y,y,y,y,y,y,,
-CONFIG_DM_VERITY,COMMON,Calvin.Liao,for dm-verity,y,y,y,y,y,y,y,y,y,y,y,,
+CONFIG_DM_VERITY,PROJECT,Calvin.Liao,for dm-verity,X,X,X,X,y,y,y,y,y,y,y,,
 CONFIG_DM_ANDROID_VERITY,PROJECT,pangyen.chen,,X,X,X,X,X,X,X,X,X,X,X,,
 CONFIG_DMA_API_DEBUG,USER,,,X,X,X,X,X,X,X,X,X,X,X,,
 CONFIG_DUAL_ROLE_USB_INTF,PROJECT,vend_jeff_chang001,new config at this commit ebc855c95fb2bdff04b66d63675dbac9387577a8,X,X,X,X,O,X,X,X,X,X,O,,

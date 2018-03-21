@@ -157,6 +157,7 @@ config MTK_ENABLE_AGO
 	select HZ_300
 	select UID_CPUTIME
 	select SDCARD_FS
+	select MTK_DM_VERITY_OFF
 	---help---
 	Enable/Disable GMO related feautre
 	Do not use this options in Kernel directly
