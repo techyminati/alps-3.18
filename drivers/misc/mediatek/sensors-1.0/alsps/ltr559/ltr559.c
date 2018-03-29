@@ -1536,6 +1536,7 @@ static void ltr559_late_resume(struct early_suspend *h)
 	mutex_unlock(&Ltr559_lock);
 }
 #endif
+#ifdef USE_HWMSEN
 int ltr559_ps_operate(void *self, uint32_t command, void *buff_in, int size_in,
 		      void *buff_out, int size_out, int *actualout)
 {
@@ -1677,7 +1678,7 @@ int ltr559_als_operate(void *self, uint32_t command, void *buff_in, int size_in,
 	mutex_unlock(&Ltr559_lock);
 	return err;
 }
-
+#endif
 
 /*----------------------------------------------------------------------------*/
 static int ltr559_i2c_detect(struct i2c_client *client, struct i2c_board_info *info)
