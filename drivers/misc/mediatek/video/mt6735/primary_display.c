@@ -148,6 +148,10 @@ disp_ddp_path_config last_primary_config;
 static struct switch_dev disp_switch_data;
 #endif
 
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+unsigned long round_corner_mask_mva;
+#endif
+
 static int g_is_inited;
 
 void enqueue_buffer(display_primary_path_context *ctx, struct list_head *head,
@@ -5026,6 +5030,18 @@ static int init_cmdq_slots(cmdqBackupSlotHandle *pSlot, int count, int init_val)
 }
 #endif
 
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+static void primary_display_get_round_corner_mask_mva(void)
+{
+	unsigned int Bpp = 4;
+	unsigned int width = primary_display_get_width();
+	unsigned int height = primary_display_get_height();
+
+	round_corner_mask_mva = primary_display_get_frame_buffer_mva_address() +
+				mtkfb_get_fb_size() - width * height * Bpp;
+}
+#endif
+
 int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited)
 {
 	DISP_STATUS ret = DISP_STATUS_OK;
@@ -5079,6 +5095,11 @@ int primary_display_init(char *lcm_name, unsigned int lcm_fps, int is_lcm_inited
 		ret = DISP_STATUS_ERROR;
 		goto done;
 	}
+
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+	primary_display_get_round_corner_mask_mva();
+#endif
+
 #ifndef MTK_FB_DFO_DISABLE
 	if ((0 == dfo_query("LCM_FAKE_WIDTH", &lcm_fake_width))
 	    && (0 == dfo_query("LCM_FAKE_HEIGHT", &lcm_fake_height))) {
@@ -6847,7 +6868,14 @@ static int _config_ovl_input(disp_session_input_config *session_input,
 		/*security issue*/
 		if (layer >= OVL_LAYER_NUM)
 			continue;
-
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+		if (i == primary_display_get_option("ASSERT_LAYER") &&
+		    i != layer) {
+			if (input_cfg->layer_enable != 0 || layer != 0)
+				DISPERR("session_input->config[3] is used\n");
+			continue;
+		}
+#endif
 		ovl_cfg = &(data_config->ovl_config[layer]);
 		if (session_input->setter != SESSION_USER_AEE) {
 			if (isAEEEnabled && layer == primary_display_get_option("ASSERT_LAYER")) {
@@ -6907,6 +6935,31 @@ static int _config_ovl_input(disp_session_input_config *session_input,
 	if (_should_wait_path_idle())
 		dpmgr_wait_event_timeout(disp_handle, DISP_PATH_EVENT_FRAME_DONE, HZ * 1);
 
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+	if (isAEEEnabled == 0) {
+		OVL_CONFIG_STRUCT *ovl_cfg;
+		int layer = OVL_LAYER_NUM - 1;
+
+		ovl_cfg  = &(data_config->ovl_config[layer]);
+		ovl_cfg->addr = (unsigned long)round_corner_mask_mva;
+		ovl_cfg->layer = layer;
+		ovl_cfg->layer_en = 1;
+		ovl_cfg->src_x = 0;
+		ovl_cfg->src_y = 0;
+		ovl_cfg->src_w = primary_display_get_width();
+		ovl_cfg->src_h = primary_display_get_height();
+		ovl_cfg->src_pitch = primary_display_get_width() * 4;
+		ovl_cfg->dst_x = 0;
+		ovl_cfg->dst_y = 0;
+		ovl_cfg->dst_w = primary_display_get_width();
+		ovl_cfg->dst_h = primary_display_get_height();
+		ovl_cfg->aen = 1;
+		ovl_cfg->alpha = 0xff;
+		ovl_cfg->buff_idx = -1;
+		ovl_cfg->fmt = eRGBA8888;
+	}
+#endif
+
 	/* should we use cmdq_hand_config? need to check */
 	ret = dpmgr_path_config(disp_handle, data_config, cmdq_handle);
 
@@ -6920,6 +6973,12 @@ static int _config_ovl_input(disp_session_input_config *session_input,
 
 		layer = input_cfg->layer_id;
 
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+		if (i == primary_display_get_option("ASSERT_LAYER") &&
+		    i != layer) {
+			continue;
+		}
+#endif
 		cmdqBackupReadSlot(*p_cur_config_fence, layer, &last_fence);
 		cur_fence = input_cfg->next_buff_idx;
 
@@ -7565,7 +7624,11 @@ int primary_display_get_info(void *info)
 	if (is_DAL_Enabled() && pgc->max_layer == OVL_LAYER_NUM)
 		dispif_info->maxLayerNum = pgc->max_layer - 1;
 	else
+#ifdef CONFIG_MTK_ROUND_CORNER_SUPPORT
+		dispif_info->maxLayerNum = pgc->max_layer - 1;
+#else
 		dispif_info->maxLayerNum = pgc->max_layer;
+#endif
 #endif
 	/* DISPDBG("available layer num=%d\n", dispif_info->maxLayerNum); */
 

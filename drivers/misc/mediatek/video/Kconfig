@@ -105,3 +105,12 @@ config MTK_PQ_COLOR_MODE
 	  if value equals to MDP, only mdp color is on.
 	  if value equals to DISP_MDP, mdp and display color are both on.
 	  if value equals to OFF, mdp and display color are both off.
+
+config MTK_ROUND_CORNER_SUPPORT
+	bool "enable medietak display round corner"
+	default n
+	help
+	  define CONFIG_MTK_ROUND_CORNER_SUPPORT to enable Mediatek Round Corner on display.
+	  If you want to use Meditek Round Corner on display, please make sure it is Y in xxx_defconfig.mk.
+	  This feature require round corner pattern provided in lcm driver folder.
+	  If unsure, set N.
