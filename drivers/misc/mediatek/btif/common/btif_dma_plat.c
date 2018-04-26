@@ -1024,7 +1024,7 @@ int hal_rx_dma_irq_handler(P_MTK_DMA_INFO_STR p_dma_info,
 /*disable DMA Rx IER*/
 	hal_btif_dma_ier_ctrl(p_dma_info, false);
 
-/*clear Rx DMA's interrupt status*/
+	/*clear Rx DMA's interrupt status*/
 	BTIF_SET_BIT(RX_DMA_INT_FLAG(base), RX_DMA_INT_DONE | RX_DMA_INT_THRE);
 
 	valid_len = BTIF_READ32(RX_DMA_VFF_VALID_SIZE(base));
@@ -1032,8 +1032,8 @@ int hal_rx_dma_irq_handler(P_MTK_DMA_INFO_STR p_dma_info,
 	wpt = BTIF_READ32(RX_DMA_VFF_WPT(base));
 	if ((0 == valid_len) && (rpt == wpt)) {
 		BTIF_DBG_FUNC
-		    ("rx interrupt, no data available in Rx DMA, wpt(0x%08x), rpt(0x%08x)\n",
-		     rpt, wpt);
+			("rx int, no data available in Rx DMA, wpt(0x%08x), rpt(0x%08x), flg(0x%x)\n",
+			 rpt, wpt, BTIF_READ32(RX_DMA_INT_FLAG(base)));
 	}
 
 	i_ret = 0;
