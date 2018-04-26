@@ -69,6 +69,8 @@ extern void aee_rr_rec_hotplug_footprint(int cpu, u8 fp);
 extern void aee_rr_rec_hotplug_cpu_event(u8 val);
 extern void aee_rr_rec_hotplug_cb_index(u8 val);
 extern void aee_rr_rec_hotplug_cb_fp(unsigned long val);
+extern void aee_rr_rec_last_sync_func(unsigned long val);
+extern void aee_rr_rec_last_async_func(unsigned long val);
 #ifdef CONFIG_MTK_EMMC_SUPPORT
 extern void last_kmsg_store_to_emmc(void);
 #endif
@@ -133,6 +135,14 @@ static inline void ram_console_write(struct console *console, const char *s, uns
 }
 
 static inline void aee_sram_fiq_save_bin(unsigned char *buffer, size_t len)
+{
+}
+
+static inline void aee_rr_rec_last_sync_func(unsigned long val)
+{
+}
+
+static inline void aee_rr_rec_last_async_func(unsigned long val)
 {
 }
 
