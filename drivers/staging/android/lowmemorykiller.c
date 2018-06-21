@@ -557,7 +557,11 @@ static int __init lowmem_init(void)
 #endif
 
 #ifdef CONFIG_ZRAM
+#ifndef CONFIG_MTK_GMO_RAM_OPTIMIZE
 	vm_swappiness = 100;
+#else
+	vm_swappiness = 120;
+#endif
 #endif
 
 
