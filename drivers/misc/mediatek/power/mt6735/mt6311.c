@@ -99,7 +99,6 @@ static DEFINE_MUTEX(mt6311_lock_mutex);
 
 int g_mt6311_driver_ready = 0;
 int g_mt6311_hw_exist = 0;
-int g_mt6311_i2c_init = 0;
 
 unsigned int g_mt6311_cid = 0;
 /*
@@ -122,10 +121,13 @@ unsigned int mt6311_read_byte(unsigned char cmd, unsigned char *returnData)
 {
 	char cmd_buf[1] = { 0x00 };
 	char readData = 0;
-	int ret = 0;
+	int ret = 0, org = 0;
+	struct i2c_adapter *adap;
 
 	mutex_lock(&mt6311_i2c_access);
-
+	adap = i2c_get_adapter(3);
+	org = adap->timeout;
+	adap->timeout = 10;
 	new_client->ext_flag =
 	    ((new_client->ext_flag) & I2C_MASK_FLAG) | I2C_WR_FLAG | I2C_PUSHPULL_FLAG |
 	    I2C_HS_FLAG;
@@ -137,6 +139,8 @@ unsigned int mt6311_read_byte(unsigned char cmd, unsigned char *returnData)
 		PMICLOG1("[mt6311_read_byte] ret=%d\n", ret);
 
 		new_client->ext_flag = 0;
+		adap->timeout = org;
+		i2c_put_adapter(adap);
 		mutex_unlock(&mt6311_i2c_access);
 		return ret;
 	}
@@ -146,6 +150,8 @@ unsigned int mt6311_read_byte(unsigned char cmd, unsigned char *returnData)
 
 	new_client->ext_flag = 0;
 
+	adap->timeout = org;
+	i2c_put_adapter(adap);
 	mutex_unlock(&mt6311_i2c_access);
 	return 1;
 }
@@ -153,9 +159,13 @@ unsigned int mt6311_read_byte(unsigned char cmd, unsigned char *returnData)
 unsigned int mt6311_write_byte(unsigned char cmd, unsigned char writeData)
 {
 	char write_data[2] = { 0 };
-	int ret = 0;
+	int ret = 0, org = 0;
+	struct i2c_adapter *adap;
 
 	mutex_lock(&mt6311_i2c_access);
+	adap = i2c_get_adapter(3);
+	org = adap->timeout;
+	adap->timeout = 10;
 
 	write_data[0] = cmd;
 	write_data[1] = writeData;
@@ -170,11 +180,15 @@ unsigned int mt6311_write_byte(unsigned char cmd, unsigned char writeData)
 		PMICLOG1("[mt6311_write_byte] ret=%d\n", ret);
 
 		new_client->ext_flag = 0;
+		adap->timeout = org;
+		i2c_put_adapter(adap);
 		mutex_unlock(&mt6311_i2c_access);
 		return ret;
 	}
 
 	new_client->ext_flag = 0;
+	adap->timeout = org;
+	i2c_put_adapter(adap);
 	mutex_unlock(&mt6311_i2c_access);
 	return 1;
 }
@@ -7196,12 +7210,6 @@ static int mt6311_driver_probe(struct i2c_client *client, const struct i2c_devic
 
 	/*---------------------        */
 
-	if (g_mt6311_i2c_init == 0) {
-		/* i2c init fail, just return */
-		pr_err("please check dws if you need mt6311 i2c register\n");
-		err = -ENOMEM;
-		goto exit;
-	}
 	ret = mt6311_hw_component_detect();
 	if (ret < 0) {
 		err = -ENOMEM;
@@ -7413,13 +7421,10 @@ static int __init mt6311_init(void)
 
 	/*i2c_register_board_info(mt6311_BUSNUM, &i2c_mt6311, 1); */
 
-	if (i2c_add_driver(&mt6311_driver) != 0) {
-		g_mt6311_i2c_init = 0;
+	if (i2c_add_driver(&mt6311_driver) != 0)
 		PMICLOG1("[mt6311_init] failed to register mt6311 i2c driver.\n");
-	} else {
-		g_mt6311_i2c_init = 1;
+	else
 		PMICLOG1("[mt6311_init] Success to register mt6311 i2c driver.\n");
-	}
 
 	/* mt6311 user space access interface */
 	ret = platform_device_register(&mt6311_user_space_device);
