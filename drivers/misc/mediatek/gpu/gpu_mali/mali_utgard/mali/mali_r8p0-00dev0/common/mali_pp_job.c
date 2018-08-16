@@ -152,6 +152,12 @@ void mali_pp_job_delete(struct mali_pp_job *job)
 	session = mali_pp_job_get_session(job);
 	MALI_DEBUG_ASSERT_POINTER(session);
 
+	/* Fix the ioctl_fuzzer test: "MALI_IOC_PP_START_JOB" & "MALI_IOC_PP_AND_GP_START_JOB" failed issue. */
+	if (NULL == session) {
+		MALI_PRINT_ERROR(("session is NULL !\n"));
+		return;
+	}
+
 	if (NULL != job->memory_cookies) {
 #if defined(CONFIG_DMA_SHARED_BUFFER) && !defined(CONFIG_MALI_DMA_BUF_MAP_ON_ATTACH)
 		/* Unmap buffers attached to job */

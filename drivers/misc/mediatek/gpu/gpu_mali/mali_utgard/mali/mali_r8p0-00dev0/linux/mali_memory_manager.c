@@ -794,11 +794,24 @@ _mali_osk_errcode_t _mali_ukk_mem_cow(_mali_uk_cow_mem_s *args)
 	/* Get the target backend for cow */
 	target_backend = mali_mem_backend_struct_search(session, args->target_handle);
 
+#if 0
 	if (NULL == target_backend || 0 == target_backend->size) {
 		MALI_DEBUG_ASSERT_POINTER(target_backend);
 		MALI_DEBUG_ASSERT(0 != target_backend->size);
 		return ret;
 	}
+#else
+	/* Fix the ioctl_fuzzer test: "MALI_IOC_MEM_COW" failed issue. */
+	if (NULL == target_backend) {
+		MALI_DEBUG_ASSERT_POINTER(target_backend);
+		return ret;
+	}
+
+	if (0 == target_backend->size) {
+		MALI_DEBUG_ASSERT(0 != target_backend->size);
+		return ret;
+	}
+#endif
 
 	/*Cow not support resized mem */
 	MALI_DEBUG_ASSERT(MALI_MEM_FLAG_CAN_RESIZE != (MALI_MEM_FLAG_CAN_RESIZE & target_backend->mali_allocation->flags));
@@ -920,11 +933,24 @@ _mali_osk_errcode_t _mali_ukk_mem_cow_modify_range(_mali_uk_cow_modify_range_s *
 	/* Get the backend that need to be modified. */
 	mem_backend = mali_mem_backend_struct_search(session, args->vaddr);
 
+#if 0
 	if (NULL == mem_backend || 0 == mem_backend->size) {
 		MALI_DEBUG_ASSERT_POINTER(mem_backend);
 		MALI_DEBUG_ASSERT(0 != mem_backend->size);
 		return ret;
 	}
+#else
+	/* Fix the ioctl_fuzzer test: "MALI_IOC_MEM_COW_MODIFY_RANGE" failed issue. */
+	if (NULL == mem_backend) {
+		MALI_DEBUG_ASSERT_POINTER(mem_backend);
+		return ret;
+	}
+
+	if (0 == mem_backend->size) {
+		MALI_DEBUG_ASSERT(0 != mem_backend->size);
+		return ret;
+	}
+#endif
 
 	MALI_DEBUG_ASSERT(MALI_MEM_COW  == mem_backend->type);
 

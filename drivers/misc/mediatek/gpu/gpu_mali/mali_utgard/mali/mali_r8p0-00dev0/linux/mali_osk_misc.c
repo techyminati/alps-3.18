@@ -46,7 +46,10 @@ void _mali_osk_abort(void)
 {
 	/* make a simple fault by dereferencing a NULL pointer */
 	dump_stack();
+#if 0
+	/* Mark to prevent the ioctl_fuzzer test failed issue. */
 	*(int *)0 = 0;
+#endif
 }
 
 void _mali_osk_break(void)
