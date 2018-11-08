@@ -40,6 +40,7 @@
 
 #include <mt_gpio.h>
 #include <mt-plat/charging.h>
+#include <mt-plat/upmu_common.h>
 
 #define hal_rtc_xinfo(fmt, args...)		\
 	pr_notice(fmt, ##args)
