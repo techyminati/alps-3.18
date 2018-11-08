@@ -187,6 +187,8 @@ void hal_rtc_bbpu_pwdn(void)
 		/* 1.   Set SRCLKENAs GPIO GPIO as Output Mode, Output Low */
 		mt_set_gpio_dir(GPIO_SRCLKEN_PIN, GPIO_DIR_OUT);
 		mt_set_gpio_out(GPIO_SRCLKEN_PIN, GPIO_OUT_ZERO);
+		/* Keep PMIC in normal mode */
+		pmic_config_interface_nolock(0x0204, 0x103, 0xffff, 0);
 		/* 2. pull PWRBB low */
 		rtc_bbpu_pwrdown(true);
 
