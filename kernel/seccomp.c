@@ -688,6 +688,7 @@ static int __seccomp_filter(int this_syscall, const struct seccomp_data *sd,
 	unreachable();
 
 skip:
+	audit_seccomp(this_syscall, 0, action);
 	return -1;
 }
 #else
