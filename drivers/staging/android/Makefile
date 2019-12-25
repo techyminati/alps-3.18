@@ -11,7 +11,6 @@ subdir-ccflags-y += -I$(srctree)/drivers/misc/mediatek/video/$(MTK_PLATFORM)/vid
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat
 
 obj-$(CONFIG_ION)			+= ion/
-obj-$(CONFIG_FIQ_DEBUGGER)		+= fiq_debugger/
 
 obj-$(CONFIG_ANDROID_BINDER_IPC)	+= binder.o binder_alloc.o
 obj-$(CONFIG_ANDROID_BINDER_IPC_SELFTEST) += binder_alloc_selftest.o
