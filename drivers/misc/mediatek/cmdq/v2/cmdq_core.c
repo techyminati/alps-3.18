@@ -3393,7 +3393,7 @@ static bool cmdq_core_check_user_valid(void *src, u32 size,
 			ret = cmdq_core_check_instr_valid(*va, gpr, spr, &spr0);
 			if (unlikely(!ret)) {
 				CMDQ_ERR("instr:%#llx\n", *va);
-				/* break; TODO */
+				break;
 			}
 		}
 
@@ -3412,7 +3412,6 @@ static bool cmdq_core_check_user_valid(void *src, u32 size,
 	CMDQ_MSG("%s size:%u cost:%lluus ret:%s\n", __func__, size, (u64)cost,
 		ret ? "true" : "false");
 
-	ret = true; /* TODO */
 	return ret;
 }
 
