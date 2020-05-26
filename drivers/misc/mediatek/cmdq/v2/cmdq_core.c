@@ -3292,6 +3292,10 @@ static bool cmdq_core_check_read(const struct cmdq_check *check,
 {
 	switch (check->opt) {
 	case 0x2:
+		if ((check->ai & 0xfff) == 0x90 && !check->val)
+			if (cmdq_core_subsys_to_reg_addr((check->sop << 16) |
+				(check->ai & 0xf000)) == GCE_BASE_PA)
+				break;
 		if (unlikely(check->val >= xpr_total ||
 			xpr[check->val] == XPR_UNLOCK) ||
 			!cmdq_mdp_is_sub_valid(check->sop, check->ai))
