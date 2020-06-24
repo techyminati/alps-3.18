@@ -27,6 +27,7 @@ static u32 mdp_engine_port[ENGBASE_COUNT] = {
 	0,	/*ENGBASE_MMSYS_MUTEX*/
 	0,	/*ENGBASE_IMGSYS*/
 	0,	/*ENGBASE_ISPSYS*/
+	0,	/*ENGBASE_MMSYS_CMDQ*/
 };
 static u32 mdp_base[] = {
 	[ENGBASE_MMSYS_CONFIG] = 0x14000000,
@@ -39,6 +40,7 @@ static u32 mdp_base[] = {
 	[ENGBASE_MMSYS_MUTEX] = 0x14015000,
 	[ENGBASE_IMGSYS] = 0x15000000,
 	[ENGBASE_ISPSYS] = 0x15004000,
+	[ENGBASE_MMSYS_CMDQ] = 0x10217000,
 };
 
 #endif
