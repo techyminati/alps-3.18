@@ -248,6 +248,12 @@ static ssize_t fts_debug_read(struct file *filp, char __user *buff, size_t count
 		num_read_chars = 1;
 		break;
 	case PROC_READ_DATA:
+		if (count > READ_BUF_SIZE) {
+			dev_notice(&fts_i2c_client->dev,
+				"%s:read proc data count > READ_BUF_SIZE\n",
+				__func__);
+			return -EFAULT;
+		}
 		readlen = count;
 		ret = fts_i2c_read(fts_i2c_client, NULL, 0, buf, readlen);
 		if (ret < 0) {
@@ -465,6 +471,12 @@ esd_switch(0);apk_debug_flag = 1;
 		num_read_chars = 1;
 		break;
 	case PROC_READ_DATA:
+		if (count > READ_BUF_SIZE) {
+			dev_notice(&fts_i2c_client->dev,
+				"%s:read proc data count > READ_BUF_SIZE\n",
+				__func__);
+			return -EFAULT;
+		}
 		readlen = count;
 		ret = fts_i2c_read(fts_i2c_client, NULL, 0, buf, readlen);
 		if (ret < 0) {
