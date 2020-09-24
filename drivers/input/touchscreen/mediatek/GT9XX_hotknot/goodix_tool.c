@@ -393,6 +393,12 @@ static s32 goodix_tool_write(struct file *filp, const char __user *buff, unsigne
 	 */
 
 	if (1 == cmd_head.wr) {
+		if ((cmd_head.data == NULL)
+		    || (cmd_head.data_len >= (DATA_LENGTH - GTP_ADDR_LENGTH))
+		    || (cmd_head.data_len >= (len - CMD_HEAD_LENGTH))) {
+			GTP_ERROR("copy_from_user data out of range.");
+			return -EINVAL;
+		}
 		/* copy_from_user(&cmd_head.data[cmd_head.addr_len], &buff[CMD_HEAD_LENGTH], cmd_head.data_len); */
 		ret =
 		    copy_from_user(&cmd_head.data[GTP_ADDR_LENGTH], &buff[CMD_HEAD_LENGTH],
@@ -430,6 +436,10 @@ static s32 goodix_tool_write(struct file *filp, const char __user *buff, unsigne
 
 		return cmd_head.data_len + CMD_HEAD_LENGTH;
 	} else if (3 == cmd_head.wr) {
+		if (cmd_head.data_len > 16) {
+			GTP_ERROR("copy_from_user data out of range.");
+			return -EINVAL;
+		}
 		memcpy(IC_TYPE, cmd_head.data, cmd_head.data_len);
 		register_i2c_func();
 
@@ -461,6 +471,12 @@ static s32 goodix_tool_write(struct file *filp, const char __user *buff, unsigne
 #endif
 			return CMD_HEAD_LENGTH;
 	} else if (17 == cmd_head.wr) {
+		if ((cmd_head.data == NULL)
+		    || (cmd_head.data_len >= (DATA_LENGTH - GTP_ADDR_LENGTH))
+		    || (cmd_head.data_len >= (len - CMD_HEAD_LENGTH))) {
+			GTP_ERROR("copy_from_user data out of range.");
+			return -EINVAL;
+		}
 		ret =
 		    copy_from_user(&cmd_head.data[GTP_ADDR_LENGTH], &buff[CMD_HEAD_LENGTH],
 				   cmd_head.data_len);
@@ -504,6 +520,12 @@ static s32 goodix_tool_write(struct file *filp, const char __user *buff, unsigne
 	}
 #endif
 	else if (19 == cmd_head.wr)	{
+		if ((cmd_head.data == NULL)
+			|| (cmd_head.data_len >= DATA_LENGTH)
+			|| (cmd_head.data_len >= (len - CMD_HEAD_LENGTH))) {
+			GTP_ERROR("copy_from_user data out of range.");
+			return -EINVAL;
+		}
 		ret = copy_from_user(&cmd_head.data[0], &buff[CMD_HEAD_LENGTH], cmd_head.data_len);
 		if (0 == cmd_head.data[0]) {
 			if (FAIL == gup_load_hotknot_system())
@@ -524,6 +546,12 @@ static s32 goodix_tool_write(struct file *filp, const char __user *buff, unsigne
 		u16 wait_hotknot_timeout = 0;
 		u8 rqst_hotknot_state;
 
+		if ((cmd_head.data == NULL)
+			|| (cmd_head.data_len >= (DATA_LENGTH - GTP_ADDR_LENGTH))
+			|| (cmd_head.data_len >= (len - CMD_HEAD_LENGTH))) {
+			GTP_ERROR("copy_from_user data out of range.");
+			return -EINVAL;
+		}
 		ret = copy_from_user(&cmd_head.data[GTP_ADDR_LENGTH],
 				     &buff[CMD_HEAD_LENGTH], cmd_head.data_len);
 
@@ -635,6 +663,12 @@ static s32 goodix_tool_read(char *page, char **start, off_t off, int count, int 
 			}
 		} else if (2 == cmd_head.flag) {
 			/* Need interrupt! */
+		}
+
+		if ((cmd_head.data == NULL)
+		    || (cmd_head.addr_len >= (DATA_LENGTH))) {
+			GTP_ERROR("copy_from_user data out of range.");
+			return -EINVAL;
 		}
 
 		memcpy(cmd_head.data, cmd_head.addr, cmd_head.addr_len);
